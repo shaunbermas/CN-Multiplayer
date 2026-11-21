@@ -9,7 +9,9 @@ import { AdaptiveQuality, quality } from './quality.ts';
 import { attachInput, input } from './input.ts';
 import { Predictor } from './predictor.ts';
 import { STAGE_SCENES } from '../stages/registry.ts';
-import { stageDef, stageGeo } from './stage.ts';
+import { stageDef, stageGeo, stageObstacles } from './stage.ts';
+import { greenTime, obstacleWalls, type Rect } from '@cn-trials/shared';
+import { scheduleFor, signalView } from './roundClock.ts';
 
 const CAPSULE_LENGTH = MOVEMENT.capsuleHeight - 2 * MOVEMENT.capsuleRadius;
 const capsuleGeo = new THREE.CapsuleGeometry(MOVEMENT.capsuleRadius, CAPSULE_LENGTH, 6, 12);
@@ -17,6 +19,13 @@ capsuleGeo.translate(0, MOVEMENT.capsuleHeight / 2, 0);
 const noseGeo = new THREE.BoxGeometry(0.16, 0.12, 0.2);
 noseGeo.translate(0, 0.85, -0.3);
 const spottedMat = new THREE.MeshStandardMaterial({ color: '#8a8f99', roughness: 0.9, transparent: true, opacity: 0.55 });
+
+/** Collision walls for prediction: the same set the server uses (stage walls + obstacle twist in a round). */
+export function wallsFor(room: TrialRoom): Rect[] {
+  if (!room.round.obstacles || room.round.phase === 'lobby' || !stageObstacles) return stageGeo.walls;
+  const elapsed = room.round.phase === 'active' ? signalView(room).elapsed : 0;
+  return [...stageGeo.walls, ...obstacleWalls(stageObstacles, greenTime(scheduleFor(room.round.seed), elapsed))];
+}
 
 function colorFor(spawn: number) {
   return new THREE.Color().setHSL(((spawn * 0.137) % 1), 0.65, 0.55);
@@ -193,7 +202,7 @@ export function Scene({ room, onStageError }: { room: TrialRoom; onStageError: (
   if (!predictor.current) {
     const me = room.self;
     const sp = stageGeo.spawns.find((s) => s.index === me?.spawn) ?? stageGeo.spawns[0];
-    predictor.current = new Predictor({ x: me?.x ?? sp.x, z: me?.z ?? sp.z, vx: 0, vz: 0 }, stageGeo.walls);
+    predictor.current = new Predictor({ x: me?.x ?? sp.x, z: me?.z ?? sp.z, vx: 0, vz: 0 }, () => wallsFor(room));
   }
   useEffect(() => {
     (window as unknown as { __cn: unknown }).__cn = {

@@ -8,7 +8,7 @@ import type { TrialRoom } from '../net.ts';
 let cachedSeed = -1;
 let cached: SignalSegment[] = [];
 
-function scheduleFor(seed: number): SignalSegment[] {
+export function scheduleFor(seed: number): SignalSegment[] {
   if (seed !== cachedSeed) {
     cached = buildSchedule(seed, 600); // longer than any round; the prefix matches the server's
     cachedSeed = seed;

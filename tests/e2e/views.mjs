@@ -43,15 +43,24 @@ try {
   }
   await page.evaluate(() => document.querySelectorAll('.hud, .panel, .overlay, header, footer').forEach((e) => { e.style.visibility = 'hidden'; }));
   const info = {};
-  for (const [name, v] of Object.entries(VIEWS)) {
+  // VIEWS_ROUND_FIRST=1: start the seeded round first (shows round-only content such as the obstacle twist).
+  if (process.env.VIEWS_ROUND_FIRST === '1') {
+    await page.evaluate(() => document.querySelectorAll('.hud, .panel, .overlay, header, footer').forEach((e) => { e.style.visibility = ''; }));
+    await page.locator('[data-testid=start]').click();
+    const t1 = Date.now();
+    while (Date.now() - t1 < 60_000 && (await page.evaluate(() => window.__cn.round().phase)) !== 'active') await sleep(200);
+    await page.evaluate(() => document.querySelectorAll('.hud, .panel, .overlay, header, footer').forEach((e) => { e.style.visibility = 'hidden'; }));
+  }
+  const views = process.env.VIEWS_ROUND_FIRST === '1' ? { obstacles_overview: { pos: [24, 16, -25], look: [0, 0, -90] }, obstacles_runner: { pos: [3, 2.2, -32], look: [0, 1, -75] }, ...VIEWS } : VIEWS;
+  for (const [name, v] of Object.entries(views)) {
     await page.evaluate((v) => { window.__cnView = v ?? undefined; }, v);
     await sleep(3500);
     await page.screenshot({ path: `${out}/${name}.png` });
-    info[name] = await page.evaluate(() => window.__cn.renderInfo());
+    info[name] = await page.evaluate(() => ({ ...window.__cn.renderInfo(), phase: window.__cn.round().phase, obstacles: window.__cn.assets().obstacles }));
   }
   // Signal states on this tier: start a seeded test round (test mode only) and capture GREEN and RED from
   // midfield toward The Watcher (lamps, signal wash, Watcher clip), with the HUD visible.
-  if (process.env.VIEWS_SIGNALS !== '0') {
+  if (process.env.VIEWS_SIGNALS !== '0' && process.env.VIEWS_ROUND_FIRST !== '1') {
     await page.evaluate(() => document.querySelectorAll('.hud, .panel, .overlay, header, footer').forEach((e) => { e.style.visibility = ''; }));
     await page.evaluate(() => { window.__cnView = { pos: [6, 3, -80], look: [0, 10, -185] }; });
     await page.locator('[data-testid=start]').click();

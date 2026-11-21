@@ -18,6 +18,7 @@
     "test:load": "tsx tests/load/thirty-clients.mjs",
     "test:e2e": "tsx tests/e2e/two-browsers.mjs",
     "test:quality": "tsx tests/e2e/quality.mjs",
+    "test:obstacles": "tsx tests/integration/obstacles.mjs",
     "deploy": "npm run build && wrangler deploy",
     "test:round": "tsx tests/integration/round.mjs"
   },

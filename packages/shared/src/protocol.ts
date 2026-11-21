@@ -4,11 +4,13 @@
 import type { Phase, Placing, PlayerStatus, Signal } from './round.ts';
 import type { Mode } from './tournament.ts';
 
-export const PROTOCOL_VERSION = 3;
+export const PROTOCOL_VERSION = 4;
 
 export interface StartRequestOptions {
   /** Standup Quick (default) or a full tournament (qualifier target, R3). Host only. */
   mode?: Mode;
+  /** Stage 1.5 obstacle twist (barricade rows and the green-only sliding gate). Host only; off by default. */
+  obstacles?: boolean;
   /** Honoured only when the room runs with CN_TEST=1 (deterministic tests). */
   seed?: number;
   roundS?: number;
@@ -45,6 +47,8 @@ export interface RoundState {
   mode: Mode;
   /** Finishers that end the round early (tournament), or -1 when there is no target. */
   target: number;
+  /** Stage 1.5: the obstacle twist is active for this round (protocol v4). */
+  obstacles: boolean;
 }
 
 export type ServerMessage =

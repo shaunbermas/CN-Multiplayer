@@ -13,17 +13,19 @@ const SIGNAL_UI = {
   red: { word: 'FREEZE', icon: '✋', cls: 'stop' },
 } as const;
 
-function startOptions(tournament: boolean) {
+function startOptions(tournament: boolean, obstacles = false) {
   // Test hook: ?testSeed=…&testRound=…&testBriefing=… (the server honours these only in test mode).
   const q = new URLSearchParams(location.search);
   const mode = tournament ? 'tournament' as const : 'standup' as const;
-  if (!q.get('testSeed')) return { mode };
-  return { mode, seed: Number(q.get('testSeed')), roundS: Number(q.get('testRound') ?? 30), briefingS: Number(q.get('testBriefing') ?? 2) };
+  if (!q.get('testSeed')) return { mode, obstacles };
+  return { mode, obstacles, seed: Number(q.get('testSeed')), roundS: Number(q.get('testRound') ?? 30), briefingS: Number(q.get('testBriefing') ?? 2) };
 }
 
 function Hud({ room, stageError }: { room: TrialRoom; stageError: string }) {
   const [, tick] = useState(0);
   const [tournament, setTournament] = useState(false);
+  // Stage 1.5 obstacle twist: off by default (the approved rules); ?obstacles=1 pre-ticks it (tests, demos).
+  const [obstacles, setObstacles] = useState(() => new URLSearchParams(location.search).get('obstacles') === '1');
   const assets = STAGE_SCENES[stageDef.id].assets as { environment?: string; watcher?: string; problems: string[] };
   const loading = assets.environment !== 'ready' || assets.watcher !== 'ready';
   useEffect(() => { const t = setInterval(() => tick((n) => n + 1), 100); return () => clearInterval(t); }, []);
@@ -78,7 +80,11 @@ function Hud({ room, stageError }: { room: TrialRoom; stageError: string }) {
                 <input id="tournament-mode" type="checkbox" checked={tournament} onChange={(e) => setTournament(e.target.checked)} />
                 Full tournament rules (the first {Math.max(Math.min(2, players.length), Math.min(players.length, Math.round(0.73 * players.length)))} of {players.length} to finish qualify)
               </label>
-              <button className="primary" data-testid="start" onClick={() => room.start(startOptions(tournament))}>Start round</button>
+              <label className="mode-toggle">
+                <input id="obstacle-twist" data-testid="obstacles" type="checkbox" checked={obstacles} onChange={(e) => setObstacles(e.target.checked)} />
+                Obstacle twist (barricade rows and a gate that slides only on green)
+              </label>
+              <button className="primary" data-testid="start" onClick={() => room.start(startOptions(tournament, obstacles))}>Start round</button>
             </>
           ) : <p className="muted">Waiting for the host to start the round.</p>}
         </div>

@@ -18,7 +18,7 @@ export class RoomError extends Error {
   constructor(public code: string, message: string) { super(message); }
 }
 
-const LOBBY: RoundState = { phase: 'lobby', signal: 'none', remaining: -1, elapsed: 0, host: '', seed: 0, stage: '', mode: 'standup', target: -1 };
+const LOBBY: RoundState = { phase: 'lobby', signal: 'none', remaining: -1, elapsed: 0, host: '', seed: 0, stage: '', mode: 'standup', target: -1, obstacles: false };
 
 export class RoomClient {
   readonly players = new Map<string, PlayerView>();

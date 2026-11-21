@@ -18,6 +18,7 @@ import { Surroundings, surroundingsStatus } from './Surroundings.tsx';
 import { MidgroundTrees, midgroundStatus } from './MidgroundTrees.tsx';
 import { buildSkyEnvironment } from './skyModel.ts';
 import { Atmosphere, atmosphereStatus } from './Atmosphere.tsx';
+import { Obstacles, obstacleStatus } from './Obstacles.tsx';
 import { CLIP_SECONDS, MISSING_FROM_MANIFEST, WATCHER_CLIPS, chooseWatcherClip, type WatcherChoice } from './watcherAnimation.ts';
 
 export const ENV_URL = envUrl;
@@ -44,6 +45,8 @@ export const stage01Assets = {
   foliageTrianglesRemoved: 0,
   /** Stage 1.5 atmosphere (sky, light cones, mist, signal wash, post-processing) for the current tier. */
   atmosphere: atmosphereStatus,
+  /** Stage 1.5 obstacle twist (visible when a round enables it). */
+  obstacles: obstacleStatus,
   environmentMap: false,
 };
 
@@ -403,6 +406,7 @@ export function Stage01Scene({ room }: { room: TrialRoom }) {
       <Atmosphere room={room} quality={quality} />
       <Surroundings quality={quality} />
       <MidgroundTrees shadows={shadowLights(quality).length > 0} />
+      <Obstacles room={room} shadows={shadowLights(quality).length > 0} />
       {dust > 0 && <Dust count={dust} />}
     </>
   );
