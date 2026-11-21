@@ -2,10 +2,13 @@
 // JSON text frames. The client only ever sends inputs and requests; the server owns movement,
 // signals, detection and results (GDD §7.3).
 import type { Phase, Placing, PlayerStatus, Signal } from './round.ts';
+import type { Mode } from './tournament.ts';
 
-export const PROTOCOL_VERSION = 2;
+export const PROTOCOL_VERSION = 3;
 
 export interface StartRequestOptions {
+  /** Standup Quick (default) or a full tournament (qualifier target, R3). Host only. */
+  mode?: Mode;
   /** Honoured only when the room runs with CN_TEST=1 (deterministic tests). */
   seed?: number;
   roundS?: number;
@@ -37,13 +40,18 @@ export interface RoundState {
   elapsed: number;
   host: string;
   seed: number;
+  /** Stage being played (stage registry id). */
+  stage: string;
+  mode: Mode;
+  /** Finishers that end the round early (tournament), or -1 when there is no target. */
+  target: number;
 }
 
 export type ServerMessage =
   | { t: 'welcome'; v: number; id: string; room: string; stage: string; spawn: number; roster: RosterEntry[]; round: RoundState }
   | { t: 'roster'; roster: RosterEntry[] }
   | { t: 'snap'; time: number; rows: SnapRow[]; round: RoundState }
-  | { t: 'results'; placings: (Placing & { name: string })[] }
+  | { t: 'results'; roundId: number; stage: string; mode: Mode; placings: (Placing & { name: string })[] }
   /** at = seconds since GO, on the server's clock. */
   | { t: 'event'; kind: 'spotted' | 'finished'; id: string; at: number }
   | { t: 'probe'; id: number }

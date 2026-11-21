@@ -1,5 +1,7 @@
 # CN Trials · Stage 01 environment design spec: Red Light, Green Light
 
+> **Note (21 Nov 2026):** the figure described here as The Shepherd was replaced by **The Watcher**, an original robotic doll (decision 023, `docs/THE_WATCHER_SPEC.md`), standing on the same 4 m plinth (decision 024). Layout, scale (28 m) and sightlines in this approved spec are unchanged.
+
 Status: **APPROVED v0.1** (owner approved all of §14 on 21 November 2026, decision 017). The environment
 greybox is built from it (`blender/scripts/generate_stage_01_greybox.py`; report: `docs/STAGE_01_GREYBOX_REPORT.md`).
 

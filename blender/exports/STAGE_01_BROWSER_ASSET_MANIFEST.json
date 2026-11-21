@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "1.0.0",
+  "stageId": "STAGE_01_RED_LIGHT",
+  "stageName": "Red Light, Green Light",
+  "environment": {
+    "sourceBlend": "blender/scenes/STAGE_01_ENVIRONMENT_FINAL.blend",
+    "runtimeAsset": "blender/exports/STAGE_01_ENVIRONMENT.glb",
+    "runtimeUrl": "Bundled by Vite from blender/exports via `?url` import in apps/web/src/stages/stage01/Stage01Scene.tsx; served as /assets/STAGE_01_ENVIRONMENT-<hash>.glb by the Worker",
+    "validationReport": "docs/STAGE_01_ENVIRONMENT_VALIDATION.md"
+  },
+  "watcher": {
+    "sourceBlend": "blender/scenes/THE_WATCHER.blend",
+    "runtimeAsset": "blender/exports/THE_WATCHER.glb",
+    "runtimeUrl": "Bundled by Vite from blender/exports via `?url` import in apps/web/src/stages/stage01/Stage01Scene.tsx; served as /assets/THE_WATCHER-<hash>.glb by the Worker",
+    "characterType": "full_body_freestanding_robotic_doll",
+    "heightMeters": 28.0,
+    "scaleSource": "docs/STAGE_01_SPEC.md L9 (28 m, decision 014); decisions 023 and 024; verified in the browser (e2e: 28.0 m)",
+    "rootAnchor": "Watcher_Root",
+    "opticalOriginAnchor": "Watcher_OpticalOrigin",
+    "detectionForwardAnchor": "Watcher_DetectionForward",
+    "animationClips": [
+      "Watcher_Idle",
+      "Watcher_TurnAway",
+      "Watcher_GreenSignal",
+      "Watcher_TurnToField",
+      "Watcher_FocusLock",
+      "Watcher_RedSignal",
+      "Watcher_ScanSweep",
+      "Watcher_Detect",
+      "Watcher_ReturnNeutral"
+    ],
+    "validationReport": "docs/THE_WATCHER_VALIDATION.md"
+  },
+  "metadata": {
+    "runtimeAsset": "blender/exports/STAGE_01_METADATA.json",
+    "schema": "blender/schemas/STAGE_01_METADATA.schema.json"
+  },
+  "coordinateSystem": {
+    "units": "meters",
+    "upAxis": "+Z (Blender world)",
+    "forwardAxis": "+Y: the course runs from the start line (Y 0) to the finish line (Y 160)",
+    "rotationUnit": "degrees",
+    "originDescription": "Blender world origin = centre of the start line on the ground (X 0, Y 0, Z 0), as in docs/BLENDER_PIPELINE.md \u00a74 and docs/STAGE_01_SPEC.md. Positions are object origins; box volumes (collision, triggers, boundaries) have their origin at the bottom centre. Rotations are Euler XYZ. A marker's forward direction is its local -Y axis. The runtime (glTF, server, web client) uses Y-up game coordinates: game = (x, z, -y)."
+  },
+  "integrationStatus": "verified"
+}

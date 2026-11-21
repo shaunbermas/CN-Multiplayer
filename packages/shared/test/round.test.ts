@@ -1,13 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
-  ROUND, RoundEngine, SIM_DT, buildSchedule, buildStageGeometry, graceFor, newRoundPlayer, rankPlayers, segmentAt, shuffled,
+  ROUND, RoundEngine, SIM_DT, buildSchedule, getStage, graceFor, newRoundPlayer, rankPlayers, segmentAt, shuffled,
   type RoundEvents, type RoundPlayer,
 } from '../src/index.ts';
 
 const root = new URL('../../../', import.meta.url);
 const load = (p: string) => JSON.parse(readFileSync(new URL(p, root), 'utf8'));
-const geo = buildStageGeometry(load('blender/exports/STG01/STG01_collision.json'), load('blender/exports/STG01/STG01_markers.json'));
+const geo = getStage().geometry; // from the approved stage metadata
 
 describe('signal schedule (spec §3)', () => {
   it('is seeded, contiguous and inside the spec ranges', () => {

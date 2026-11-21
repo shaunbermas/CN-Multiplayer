@@ -5,3 +5,6 @@ export * from './messages.ts';
 export * from './protocol.ts';
 export * from './client.ts';
 export * from './round.ts';
+export * from './stage-metadata.ts';
+export * from './stages.ts';
+export * from './tournament.ts';

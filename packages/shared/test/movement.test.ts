@@ -1,18 +1,15 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
-  MOVEMENT, SIM_DT, buildStageGeometry, insideRect, inputFromKeys, sanitizeInput, sanitizeName, step,
+  MOVEMENT, SIM_DT, getStage, insideRect, inputFromKeys, sanitizeInput, sanitizeName, step,
   type MoveState,
 } from '../src/index.ts';
 
 const root = new URL('../../../', import.meta.url);
 const load = (p: string) => JSON.parse(readFileSync(new URL(p, root), 'utf8'));
-const geo = buildStageGeometry(
-  load('blender/exports/STG01/STG01_collision.json'),
-  load('blender/exports/STG01/STG01_markers.json'),
-);
+const geo = getStage().geometry; // from the approved stage metadata
 
-describe('Stage 01 geometry from the Blender exports', () => {
+describe('Stage 01 geometry from the approved metadata', () => {
   it('has 30 spawns in the start zone, walls, and finish/safe triggers', () => {
     expect(geo.spawns).toHaveLength(30);
     for (const s of geo.spawns) {

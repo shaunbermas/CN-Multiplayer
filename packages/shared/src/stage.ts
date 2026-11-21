@@ -1,5 +1,7 @@
-// Stage geometry from the Blender exports (blender/exports/<STAGE>/*_collision.json and *_markers.json).
-// Everything is in game coordinates: metres, Y up, the course runs toward -Z.
+// Runtime stage geometry in game coordinates (metres, Y up, the course runs toward -Z).
+// The runtime builds it from the approved stage metadata (stage-metadata.ts, via stages.ts).
+// buildStageGeometry() below reads the older greybox exports (STG01_collision.json / _markers.json) and is
+// kept only so tests can prove the two sources agree.
 
 export interface ColliderJson {
   id: string;
@@ -27,18 +29,30 @@ export interface Rect { id: string; minX: number; maxX: number; minZ: number; ma
 
 export interface Spawn { index: number; x: number; z: number; yaw: number }
 
+export interface WatcherPlacement {
+  /** Root (feet) position in game coordinates. */
+  x: number; y: number; z: number;
+  /** Model height in metres (asset manifest / spec L9). */
+  height: number;
+  /** Facing yaw in game convention (0 = facing -Z; PI = facing +Z, toward the start line). */
+  yaw: number;
+}
+
 export interface StageGeometry {
   stage: string;
   walls: Rect[];
+  start: Rect | null;
   finish: Rect | null;
   safe: Rect | null;
+  /** Playable area (everything inside the fence). */
+  bounds: Rect | null;
   spawns: Spawn[];
   /** Bench seats for spotted and waiting players (outside the yard). */
   benches: { x: number; z: number }[];
   /** Start line Z (game) and finish line Z (game). Progress runs from startZ toward finishZ. */
   startZ: number;
   finishZ: number;
-  shepherd: { x: number; y: number; z: number; height: number; headY: number } | null;
+  watcher: WatcherPlacement | null;
 }
 
 function rectOf(c: ColliderJson): Rect {
@@ -71,18 +85,19 @@ export function buildStageGeometry(collision: CollisionFile, markers: MarkersFil
     .map((m) => ({ x: m.position[0], z: m.position[2] }));
   const byId = Object.fromEntries(markers.markers.map((m) => [m.id, m]));
   const sh = byId['GMK_SHEPHERD'];
+  const b = byId['GMK_BOUNDS'];
   return {
     stage: collision.stage,
     walls,
+    start: null,
     finish: trig('finish'),
     safe: trig('safe'),
+    bounds: b ? { id: 'GMK_BOUNDS', minX: Number(b.min_x), maxX: Number(b.max_x), minZ: -Number(b.max_y), maxZ: -Number(b.min_y) } : null,
     spawns,
     benches,
     startZ: byId['GMK_START']?.position[2] ?? 0,
     finishZ: byId['GMK_FINISH']?.position[2] ?? 0,
-    shepherd: sh
-      ? { x: sh.position[0], y: sh.position[1], z: sh.position[2], height: Number(sh.height), headY: Number(sh.head_z) }
-      : null,
+    watcher: sh ? { x: sh.position[0], y: sh.position[1], z: sh.position[2], height: Number(sh.height), yaw: Math.PI } : null,
   };
 }
 

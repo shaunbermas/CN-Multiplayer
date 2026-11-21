@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "THE LAST TRIAL Stage 01 Browser Asset Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "stageId",
+    "stageName",
+    "environment",
+    "watcher",
+    "metadata",
+    "coordinateSystem",
+    "integrationStatus"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "stageId": {
+      "const": "STAGE_01_RED_LIGHT"
+    },
+    "stageName": {
+      "const": "Red Light, Green Light"
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceBlend",
+        "runtimeAsset",
+        "runtimeUrl",
+        "validationReport"
+      ],
+      "properties": {
+        "sourceBlend": {
+          "type": "string",
+          "minLength": 1
+        },
+        "runtimeAsset": {
+          "type": "string",
+          "minLength": 1
+        },
+        "runtimeUrl": {
+          "type": "string",
+          "minLength": 1
+        },
+        "validationReport": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "watcher": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceBlend",
+        "runtimeAsset",
+        "runtimeUrl",
+        "characterType",
+        "heightMeters",
+        "scaleSource",
+        "rootAnchor",
+        "opticalOriginAnchor",
+        "detectionForwardAnchor",
+        "animationClips",
+        "validationReport"
+      ],
+      "properties": {
+        "sourceBlend": {
+          "type": "string"
+        },
+        "runtimeAsset": {
+          "type": "string"
+        },
+        "runtimeUrl": {
+          "type": "string"
+        },
+        "characterType": {
+          "const": "full_body_freestanding_robotic_doll"
+        },
+        "heightMeters": {
+          "type": "number",
+          "const": 28
+        },
+        "scaleSource": {
+          "type": "string"
+        },
+        "rootAnchor": {
+          "type": "string"
+        },
+        "opticalOriginAnchor": {
+          "type": "string"
+        },
+        "detectionForwardAnchor": {
+          "type": "string"
+        },
+        "animationClips": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "validationReport": {
+          "type": "string"
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": [
+        "runtimeAsset",
+        "schema"
+      ],
+      "properties": {
+        "runtimeAsset": {
+          "type": "string"
+        },
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
+    "coordinateSystem": {
+      "type": "object",
+      "required": [
+        "units",
+        "upAxis",
+        "forwardAxis",
+        "rotationUnit",
+        "originDescription"
+      ],
+      "properties": {
+        "units": {
+          "const": "meters"
+        },
+        "upAxis": {
+          "type": "string"
+        },
+        "forwardAxis": {
+          "type": "string"
+        },
+        "rotationUnit": {
+          "enum": [
+            "degrees",
+            "radians"
+          ]
+        },
+        "originDescription": {
+          "type": "string"
+        }
+      }
+    },
+    "integrationStatus": {
+      "type": "string",
+      "enum": [
+        "template_only_do_not_use_until_verified",
+        "verified"
+      ]
+    }
+  }
+}

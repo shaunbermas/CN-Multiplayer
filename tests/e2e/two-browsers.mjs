@@ -2,12 +2,16 @@
 // Cloudflare Worker (page + Durable Object room) running under `wrangler dev`.
 //  - two Chromium contexts join through the web app and each sees both players
 //  - player A walks forward with the W key; player B sees A move; A's prediction matches the server
-//  - screenshots: A's third-person view at spawn (Shepherd readability), A after walking, B's view
+//  - Prompt 07: both browsers load the Stage 01 environment GLB and THE_WATCHER.glb with no asset problems
+//    (28 m Watcher, every clip present); The Watcher's clip follows the server signal (green / red);
+//    the spotted player sees the spectator status, results show qualified / eliminated tags
+//  - screenshots: A's third-person view at spawn (Watcher readability), A after walking, B's view
 // Builds the web app first. Usage: npm run test:e2e
 import { execSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { mkdirSync } from 'node:fs';
 import { root, sleep, startWorker, writeReport } from '../lib.mjs';
+import { buildSchedule, segmentAt } from '../../packages/shared/src/index.ts';
 
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
@@ -17,6 +21,9 @@ const shots = `${root}tests/reports/screenshots`;
 mkdirSync(shots, { recursive: true });
 if (process.env.SKIP_BUILD !== '1') execSync('npm run build', { cwd: root, stdio: 'ignore' });
 const errors = [];
+const t0 = Date.now();
+const step = (label) => console.log(`[e2e ${((Date.now() - t0) / 1000).toFixed(1)} s] ${label}`);
+let greenClip = '', redClip = '', sigAtSpot = '', assetA = { watcherHeight: 0, watcherClips: [], quality: '', problems: [] };
 const worker = startWorker(PORT);
 let browser;
 
@@ -30,7 +37,8 @@ const waitFor = async (fn, label, ms = 30_000) => {
 try {
   await worker.ready;
   browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
-  const url = (name, extra = '') => `http://127.0.0.1:${PORT}/?name=${name}&autojoin=1${extra}`;
+  // Low lighting tier (STAGE_01_LIGHTING.json): software WebGL in CI; the stage assets are the same.
+  const url = (name, extra = '') => `http://127.0.0.1:${PORT}/?name=${name}&autojoin=1&quality=low${extra}`;
   const ctxA = await browser.newContext({ viewport: { width: 1280, height: 720 } });
   const ctxB = await browser.newContext({ viewport: { width: 1280, height: 720 } });
   const pageA = await ctxA.newPage();
@@ -44,11 +52,17 @@ try {
     p.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(`${tag}: ${m.text()}`); });
   }
   // Alpha joins first, so Alpha is the host; the test seed makes the round deterministic (test mode only).
-  await pageA.goto(url('Alpha', '&testSeed=12345&testRound=20&testBriefing=1'));
+  await pageA.goto(url('Alpha', '&testSeed=12345&testRound=30&testBriefing=1'));
   await waitFor(async () => pageA.evaluate(() => !!window.__cn), 'Alpha joined first (host)');
   await pageB.goto(url('Beta'));
   await waitFor(async () => (await pageA.evaluate(() => !!window.__cn)) && (await pageB.evaluate(() => !!window.__cn)), 'both pages joined');
   await waitFor(async () => (await players(pageA)).length === 2 && (await players(pageB)).length === 2, 'both see 2 players');
+  const assets = (page) => page.evaluate(() => window.__cn.assets());
+  await waitFor(async () => { const a = await assets(pageA), b = await assets(pageB);
+    return a.environment === 'ready' && a.watcher === 'ready' && b.environment === 'ready' && b.watcher === 'ready'; }, 'Stage 01 assets loaded in both browsers', 90_000);
+  assetA = await assets(pageA);
+  if (assetA.problems.length) errors.push(`Asset problems: ${assetA.problems.join('; ')}`);
+  if (Math.abs(assetA.watcherHeight - 28) > 0.2) errors.push(`Watcher height ${assetA.watcherHeight} m in the browser, expected 28`);
   const roomA = await pageA.evaluate(() => window.__cn.roomId);
   const roomB = await pageB.evaluate(() => window.__cn.roomId);
   if (roomA !== roomB) errors.push(`Different rooms: ${roomA} vs ${roomB}`);
@@ -81,28 +95,69 @@ try {
 
   // ---- S1-4: a full round through the UI. Alpha (host) starts; Beta keeps walking into the red light.
   const round = (page) => page.evaluate(() => window.__cn.round());
+  step('host clicks start');
   await pageA.locator('[data-testid=start]').click();
-  await waitFor(async () => (await round(pageB)).phase === 'briefing', 'briefing on both');
+  // Player A is CPU-throttled, so the click can resolve after the 1 s test briefing: accept any started phase.
+  await waitFor(async () => (await round(pageB)).phase !== 'lobby', 'round started (seen by Beta)');
   await waitFor(async () => (await round(pageA)).phase === 'active', 'round active', 15_000);
-  await sleep(800);
-  await pageA.screenshot({ path: `${shots}/s1-4_green_view.png` });
+  // Round screenshots and clip checks come from Beta (not CPU-throttled), so they fit inside the signal windows.
+  step('round active');
   await pageB.bringToFront();
+  // GREEN: The Watcher turns away, then loops its green clip (clip history, so slow polling cannot miss it).
+  await waitFor(async () => (await assets(pageB)).clipHistory.some(([c]) => c === 'Watcher_GreenSignal'), 'Watcher_GreenSignal on GREEN', 20_000)
+    .catch(() => errors.push('Watcher_GreenSignal never played on GREEN'));
+  const histG = (await assets(pageB)).clipHistory.map(([c]) => c);
+  greenClip = histG.includes('Watcher_GreenSignal') ? 'Watcher_GreenSignal' : histG.at(-1);
+  if (!histG.includes('Watcher_TurnAway')) errors.push(`Watcher_TurnAway never played at GREEN (clips: ${histG.join(', ')})`);
+  await pageB.screenshot({ path: `${shots}/s1-4_green_view.png` });
+  step('green checked; Beta walks');
   await pageB.keyboard.down('KeyW');
-  await waitFor(async () => (await round(pageA)).signal === 'red', 'red light', 15_000);
-  await sleep(1200);
-  await pageA.screenshot({ path: `${shots}/s1-4_red_view.png` });
+  // Wait for the server's decision rather than polling for the short red window (slow software WebGL in CI
+  // can miss it): Beta keeps walking, so the server spots Beta just after the first red's grace window.
   const idB = await pageB.evaluate(() => window.__cn.sessionId);
-  await waitFor(async () => (await players(pageA)).find((p) => p.id === idB)?.status === 'spotted', 'Beta spotted', 5000);
+  await waitFor(async () => (await players(pageB)).find((p) => p.id === idB)?.status === 'spotted', 'Beta spotted by the server', 40_000);
+  step('Beta spotted');
+  // The server stamps each spotting with its round time; the seeded schedule says which signal that was.
+  const spotEv = (await pageB.evaluate(() => window.__cn.events())).find((e) => e.kind === 'spotted' && e.id === idB);
+  sigAtSpot = segmentAt(buildSchedule(12345, 30), spotEv?.roundT ?? -1)?.signal ?? 'none';
+  if (sigAtSpot !== 'red') errors.push(`Beta was spotted at ${spotEv?.roundT} s during ${sigAtSpot}, expected red`);
+  // The Watcher reacts to the server's event: Watcher_Detect plays after the spot (clip history, so slow
+  // polling cannot miss it).
+  const spottedAtLocal = spotEv?.at ?? 0;
+  await waitFor(async () => (await assets(pageB)).clipHistory.some(([c, t]) => c === 'Watcher_Detect' && t >= spottedAtLocal - 50), 'Watcher_Detect after the spot', 8000)
+    .catch(() => errors.push('Watcher_Detect did not play after the server spotted Beta'));
+  const hist = (await assets(pageB)).clipHistory.map(([c]) => c);
+  redClip = hist.includes('Watcher_Detect') ? 'Watcher_Detect' : hist.at(-1);
+  if (!hist.includes('Watcher_FocusLock')) errors.push(`Watcher_FocusLock never played at red (clips: ${hist.join(', ')})`);
+  await pageB.screenshot({ path: `${shots}/s1-4_red_view.png` });
+  step('detect checked');
+  await sleep(2600); // past the SPOTTED! stamp
+  // The HUD shows the spectator status after the 2.5 s SPOTTED! stamp; allow for a slow software-rendered page.
+  await waitFor(async () => (await pageB.locator('[data-testid=spectating]').count()) > 0, 'spectator status on Beta', 10_000)
+    .catch(() => errors.push('Spotted player does not see the spectator status'));
   await pageB.screenshot({ path: `${shots}/s1-4_spotted_view.png` });
+  step('spectator checked');
   await pageB.keyboard.up('KeyW');
   const alphaStatus = (await players(pageA)).find((p) => p.id === idA)?.status;
   if (alphaStatus !== 'active') errors.push(`Alpha (standing still) ended up ${alphaStatus}`);
-  await waitFor(async () => (await round(pageA)).phase === 'results', 'results', 30_000);
-  await sleep(600);
+  // Round end comes from the server. The results message persists after the 20 s results screen closes, so
+  // wait on it (from unthrottled Beta) rather than on the phase, which a slow CI runner can poll past.
+  step('waiting for results');
+  await waitFor(async () => (await pageB.evaluate(() => window.__cn.resultsMeta())) !== null, 'results message (Beta)', 60_000);
+  step(`results on Beta, phase ${(await round(pageB)).phase}`);
+  if ((await round(pageB)).phase === 'results') {
+    await waitFor(async () => (await pageB.locator('.results .tag.out').count()) > 0, 'results screen on Beta', 10_000)
+      .catch(() => errors.push('Results screen has no eliminated tag'));
+    await pageB.screenshot({ path: `${shots}/s1-4_results_view.png` });
+  } else errors.push(`Results screen closed before the test could check it (Beta phase ${(await round(pageB)).phase})`);
+  await pageA.bringToFront();
+  await waitFor(async () => (await pageA.evaluate(() => window.__cn.results().length)) >= 2, 'results (seen by Alpha)', 30_000);
+  step('results on Alpha');
   const results = await pageA.evaluate(() => window.__cn.results());
   if (results.map((r) => r.name).join() !== 'Alpha,Beta') errors.push(`Results order ${results.map((r) => r.name).join(', ')}`);
   if (results.find((r) => r.name === 'Beta')?.status !== 'spotted') errors.push('Beta is not spotted in the results');
-  await pageA.screenshot({ path: `${shots}/s1-4_results_view.png` });
+  const meta = await pageA.evaluate(() => window.__cn.resultsMeta());
+  if (meta?.stage !== 'STAGE_01_RED_LIGHT' || !(meta?.roundId >= 1)) errors.push(`Results meta ${JSON.stringify(meta)}`);
   if (consoleErrors.length) errors.push(...consoleErrors);
 
   const report = {
@@ -112,7 +167,8 @@ try {
     same_room: roomA === roomB,
     both_see_players: 2,
     walk_4s: { moved_m_seen_by_other_browser: +moved.toFixed(2), prediction_error_m: +predictionError.toFixed(3) },
-    round: { results: 'Alpha (stood still) 1st, Beta (walked into red) spotted' },
+    round: { results: 'Alpha (stood still) 1st, Beta (walked into red) spotted', watcher_clips: { green: greenClip, red: redClip }, beta_spotted_during: sigAtSpot },
+    assets: { watcher_height_m: assetA.watcherHeight, clips: assetA.watcherClips.length, quality: assetA.quality, problems: assetA.problems },
     screenshots: ['s1-3_start_view.png', 's1-3_after_walk.png', 's1-3_other_player_view.png', 's1-4_green_view.png', 's1-4_red_view.png', 's1-4_spotted_view.png', 's1-4_results_view.png'].map((f) => `tests/reports/screenshots/${f}`),
     renderer: 'headless Chromium, software WebGL (SwiftShader)',
     player_a_cpu_throttle: throttle,

@@ -18,7 +18,7 @@ export class RoomError extends Error {
   constructor(public code: string, message: string) { super(message); }
 }
 
-const LOBBY: RoundState = { phase: 'lobby', signal: 'none', remaining: -1, elapsed: 0, host: '', seed: 0 };
+const LOBBY: RoundState = { phase: 'lobby', signal: 'none', remaining: -1, elapsed: 0, host: '', seed: 0, stage: '', mode: 'standup', target: -1 };
 
 export class RoomClient {
   readonly players = new Map<string, PlayerView>();
@@ -31,6 +31,8 @@ export class RoomClient {
   /** Local clock (ms) when the last snapshot arrived, to smooth timers between snapshots. */
   roundAt = 0;
   results: ResultRow[] = [];
+  /** Round id, stage and mode of the last results message. */
+  resultsMeta: { roundId: number; stage: string; mode: string } | null = null;
   /** at = local receive time (ms); roundT = seconds since GO on the server's clock. */
   readonly events: { kind: 'spotted' | 'finished'; id: string; at: number; roundT: number }[] = [];
   private ws: WebSocket;
@@ -85,6 +87,7 @@ export class RoomClient {
             break;
           case 'results':
             c.results = msg.placings;
+            c.resultsMeta = { roundId: msg.roundId, stage: msg.stage, mode: msg.mode };
             break;
           case 'event':
             c.events.push({ kind: msg.kind, id: msg.id, at: Date.now(), roundT: msg.at });
