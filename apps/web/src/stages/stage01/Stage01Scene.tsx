@@ -19,6 +19,7 @@ import { MidgroundTrees, midgroundStatus } from './MidgroundTrees.tsx';
 import { buildSkyEnvironment } from './skyModel.ts';
 import { Atmosphere, atmosphereStatus } from './Atmosphere.tsx';
 import { Obstacles, obstacleStatus } from './Obstacles.tsx';
+import { WatcherFX, watcherFxStatus } from './WatcherFX.tsx';
 import { CLIP_SECONDS, MISSING_FROM_MANIFEST, WATCHER_CLIPS, chooseWatcherClip, type WatcherChoice } from './watcherAnimation.ts';
 
 export const ENV_URL = envUrl;
@@ -47,6 +48,8 @@ export const stage01Assets = {
   atmosphere: atmosphereStatus,
   /** Stage 1.5 obstacle twist (visible when a round enables it). */
   obstacles: obstacleStatus,
+  /** Stage 1.5 Watcher detection presentation (scan beam, searchlight) and lens emissive boost. */
+  watcherFx: watcherFxStatus,
   environmentMap: false,
 };
 
@@ -257,7 +260,7 @@ function Environment({ room, quality }: { room: TrialRoom; quality: Quality }) {
 }
 
 // ------------------------------------------------------------------------------------------ The Watcher
-function Watcher({ room }: { room: TrialRoom }) {
+function Watcher({ room, search }: { room: TrialRoom; search: boolean }) {
   const gltf = useGLTF(WATCHER_URL);
   const group = useRef<THREE.Group>(null);
   const { actions } = useAnimations(gltf.animations, group);
@@ -281,6 +284,12 @@ function Watcher({ room }: { room: TrialRoom }) {
     }
     // Skinned bounds move with the clips, so never frustum-cull; The Watcher casts the moon's shadow on High.
     gltf.scene.traverse((o) => { if ((o as THREE.Mesh).isMesh) { o.frustumCulled = false; o.castShadow = true; } });
+    // Stage 1.5 material polish (presentation only, approved design unchanged): the signal lens materials glow a
+    // little brighter so the red / green state reads at 190 m and catches the High tier's bloom.
+    gltf.scene.traverse((o) => {
+      const m = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined;
+      if (m?.name?.startsWith('MAT_Watcher_Lens_') && !m.userData.stage15) { m.emissiveIntensity *= 1.8; m.userData.stage15 = true; }
+    });
     // Measure in the asset's own frame: by now the scene may already sit under the plinth-height group,
     // so detach it for the measurement (skinned bounds use the bones' world matrices).
     const parent = gltf.scene.parent;
@@ -328,9 +337,12 @@ function Watcher({ room }: { room: TrialRoom }) {
 
   // The GLB faces +Z (game yaw PI); rotate by the stage's facing relative to that.
   return (
-    <group ref={group} position={[w.x, w.y, w.z]} rotation={[0, w.yaw - Math.PI, 0]}>
-      <primitive object={gltf.scene} />
-    </group>
+    <>
+      <group ref={group} position={[w.x, w.y, w.z]} rotation={[0, w.yaw - Math.PI, 0]}>
+        <primitive object={gltf.scene} />
+      </group>
+      <WatcherFX room={room} root={gltf.scene} search={search} />
+    </>
   );
 }
 
@@ -402,7 +414,7 @@ export function Stage01Scene({ room }: { room: TrialRoom }) {
     <>
       <Lighting quality={quality} />
       <Environment room={room} quality={quality} />
-      <Watcher room={room} />
+      <Watcher room={room} search={quality !== 'low'} />
       <Atmosphere room={room} quality={quality} />
       <Surroundings quality={quality} />
       <MidgroundTrees shadows={shadowLights(quality).length > 0} />

@@ -130,6 +130,10 @@ try {
   const spottedAtLocal = spotEv?.at ?? 0;
   await waitFor(async () => (await assets(pageB)).clipHistory.some(([c, t]) => c === 'Watcher_Detect' && t >= spottedAtLocal - 50), 'Watcher_Detect after the spot', 8000)
     .catch(() => errors.push('Watcher_Detect did not play after the server spotted Beta'));
+  // Stage 1.5: the detection beam fires from The Watcher's optical-origin anchor after the server's spot.
+  const fxB = (await assets(pageB)).watcherFx;
+  if (!fxB?.anchor) errors.push('Watcher_OpticalOrigin anchor not found for the detection beam');
+  if (!(fxB?.spotBeams >= 1)) errors.push(`Detection beam did not fire after the spot (${JSON.stringify(fxB)})`);
   const hist = (await assets(pageB)).clipHistory.map(([c]) => c);
   redClip = hist.includes('Watcher_Detect') ? 'Watcher_Detect' : hist.at(-1);
   if (!hist.includes('Watcher_FocusLock')) errors.push(`Watcher_FocusLock never played at red (clips: ${hist.join(', ')})`);
