@@ -21,6 +21,8 @@ const shots = `${root}tests/reports/screenshots`;
 mkdirSync(shots, { recursive: true });
 if (process.env.SKIP_BUILD !== '1') execSync('npm run build', { cwd: root, stdio: 'ignore' });
 const errors = [];
+const t0 = Date.now();
+const step = (label) => console.log(`[e2e ${((Date.now() - t0) / 1000).toFixed(1)} s] ${label}`);
 let greenClip = '', redClip = '', sigAtSpot = '', assetA = { watcherHeight: 0, watcherClips: [], quality: '', problems: [] };
 const worker = startWorker(PORT);
 let browser;
@@ -93,11 +95,13 @@ try {
 
   // ---- S1-4: a full round through the UI. Alpha (host) starts; Beta keeps walking into the red light.
   const round = (page) => page.evaluate(() => window.__cn.round());
+  step('host clicks start');
   await pageA.locator('[data-testid=start]').click();
   // Player A is CPU-throttled, so the click can resolve after the 1 s test briefing: accept any started phase.
   await waitFor(async () => (await round(pageB)).phase !== 'lobby', 'round started (seen by Beta)');
   await waitFor(async () => (await round(pageA)).phase === 'active', 'round active', 15_000);
   // Round screenshots and clip checks come from Beta (not CPU-throttled), so they fit inside the signal windows.
+  step('round active');
   await pageB.bringToFront();
   // GREEN: The Watcher turns away, then loops its green clip (clip history, so slow polling cannot miss it).
   await waitFor(async () => (await assets(pageB)).clipHistory.some(([c]) => c === 'Watcher_GreenSignal'), 'Watcher_GreenSignal on GREEN', 20_000)
@@ -106,11 +110,13 @@ try {
   greenClip = histG.includes('Watcher_GreenSignal') ? 'Watcher_GreenSignal' : histG.at(-1);
   if (!histG.includes('Watcher_TurnAway')) errors.push(`Watcher_TurnAway never played at GREEN (clips: ${histG.join(', ')})`);
   await pageB.screenshot({ path: `${shots}/s1-4_green_view.png` });
+  step('green checked; Beta walks');
   await pageB.keyboard.down('KeyW');
   // Wait for the server's decision rather than polling for the short red window (slow software WebGL in CI
   // can miss it): Beta keeps walking, so the server spots Beta just after the first red's grace window.
   const idB = await pageB.evaluate(() => window.__cn.sessionId);
   await waitFor(async () => (await players(pageB)).find((p) => p.id === idB)?.status === 'spotted', 'Beta spotted by the server', 40_000);
+  step('Beta spotted');
   // The server stamps each spotting with its round time; the seeded schedule says which signal that was.
   const spotEv = (await pageB.evaluate(() => window.__cn.events())).find((e) => e.kind === 'spotted' && e.id === idB);
   sigAtSpot = segmentAt(buildSchedule(12345, 30), spotEv?.roundT ?? -1)?.signal ?? 'none';
@@ -124,28 +130,34 @@ try {
   redClip = hist.includes('Watcher_Detect') ? 'Watcher_Detect' : hist.at(-1);
   if (!hist.includes('Watcher_FocusLock')) errors.push(`Watcher_FocusLock never played at red (clips: ${hist.join(', ')})`);
   await pageB.screenshot({ path: `${shots}/s1-4_red_view.png` });
+  step('detect checked');
   await sleep(2600); // past the SPOTTED! stamp
   // The HUD shows the spectator status after the 2.5 s SPOTTED! stamp; allow for a slow software-rendered page.
   await waitFor(async () => (await pageB.locator('[data-testid=spectating]').count()) > 0, 'spectator status on Beta', 10_000)
     .catch(() => errors.push('Spotted player does not see the spectator status'));
   await pageB.screenshot({ path: `${shots}/s1-4_spotted_view.png` });
+  step('spectator checked');
   await pageB.keyboard.up('KeyW');
   const alphaStatus = (await players(pageA)).find((p) => p.id === idA)?.status;
   if (alphaStatus !== 'active') errors.push(`Alpha (standing still) ended up ${alphaStatus}`);
-  // Round end comes from the server: wait on Beta (unthrottled, in front), then let the CPU-throttled Alpha
-  // catch up on its snapshot backlog before reading its results screen.
-  await waitFor(async () => (await round(pageB)).phase === 'results', 'results (seen by Beta)', 45_000);
+  // Round end comes from the server. The results message persists after the 20 s results screen closes, so
+  // wait on it (from unthrottled Beta) rather than on the phase, which a slow CI runner can poll past.
+  step('waiting for results');
+  await waitFor(async () => (await pageB.evaluate(() => window.__cn.resultsMeta())) !== null, 'results message (Beta)', 60_000);
+  step(`results on Beta, phase ${(await round(pageB)).phase}`);
+  if ((await round(pageB)).phase === 'results') {
+    await waitFor(async () => (await pageB.locator('.results .tag.out').count()) > 0, 'results screen on Beta', 10_000)
+      .catch(() => errors.push('Results screen has no eliminated tag'));
+    await pageB.screenshot({ path: `${shots}/s1-4_results_view.png` });
+  } else errors.push(`Results screen closed before the test could check it (Beta phase ${(await round(pageB)).phase})`);
   await pageA.bringToFront();
-  await waitFor(async () => (await pageA.evaluate(() => window.__cn.results().length)) >= 2
-    && (await pageA.locator('.results').count()) > 0, 'results (seen by Alpha)', 30_000);
-  await sleep(600);
+  await waitFor(async () => (await pageA.evaluate(() => window.__cn.results().length)) >= 2, 'results (seen by Alpha)', 30_000);
+  step('results on Alpha');
   const results = await pageA.evaluate(() => window.__cn.results());
   if (results.map((r) => r.name).join() !== 'Alpha,Beta') errors.push(`Results order ${results.map((r) => r.name).join(', ')}`);
   if (results.find((r) => r.name === 'Beta')?.status !== 'spotted') errors.push('Beta is not spotted in the results');
   const meta = await pageA.evaluate(() => window.__cn.resultsMeta());
   if (meta?.stage !== 'STAGE_01_RED_LIGHT' || !(meta?.roundId >= 1)) errors.push(`Results meta ${JSON.stringify(meta)}`);
-  if (!(await pageA.locator('.results .tag.out').count())) errors.push('Results screen has no eliminated tag');
-  await pageA.screenshot({ path: `${shots}/s1-4_results_view.png` });
   if (consoleErrors.length) errors.push(...consoleErrors);
 
   const report = {
