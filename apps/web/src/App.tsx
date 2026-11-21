@@ -1,13 +1,16 @@
 // CN TRIAL client shell (Stage 1.5, Prompt 07): main menu → private room → game, with connection states.
 //   ?room=<code>               invite link: opens the menu ready to join that room
 //   ?name=<n>&autojoin=1       tests and quick links: join straight away (room from ?room, else "default")
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { CLOSE } from '@cn-trials/shared';
 import { joinTrial, newRoomCode, type TrialRoom } from './net.ts';
 import { hud } from './game/hudStore.ts';
-import { Scene } from './game/Scene.tsx';
-import { GameHud } from './ui/GameHud.tsx';
 import { Brand, MainMenu } from './ui/Menu.tsx';
+
+// The game view (three.js, the stage scene, its models) is a separate chunk; the menu prefetches it, which also
+// starts downloading the stage models while the player types a nickname.
+const loadGame = () => import('./GameView.tsx');
+const GameView = lazy(loadGame);
 
 type Lost = { title: string; detail: string; canRetry: boolean };
 
@@ -59,7 +62,13 @@ export function App() {
     if (params.get('autojoin') === '1' && params.get('name')) void join(params.get('name')!, (invite ?? 'default').toLowerCase());
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (room) return (<><Scene room={room} onStageError={setStageError} /><GameHud room={room} stageError={stageError} onLeave={leave} /></>);
+  useEffect(() => { void loadGame(); }, []);
+
+  if (room) return (
+    <Suspense fallback={<div className="loading-stage" data-testid="loading"><Brand /><p>Loading the game…</p><div className="spinner" aria-hidden="true" /></div>}>
+      <GameView room={room} stageError={stageError} onStageError={setStageError} onLeave={leave} />
+    </Suspense>
+  );
   if (lost) {
     return (
       <main className="menu" data-testid="connection-lost">

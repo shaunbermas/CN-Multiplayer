@@ -20,6 +20,7 @@
     "test:quality": "tsx tests/e2e/quality.mjs",
     "test:obstacles": "tsx tests/integration/obstacles.mjs",
     "test:ui": "tsx tests/e2e/ui.mjs",
+    "test:thirty": "tsx tests/e2e/thirty.mjs",
     "deploy": "npm run build && wrangler deploy",
     "test:round": "tsx tests/integration/round.mjs"
   },

@@ -7,8 +7,10 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib.js';
-import envUrl from '../../../../../blender/exports/STAGE_01_ENVIRONMENT.glb?url';
-import watcherUrl from '../../../../../blender/exports/THE_WATCHER.glb?url';
+// Stage 1.5 (Prompt 08): meshopt-compressed copies of the approved GLBs (tools/stage15/compress_glb.sh). The
+// approved originals are unchanged; geometry is identical after decoding (asset checks below still run).
+import envUrl from '../../../../../blender/exports/stage15/STAGE_01_ENVIRONMENT.meshopt.glb?url';
+import watcherUrl from '../../../../../blender/exports/stage15/THE_WATCHER.meshopt.glb?url';
 import lighting from '../../../../../blender/exports/STAGE_01_LIGHTING.json';
 import type { TrialRoom } from '../../net.ts';
 import { useQuality, type Quality } from '../../game/quality.ts';
@@ -208,7 +210,7 @@ function stripConeTrees(root: THREE.Object3D): number {
 const LAMP: Record<string, string> = { green: 'MAT_Signal_Green', warning: 'MAT_Signal_Amber', red: 'MAT_Signal_Red' };
 
 function Environment({ room, quality }: { room: TrialRoom; quality: Quality }) {
-  const gltf = useGLTF(ENV_URL);
+  const gltf = useGLTF(ENV_URL, false, true);
   const scene = useThree((st) => st.scene);
   const puddles = useMemo(() => new Set<THREE.MeshStandardMaterial>(), []);
   const lamps = useMemo(() => {
@@ -261,7 +263,7 @@ function Environment({ room, quality }: { room: TrialRoom; quality: Quality }) {
 
 // ------------------------------------------------------------------------------------------ The Watcher
 function Watcher({ room, search }: { room: TrialRoom; search: boolean }) {
-  const gltf = useGLTF(WATCHER_URL);
+  const gltf = useGLTF(WATCHER_URL, false, true);
   const group = useRef<THREE.Group>(null);
   const { actions } = useAnimations(gltf.animations, group);
   const current = useRef<WatcherChoice | null>(null);
@@ -425,6 +427,6 @@ export function Stage01Scene({ room }: { room: TrialRoom }) {
 }
 
 export function preloadStage01() {
-  useGLTF.preload(ENV_URL);
-  useGLTF.preload(WATCHER_URL);
+  useGLTF.preload(ENV_URL, false, true);
+  useGLTF.preload(WATCHER_URL, false, true);
 }

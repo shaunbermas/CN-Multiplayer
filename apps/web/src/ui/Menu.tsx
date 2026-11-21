@@ -2,7 +2,7 @@
 // concept board (layout and style only; its placeholder avatars and imagery are not used).
 import { useState, type ReactNode } from 'react';
 import { CONTESTANT_ROSTER, MAX_PLAYERS, ROSTER_SIZE, ROSTER_STATUS } from '@cn-trials/shared';
-import { applyGraphicsSetting } from '../game/quality.ts';
+import { applyGraphicsSetting } from '../game/qualityStore.ts';
 import { updateSettings, useSettings, type GraphicsSetting } from './settings.ts';
 
 export function Brand({ small = false }: { small?: boolean }) {
