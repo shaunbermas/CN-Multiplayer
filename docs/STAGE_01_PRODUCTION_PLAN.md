@@ -153,6 +153,6 @@ qualified counter (for example 14 / 22); centre of the screen kept clear.
 | D3 | Original observer design to replace the doll look (C5) | Yes, before S1-5 |
 | D4 | Approve G1 and G2 as mood-only global references | Yes, mood only |
 | D5 | Who supplies the missing Stage 01 references (artist, AI concept tool, or Claude-written spec instead of a layout image) | Layout from the written spec; images for environment and observer |
-| D6 | Blender version on your desktop (or none yet) | Pin 5.3.x |
+| D6 | Blender version | Decided: 5.3.0 (owner's desktop) |
 | D7 | Hosting approach for the Colyseus server | Decide in M0 after a short comparison |
 | D8 | Git LFS for `.blend`, `.glb` and textures | Yes, after a quota check |
