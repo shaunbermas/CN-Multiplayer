@@ -1,0 +1,43 @@
+{
+  "result": "PASS",
+  "errors": [],
+  "date": "2026-11-21T08:36:54.757Z",
+  "clients": 30,
+  "join_ms": {
+    "avg": 3,
+    "max": 5
+  },
+  "every_client_sees": 30,
+  "client_31": {
+    "rejected": true,
+    "message": "room \"Wlyc8sexk\" is locked"
+  },
+  "load_seconds": 40.5,
+  "server": {
+    "ok": true,
+    "uptimeS": 41,
+    "rooms": 1,
+    "clients": 30,
+    "ticks": 1223,
+    "tickMs": {
+      "avg": 0.0949,
+      "p95": 0.1705,
+      "max": 1.1476
+    },
+    "inputs": {
+      "accepted": 36660,
+      "dropped": 0
+    }
+  },
+  "state_updates_per_client_per_s": {
+    "min": 19.9,
+    "avg": 19.9
+  },
+  "walk_test": {
+    "from": "spawn 1 (front row, centre)",
+    "distance_m": 162,
+    "server_finish_time_s": 40.6,
+    "projected_with_signals_s": 71.2,
+    "note": "Projection assumes the average signal cycle in STAGE_01_SPEC.md §3 and a player who never hesitates."
+  }
+}

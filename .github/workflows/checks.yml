@@ -1,4 +1,6 @@
-# Runs on every pull request. Asset pipeline checks for the Blender stages:
+# Runs on every pull request.
+# Job "app": typecheck, unit tests, 30-client load test with walk timing, two-browser end-to-end test.
+# Job "test": asset pipeline checks for the Blender stages:
 #  - committed .blend passes validate_asset.py (pinned Blender 5.3.0, naming, spec measurements,
 #    budgets, Shepherd sightline from every spawn)
 #  - collision and marker JSON rebuild exactly from the spec (nobody forgot to re-export)
@@ -63,4 +65,44 @@ jobs:
           path: |
             blender/exports/STG01/browser
             ${{ runner.temp }}/STG01_validation.json
+          retention-days: 7
+
+  app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci --no-audit --no-fund
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Install Chromium for the browser test
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.63.0
+          npx playwright install --with-deps chromium
+
+      - name: 30-client load test and walk timing
+        run: npm run test:load
+
+      - name: Two browsers in one room
+        run: npm run test:e2e
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-test-reports
+          path: tests/reports
           retention-days: 7

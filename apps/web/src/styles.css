@@ -1,0 +1,21 @@
+:root { color-scheme: dark; --bg: #141a2b; --panel: rgba(12, 16, 28, 0.72); --text: #eef1f7; --muted: #9aa3b8; --accent: #f2a65a; }
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; height: 100%; background: var(--bg); color: var(--text); font: 15px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; overflow: hidden; }
+canvas { display: block; }
+.landing { height: 100%; display: grid; place-content: center; text-align: center; gap: 12px; padding: 16px; }
+.landing h1 { margin: 0; font-size: 44px; letter-spacing: 0.04em; }
+.tagline { margin: 0 0 12px; color: var(--muted); }
+.landing form { display: flex; gap: 8px; justify-content: center; }
+.landing input { padding: 10px 12px; border-radius: 8px; border: 1px solid #39425a; background: #0e1322; color: var(--text); font-size: 16px; width: 220px; }
+.landing button { padding: 10px 18px; border-radius: 8px; border: 0; background: var(--accent); color: #1a1205; font-weight: 600; font-size: 16px; cursor: pointer; }
+.error { color: #ff8a80; }
+.hud { position: fixed; inset: 0; pointer-events: none; padding: 16px; display: flex; flex-direction: column; }
+.hud-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.pill { background: var(--panel); padding: 6px 12px; border-radius: 999px; font-weight: 600; }
+.timer { background: var(--panel); padding: 6px 16px; border-radius: 10px; font-size: 22px; font-variant-numeric: tabular-nums; font-weight: 700; }
+.objective { margin: 10px auto 0; background: var(--panel); padding: 6px 14px; border-radius: 8px; }
+.progress { margin: 8px auto 0; width: min(420px, 80vw); height: 6px; background: rgba(255,255,255,0.15); border-radius: 3px; overflow: hidden; }
+.progress > div { height: 100%; background: var(--accent); }
+.hud-bottom { margin-top: auto; display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 13px; }
+.muted { opacity: 0.7; }
+.nametag { background: rgba(10, 12, 20, 0.7); color: #fff; padding: 2px 8px; border-radius: 6px; font-size: 13px; white-space: nowrap; pointer-events: none; }
