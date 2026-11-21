@@ -43,6 +43,7 @@ export function WatcherFX({ room, root, search }: { room: TrialRoom; root: THREE
   useEffect(() => () => { fx.g.traverse((o) => { const m = o as THREE.Mesh; if (m.isMesh) { m.geometry.dispose(); (m.material as THREE.Material).dispose(); } }); }, [fx]);
 
   const tmp = useMemo(() => ({ a: new THREE.Vector3(), b: new THREE.Vector3(), d: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0) }), []);
+  const seen = useMemo(() => ({ key: '', at: 0 }), []);
   useFrame((state) => {
     const lens = root?.getObjectByName('Watcher_OpticalOrigin');
     watcherFxStatus.anchor = !!lens;
@@ -53,7 +54,11 @@ export function WatcherFX({ room, root, search }: { room: TrialRoom; root: THREE
     const now = Date.now();
     // Spotted beam: newest server 'spotted' event of this round, for SPOT_S seconds.
     const ev = [...room.events].reverse().find((e) => e.kind === 'spotted');
-    const p = ev && phase === 'active' && (now - ev.at) / 1000 < SPOT_S ? room.players.get(ev.id) : undefined;
+    // Time each spot from the first frame that draws it, so a slow client still shows the beam in full.
+    const evKey = ev ? `${ev.id}@${ev.at}` : '';
+    if (seen.key !== evKey) { seen.key = evKey; seen.at = now; }
+    const age = ev ? (now - Math.max(ev.at, seen.at)) / 1000 : Infinity;
+    const p = ev && phase === 'active' && age < SPOT_S ? room.players.get(ev.id) : undefined;
     if (p) {
       tmp.b.set(p.x, 1.1, p.z);
       tmp.d.subVectors(tmp.b, tmp.a);
@@ -64,8 +69,8 @@ export function WatcherFX({ room, root, search }: { room: TrialRoom; root: THREE
       const pulse = 0.6 + 0.4 * Math.sin(state.clock.elapsedTime * 30);
       (fx.beam.material as THREE.MeshBasicMaterial).opacity = 0.85 * pulse;
       fx.ring.position.set(p.x, 0.04, p.z);
-      fx.ring.scale.setScalar(1 + ((now - ev!.at) / 1000) * 0.6);
-      (fx.ring.material as THREE.MeshBasicMaterial).opacity = 0.9 * (1 - (now - ev!.at) / 1000 / SPOT_S);
+      fx.ring.scale.setScalar(1 + age * 0.6);
+      (fx.ring.material as THREE.MeshBasicMaterial).opacity = 0.9 * (1 - age / SPOT_S);
       if (watcherFxStatus.lastSpotId !== `${ev!.id}@${ev!.at}`) { watcherFxStatus.lastSpotId = `${ev!.id}@${ev!.at}`; watcherFxStatus.spotBeams++; }
     }
     fx.beam.visible = fx.ring.visible = !!p;

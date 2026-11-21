@@ -65,6 +65,9 @@ export function chooseWatcherClip(s: WatcherInputs): WatcherChoice {
   }
   if (s.phase !== 'active' || s.signal === 'none') return loop('Watcher_Idle', s.phase);
   const seg = s.segmentStart.toFixed(2);
+  // A server spot always gets its Detect reaction, even if a slow client first draws it after the light turned
+  // green again (the server only spots during red, so this never shows a reaction that did not happen).
+  if (s.sinceSpotted < CLIP_SECONDS.Watcher_Detect) return once('Watcher_Detect', `spot:${(Date.now() / 1000 - s.sinceSpotted).toFixed(1)}`);
   const opening = Math.min(s.into, s.sinceSegmentSeen ?? Infinity);
   switch (s.signal) {
     case 'green':
@@ -72,7 +75,6 @@ export function chooseWatcherClip(s: WatcherInputs): WatcherChoice {
     case 'warning':
       return once('Watcher_TurnToField', seg, CLIP_SECONDS.Watcher_TurnToField / Math.max(0.1, s.segmentLength));
     case 'red':
-      if (s.sinceSpotted < CLIP_SECONDS.Watcher_Detect) return once('Watcher_Detect', `${seg}:${(s.into - s.sinceSpotted).toFixed(2)}`);
       if (opening < CLIP_SECONDS.Watcher_FocusLock) return once('Watcher_FocusLock', seg);
       return loop(s.redIndex % 2 === 0 ? 'Watcher_RedSignal' : 'Watcher_ScanSweep', seg);
     default:
