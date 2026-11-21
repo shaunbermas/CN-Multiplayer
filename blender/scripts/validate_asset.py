@@ -117,6 +117,19 @@ def main() -> None:
         if not approx(mx[2], 0.0):
             errors.append("Ground collision top is not at Z = 0")
 
+    # ---- nothing taller than 3 m inside the yard (design spec §9), except the finish gate over the line
+    yard_min_y, yard_max_y = -spec["start_zone_depth"], spec["course_length"] + spec["finish_trigger_depth"] + spec["safe_zone_depth"]
+    for s_ in ("ENV", "PROPS"):
+        for o in bpy.data.collections[f"{st}_{s_}"].all_objects:
+            if o.type != "MESH" or o.name.startswith("PRP_STG01_FinishGate"):
+                continue
+            mn, mx = bbox(o)
+            inside = mx[0] > -half + 0.01 and mn[0] < half - 0.01 and mx[1] > yard_min_y + 0.01 and mn[1] < yard_max_y - 0.01
+            if inside and mx[2] > 3.0:
+                errors.append(f"{o.name} rises {mx[2]:.1f} m inside the yard (limit 3 m)")
+    if "GMK_BENCH_01" not in gmk:
+        warnings.append("No bench markers (GMK_BENCH_*) for spotted players")
+
     # ---- triangle budget (runtime collections)
     tris = sum(cb.triangle_count(o) for s in ("ENV", "PROPS") for o in bpy.data.collections[f"{st}_{s}"].all_objects)
     if tris > TRIANGLE_BUDGET:

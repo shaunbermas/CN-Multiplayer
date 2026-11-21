@@ -1,7 +1,7 @@
 """Draw to-scale Stage 01 layout diagrams (top plan, front elevation, side section) as SVG.
 
-Reads the gameplay values from blender/scripts/specs/stg01_greybox.json and the proposed environment
-from blender/scripts/specs/stg01_design_layout.json, so the diagrams always match the specs.
+Reads blender/scripts/specs/stg01_greybox.json (gameplay values plus the approved environment), so the
+diagrams always match what the greybox builds.
 
     python3 tools/diagrams/stage01_diagrams.py        # writes docs/diagrams/STG01_*.svg
 """
@@ -13,7 +13,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 G = json.loads((ROOT / "blender/scripts/specs/stg01_greybox.json").read_text())
-L = json.loads((ROOT / "blender/scripts/specs/stg01_design_layout.json").read_text())
+_E = G["environment"]
+L = {
+    **_E,
+    "floodlight_towers": G["floodlights"],
+    "finish_gate": {"y": G["course_length"], "height": G["greybox_visual"]["gate_height"], "post_x": G["greybox_visual"]["gate_post_x"]},
+}
 OUT = ROOT / "docs/diagrams"
 
 INK, MUTED, FIELD, LINE = "#1f2430", "#6b7280", "#e8e2d6", "#ffffff"
@@ -27,7 +32,7 @@ SH = G["shepherd"]
 HEAD_R = SH["height"] * 0.14
 HEAD_Z = SH["platform_height"] + (SH["height"] - 2 * HEAD_R) + HEAD_R
 START_NOW = -G["start_zone_depth"]
-START_NEW = -L["start_zone_depth_proposed"]
+START_NEW = START_NOW  # E5 approved: the start zone is 15 m deep
 
 
 def spawns():
@@ -77,7 +82,7 @@ def top_plan():
     k, xmin, xmax, ymin, ymax = 2.4, -100, 100, -55, 270
     pad_l, pad_t = 30, 70
     W, H = int((xmax - xmin) * k) + 300, int((ymax - ymin) * k) + 90
-    s = Svg(W, H, "Stage 01 top plan (proposed, metres; north = toward The Shepherd)")
+    s = Svg(W, H, "Stage 01 top plan (approved v0.2, metres; north = toward The Shepherd)")
     X = lambda x: pad_l + (x - xmin) * k
     Y = lambda y: pad_t + (ymax - y) * k
     # backdrop
@@ -102,8 +107,7 @@ def top_plan():
         s.rect(X(p["x"] - p["w"] / 2), Y(p["y"] + p["d"] / 2), p["w"] * k, p["d"] * k, "#e9d5ff", PROPOSED)
     # yard
     s.rect(X(-W2), Y(Y_BACK), G["width"] * k, (Y_BACK - START_NOW) * k, FIELD, INK, 1.5)
-    s.rect(X(-W2), Y(START_NOW), G["width"] * k, (START_NOW - START_NEW) * k, "#ede9fe", PROPOSED, 1, "4 3")
-    s.text(X(0), Y(START_NEW) + 12, "proposed: start zone 15 m deep (now 12 m)", 10, PROPOSED, "middle")
+    s.text(X(0), Y(START_NOW) + 12, "start zone 15 m deep", 10, INK, "middle")
     for i in range(1, int(G["width"] // G["lane_spacing"])):
         x = -W2 + i * G["lane_spacing"]
         s.line(X(x), Y(L_COURSE), X(x), Y(0), "#c8c0b0", 0.8)
@@ -169,7 +173,7 @@ def top_plan():
     lx = W - 260
     for i, (col, label) in enumerate([
         (FIELD, "playable yard 60 m x 184 m"), ("#fed7aa", "finish trigger (qualify)"), ("#d1fae5", "safe zone"),
-        ("#ede9fe", "proposed change"), ("#fde68a", "observation structures"), ("#e9d5ff", "playground relics (no collision inside yard)"),
+("#fde68a", "observation structures"), ("#e9d5ff", "playground relics (outside the yard)"),
         (COVER, "Shepherd scan coverage"), ("#fbbf24", "floodlight tower"), ("#2563eb", "camera viewpoint"),
     ]):
         s.rect(lx, 60 + i * 20, 14, 12, col, INK, 0.6)
@@ -227,10 +231,6 @@ def front_elevation():
     s.rect(X(-SH["height"] * 0.13), Z(pz + body_h), 2 * SH["height"] * 0.13 * k, body_h * k, "#fdba74", ACCENT, 1.5)
     s.circle(X(0), Z(HEAD_Z), HEAD_R * k, "#fdba74", ACCENT, 1.5)
     s.text(X(0) + HEAD_R * k + 8, Z(HEAD_Z), f"The Shepherd: 28 m on a 4 m platform (head centre {HEAD_Z:.1f} m)", 11, ACCENT, "start", 700)
-    # option B outline
-    tb = L["shepherd_option_b_tower"]
-    s.poly([(X(-tb["base"] / 2), Z(0)), (X(tb["base"] / 2), Z(0)), (X(1.5), Z(tb["height"])), (X(-1.5), Z(tb["height"]))], "none", PROPOSED, 1.2, "6 4")
-    s.text(X(-tb["base"] / 2) - 6, Z(tb["height"] - 2), "option B: cage tower 34 m", 10, PROPOSED, "end")
     # scale figure
     s.rect(X(-W2 + 4), Z(1.2), 0.6 * k, 1.2 * k, INK, "none")
     s.text(X(-W2 + 7), Z(1.4), "contestant 1.2 m", 10, INK)

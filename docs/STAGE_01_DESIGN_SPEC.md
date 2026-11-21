@@ -1,7 +1,7 @@
 # CN Trials · Stage 01 environment design spec: Red Light, Green Light
 
-Status: **PROPOSED v0.1, awaiting owner approval** (21 November 2026). Nothing here is modelled yet.
-Greyboxing the environment starts only after the decisions in §14 are answered.
+Status: **APPROVED v0.1** (owner approved all of §14 on 21 November 2026, decision 017). The environment
+greybox is built from it (`blender/scripts/build_stg01_greybox.py`, spec v0.2).
 
 | Source | Role |
 |--------|------|
@@ -11,7 +11,7 @@ Greyboxing the environment starts only after the decisions in §14 are answered.
 | Prompt 02 reference pack: `playground_mood_reference_cropped.png` | New primary **mood** reference (see §13 for limits) |
 | `references/GLOBAL/*` | Secondary style boards (doll figure retired) |
 | `blender/scripts/specs/stg01_greybox.json` | Built and tested greybox values |
-| `blender/scripts/specs/stg01_design_layout.json` | **New**: proposed environment placements used by the diagrams |
+| `blender/scripts/specs/stg01_greybox.json` → `environment` | The approved environment placements (merged from the former layout file) |
 
 All dimensions are **provisional until tested** in the greybox walk test and team playtests.
 
@@ -182,7 +182,7 @@ Stage 01). Everything below sits in the margins or the backdrop.
 | Element | Placement (Blender) | Size | Collision | Purpose |
 |---------|---------------------|------|-----------|---------|
 | Inner fence | X ±30, Y −12…172; back wall Y 172 | 3 m, chain-link on posts every 4 m | Yes (existing walls) | Keeps players in; see-through so the margins stay visible |
-| Start barrier arm | Y 0, posts at X ±31 | Arm at 1.1 m | No | Lifts on GO (start ritual) |
+| Start barrier arm | Y 0, posts at X ±31 | Lowered at 1.1 m before GO, raised to 2.8 m after (the walk-test greybox shows it raised) | No | Lifts on GO (start ritual) |
 | Finish gate | Y 160, posts at X ±32 | 9 m tall, beam 1.2 m deep (proposed, was 7 m: E7) | No | Frames the goal; warm lights; stays below every sightline (about 15 m clearance) |
 | Floodlight towers | X ±38 at Y −10, 40, 90, 140, 175 (10 towers) | 22 m mast, 4 m head (proposed, was 14 m: E6) | No | Pools of warm light down both sides; strong vertical rhythm |
 | Spectator gantry | X +44, Y 30…130 | 6 m deep, deck 6 m, roof 10 m | No | Where spotted players reappear and cheer; spectator camera |
@@ -329,7 +329,7 @@ the RED flicker with a steady tint (game-ui-ux accessibility list).
 | G1 stage environment board | Night floodlit industrial yard (decision 007), palette | Doll figure retired |
 | G2 asset board | Contestant style, prop language | Not a layout |
 
-## 14. Decisions needing approval
+## 14. Decisions (all approved 21 November 2026, as proposed)
 
 | ID | Decision | Proposal |
 |----|----------|----------|
@@ -348,10 +348,10 @@ the RED flicker with a steady tint (game-ui-ux accessibility list).
 | E13 | Row fairness | Randomise which players get the front row each round |
 | E14 | Observation structures | Spectator gantry, judges' booth, benches and service gates as in §7 |
 
-## 15. After approval
+## 15. After approval (steps 1–3 done 21 November 2026)
 
 1. Update `docs/STAGE_01_SPEC.md` and `stg01_greybox.json` with the approved changes (E5–E7), and
-   merge `stg01_design_layout.json` into the build spec.
+   merge the layout into the build spec. Done.
 2. Extend `build_stg01_greybox.py` with the environment blockout (primitives for every §7 element and
    §10 asset footprint), the new colliders, markers and cameras; add the "no dressing taller than 3 m
    inside the yard" validator rule.

@@ -1,31 +1,36 @@
 {
   "stage": "STG01",
   "blend": "blender/scenes/STG01_RedLightGreenLight.blend",
-  "spec_hash": "11de4837539b447f",
+  "spec_hash": "5bcff9a761d04178",
   "blender": "5.3.0",
   "result": "PASS",
   "errors": [],
   "warnings": [],
   "stats": {
-    "objects": 106,
-    "runtime_triangles": 1260,
+    "objects": 269,
+    "runtime_triangles": 3236,
     "triangle_budget": 300000,
     "spawn_markers": 30,
     "materials": [
       "MAT_Greybox_Collision",
+      "MAT_Greybox_Concrete",
+      "MAT_Greybox_Deck",
       "MAT_Greybox_Ground",
       "MAT_Greybox_Lamp",
       "MAT_Greybox_Line",
       "MAT_Greybox_Metal",
       "MAT_Greybox_Prop",
+      "MAT_Greybox_Relic",
       "MAT_Greybox_Shepherd",
+      "MAT_Greybox_Signal",
       "MAT_Greybox_Silhouette",
+      "MAT_Greybox_Tree",
       "MAT_Greybox_Yard"
     ],
     "export_files_bytes": {
-      "STG01_RedLightGreenLight.glb": 54984,
-      "STG01_collision.json": 2452,
-      "STG01_markers.json": 8054
+      "STG01_RedLightGreenLight.glb": 103820,
+      "STG01_collision.json": 3408,
+      "STG01_markers.json": 11336
     }
   },
   "shepherd_sightline": {

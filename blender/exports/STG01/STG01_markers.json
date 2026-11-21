@@ -1,17 +1,242 @@
 {
   "stage": "STG01",
   "source": "blender/scenes/STG01_RedLightGreenLight.blend",
-  "spec_hash": "11de4837539b447f",
+  "spec_hash": "5bcff9a761d04178",
   "blender": "5.3.0",
   "units": "m",
   "coordinates": "game / glTF: Y up, right-handed; Blender +Y (course direction) = game -Z",
   "markers": [
     {
+      "id": "GMK_BENCH_01",
+      "position": [
+        33.5,
+        0.45,
+        -10.0
+      ],
+      "forward": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "kind": "bench",
+      "index": 1
+    },
+    {
+      "id": "GMK_BENCH_02",
+      "position": [
+        33.5,
+        0.45,
+        -20.0
+      ],
+      "forward": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "kind": "bench",
+      "index": 2
+    },
+    {
+      "id": "GMK_BENCH_03",
+      "position": [
+        33.5,
+        0.45,
+        -30.0
+      ],
+      "forward": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "kind": "bench",
+      "index": 3
+    },
+    {
+      "id": "GMK_BENCH_04",
+      "position": [
+        33.5,
+        0.45,
+        -40.0
+      ],
+      "forward": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "kind": "bench",
+      "index": 4
+    },
+    {
+      "id": "GMK_BENCH_05",
+      "position": [
+        33.5,
+        0.45,
+        -50.0
+      ],
+      "forward": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "kind": "bench",
+      "index": 5
+    },
+    {
+      "id": "GMK_BENCH_06",
+      "position": [
+        33.5,
+        0.45,
+        -60.0
+      ],
+      "forward": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "kind": "bench",
+      "index": 6
+    },
+    {
+      "id": "GMK_BENCH_07",
+      "position": [
+        33.5,
+        0.45,
+        -70.0
+      ],
+      "forward": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "kind": "bench",
+      "index": 7
+    },
+    {
+      "id": "GMK_BENCH_08",
+      "position": [
+        33.5,
+        0.45,
+        -80.0
+      ],
+      "forward": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "kind": "bench",
+      "index": 8
+    },
+    {
+      "id": "GMK_BENCH_09",
+      "position": [
+        33.5,
+        0.45,
+        -90.0
+      ],
+      "forward": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "kind": "bench",
+      "index": 9
+    },
+    {
+      "id": "GMK_BENCH_10",
+      "position": [
+        33.5,
+        0.45,
+        -100.0
+      ],
+      "forward": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "kind": "bench",
+      "index": 10
+    },
+    {
+      "id": "GMK_BENCH_11",
+      "position": [
+        33.5,
+        0.45,
+        -110.0
+      ],
+      "forward": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "kind": "bench",
+      "index": 11
+    },
+    {
+      "id": "GMK_BENCH_12",
+      "position": [
+        33.5,
+        0.45,
+        -120.0
+      ],
+      "forward": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "kind": "bench",
+      "index": 12
+    },
+    {
+      "id": "GMK_BENCH_13",
+      "position": [
+        33.5,
+        0.45,
+        -130.0
+      ],
+      "forward": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "kind": "bench",
+      "index": 13
+    },
+    {
+      "id": "GMK_BENCH_14",
+      "position": [
+        33.5,
+        0.45,
+        -140.0
+      ],
+      "forward": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "kind": "bench",
+      "index": 14
+    },
+    {
+      "id": "GMK_BENCH_15",
+      "position": [
+        33.5,
+        0.45,
+        -150.0
+      ],
+      "forward": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "kind": "bench",
+      "index": 15
+    },
+    {
       "id": "GMK_BOUNDS",
       "position": [
         0.0,
         0.0,
-        -80.0
+        -78.5
       ],
       "forward": [
         0.0,
@@ -21,7 +246,7 @@
       "kind": "bounds",
       "min_x": -30.0,
       "max_x": 30.0,
-      "min_y": -12.0,
+      "min_y": -15.0,
       "max_y": 172.0
     },
     {

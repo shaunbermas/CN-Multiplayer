@@ -1,6 +1,6 @@
 # CN Trials · Stage 01 spec: Red Light, Green Light
 
-Status: **v0.1, adopted as starting values** on 21 November 2026 (owner asked Claude to proceed). Phase S1-1 of
+Status: **v0.2** (21 November 2026): v0.1 starting values plus the approved environment design changes (decision 017: start zone 15 m, 22 m floodlight towers, 9 m finish gate, row shuffle). Environment detail lives in `docs/STAGE_01_DESIGN_SPEC.md`. Phase S1-1 of
 `STAGE_01_PRODUCTION_PLAN.md`. Values stay tunable after the S1-3 walk test and team playtests.
 
 The GDD (v0.3) defines the rules. This spec gives every number and state the greybox, the server and
@@ -27,27 +27,27 @@ Standup mode (006).
         │      no cover, no obstacles
         │
  ✦      │                                                ✦  floodlight masts outside the fence,
-        │                                                   X = ±36, every 40 m
+        │                                                   X = ±38: 22 m towers at Y −10, 40, 90, 140, 175
         │
      0  ┼════════════════ START LINE ══════════════════
         │   · · · · · · · · · ·   spawn rows at Y = −2.0, −4.5, −7.0
-   −12  ┴────────────────────────────────────────────  start wall
+   −15  ┴────────────────────────────────────────────  start wall
        X = −30                  0                    X = +30
 ```
 
 | ID | Item | Value |
 |----|------|-------|
 | L1 | Playable width | 60 m (X −30 to +30) |
-| L2 | Start zone | Y −12 to 0 |
+| L2 | Start zone | Y −15 to 0 (15 m; was 12 m, decision E5: room for the camera behind the back row) |
 | L3 | Course length (start line to finish line) | **160 m** |
 | L4 | Finish trigger volume | Y 160 to 163, full width, 3 m high |
 | L5 | Safe zone | Y 163 to 172 |
-| L6 | Boundary | Fence-height colliders 3 m tall at X = ±30 (Y −12 to 172), start wall at Y −12, back wall at Y 172 |
-| L7 | Spawn grid | 30 points: 10 columns × 3 rows; X = −13.5 to +13.5 every 3.0 m; rows at Y −2.0, −4.5, −7.0. Fewer players fill from the centre of the front row outward |
+| L6 | Boundary | Fence-height colliders 3 m tall at X = ±30 (Y −15 to 172), start wall at Y −15, back wall at Y 172. Camera-only colliders on the fence (decision E10) |
+| L7 | Spawn grid | 30 points: 10 columns × 3 rows; X = −13.5 to +13.5 every 3.0 m; rows at Y −2.0, −4.5, −7.0. Fewer players fill from the centre of the front row outward. **Row shuffle (E13):** each round the server assigns players to rows in a random seeded order, so nobody always starts at the back (implemented with the round flow in S1-4) |
 | L8 | Shepherd platform | Centre X 0, Y 185; 12 × 12 m; 4 m high; outside the playable area |
 | L9 | Shepherd height | **28 m** (about 23 × contestant height). Raised from 18 m after the S1-3 walk test showed it read too small from the start line (owner approved, 21 Nov 2026). Visible from every spawn |
 | L10 | Ground markings | Lane lines every 6 m and start/finish bands; visual only, no collision |
-| L11 | Dressing | Floodlight masts at X = ±36 every 40 m, banners, perimeter fence visuals, distant industrial silhouettes. No collision inside the playable area |
+| L11 | Dressing | Floodlight towers 22 m at X = ±38 (decision E6), finish gate 9 m (E7), spectator gantry, judges' booth, benches, playground relics, outer barrier, roadway, water tower and tree lines: see `STAGE_01_DESIGN_SPEC.md` §7. No collision inside the playable area and nothing taller than 3 m inside the yard except the finish gate |
 
 **Why 160 m:** at 4.0 m/s with moving time of about 57 % (green plus warning), a player who never
 gets caught crosses in about 70 s. That leaves room for hesitation inside the 120 s timer and fits
@@ -91,6 +91,7 @@ The seed and the full signal sequence are logged per round (GDD §3.1).
 | D2 | Elimination test after the grace window | Horizontal speed above **0.3 m/s** averaged over 3 server ticks (100 ms at 30 Hz), **or** total horizontal displacement during this RED above **0.15 m** |
 | D3 | Never counts | Camera rotation, turning on the spot, idle animation, vertical movement |
 | D4 | Pushes | Displacement caused by another player's collision is excluded from D2 |
+| D4b | Not line-of-sight (E9) | Every player on the field is checked during RED; nobody can hide behind other players or props. The Shepherd's scan beam is presentation only |
 | D5 | Safe players | Players inside the finish trigger or safe zone are immune |
 | D6 | Inputs during RED | Accepted (no lockout), so a mistake is the player's own; the server judges the resulting motion |
 
@@ -146,7 +147,7 @@ Captions for gameplay-critical cues ("GO", "FREEZE", "SPOTTED").
   "stage": "STG01",
   "units": "m",
   "width": 60.0,
-  "start_zone_depth": 12.0,
+  "start_zone_depth": 15.0,
   "course_length": 160.0,
   "finish_trigger_depth": 3.0,
   "safe_zone_depth": 9.0,

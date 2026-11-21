@@ -73,6 +73,10 @@ GDD §9.2 prefixes, plus the additions marked NEW.
 | `GMK_` NEW | Gameplay markers (Empties) | `GMK_SPAWN_01` … `GMK_SPAWN_30`, `GMK_FINISH`, `GMK_SHEPHERD` |
 | `CAM_` NEW | Authored cameras | `CAM_STG01_Intro`, `CAM_STG01_Spectator_01` |
 | `LGT_` NEW | Lights | `LGT_STG01_Flood_03` |
+| `PRP_KIT_` NEW (017) | Props reusable across stages | `PRP_KIT_FloodlightTower_01`, `PRP_KIT_Bench_4m` |
+| `COL_CAM_` NEW (017) | Camera-only collision; exported as `camera_colliders`, never used by the server | `COL_CAM_STG01_Fence_W` |
+| `STG01_BG_` NEW (017) | Backdrop beyond the outer barrier | `STG01_BG_WaterTower_Tank` |
+| `STG01_Decal_` NEW (017) | Ground decals | `STG01_Decal_SpawnMark` |
 | `LOD1`, `LOD2` suffix NEW | Level-of-detail meshes | `PRP_STG01_FloodlightMast_LOD1` |
 
 Rules: PascalCase after the prefix, no spaces, ASCII only, numbers zero-padded to two digits. Animation

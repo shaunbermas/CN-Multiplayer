@@ -152,3 +152,12 @@ def triangle_count(obj) -> int:
 def write_json(path: Path, data: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+
+
+def cone_mesh(name: str, radius: float, height: float, segments: int = 12, mat=None):
+    """Cone with its base on Z = 0 and the tip at Z = height."""
+    bm = bmesh.new()
+    bmesh.ops.create_cone(bm, cap_ends=True, segments=segments, radius1=radius, radius2=0.0, depth=height)
+    for v in bm.verts:
+        v.co.z += height / 2.0
+    return _finish_mesh(name, bm, mat)
