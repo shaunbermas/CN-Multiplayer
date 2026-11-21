@@ -22,7 +22,8 @@ mkdirSync(shots, { recursive: true });
 if (process.env.SKIP_BUILD !== '1') execSync('npm run build', { cwd: root, stdio: 'ignore' });
 const errors = [];
 const t0 = Date.now();
-const step = (label) => console.log(`[e2e ${((Date.now() - t0) / 1000).toFixed(1)} s] ${label}`);
+const steps = [];
+const step = (label) => { const line = `${((Date.now() - t0) / 1000).toFixed(1)} s ${label}`; steps.push(line); console.log(`[e2e] ${line}`); };
 let greenClip = '', redClip = '', sigAtSpot = '', assetA = { watcherHeight: 0, watcherClips: [], quality: '', problems: [] };
 const worker = startWorker(PORT);
 let browser;
@@ -172,12 +173,14 @@ try {
     screenshots: ['s1-3_start_view.png', 's1-3_after_walk.png', 's1-3_other_player_view.png', 's1-4_green_view.png', 's1-4_red_view.png', 's1-4_spotted_view.png', 's1-4_results_view.png'].map((f) => `tests/reports/screenshots/${f}`),
     renderer: 'headless Chromium, software WebGL (SwiftShader)',
     player_a_cpu_throttle: throttle,
+    steps,
   };
   writeReport('e2e-two-browsers.json', report);
   console.log(JSON.stringify(report, null, 2));
 } catch (e) {
   errors.push(String(e?.stack ?? e));
   console.error(e);
+  console.error(JSON.stringify({ steps }, null, 2));
 } finally {
   await browser?.close();
   worker.stop();

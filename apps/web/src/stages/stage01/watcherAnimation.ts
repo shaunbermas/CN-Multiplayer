@@ -39,6 +39,9 @@ export interface WatcherInputs {
   segmentStart: number;
   /** Index of the current RED segment since GO (0, 1, 2...), for variety. */
   redIndex: number;
+  /** Seconds since this client first drew the current segment (Infinity if unknown). A slow client that
+   *  first sees a segment late still plays the segment's opening clip (TurnAway, FocusLock) in full. */
+  sinceSegmentSeen?: number;
   /** Seconds since the last server 'spotted' event, or Infinity. */
   sinceSpotted: number;
   /** Seconds since the results phase began, or Infinity. */
@@ -62,14 +65,15 @@ export function chooseWatcherClip(s: WatcherInputs): WatcherChoice {
   }
   if (s.phase !== 'active' || s.signal === 'none') return loop('Watcher_Idle', s.phase);
   const seg = s.segmentStart.toFixed(2);
+  const opening = Math.min(s.into, s.sinceSegmentSeen ?? Infinity);
   switch (s.signal) {
     case 'green':
-      return s.into < CLIP_SECONDS.Watcher_TurnAway ? once('Watcher_TurnAway', seg) : loop('Watcher_GreenSignal', seg);
+      return opening < CLIP_SECONDS.Watcher_TurnAway ? once('Watcher_TurnAway', seg) : loop('Watcher_GreenSignal', seg);
     case 'warning':
       return once('Watcher_TurnToField', seg, CLIP_SECONDS.Watcher_TurnToField / Math.max(0.1, s.segmentLength));
     case 'red':
       if (s.sinceSpotted < CLIP_SECONDS.Watcher_Detect) return once('Watcher_Detect', `${seg}:${(s.into - s.sinceSpotted).toFixed(2)}`);
-      if (s.into < CLIP_SECONDS.Watcher_FocusLock) return once('Watcher_FocusLock', seg);
+      if (opening < CLIP_SECONDS.Watcher_FocusLock) return once('Watcher_FocusLock', seg);
       return loop(s.redIndex % 2 === 0 ? 'Watcher_RedSignal' : 'Watcher_ScanSweep', seg);
     default:
       return loop('Watcher_Idle', s.phase);

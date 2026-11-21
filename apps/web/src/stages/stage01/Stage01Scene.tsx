@@ -186,6 +186,7 @@ function Watcher({ room }: { room: TrialRoom }) {
   const { actions } = useAnimations(gltf.animations, group);
   const current = useRef<WatcherChoice | null>(null);
   const resultsAt = useRef<number | null>(null);
+  const segSeen = useRef<{ start: number; at: number }>({ start: NaN, at: 0 });
   const w = stageGeo.watcher!;
 
   useEffect(() => {
@@ -224,8 +225,9 @@ function Watcher({ room }: { room: TrialRoom }) {
     if (phase === 'results' && resultsAt.current === null) resultsAt.current = Date.now();
     if (phase !== 'results') resultsAt.current = null;
     const spotted = [...room.events].reverse().find((e) => e.kind === 'spotted');
+    if (segSeen.current.start !== v.segStart) segSeen.current = { start: v.segStart, at: Date.now() };
     const choice = chooseWatcherClip({
-      phase, signal: v.signal, into: v.into, segmentLength: v.segLength, segmentStart: v.segStart, redIndex: v.redIndex,
+      phase, signal: v.signal, into: v.into, sinceSegmentSeen: (Date.now() - segSeen.current.at) / 1000, segmentLength: v.segLength, segmentStart: v.segStart, redIndex: v.redIndex,
       sinceSpotted: spotted && phase === 'active' ? (Date.now() - spotted.at) / 1000 : Infinity,
       sinceResults: resultsAt.current === null ? Infinity : (Date.now() - resultsAt.current) / 1000,
     });
