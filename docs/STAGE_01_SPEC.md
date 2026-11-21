@@ -1,7 +1,7 @@
 # CN Trials · Stage 01 spec: Red Light, Green Light
 
-Status: **DRAFT v0.1 for owner approval**, 21 November 2026. Phase S1-1 of
-`STAGE_01_PRODUCTION_PLAN.md`.
+Status: **v0.1, adopted as starting values** on 21 November 2026 (owner asked Claude to proceed). Phase S1-1 of
+`STAGE_01_PRODUCTION_PLAN.md`. Values stay tunable after the S1-3 walk test and team playtests.
 
 The GDD (v0.3) defines the rules. This spec gives every number and state the greybox, the server and
 the presentation need. All values are **PROPOSED starting values** until approved in §10, and all are
@@ -138,8 +138,8 @@ Captions for gameplay-critical cues ("GO", "FREEZE", "SPOTTED").
 
 ## 9. Greybox build parameters
 
-`blender/scripts/specs/stg01_greybox.json` will be created with the build scripts once this spec is
-approved:
+`blender/scripts/specs/stg01_greybox.json` holds these values plus greybox-only visual settings
+(ground margins, gate and fence sizes, background silhouettes). Core values:
 
 ```json
 {

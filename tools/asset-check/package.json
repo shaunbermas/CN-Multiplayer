@@ -1,0 +1,13 @@
+{
+  "name": "cn-trials-asset-check",
+  "private": true,
+  "type": "module",
+  "description": "Validates exported stage GLBs (Khronos glTF Validator) and loads them in headless Chromium with Three.js.",
+  "scripts": {
+    "check": "node check-glb.mjs"
+  },
+  "dependencies": {
+    "gltf-validator": "2.0.0-dev.3.10",
+    "three": "0.187.0"
+  }
+}

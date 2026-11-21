@@ -1,0 +1,66 @@
+# Runs on every pull request. Asset pipeline checks for the Blender stages:
+#  - committed .blend passes validate_asset.py (pinned Blender 5.3.0, naming, spec measurements,
+#    budgets, Shepherd sightline from every spawn)
+#  - collision and marker JSON rebuild exactly from the spec (nobody forgot to re-export)
+#  - the GLB passes the Khronos glTF Validator and loads in headless Chromium with Three.js
+name: Checks
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"   # bpy 5.3.0 wheels are built for CPython 3.13
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: System libraries for Blender's Python module
+        run: sudo apt-get update -q && sudo apt-get install -y -q libxi6 libxkbcommon0 libsm6 libxrender1 libxxf86vm1 libxfixes3 libgl1 libegl1
+
+      - name: Install Blender 5.3.0 (bpy)
+        run: pip install bpy==5.3.0
+
+      - name: Install asset-check tools and Chromium
+        working-directory: tools/asset-check
+        run: |
+          npm ci --no-audit --no-fund
+          npm install --no-save --no-audit --no-fund playwright@1.63.0
+          npx playwright install --with-deps chromium
+
+      - name: Validate committed Stage 01 scene
+        run: python blender/scripts/validate_asset.py --blend blender/scenes/STG01_RedLightGreenLight.blend --spec blender/scripts/specs/stg01_greybox.json --stage STG01 --report "$RUNNER_TEMP/STG01_validation.json"
+
+      - name: Exports are up to date with the spec
+        run: |
+          python blender/scripts/build_stg01_greybox.py --out "$RUNNER_TEMP/rebuild/STG01_RedLightGreenLight.blend"
+          python blender/scripts/export_stage.py --blend "$RUNNER_TEMP/rebuild/STG01_RedLightGreenLight.blend" --stage STG01 --out-dir "$RUNNER_TEMP/rebuild/exp"
+          diff -u blender/exports/STG01/STG01_collision.json "$RUNNER_TEMP/rebuild/exp/STG01_collision.json"
+          diff -u blender/exports/STG01/STG01_markers.json "$RUNNER_TEMP/rebuild/exp/STG01_markers.json"
+
+      - name: glTF Validator and browser load
+        run: node tools/asset-check/check-glb.mjs STG01
+
+      - name: Upload check output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage-checks
+          path: |
+            blender/exports/STG01/browser
+            ${{ runner.temp }}/STG01_validation.json
+          retention-days: 7

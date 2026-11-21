@@ -1,0 +1,32 @@
+{
+  "stage": "STG01",
+  "glb": "STG01_RedLightGreenLight.glb",
+  "result": "PASS",
+  "errors": [],
+  "gltf_validator": {
+    "version": "2.0.0-dev.3.10",
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "messages": []
+  },
+  "browser": {
+    "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+    "objects": 86,
+    "spawn_markers": 30,
+    "triangles": 1260,
+    "yard_bounds": {
+      "min": [
+        -30,
+        -0.019999999552965164,
+        -172
+      ],
+      "max": [
+        30,
+        0,
+        12
+      ]
+    }
+  },
+  "screenshot": "blender/exports/STG01/browser/STG01_browser_gameplay.png"
+}

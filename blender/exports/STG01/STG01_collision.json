@@ -1,0 +1,159 @@
+{
+  "stage": "STG01",
+  "source": "blender/scenes/STG01_RedLightGreenLight.blend",
+  "spec_hash": "ba0772b955cc3cc1",
+  "blender": "5.3.0",
+  "units": "m",
+  "coordinates": "game / glTF: Y up, right-handed; Blender +Y (course direction) = game -Z",
+  "colliders": [
+    {
+      "id": "COL_STG01_Ground",
+      "shape": "box",
+      "type": "solid",
+      "center": [
+        0.0,
+        -0.25,
+        -80.0
+      ],
+      "size": [
+        60.0,
+        0.5,
+        184.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        -0.0,
+        1.0
+      ]
+    },
+    {
+      "id": "COL_STG01_Wall_W",
+      "shape": "box",
+      "type": "solid",
+      "center": [
+        -30.25,
+        1.5,
+        -80.0
+      ],
+      "size": [
+        0.5,
+        3.0,
+        184.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        -0.0,
+        1.0
+      ]
+    },
+    {
+      "id": "COL_STG01_Wall_E",
+      "shape": "box",
+      "type": "solid",
+      "center": [
+        30.25,
+        1.5,
+        -80.0
+      ],
+      "size": [
+        0.5,
+        3.0,
+        184.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        -0.0,
+        1.0
+      ]
+    },
+    {
+      "id": "COL_STG01_Wall_S",
+      "shape": "box",
+      "type": "solid",
+      "center": [
+        0.0,
+        1.5,
+        12.25
+      ],
+      "size": [
+        61.0,
+        3.0,
+        0.5
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        -0.0,
+        1.0
+      ]
+    },
+    {
+      "id": "COL_STG01_Wall_N",
+      "shape": "box",
+      "type": "solid",
+      "center": [
+        0.0,
+        1.5,
+        -172.25
+      ],
+      "size": [
+        61.0,
+        3.0,
+        0.5
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        -0.0,
+        1.0
+      ]
+    },
+    {
+      "id": "COL_STG01_FinishTrigger",
+      "shape": "box",
+      "type": "trigger",
+      "center": [
+        0.0,
+        1.5,
+        -161.5
+      ],
+      "size": [
+        60.0,
+        3.0,
+        3.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        -0.0,
+        1.0
+      ],
+      "role": "finish"
+    },
+    {
+      "id": "COL_STG01_SafeZone",
+      "shape": "box",
+      "type": "trigger",
+      "center": [
+        0.0,
+        1.5,
+        -167.5
+      ],
+      "size": [
+        60.0,
+        3.0,
+        9.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        -0.0,
+        1.0
+      ],
+      "role": "safe"
+    }
+  ]
+}
