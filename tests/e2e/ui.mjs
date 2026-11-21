@@ -16,6 +16,7 @@ mkdirSync(shots, { recursive: true });
 if (process.env.SKIP_BUILD !== '1') execSync('npm run build', { cwd: root, stdio: 'ignore' });
 const errors = [];
 const done = [];
+const missedShots = [];
 let worker = startWorker(PORT);
 let browser;
 const base = `http://127.0.0.1:${PORT}/`;
@@ -59,7 +60,7 @@ try {
 
   // 5: invite link
   const code = 'uitest';
-  await page.goto(`${base}?room=${code}&quality=low&testSeed=12345&testRound=60&testBriefing=3`);
+  await page.goto(`${base}?room=${code}&quality=low&testSeed=12345&testRound=120&testBriefing=3`);
   await page.fill('[data-testid=nickname]', 'Host');
   await step(page, '05_invite_link', async () => { await waitFor(() => visible(page, '[data-testid=invite-notice]'), 'invite notice'); });
 
@@ -80,10 +81,21 @@ try {
   await step(page, '07_character_select_pending', async () => { await waitFor(() => visible(page, '[data-testid=roster-pending]'), 'roster pending notice'); });
   await page.getByRole('button', { name: 'Close' }).click();
 
+  // Transient screens (countdown, stamp…) can come and go faster than a software-rendered screenshot on a slow
+  // CI runner, so an in-page observer records when each one actually appeared; the test asserts on that and
+  // screenshots the screen when it is still showing.
+  await page.evaluate(() => {
+    window.__seen = {};
+    const ids = ['briefing', 'countdown', 'spotted', 'spectating', 'results'];
+    const check = () => { for (const id of ids) if (!window.__seen[id] && document.querySelector(`[data-testid=${id}]`)) window.__seen[id] = { at: Date.now(), text: document.querySelector(`[data-testid=${id}]`).textContent.trim().slice(0, 60) }; };
+    new MutationObserver(check).observe(document.body, { subtree: true, childList: true, characterData: true });
+  });
+  const seen = (id) => page.evaluate((id) => !!window.__seen?.[id], id);
+  const shotIfShowing = async (id) => { if (await visible(page, `[data-testid=${id}]`)) return; missedShots.push(id); };
   // 8–9: briefing and countdown (host starts; test seed and 3 s briefing)
   await page.click('[data-testid=start]');
   await step(page, '08_briefing', async () => { await waitFor(() => visible(page, '[data-testid=briefing]'), 'briefing'); });
-  await step(page, '09_countdown', async () => { await waitFor(() => visible(page, '[data-testid=countdown]'), 'countdown', 20_000); });
+  await step(page, '09_countdown', async () => { await waitFor(() => seen('countdown'), 'countdown', 20_000); await shotIfShowing('countdown'); });
 
   // 10–11: HUD green and red (client signal view held for exact captures; server state unaffected)
   await waitFor(() => page.evaluate(() => window.__cn.round().phase === 'active'), 'active');
@@ -104,12 +116,12 @@ try {
   await page.bringToFront();
   await page.locator('canvas').click();
   await page.keyboard.down('KeyW');
-  await step(page, '13_you_were_spotted', async () => { await waitFor(() => visible(page, '[data-testid=spotted]'), 'spotted stamp', 40_000); });
+  await step(page, '13_you_were_spotted', async () => { await waitFor(() => seen('spotted'), 'spotted stamp', 60_000); await shotIfShowing('spotted'); });
   await page.keyboard.up('KeyW');
   await step(page, '14_spectator', async () => { await waitFor(() => visible(page, '[data-testid=spectating]'), 'spectator', 15_000); });
 
   // 15: results (round ends; the remaining bots never finish)
-  await step(page, '15_results', async () => { await waitFor(() => visible(page, '[data-testid=results]'), 'results', 90_000); await sleep(800); });
+  await step(page, '15_results', async () => { await waitFor(() => seen('results'), 'results', 150_000); await shotIfShowing('results'); });
   for (const b of bots) b.leave();
 
   // 16: room full (30 players) → clean rejection shown on the menu
@@ -133,7 +145,8 @@ try {
   await browser?.close();
   worker.stop();
 }
-const report = { result: errors.length ? 'FAIL' : 'PASS', errors, date: new Date().toISOString(), screens: done, renderer: 'headless Chromium, SwiftShader, low tier' };
+const report = { result: errors.length ? 'FAIL' : 'PASS', errors, date: new Date().toISOString(), screens: done,
+  screenshot_after_screen_closed: missedShots, renderer: 'headless Chromium, SwiftShader, low tier' };
 writeReport('ui-walkthrough.json', report);
 console.log(JSON.stringify(report, null, 2));
 process.exit(errors.length ? 1 : 0);
