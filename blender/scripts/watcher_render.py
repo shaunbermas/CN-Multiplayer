@@ -234,12 +234,13 @@ def main() -> None:
                 frames.append(shoot(tmp / f"anim_{n:03d}.png"))
                 labels.append(f"{clip} f{f}")
                 n += 1
-        imgs = [Image.open(p).convert("RGB") for p in frames]
+        imgs = [Image.open(p).convert("RGB").resize((360, 450), Image.LANCZOS) for p in frames]
         for im, lab in zip(imgs, labels):
             d = ImageDraw.Draw(im)
-            d.rectangle((0, im.height - 30, im.width, im.height), fill=(11, 20, 22))
-            d.text((8, im.height - 26), lab, fill=(230, 239, 237), font=font(16))
-        imgs[0].save(OUT / "THE_WATCHER_ANIMATION.gif", save_all=True, append_images=imgs[1:], duration=125, loop=0, optimize=True)
+            d.rectangle((0, im.height - 24, im.width, im.height), fill=(11, 20, 22))
+            d.text((6, im.height - 21), lab, fill=(230, 239, 237), font=font(13))
+        pal = [im.quantize(colors=96, method=Image.Quantize.MEDIANCUT) for im in imgs]
+        pal[0].save(OUT / "THE_WATCHER_ANIMATION.gif", save_all=True, append_images=pal[1:], duration=125, loop=0, optimize=True)
         print("GIF", len(imgs), "frames")
         pick = [i for i, lab in enumerate(labels) if i % 3 == 0]
         label_grid([frames[i] for i in pick], [labels[i] for i in pick], 8, OUT / "THE_WATCHER_ANIMATION_CONTACT.png",
@@ -262,6 +263,8 @@ def render_in_stage(args):
     for o in dst.objects:
         col.objects.link(o)
     rig = bpy.data.objects["Watcher_Rig"]
+    body = bpy.data.objects["Watcher_Body"]
+    body.parent = rig  # the asset keeps the skinned mesh unparented for glTF; parent it here so it moves with the rig
     root = bpy.data.objects["WATCHER_ROOT_ANCHOR"].matrix_world.translation
     rig.location = root
     for o in bpy.data.objects:
