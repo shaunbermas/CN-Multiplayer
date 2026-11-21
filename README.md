@@ -12,6 +12,8 @@ Status: Stage 01 Red Light, Green Light is playable (greybox): lobby practice wa
 | `docs/DECISIONS.md` | What has been decided and what is open |
 | `docs/STAGE_01_DESIGN_SPEC.md` | Stage 01 environment design: layout, The Shepherd, props, cameras, assets, lighting (approved) |
 | `docs/STAGE_01_GREYBOX_REPORT.md` | Stage 01 greybox: files, dimensions, coordinates, validation (approved) |
+| `docs/THE_WATCHER_SPEC.md` | THE WATCHER, the Stage 01 enemy: design, rig, clips, anchors (decision 023) |
+| `docs/THE_WATCHER_VALIDATION.md` | THE WATCHER checks, GLB test and renders |
 | `docs/STAGE_01_ENVIRONMENT_VALIDATION.md` | Stage 01 detailed environment: checks, GLB test, renders, reference comparison (for review) |
 | `docs/STAGE_01_ENVIRONMENT_ASSET_MANIFEST.md` | Stage 01 environment: collections, modular assets, materials, textures, GLB contents |
 | `docs/STAGE_01_COLLISION_VALIDATION.md` | Stage 01 collision-ready scene and `STAGE_01_METADATA.json`: gameplay objects, collision coverage, validation (approved) |

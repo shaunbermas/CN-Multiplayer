@@ -182,6 +182,7 @@ Scripts (written and run for Stage 01 on 21 November 2026; see `blender/README.m
 | `stage_01_collision_setup.py` | Prompt 04: collision-ready scene with gameplay collections and `STAGE_01_METADATA.json` (`docs/STAGE_01_COLLISION_VALIDATION.md`) |
 | `validate_stage_01_metadata.py` | Schema, ID, transform and runtime-consistency checks for the metadata |
 | `stage_01_textures.py`, `stage_01_environment_build.py`, `stage_01_environment_export.py`, `validate_stage_01_environment.py`, `stage_01_environment_render.py` | Prompt 05 detailed environment, test GLB and validation (`docs/STAGE_01_ENVIRONMENT_VALIDATION.md`) |
+| `watcher_textures.py`, `watcher_build.py`, `watcher_export.py`, `validate_watcher.py`, `watcher_render.py` | Prompt 06 THE WATCHER character asset (`docs/THE_WATCHER_SPEC.md`) |
 | `../tools/asset-check/check-glb.mjs` | Khronos glTF Validator and Three.js load in headless Chromium |
 
 ### Running

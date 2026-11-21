@@ -10,6 +10,7 @@
 #    exports) and the metadata rebuilds exactly from the approved greybox
 #  - the Prompt 05 environment exports a valid GLB (glTF Validator, Three.js scale/orientation/materials)
 #    and keeps every gameplay object identical to the collision-ready scene
+#  - THE WATCHER exports a valid skinned GLB with all clips and passes the asset validation
 name: Checks
 
 on:
@@ -68,6 +69,12 @@ jobs:
           node tools/asset-check/check-environment.mjs
           python blender/scripts/validate_stage_01_environment.py --report "$RUNNER_TEMP/STAGE_01_ENVIRONMENT_VALIDATION.json"
 
+      - name: THE WATCHER (Prompt 06) - GLB export, browser check and asset validation
+        run: |
+          python blender/scripts/watcher_export.py
+          node tools/asset-check/check-watcher.mjs
+          python blender/scripts/validate_watcher.py
+
       - name: Exports are up to date with the spec
         run: |
           python blender/scripts/generate_stage_01_greybox.py --out "$RUNNER_TEMP/rebuild/STAGE_01_GREYBOX.blend"
@@ -89,6 +96,8 @@ jobs:
             ${{ runner.temp }}/STAGE_01_METADATA_VALIDATION.json
             ${{ runner.temp }}/STAGE_01_ENVIRONMENT_VALIDATION.json
             blender/exports/STAGE_01_ENVIRONMENT_browser
+            blender/exports/THE_WATCHER_browser
+            blender/exports/THE_WATCHER_VALIDATION.json
           retention-days: 7
 
   app:

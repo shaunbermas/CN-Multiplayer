@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "THE WATCHER Asset Manifest",
+  "type": "object",
+  "required": [
+    "asset_id",
+    "character_type",
+    "scale_source",
+    "collections",
+    "anchors",
+    "animations",
+    "exports",
+    "validation"
+  ],
+  "properties": {
+    "asset_id": {
+      "const": "THE_WATCHER"
+    },
+    "character_type": {
+      "const": "full_body_robotic_doll"
+    },
+    "scale_source": {
+      "type": "string",
+      "description": "Path to approved Stage 01 specification; never use concept-art dimensions as final."
+    },
+    "height_m": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "exclusiveMinimum": 0
+    },
+    "collections": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "anchors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "animations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "frame_start",
+          "frame_end"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "frame_start": {
+            "type": "integer"
+          },
+          "frame_end": {
+            "type": "integer"
+          },
+          "loop": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "exports": {
+      "type": "object",
+      "properties": {
+        "blend": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "glb": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fbx": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "properties": {
+        "scale_verified": {
+          "type": "boolean"
+        },
+        "rig_verified": {
+          "type": "boolean"
+        },
+        "animations_verified": {
+          "type": "boolean"
+        },
+        "materials_verified": {
+          "type": "boolean"
+        },
+        "glb_verified": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

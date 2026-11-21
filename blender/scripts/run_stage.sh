@@ -44,3 +44,12 @@ if [[ "$STAGE" == "STG01" ]]; then
   python3 blender/scripts/validate_stage_01_environment.py | grep -E '^(PASS|FAIL|RESULT)'
   if [[ $RENDER == 1 ]]; then python3 blender/scripts/stage_01_environment_render.py | grep Rendered; fi
 fi
+if [[ "$STAGE" == "STG01" ]]; then
+  echo "== THE WATCHER (Prompt 06)"
+  python3 blender/scripts/watcher_textures.py
+  python3 blender/scripts/watcher_build.py | grep Saved
+  python3 blender/scripts/watcher_export.py | tail -1
+  NODE_PATH="$(npm root -g)" node tools/asset-check/check-watcher.mjs | head -4
+  python3 blender/scripts/validate_watcher.py | grep -E '^(PASS|FAIL|RESULT)'
+  if [[ $RENDER == 1 ]]; then python3 blender/scripts/watcher_render.py | grep -E 'Sheet|GIF'; fi
+fi

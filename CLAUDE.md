@@ -35,5 +35,5 @@ the owner's decision, recorded in `docs/DECISIONS.md`.
 - Blender: pinned 5.3.0, conventions in `docs/BLENDER_PIPELINE.md`. Scripts own the `STG01_*`
   collections. `.blend`, `.glb` and images are stored with Git LFS.
 - Tone is playful (decision 008): suspense and comedy, no horror imagery or harm.
-- Name players and stage figures by the decided names (The Shepherd, `ENM_Shepherd`).
+- Name players and stage figures by the decided names: the Stage 01 enemy is The Watcher (`THE_WATCHER`, `Watcher_` bones and clips; decision 023, which retired The Shepherd).
 - Game-design guidance: the owner's `shaun-game` and `game-feel` skills apply.
