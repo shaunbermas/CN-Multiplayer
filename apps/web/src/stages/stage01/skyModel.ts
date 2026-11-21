@@ -6,8 +6,8 @@ import * as THREE from 'three';
 export const SKY = {
   zenith: '#070a1a',
   upper: '#141c38',
-  horizon: '#2f5560',
-  horizonGlow: '#4a6a6e',
+  horizon: '#456569',      // equals the scene fog colour (STAGE_01_LIGHTING.json fog), so fog melts into the sky
+  horizonGlow: '#55777a',
   below: '#0b1416',
   moon: '#dfe8f2',
   /** Direction toward the moon (game space, normalised at use). Matches LGT_STG01_Moon's light travelling

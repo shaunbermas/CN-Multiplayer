@@ -35,7 +35,7 @@ try {
   const page = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   page.on('pageerror', (e) => errors.push(String(e)));
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
-  await page.goto(`http://127.0.0.1:${PORT}/?name=Viewer&autojoin=1&quality=${quality}${extra}`);
+  await page.goto(`http://127.0.0.1:${PORT}/?name=Viewer&autojoin=1&quality=${quality}&testSeed=12345&testRound=40&testBriefing=1${extra}`);
   const t = Date.now();
   while (Date.now() - t < 120_000) {
     if (await page.evaluate(() => { const a = window.__cn?.assets(); return a?.environment === 'ready' && a?.watcher === 'ready'; })) break;
@@ -49,7 +49,27 @@ try {
     await page.screenshot({ path: `${out}/${name}.png` });
     info[name] = await page.evaluate(() => window.__cn.renderInfo());
   }
-  writeFileSync(`${out}/views.json`, JSON.stringify({ quality, date: new Date().toISOString(), renderer: 'SwiftShader', errors, renderInfo: info }, null, 2));
+  // Signal states on this tier: start a seeded test round (test mode only) and capture GREEN and RED from
+  // midfield toward The Watcher (lamps, signal wash, Watcher clip), with the HUD visible.
+  if (process.env.VIEWS_SIGNALS !== '0') {
+    await page.evaluate(() => document.querySelectorAll('.hud, .panel, .overlay, header, footer').forEach((e) => { e.style.visibility = ''; }));
+    await page.evaluate(() => { window.__cnView = { pos: [6, 3, -80], look: [0, 10, -185] }; });
+    await page.locator('[data-testid=start]').click();
+    // Wait for the round, then hold the client's signal VIEW on each state (test-only presentation hook;
+    // server decisions are unaffected) so each capture shows exactly that state: HUD, lamps, wash, Watcher.
+    const t0 = Date.now();
+    while (Date.now() - t0 < 60_000 && (await page.evaluate(() => window.__cn.round().phase)) !== 'active') await sleep(200);
+    const got = new Set();
+    for (const s of ['green', 'warning', 'red']) {
+      await page.evaluate((s) => { globalThis.__cnSignalHold = { signal: s, since: Date.now() }; }, s);
+      await sleep(5000); // opening clip (TurnAway / FocusLock) and the wash fade complete
+      await page.screenshot({ path: `${out}/signal_${s}.png` });
+      got.add(s);
+    }
+    await page.evaluate(() => { delete globalThis.__cnSignalHold; });
+    if (got.size < 3) errors.push(`signal captures: only ${[...got].join(', ')}`);
+  }
+  writeFileSync(`${out}/views.json`, JSON.stringify({ quality, date: new Date().toISOString(), renderer: 'SwiftShader', errors, renderInfo: info, signalCaptures: 'held via window.__cnSignalHold (presentation only)' }, null, 2));
   console.log(JSON.stringify({ out, errors, renderInfo: info }, null, 2));
 } finally {
   await browser?.close();

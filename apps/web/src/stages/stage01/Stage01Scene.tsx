@@ -17,6 +17,7 @@ import { stageGeo } from '../../game/stage.ts';
 import { Surroundings, surroundingsStatus } from './Surroundings.tsx';
 import { MidgroundTrees, midgroundStatus } from './MidgroundTrees.tsx';
 import { buildSkyEnvironment } from './skyModel.ts';
+import { Atmosphere, atmosphereStatus } from './Atmosphere.tsx';
 import { CLIP_SECONDS, MISSING_FROM_MANIFEST, WATCHER_CLIPS, chooseWatcherClip, type WatcherChoice } from './watcherAnimation.ts';
 
 export const ENV_URL = envUrl;
@@ -41,6 +42,8 @@ export const stage01Assets = {
   midground: midgroundStatus,
   /** Cone-tree triangles removed from ENV_VISUAL_FOLIAGE (grass tufts kept), and whether the sky env map is set. */
   foliageTrianglesRemoved: 0,
+  /** Stage 1.5 atmosphere (sky, light cones, mist, signal wash, post-processing) for the current tier. */
+  atmosphere: atmosphereStatus,
   environmentMap: false,
 };
 
@@ -80,6 +83,9 @@ function fitShadow(light: THREE.DirectionalLight, dir: THREE.Vector3) {
 
 let rectLibReady = false;
 
+/** Lights that followed the retired Shepherd placeholder (decision 023) are not used with The Watcher. */
+export const retiredLight = (l: { follows?: string }) => !!l.follows?.startsWith('ENM_Shepherd_Placeholder');
+
 function dispose(root: THREE.Object3D) {
   root.traverse((o) => {
     const m = o as THREE.Mesh;
@@ -106,11 +112,11 @@ function Lighting({ quality }: { quality: Quality }) {
     const casters = shadowLights(quality);
     const wanted = (id: string) => tier.dynamicLights === 'all' || (tier.dynamicLights as string[]).some((p) => (p.endsWith('*') ? id.startsWith(p.slice(0, -1)) : id === p));
     for (const l of L.lights) {
-      if (!wanted(l.id)) continue;
+      if (!wanted(l.id) || retiredLight(l)) continue;
       const col = new THREE.Color(...(l.color as [number, number, number]));
       let o: THREE.Light | null = null;
       if (l.type === 'directional') o = new THREE.DirectionalLight(col, 0.6);
-      else if (l.type === 'spot') o = new THREE.SpotLight(col, l.id.includes('Rim') ? 2600 : 1700, 110, THREE.MathUtils.degToRad(l.angleDeg ?? 40), l.penumbra ?? 0.5, 1.5);
+      else if (l.type === 'spot') o = new THREE.SpotLight(col, 1700, 110, THREE.MathUtils.degToRad(l.angleDeg ?? 40), l.penumbra ?? 0.5, 1.5);
       else if (l.type === 'point') o = new THREE.PointLight(col, 260, (l.range ?? 25) * 1.4, 1.5);
       else if (l.type === 'rect_area') {
         // The finish gate's lamp strip: a wide, thin area light shining down (MeshStandard materials only).
@@ -152,7 +158,8 @@ function Lighting({ quality }: { quality: Quality }) {
   }, [gl, scene]);
   useEffect(() => { scene.environmentIntensity = ENV_INTENSITY[quality]; }, [scene, quality]);
   useEffect(() => {
-    scene.background = new THREE.Color(...(L.background.horizon as [number, number, number])).multiplyScalar(1.4);
+    // The Stage 1.5 sky dome draws the sky; this colour only shows for a frame before it mounts.
+    scene.background = new THREE.Color(...(L.fog.color as [number, number, number]));
     scene.fog = quality === 'low'
       ? new THREE.Fog(new THREE.Color(...(L.fog.color as [number, number, number])), 60, 260)
       : new THREE.FogExp2(new THREE.Color(...(L.fog.color as [number, number, number])), L.fog.density);
@@ -393,6 +400,7 @@ export function Stage01Scene({ room }: { room: TrialRoom }) {
       <Lighting quality={quality} />
       <Environment room={room} quality={quality} />
       <Watcher room={room} />
+      <Atmosphere room={room} quality={quality} />
       <Surroundings quality={quality} />
       <MidgroundTrees shadows={shadowLights(quality).length > 0} />
       {dust > 0 && <Dust count={dust} />}

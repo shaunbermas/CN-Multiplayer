@@ -1,40 +1,64 @@
 {
   "result": "PASS",
   "errors": [],
-  "date": "2026-11-21T17:50:16.986Z",
+  "date": "2026-11-21T20:45:50.385Z",
   "renderer": "headless Chromium, software WebGL (SwiftShader); frame rates compare tiers only",
   "tiers": {
     "low": {
+      "atmosphere": {
+        "sky": "gradient+moon",
+        "cones": 0,
+        "mist": 0,
+        "wash": false,
+        "post": "none"
+      },
+      "cutouts": 457,
       "lights": 1,
       "shadows": [],
       "dust": 0,
       "haze": false,
-      "draw_calls": 59,
-      "triangles": 68196,
-      "shader_programs": 9,
-      "software_fps": 4
+      "draw_calls": 70,
+      "triangles": 70600,
+      "shader_programs": 14,
+      "software_fps": 2.1
     },
     "medium": {
+      "atmosphere": {
+        "sky": "gradient+moon+stars+clouds",
+        "cones": 10,
+        "mist": 2,
+        "wash": true,
+        "post": "none"
+      },
+      "cutouts": 760,
       "lights": 12,
       "shadows": [],
       "dust": 150,
       "haze": false,
-      "draw_calls": 60,
-      "triangles": 68196,
-      "shader_programs": 9,
-      "software_fps": 1.6
+      "draw_calls": 81,
+      "triangles": 71402,
+      "shader_programs": 16,
+      "software_fps": 1.2
     },
     "high": {
-      "lights": 15,
+      "atmosphere": {
+        "sky": "gradient+moon+stars+clouds",
+        "cones": 10,
+        "mist": 4,
+        "wash": true,
+        "post": "bloom+grade"
+      },
+      "cutouts": 1099,
+      "lights": 14,
       "shadows": [
         "LGT_STG01_Moon"
       ],
       "dust": 400,
       "haze": true,
-      "draw_calls": 119,
-      "triangles": 136292,
-      "shader_programs": 18,
-      "software_fps": 1.3
+      "draw_calls": 160,
+      "triangles": 137941,
+      "shader_programs": 35,
+      "software_fps": 1.1
     }
   },
   "adaptive_default": {
@@ -44,7 +68,7 @@
       "medium@1x -> low@1x at 1 fps"
     ],
     "final_tier": "low",
-    "software_fps_after": 3.8
+    "software_fps_after": 2.2
   },
   "screenshots": [
     "tests/reports/screenshots/quality_low.png",

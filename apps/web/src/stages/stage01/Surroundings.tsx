@@ -51,7 +51,7 @@ function MatteLayers() {
     for (const l of manifest.layers) {
       const tex = loadTexture(LAYER_URL[l.id], () => surroundingsStatus.problems.push(`matte layer ${l.id} failed to load`));
       tex.wrapS = THREE.RepeatWrapping;
-      const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, side: THREE.DoubleSide, fog: false, toneMapped: false });
+      const mat = new THREE.MeshBasicMaterial({ map: tex, color: new THREE.Color().setScalar(l.brightness ?? 1), transparent: true, depthWrite: false, side: THREE.DoubleSide, fog: false, toneMapped: false });
       const mesh = new THREE.Mesh(layerGeometry(l.radius, l.height, l.bottom, l.uOffset), mat);
       mesh.name = l.id;
       mesh.renderOrder = -10 + l.order; // far layers first; they never write depth

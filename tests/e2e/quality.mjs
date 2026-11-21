@@ -32,7 +32,9 @@ const waitFor = async (fn, label, ms = 60_000) => {
 };
 const expectedLights = (q) => {
   const want = lighting.qualityTiers[q].dynamicLights;
-  return lighting.lights.map((l) => l.id).filter((id) => want === 'all' || want.some((p) => (p.endsWith('*') ? id.startsWith(p.slice(0, -1)) : id === p)));
+  // Lights that followed the retired Shepherd placeholder are not used with The Watcher (decision 023).
+  return lighting.lights.filter((l) => !l.follows?.startsWith('ENM_Shepherd_Placeholder')).map((l) => l.id)
+    .filter((id) => want === 'all' || want.some((p) => (p.endsWith('*') ? id.startsWith(p.slice(0, -1)) : id === p)));
 };
 const fpsOver = (page, ms) => page.evaluate((ms) => new Promise((done) => {
   let n = 0; const t0 = performance.now();
@@ -71,10 +73,24 @@ try {
     if (a.effects.dust !== (tier.dust ?? 0)) errors.push(`${q}: dust ${a.effects.dust}; expected ${tier.dust}`);
     if (a.effects.haze !== !!tier.hazeCards) errors.push(`${q}: haze ${a.effects.haze}; expected ${!!tier.hazeCards}`);
     if (a.problems.length) errors.push(`${q}: asset problems ${a.problems.join('; ')}`);
+    // Stage 1.5: atmosphere, painted surroundings, midground trees and the sky environment map per tier.
+    const want15 = {
+      low: { sky: 'gradient+moon', cones: 0, mist: 0, post: 'none', wash: false },
+      medium: { sky: 'gradient+moon+stars+clouds', cones: 10, mist: 2, post: 'none', wash: true },
+      high: { sky: 'gradient+moon+stars+clouds', cones: 10, mist: 4, post: 'bloom+grade', wash: true },
+    }[q];
+    for (const [k, v] of Object.entries(want15)) if (a.atmosphere[k] !== v) errors.push(`${q}: atmosphere.${k} ${a.atmosphere[k]}; expected ${v}`);
+    const matte = JSON.parse(readFileSync(`${root}blender/exports/stage15/STAGE_01_MATTE_PAINTING_MANIFEST.json`, 'utf8'));
+    const wantCutouts = matte.cutouts.instances.filter((i) => i.rank < matte.cutouts.qualityFraction[q]).length;
+    if (a.surroundings.layers !== matte.layers.length || a.surroundings.cutouts !== wantCutouts || a.surroundings.problems.length)
+      errors.push(`${q}: surroundings ${JSON.stringify(a.surroundings)}; expected ${matte.layers.length} layers, ${wantCutouts} cutouts`);
+    if (a.midground.trees !== 49) errors.push(`${q}: midground trees ${a.midground.trees}; expected 49`);
+    if (!a.environmentMap) errors.push(`${q}: sky environment map not set`);
+    if (!(a.foliageTrianglesRemoved > 0)) errors.push(`${q}: cone trees were not stripped`);
     const fps = await fpsOver(page, 3000);
     const info = await page.evaluate(() => window.__cn.renderInfo());
     await page.screenshot({ path: `${shots}/quality_${q}.png` });
-    tiers[q] = { lights: got.length, shadows: a.effects.shadows, dust: a.effects.dust, haze: a.effects.haze, draw_calls: info.calls, triangles: info.triangles, shader_programs: info.programs, software_fps: +fps.toFixed(1) };
+    tiers[q] = { atmosphere: a.atmosphere, cutouts: a.surroundings.cutouts, lights: got.length, shadows: a.effects.shadows, dust: a.effects.dust, haze: a.effects.haze, draw_calls: info.calls, triangles: info.triangles, shader_programs: info.programs, software_fps: +fps.toFixed(1) };
     errors.push(...consoleErrors);
     await ctx.close();
   }
