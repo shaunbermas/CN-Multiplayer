@@ -13,9 +13,10 @@ canvas { display: block; }
 .hud-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .pill { background: var(--panel); padding: 6px 12px; border-radius: 999px; font-weight: 600; }
 .timer { background: var(--panel); padding: 6px 16px; border-radius: 10px; font-size: 22px; font-variant-numeric: tabular-nums; font-weight: 700; }
-.objective { margin: 10px auto 0; background: var(--panel); padding: 6px 14px; border-radius: 8px; }
-.progress { margin: 8px auto 0; width: min(420px, 80vw); height: 6px; background: rgba(255,255,255,0.15); border-radius: 3px; overflow: hidden; }
+.hud-lower { margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 8px; padding-bottom: 10px; }
+.objective { background: var(--panel); padding: 6px 14px; border-radius: 8px; }
+.progress { width: min(420px, 80vw); height: 6px; background: rgba(255,255,255,0.15); border-radius: 3px; overflow: hidden; }
 .progress > div { height: 100%; background: var(--accent); }
-.hud-bottom { margin-top: auto; display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 13px; }
+.hud-bottom { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 13px; }
 .muted { opacity: 0.7; }
 .nametag { background: rgba(10, 12, 20, 0.7); color: #fff; padding: 2px 8px; border-radius: 6px; font-size: 13px; white-space: nowrap; pointer-events: none; }

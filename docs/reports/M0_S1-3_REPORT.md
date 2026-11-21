@@ -43,16 +43,16 @@ test (M4), which needs 30 animated characters on the agreed reference desktop.
 Screenshots (`tests/reports/screenshots/`): `s1-3_start_view.png` (third-person view at spawn),
 `s1-3_after_walk.png`, `s1-3_other_player_view.png` (second browser watching the first player).
 
-**Recommendation for the spec (owner to approve):** make The Shepherd read clearly from the start line
-before S1-4, for example height 18 m → 28 m, or move the platform from Y 185 to Y 172 (just past the
-safe zone), or both. Both are one-line spec changes; the greybox, exports and tests rebuild
-automatically.
+**Resolved (decision 014):** The Shepherd is now 28 m tall, and the HUD objective moved to the bottom of
+the screen because it covered The Shepherd's head. From the start line it now fills about 1/7 of the
+screen height (was about 1/10) and stands above the yard and the buildings behind it
+(`s1-3_start_view.png`, rebuilt with the 28 m Shepherd).
 
 ## Known risks after M0
 
 | Risk | Status |
 |------|--------|
-| Hosting for Colyseus | Open: `docs/adr/0002-hosting.md` |
+| Hosting | Constraint set (Cloudflare + GitHub only); option to confirm in `docs/adr/0002-hosting.md` |
 | Red-light latency fairness | Not yet tested; server timestamps and grace window come with S1-4 |
 | 30 characters rendering on weaker laptops | Not tested (needs character art and reference hardware, M4) |
 | Client bundle 1.36 MB (383 KB gzipped) | Acceptable for now; split three/drei chunks before release |
