@@ -51,7 +51,12 @@ try {
   }
   const bots = [];
   for (let i = 0; i < 25; i++) bots.push(await RoomClient.connect(`ws://127.0.0.1:${PORT}/api/room/${ROOM}/ws`, `Bot${String(i + 1).padStart(2, '0')}`));
-  await waitFor(async () => (await Promise.all(pages.map((p) => p.evaluate(() => window.__cn.players().length)))).every((n) => n === 30), 'all pages see 30 players');
+  await waitFor(async () => (await Promise.all(pages.map((p) => p.evaluate(() => window.__cn.players().length)))).every((n) => n === 30), 'all pages see 30 players')
+    .catch(async (e) => {
+      report.seen_on_timeout = await Promise.all(pages.map((p) => p.evaluate(() => window.__cn?.players().length ?? -1).catch((x) => String(x))));
+      report.page_errors = consoleErrors.slice(0, 8);
+      throw e;
+    });
   await waitFor(() => pages[0].evaluate(() => { const a = window.__cn.assets(); return a.environment === 'ready' && a.watcher === 'ready'; }), 'observer stage loaded', 180_000);
   await sleep(2000);
   await pages[0].screenshot({ path: `${shots}/thirty_lobby_30_slots.png`, timeout: 120_000 });

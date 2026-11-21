@@ -1,7 +1,7 @@
 {
   "result": "PASS",
   "errors": [],
-  "date": "2026-11-21T21:05:37.852Z",
+  "date": "2026-11-21T21:54:24.999Z",
   "seed": 12345,
   "layout": "STG01_TWIST_A",
   "barricades": 14,
@@ -14,9 +14,9 @@
     "expected_stop_z": -69.5
   },
   "without_obstacles": {
-    "z": -74.033,
+    "z": -74.041,
     "x": 0,
-    "minZ": -74.033,
+    "minZ": -74.041,
     "status": "active"
   }
 }
