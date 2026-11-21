@@ -1,7 +1,7 @@
 # CN Trials · THE WATCHER (Stage 01 enemy, Prompt 06)
 
 Status: **built, ready for owner review** (21 November 2026). Design direction approved by the owner
-(decision 023: an original robotic doll replaces The Shepherd). Points still open are in §9 (decision 024).
+(decision 023: an original robotic doll replaces The Shepherd). Integration choices in §9 are approved (decision 024).
 
 | Deliverable | File |
 |-------------|------|
@@ -138,7 +138,7 @@ The textures are original and procedural (`watcher_textures.py`), with no photos
 
 These anchors are references only. Detection, eligibility and elimination stay in the server (spec §4, decision E9: not line-of-sight).
 
-## 9. Points for approval (decision 024, PROPOSED)
+## 9. Integration choices (decision 024, APPROVED)
 
 1. **Placement:** keep the approved 4 m plinth at Y 185, with the doll standing freely on top (no
    tower, no attachment). Moving it to the ground would change approved gameplay metadata.
