@@ -3,6 +3,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { inputFromKeys, MOVEMENT, progress, SIM_DT } from '@cn-trials/shared';
 import { Component, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { PlayerView, TrialRoom } from '../net.ts';
 import { hud } from './hudStore.ts';
 import { AdaptiveQuality, quality } from './quality.ts';
@@ -16,8 +17,11 @@ import { scheduleFor, signalView } from './roundClock.ts';
 const CAPSULE_LENGTH = MOVEMENT.capsuleHeight - 2 * MOVEMENT.capsuleRadius;
 const capsuleGeo = new THREE.CapsuleGeometry(MOVEMENT.capsuleRadius, CAPSULE_LENGTH, 6, 12);
 capsuleGeo.translate(0, MOVEMENT.capsuleHeight / 2, 0);
-const noseGeo = new THREE.BoxGeometry(0.16, 0.12, 0.2);
+const noseGeo = new THREE.BoxGeometry(0.16, 0.12, 0.2).toNonIndexed();
 noseGeo.translate(0, 0.85, -0.3);
+// Stage 1.5 (Prompt 08): body and facing nose merged into one mesh: one draw call per contestant (and one in
+// the shadow pass) instead of two, which saves 60 calls with 30 players on High.
+const contestantGeo = mergeGeometries([capsuleGeo.toNonIndexed(), noseGeo])!;
 const spottedMat = new THREE.MeshStandardMaterial({ color: '#8a8f99', roughness: 0.9, transparent: true, opacity: 0.55 });
 
 /** Collision walls for prediction: the same set the server uses (stage walls + obstacle twist in a round). */
@@ -42,7 +46,6 @@ export function canMove(room: TrialRoom): boolean {
 function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoom; local: boolean; predictor?: React.RefObject<Predictor | null> }) {
   const group = useRef<THREE.Group>(null);
   const body = useRef<THREE.Mesh>(null);
-  const nose = useRef<THREE.Mesh>(null);
   const [status, setStatus] = useState(room.players.get(id)?.status ?? 'active');
   const p0 = room.players.get(id);
   const material = useMemo(() => new THREE.MeshStandardMaterial({ color: colorFor(p0?.spawn ?? 1), roughness: 0.6 }), [p0?.spawn]);
@@ -68,13 +71,11 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
     g.rotation.z += (tilt - g.rotation.z) * (1 - Math.exp(-dt * 8));
     const m = spotted ? spottedMat : material;
     if (body.current && body.current.material !== m) body.current.material = m;
-    if (nose.current && nose.current.material !== m) nose.current.material = m;
   });
   const waiting = status === 'waiting';
   return (
     <group ref={group} position={[p0?.x ?? 0, 0, p0?.z ?? 0]} visible={!waiting || !local}>
-      <mesh ref={body} geometry={capsuleGeo} material={material} castShadow />
-      <mesh ref={nose} geometry={noseGeo} material={material} castShadow />
+      <mesh ref={body} geometry={contestantGeo} material={material} castShadow />
       {(!local || status === 'spotted') && (
         <Html position={[0, 1.65, 0]} center distanceFactor={9} zIndexRange={[10, 0]}>
           <div className={`nametag ${status}`}>{status === 'spotted' ? 'SPOTTED!' : p0?.name}</div>
