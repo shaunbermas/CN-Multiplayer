@@ -14,7 +14,7 @@ file and the GDD disagree, the GDD wins until the GDD is revised.
 | GPU in the container | **None** (no `/dev/dri`). CPU only, 4 cores, 15 GB RAM |
 | Persistence | The container is temporary. Anything installed is lost when the session ends unless the environment setup script installs it |
 | Existing Blender integration in this Claude session | No direct Blender connector. A third-party service (Higgsfield "3D scene builder") can run Blender Python remotely, but it is paid, external and not under project control, so it is **not** part of this pipeline |
-| Owner's desktop Blender | Unknown. Needs the owner to confirm version and OS |
+| Owner's desktop Blender | **Installed, with a Blender MCP server** (owner confirmed). Not reachable from this cloud session: no Blender MCP tools are loaded here and no computer folder is shared through Remote Control (re-checked 21 November 2026). Version and OS still to confirm |
 
 **Conclusion:** Claude cannot control a Blender GUI. Claude can run Blender **headless** in the cloud
 container by installing the `bpy` module (or the Blender Linux build) at the start of a session. That
