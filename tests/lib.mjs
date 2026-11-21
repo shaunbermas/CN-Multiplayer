@@ -7,12 +7,13 @@ export const root = fileURLToPath(new URL('..', import.meta.url));
 
 function startProcess(name, cmd, args, { cwd = root, env = {}, ready }) {
   // detached: the child leads its own process group, so stop() also ends what `npx` started.
-  const child = spawn(cmd, args, { cwd, env: { ...process.env, ...env }, stdio: ['ignore', 'pipe', 'pipe'], detached: true });
+  const child = spawn(cmd, args, { cwd, env: { ...process.env, NO_COLOR: '1', ...env }, stdio: ['ignore', 'pipe', 'pipe'], detached: true });
   const log = [];
   const started = new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error(`${name} did not start in 60 s\n${log.join('')}`)), 60_000);
     const onData = (d) => {
-      log.push(d.toString());
+      // Strip ANSI colour codes: CI forces colour, which splits text such as "127.0.0.1:" from the port.
+      log.push(d.toString().replace(/\x1b\[[0-9;]*m/g, ''));
       if (ready.test(log.join(''))) { clearTimeout(timer); resolve(); }
     };
     child.stdout.on('data', onData);
