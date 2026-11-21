@@ -1,6 +1,6 @@
 # Reference manifest
 
-Status: v0.1, 21 November 2026. Covers every visual reference currently in `references/`.
+Status: v0.2, 21 November 2026. Covers every visual reference currently in `references/`. Project renamed to **CN Trials** (GDD v0.2).
 
 ## How to use this file
 
@@ -40,7 +40,7 @@ slot each board partly covers.
 | Hero banner (castle-factory on a cliff, hooded giant with glowing eyes, red banners) | Overall world tone: dark industrial fantasy, cold blue-grey night, warm amber windows, red banner accent | Architecture or scale of any stage |
 | Tournament flow strip | Matches GDD §2.3 round order (R1 to R7) | Advancement numbers (use GDD) |
 | Stage pool thumbnails (10) | One mood frame per stage | Layouts |
-| Stage 01 panel | Outdoor night yard, packed-dirt ground with white painted lines, floodlight masts, red banners, industrial silhouettes behind, giant doll-like figure at the far end facing the players, small hooded contestants with backpacks running toward it | Field size, figure height, lane count, finish position |
+| Stage 01 panel | Outdoor night yard, packed-dirt ground with white painted lines, floodlight masts, red banners, industrial silhouettes behind, giant doll-like figure at the far end facing the players, small hooded contestants with backpacks running toward it | Field size, lane count, finish position, and **the figure**: the doll is retired and replaced by The Shepherd (C1, C5) |
 | Stage 02–10 panels | Mood and key set pieces for later stages | Anything for Stage 01 |
 | Enemies & threats strip | Five silhouettes: "Observer (Stage 01)", "Warden (Stage 05)", "Stalker (Stage 07)", "Overseer (General / Cutscene)", "Automaton (Stage 03/10)" | Enemy names or stage assignments (not in GDD) |
 | Key obstacles & interactables | Gear, swinging hammer, moving platform, collapsing floor, conveyor, crate, lever, pressure plate: the modular-kit idea from GDD §9.5 | Exact prop designs |
@@ -53,7 +53,7 @@ slot each board partly covers.
 |-------------------|-------------------------------|------------------------------|
 | Hero banner (group of contestants looking at a lit fortress) | **Contestant style**: compact bodies, large heads, hoods, caps, goggles, worn layered clothing, muted palette; this is the best current guide to GDD §4.1 | Final character designs or proportions |
 | Stage lineup (10) | A second mood frame per stage | Layouts |
-| Stage 01 panel | Alternative Stage 01 mood: open field at dusk, dead trees, overcast sky, doll figure with **glowing red eyes**, white lines, contestants in rows | Same limits as G1 |
+| Stage 01 panel | Alternative Stage 01 mood: open field at dusk, dead trees, overcast sky, doll figure with **glowing red eyes**, white lines, contestants in rows | Same limits as G1; the doll figure is retired |
 | Enemy roster (6) | "Warden (main overseer)", "Doll (stage enforcer)", "Nurse (stealth hunter)", "Custodian (patrol)", "Brute (chase)", "Watcher (environmental threat)" | Names, roles or stage assignments |
 | Obstacle & hazard assets | Ten hazard concepts (blades, hammer, moving platform, crusher, conveyor, collapsing floor, spikes, rotating arm, pendulum log, rising water) | Exact designs; Stage 01 uses none of them |
 
@@ -62,7 +62,7 @@ slot each board partly covers.
 These points agree with GDD §5 and are safe to carry into production briefs:
 
 - Palette: charcoal, blue-grey, muted teal and weathered stone, with rust, amber and dirty-brass warm
-  accents. Red is used sparingly (banners, the observer).
+  accents. Red is used sparingly (banners, signal lights).
 - Lighting: cool, deep shadows with warm practical lights (lamps, windows, floodlights).
 - Atmosphere: fog, haze, distant silhouettes.
 - Scale contrast: very small contestants in a world built far too large for them.
@@ -80,18 +80,18 @@ Slots from the agreed project structure plus the Stage 01 pack's suggested sheet
 | Stage 01 overview | `references/STAGE_01_RED_LIGHT/stage-overview.png` | MISSING | G1 and G2 Stage 01 panels (they disagree, see C2) | Greybox sign-off (S1-2) |
 | Stage 01 environment | `references/STAGE_01_RED_LIGHT/environment-reference.png` | MISSING | G1 Stage 01 panel | Art pass (S1-6) |
 | Stage 01 layout | `references/STAGE_01_RED_LIGHT/layout-reference.png` | MISSING | G1 "Red Light Area" thumbnail (no measurements) | Greybox (S1-2), but a layout can instead come from the Stage 01 spec, see §5 |
-| Watcher / observer turnaround | `references/STAGE_01_RED_LIGHT/watcher-reference.png` | MISSING | G1 "Observer" and G2 "Doll" (front view only) | Observer modelling (S1-5) |
+| The Shepherd turnaround (replaces the planned `watcher-reference.png`) | `references/STAGE_01_RED_LIGHT/shepherd-reference.png` | MISSING | None. The doll figures on G1 and G2 must not be used | Shepherd modelling (S1-5) |
 | Obstacle and prop sheet (pack suggestion) | `references/STAGE_01_RED_LIGHT/props-reference.png` | MISSING | none | Art pass (S1-6) |
 
 ## 4. Conflicts that need an owner decision
 
 | ID | Conflict | Sources | Why it matters | Proposed resolution (owner decides) |
 |----|----------|---------|----------------|-------------------------------------|
-| C1 | **Stage 01 figure name.** G1 calls it "The Observer", G2 calls it "The Doll", the agreed folder calls it "watcher", and G2 uses "The Watcher" for a different, binocular-headed creature. The GDD calls it the "mechanical observer". | G1, G2, folder names, GDD §4.4 | Asset names (`ENM_…`) are permanent IDs in code and files | Use the GDD term: `ENM_Observer`. Rename the folder file to `observer-reference.png`, or confirm "watcher" as the final name |
+| C1 | **RESOLVED v0.2: The Shepherd (`ENM_Shepherd`).** Was: Stage 01 figure name. G1 calls it "The Observer", G2 calls it "The Doll", the agreed folder calls it "watcher", and G2 uses "The Watcher" for a different, binocular-headed creature. The GDD calls it the "mechanical observer". | G1, G2, folder names, GDD §4.4 | Asset names (`ENM_…`) are permanent IDs in code and files | Owner decided: **The Shepherd**, asset ID `ENM_Shepherd`, reference slot `shepherd-reference.png` |
 | C2 | **Stage 01 setting.** G1: night, floodlit industrial yard with banners. G2: dusk, open field with dead trees. | G1, G2 | Environment kit, lighting and skybox are different builds | Pick one as the base. GDD §3 Stage 01 lists floodlit-yard elements ("large yard, observer platform … distant silhouettes"), so G1 fits the GDD more closely |
-| C3 | **Observer eyes.** G2 has glowing red eyes, G1 does not. | G1, G2 | Eyes could become part of the red/green signal | Decide in the observer turnaround. Any eye glow must be paired with shape and sound, not colour alone (GDD §5.2, §6.4) |
+| C3 | **Shepherd signal lights.** Was: observer eyes. G2 has glowing red eyes, G1 does not. | G1, G2 | Eyes could become part of the red/green signal | Decide in The Shepherd turnaround (lantern, eyes or both). Any eye glow must be paired with shape and sound, not colour alone (GDD §5.2, §6.4) |
 | C4 | **Enemy roster and names.** Boards show 5 and 6 named enemies with roles not in the GDD. The GDD needs only 3 presences (observer, ward pursuer, blackout variant). | G1, G2, GDD §4.4 | Scope creep risk (GDD §13) | Treat board enemies as concept exploration only until a GDD revision adds them |
-| C5 | **Originality of the Stage 01 figure.** The giant girl doll with dark pigtails and an orange pinafore dress, used as a red-light / green-light enforcer, is strongly similar to a well-known doll design from an existing TV series. Some contestant designs also sit very close to an existing horror-platformer style. | G1, G2 Stage 01 panels; GDD §1 "original", §5.4, M10 "legal asset review" | The GDD requires an original visual identity and a legal asset review before release. Fixing a design is cheap now and expensive after modelling | Before observer modelling, commission an original observer design (different silhouette, costume, colours and head shape), keeping the GDD's "giant mechanical observer" function. Red light / green light itself is a traditional children's game and is not the issue |
+| C5 | **RESOLVED for the figure in v0.2.** Originality of the Stage 01 figure. The giant girl doll with dark pigtails and an orange pinafore dress, used as a red-light / green-light enforcer, is strongly similar to a well-known doll design from an existing TV series. Some contestant designs also sit very close to an existing horror-platformer style. | G1, G2 Stage 01 panels; GDD §1 "original", §5.4, M10 "legal asset review" | The GDD requires an original visual identity and a legal asset review before release. Fixing a design is cheap now and expensive after modelling | Owner decided: replace the doll with **The Shepherd**, an original giant mechanical shepherd. Still needed: an approved Shepherd concept and turnaround before modelling. The contestant-style similarity remains open for the character design pass |
 
 ## 5. Missing technical information for Stage 01
 
@@ -100,10 +100,10 @@ I do not invent the values; `STAGE_01_PRODUCTION_PLAN.md` proposes test ranges l
 
 | Area | Missing item | Blocks |
 |------|--------------|--------|
-| Layout | Field length and width, start-zone depth, finish-gate width, out-of-bounds edges, observer distance from finish | Greybox |
+| Layout | Field length and width, start-zone depth, finish-gate width, out-of-bounds edges, Shepherd distance from finish | Greybox |
 | Layout | Spawn arrangement for up to 30 players (grid spacing, minimum gap) | Greybox, server placement |
 | Scale | Contestant gameplay capsule (height, radius); contestant visual height | Everything metric |
-| Scale | Observer height and platform height | Observer model, sightlines |
+| Scale | Shepherd height and platform height | Shepherd model, sightlines |
 | Movement | Walk and sprint speed, acceleration, stopping distance (GDD §2.6 says "shared baseline values" but gives none). Whether sprint is enabled in Stage 01 | Field length, red-window tolerance |
 | Rules | Green and red durations or ranges, warning cue before red, scan duration, round timer | Server state machine, audio and VFX timing |
 | Rules | Movement tolerance during red (speed or distance threshold), grace period after red starts, latency compensation policy | Server validation (GDD §11.1) |
@@ -111,7 +111,7 @@ I do not invent the values; `STAGE_01_PRODUCTION_PLAN.md` proposes test ranges l
 | Rules | What happens to players who are still on the field at time-out | Results |
 | Presentation | Elimination presentation (GDD: no gore; "elimination transition") | Animation, VFX |
 | Presentation | Spectator camera behaviour on the Stage 01 field | Camera, UI |
-| Visual | Observer turnaround (front, side, back), which parts move (head only, torso, whole body), how red and green are shown on the figure | Observer model and rig |
+| Visual | Shepherd concept and turnaround (front, side, back), which parts move (head, torso, lantern arm, crook), how move and stop are shown on the figure | Shepherd model and rig |
 | Visual | Contestant base-body proportions and 3 preset variations (GDD §9.5 item 1) | Character pipeline |
 | Visual | Final palette tokens (GDD §5.2: "not locked") | Materials, lighting |
 | Audio | Signal cues (green, warning, red, scan), crowd/ambient, elimination cue | Audio pass |

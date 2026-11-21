@@ -64,13 +64,13 @@ GDD §9.2 prefixes, plus the additions marked NEW.
 | Prefix | Use | Example |
 |--------|-----|---------|
 | `CHR_` | Character meshes and files | `CHR_Contestant_Base` |
-| `ENM_` | Enemies | `ENM_Observer` (name pending conflict C1 in the reference manifest) |
+| `ENM_` | Enemies and stage figures | `ENM_Shepherd` (Stage 01) |
 | `STG01_` | Stage files and stage-only objects (two-digit stage number) | `STG01_RedLightGreenLight.blend` |
 | `PRP_` | Props; stage-specific props add the stage | `PRP_STG01_FloodlightMast` |
 | `VFX_` | Effect meshes | `VFX_SignalSweep` |
 | `COL_` | Collision proxies | `COL_STG01_Ground`, `COL_STG01_Wall_E` |
 | `MAT_` NEW | Shared materials | `MAT_Dirt_Packed`, `MAT_Metal_Worn` |
-| `GMK_` NEW | Gameplay markers (Empties) | `GMK_SPAWN_01` … `GMK_SPAWN_30`, `GMK_FINISH`, `GMK_OBSERVER` |
+| `GMK_` NEW | Gameplay markers (Empties) | `GMK_SPAWN_01` … `GMK_SPAWN_30`, `GMK_FINISH`, `GMK_SHEPHERD` |
 | `CAM_` NEW | Authored cameras | `CAM_STG01_Intro`, `CAM_STG01_Spectator_01` |
 | `LGT_` NEW | Lights | `LGT_STG01_Flood_03` |
 | `LOD1`, `LOD2` suffix NEW | Level-of-detail meshes | `PRP_STG01_FloodlightMast_LOD1` |
@@ -88,7 +88,7 @@ STG01_RedLightGreenLight.blend
 ├── STG01_PROPS      placed props (linked from prop files where possible)
 ├── STG01_LIGHTS     LGT_ objects, with a custom property bake = baked | dynamic | decorative
 ├── STG01_COL        COL_ proxies (not rendered)
-├── STG01_GMK        GMK_ empties (spawns, finish, observer, bounds, cameras targets)
+├── STG01_GMK        GMK_ empties (spawns, finish, Shepherd, bounds, camera targets)
 ├── STG01_CAM        CAM_ objects
 └── _WORK            scratch; never exported
 ```
@@ -155,7 +155,7 @@ Planned scripts (none are written yet; they come after approval):
 
 | Script | Job |
 |--------|-----|
-| `build_stg01_greybox.py` | Build the greybox from the spec: ground, start zone, finish gate, observer platform and placeholder, boundaries, `COL_` proxies, `GMK_` markers |
+| `build_stg01_greybox.py` | Build the greybox from the spec: ground, start zone, finish gate, Shepherd platform and placeholder, boundaries, `COL_` proxies, `GMK_` markers |
 | `export_stage.py` | Export the runtime GLB and the collision and marker JSON for a stage |
 | `validate_asset.py` | Check a `.blend` or `.glb` against §4, §5, §7 and the budgets; write a JSON report |
 | `render_preview.py` | CPU Cycles or Workbench preview renders from `CAM_` objects for review |
@@ -185,7 +185,7 @@ An asset is not "approved" until all of these pass (GDD §9.1 step 8):
 1. **Scene check** (`validate_asset.py`): naming prefixes, unit scale 1.0, applied transforms,
    no unused or duplicate materials, no missing textures, no n-gons on deforming meshes, triangle and
    texture counts against budget, required `GMK_` markers present (Stage 01: 30 spawns, finish,
-   observer, bounds).
+   Shepherd, bounds).
 2. **glTF check:** the official Khronos glTF Validator (`npx gltf-validator`, pinned) reports no errors.
 3. **Browser check:** a headless Chromium test (Playwright, already installed in the cloud container)
    loads the GLB with Three.js `GLTFLoader`, checks object names, marker count and bounds in metres,
@@ -200,7 +200,7 @@ An asset is not "approved" until all of these pass (GDD §9.1 step 8):
 | Asset | Triangles (LOD0) | Textures | Notes |
 |-------|------------------|----------|-------|
 | Contestant (body + preset parts) | ≤ 4,000 | one 1K atlas | × 30 on screen ≈ 120k triangles; one skinned mesh per contestant |
-| Observer | ≤ 25,000 | up to 2 × 2K | Single large hero asset |
+| The Shepherd | ≤ 25,000 | up to 2 × 2K | Single large hero asset |
 | Stage 01 environment, visible at once | ≤ 300,000 | shared 1K–2K sets, KTX2 | Background silhouettes as low-poly cards |
 | Draw calls, whole Stage 01 scene | ≤ 150 | | Instancing for masts, banners, fences (GDD §8.1) |
 | Stage 01 runtime download (compressed) | ≤ 20 MB | | GDD §8: load only the current stage |

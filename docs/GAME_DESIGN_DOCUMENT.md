@@ -1,8 +1,8 @@
-ORIGINAL MULTIPLAYER GAME
+ORIGINAL MULTIPLAYER GAME · CREATIVE NOMADS
 
-# THE LAST TRIAL
+# CN TRIALS
 
-*Thirty enter. Only one survives.*
+*Thirty enter. Only one survives.* (working tagline, under review: see §14)
 
 > 
 
@@ -12,14 +12,22 @@ INITIAL PRE-PRODUCTION SPECIFICATION
 
 | DOCUMENT CONTROL | VALUE |
 | --- | --- |
-| Project title | THE LAST TRIAL |
-| Document version | 0.1 - Initial direction and pre-production |
-| Prepared | 21 November 2026 |
+| Project title | CN TRIALS (CN = Creative Nomads). Formerly THE LAST TRIAL |
+| Document version | 0.2 - Renamed; The Shepherd; Standup mode |
+| Prepared | 21 November 2026 (v0.1); updated 21 November 2026 (v0.2) |
+| Owner and purpose | Creative Nomads, internal. A team icebreaker for standups, with a longer tournament for team events |
 | Status | Working baseline. Gameplay, technical and production assumptions require validation. |
 | Primary implementation | Claude Code + React / Three.js + Colyseus |
 | 3D production | Blender, with web-ready GLB / glTF exports |
 
 > **SCOPE NOTE** This document defines the first production baseline. It is not a claim that all systems, stage counts, player counts or performance targets have already been proven in a playable build.
+
+### Version history
+
+| VERSION | DATE | CHANGE | DECIDED BY |
+| --- | --- | --- | --- |
+| 0.1 | 21 Nov 2026 | Initial direction and pre-production baseline as THE LAST TRIAL. | Project owner |
+| 0.2 | 21 Nov 2026 | Renamed to CN TRIALS. Purpose set: Creative Nomads team standup icebreaker. The Stage 01 figure becomes The Shepherd, an original design replacing the earlier doll concept. Added Standup mode (§2.3.1) alongside the full tournament. "Monetization: private" confirmed as internal use with no monetization. | Project owner (APPROVED). Standup mode details are PROPOSED |
 
 ## Document guide
 
@@ -53,7 +61,9 @@ This GDD is the shared source of truth for concept design, stage production, Ble
 
 ### 1.1 High concept
 
-THE LAST TRIAL is a desktop browser-based 3D multiplayer elimination game for private groups. Up to 30 guest contestants enter a hosted room and compete through a sequence of trials that mix reaction challenges, team cooperation, obstacle racing, escape-room puzzles, horror survival and platforming. Each round removes contestants until one winner remains.
+CN TRIALS is a desktop browser-based 3D multiplayer elimination game for private groups. Up to 30 guest contestants enter a hosted room and compete through a sequence of trials that mix reaction challenges, team cooperation, obstacle racing, escape-room puzzles, horror survival and platforming. Each round removes contestants until one winner remains.
+
+APPROVED PURPOSE: CN TRIALS is made for Creative Nomads (CN), a remote-first studio of 20+ people. Its main use is a short icebreaker at team standups (Standup mode, §2.3.1). The full seven-round tournament remains for longer team events.
 
 The experience combines the readable, fast-to-understand competition loop of a party elimination game with high-pressure survival rules and a cinematic, dark fantasy presentation. The characters are simple, expressive and easy to distinguish. The environments are much larger, more detailed and atmospheric.
 
@@ -71,8 +81,10 @@ The experience combines the readable, fast-to-understand competition loop of a p
 | Room capacity | 30 players maximum | Server and client must be designed and tested for up to 30 contestants in one room. |
 | Roster | 30 character identities | Create 30 curated presets on a shared modular character system, not 30 independent rigs. |
 | Stage pool | 10 stages | Seven rounds per default tournament, with alternate stages used to vary repeat matches. |
+| Purpose | Team icebreaker for Creative Nomads standups | Sessions must fit inside a standup; joining must take seconds; tone must suit a workplace. |
+| Session modes | Standup mode and full tournament | Standup mode (§2.3.1) is the everyday mode. The seven-round tournament (§2.3) is for team events. |
 
-Interpretation to confirm before public release: “Monetization: private” is treated here as no monetization and invite-only play. If it instead means a paid private product or a restricted commercial distribution model, update this section before pricing, legal or deployment decisions.
+CONFIRMED (v0.2): “Monetization: private” means internal use by the Creative Nomads team, invite-only, with no monetization.
 
 ### 1.3 Genre and experience
 
@@ -83,9 +95,10 @@ Interpretation to confirm before public release: “Monetization: private” is 
 - Tone: tense and mysterious, with moments of physical comedy, surprise, panic and triumph.
 ### 1.4 Target players
 
-Primary audience: groups of friends who want an easy-to-organize online competition. A guest should be able to open a link, enter a nickname, select a character and join without creating an account.
+Primary audience: the Creative Nomads team (20+ people, remote-first, working across time zones in US business hours) playing together at standups and team events. Secondary: other private groups who want an easy-to-organize online competition. A guest should be able to open a link, enter a nickname, select a character and join without creating an account.
 
-- Social play is organized by the host, not by public matchmaking.
+- Social play is organized by the host, not by public matchmaking. At standups the host is usually the person running the meeting.
+- Players range from developers to account and SEO staff, so the game must be playable by people who rarely play games.
 - The rules for each stage must be understandable within a short pre-round briefing.
 - Players who are eliminated should remain part of the session as spectators rather than being disconnected immediately.
 - The game should work well for mixed skill levels. Stage rules should reward timing, reading the environment and cooperation, not only fast reactions.
@@ -157,9 +170,28 @@ PROPOSED DEFAULT: seven rounds per tournament. The game contains ten stages in i
 - Paired escape room: create pairs. The two fastest pairs that complete the room advance together. A solo odd player in non-default room sizes receives a short solo variant or is paired with a server-controlled helper only if the team mode is deliberately designed for it.
 - Horror survival: qualify by reaching the extraction point. Players caught by the enemy or still inside when the timer expires are eliminated.
 - Final: the stage must produce exactly one winner. If a timer expires without a clear winner, use a sudden-death overtime rule rather than a shared win.
+### 2.3.1 Standup mode
+
+APPROVED: a short session format for team standups. All details below are PROPOSED until playtested with the team.
+
+| ITEM | PROPOSED RULE |
+| --- | --- |
+| Target length | 5 to 10 minutes from opening the link to the results screen (TARGET). |
+| Formats | Host picks **Quick** (1 round, about 3 to 5 minutes) or **Short** (3 rounds, about 8 to 10 minutes). Quick is the default. |
+| Quick format | One race stage, normally Stage 01 Red Light, Green Light. The server ranks players by recorded finish time; the first finisher is the champion. Players still on the course at time-out rank by progress; eliminated players rank last, latest elimination first. Every player gets a placing. |
+| Short format | Round 1: Stage 01 (about half advance). Round 2: one short stage from those that have passed acceptance (Tug of War, The Factory or The Hollow Bridge). Round 3: a final that produces exactly one winner (The Last Bell, or a race final where the first finisher wins). Qualification targets scale to the actual starting count. |
+| Stages allowed | Only stages that have passed their acceptance gate (§3.1) and normally run 3 minutes or less. The Clockwork House (3 to 5 minutes, pairs) is excluded from the default rotation. Horror stages are excluded until the tone decision in §14 is made. |
+| Briefing | At most 15 seconds, one sentence plus one icon. A player who has seen a stage's briefing before can skip it; the countdown waits for the longest remaining briefing. No stage-intro cinematics in Standup mode. |
+| Results | Results screen of about 20 seconds with podium and full placings, then Play again (same room and roster) or End. |
+| Late arrivals | People who join during a match wait in the lobby as spectators and enter the next match. They never join a match in progress. |
+| Player count | Designed for a typical standup of 3 to 22 players; must work from 2 players. |
+| Standing team room | A reusable team link for daily standups is TBD; it may need persistence (§7.1 assumes no database). |
+
+The full seven-round tournament below remains the format for team events.
+
 ### 2.4 Match length
 
-TARGET FOR PLAYTESTING: approximately 20 to 30 minutes for a full seven-round tournament, including briefings and transitions. This is an initial pacing hypothesis, not a measured duration. Stage timers should be tuned after real groups play the prototype.
+TARGET FOR PLAYTESTING: Standup mode 5 to 10 minutes (§2.3.1). Approximately 20 to 30 minutes for a full seven-round tournament, including briefings and transitions. This is an initial pacing hypothesis, not a measured duration. Stage timers should be tuned after real groups play the prototype.
 
 | ROUND TYPE | INITIAL DURATION TARGET | NOTES |
 | --- | --- | --- |
@@ -203,9 +235,9 @@ Each stage must have one primary gameplay verb, one clear win/qualification cond
 | --- | --- |
 | Genre / role | Opening reaction / movement |
 | Player count | 30 target starters; 22 target qualifiers. |
-| Core loop | Contestants cross a large outdoor testing yard while a giant mechanical observer controls the signal. Move during green. Stop during red. Crossing the finish line before time expires qualifies. |
-| Rules and failure | Observer turns away or displays green. On red, the observer turns and scans. Movement above an approved tolerance during the red window triggers elimination. The server validates motion and accounts for latency. |
-| Environment | Large yard, start zone, finish gate, observer platform, cover-free lanes, side dressing and distant silhouettes. |
+| Core loop | Contestants cross a large outdoor testing yard while The Shepherd, a giant mechanical observer, controls the signal. Move during green. Stop during red. Crossing the finish line before time expires qualifies. |
+| Rules and failure | The Shepherd turns away or displays green. On red, The Shepherd turns and scans. Movement above an approved tolerance during the red window triggers elimination. The server validates motion and accounts for latency. |
+| Environment | Large yard, start zone, finish gate, Shepherd platform, cover-free lanes, side dressing and distant silhouettes. |
 | Implementation needs | Signal state machine, scan timing, movement validation, finish detection, elimination, timer, results and spectator handoff. |
 | Design notes | This is the first vertical-slice stage. Its environment and mechanic must be fully playable before large-scale content production. |
 
@@ -385,7 +417,7 @@ The first release needs a small number of memorable enemy types, not a large ene
 
 | ENEMY / PRESENCE | ROLE | AI REQUIREMENTS |
 | --- | --- | --- |
-| Mechanical observer | Red Light, Green Light stage authority expressed visually. | Signal state, rotation, scan cue and movement detection window. It may be a large animated prop rather than a full roaming enemy. |
+| The Shepherd (mechanical observer) | Red Light, Green Light stage authority expressed visually. An original design: a giant mechanical shepherd watching over the flock of contestants. PROPOSED brief: turned away with its lantern lowered means move; turned to face the players with lantern and crook raised means stop. The signal never relies on colour alone. Final look comes from an approved concept. | Signal state, rotation, scan cue and movement detection window. It may be a large animated prop rather than a full roaming enemy. |
 | Ward pursuer | Main horror-stage enemy. | Patrol, investigate, chase, search and return. Server owns target selection and catch events. |
 | Blackout variant | Alternate pursuer or re-skinned behavior variant. | May reuse core AI if detection rules are adjusted for light and battery mechanics. |
 
@@ -397,7 +429,7 @@ The first release needs a small number of memorable enemy types, not a large ene
 
 ### 5.1 Hybrid visual direction
 
-The uploaded references establish two complementary visual qualities: cinematic, painterly action imagery with dramatic lighting and rich atmospheric environments; and small, stylized, unsettling character design with simple silhouettes and worn clothing. THE LAST TRIAL combines these qualities into an original visual identity.
+The uploaded references establish two complementary visual qualities: cinematic, painterly action imagery with dramatic lighting and rich atmospheric environments; and small, stylized, unsettling character design with simple silhouettes and worn clothing. CN TRIALS combines these qualities into an original visual identity.
 
 | VISUAL LAYER | DIRECTION | PRODUCTION GUIDANCE |
 | --- | --- | --- |
@@ -662,7 +694,7 @@ These are initial engineering targets for testing. They are not guaranteed perfo
 | --- | --- | --- |
 | 1 | One contestant base body, rig and 3 preset variations. | Validate silhouette, scale, animation and modular costume workflow. |
 | 2 | Red Light, Green Light greybox and collision. | Prove the first full stage before high-detail modeling. |
-| 3 | Observer / signal prop. | Core visual identity and gameplay signal. |
+| 3 | The Shepherd / signal prop. | Core visual identity and gameplay signal. |
 | 4 | Red Light, Green Light final environment art pass. | Test lighting, fog, materials and 30-player readability. |
 | 5 | Factory modular prop kit. | Create reusable hazard and industrial asset workflows. |
 | 6 | Ward pursuer and stealth room kit. | Validate enemy rig, animation and stage-specific AI presentation. |
@@ -677,7 +709,7 @@ The production sequence is risk-first. Prove room networking and one complete st
 | M0 - Technical spike | Create repo, confirm stable dependency versions, render one Blender GLB, connect two browser clients to one room, test 30 simulated clients. | Architecture decision record, a working local client/server connection, 30-client load-test report and known-risk list. |
 | M1 - Graybox core | Third-person controller, camera, basic collision, lobby shell, one graybox arena. | One player can complete a simple test course. No final art required. |
 | M2 - Private room | Room creation, invite token, guest join, character preset selection, ready state, host permissions, capacity. | At least two real browsers join through a link; room rejects a 31st player. |
-| M3 - First playable stage | Red Light, Green Light rules, observer state, movement validation, timer, qualification, elimination, spectator view. | A full small-group round completes correctly from start to results. |
+| M3 - First playable stage | Red Light, Green Light rules, Shepherd state, movement validation, timer, qualification, elimination, spectator view. | A full small-group round completes correctly from start to results. |
 | M4 - 30-player vertical slice | Optimize shared character model, sync movement, validate full lobby, reconnect, stage load and performance. | 30 clients complete the first stage under agreed test conditions. |
 | M5 - Two-stage tournament | Add Tug of War and inter-round tournament state. | Two rounds run sequentially with correct team assignment and qualified roster. |
 | M6 - Core stage framework | Implement common stage lifecycle, stage result contract and server-owned hazard pattern. | A new stage can be added without rewriting room/tournament logic. |
@@ -783,7 +815,11 @@ The following topics are not blockers for drafting the first prototype, but they
 
 | ITEM | CURRENT POSITION | DECISION / TEST REQUIRED BY |
 | --- | --- | --- |
-| Meaning of “private” monetization | Assumed no monetization and private invited rooms. | Confirm before public launch or any commercial planning. |
+| Meaning of “private” monetization | RESOLVED v0.2: internal Creative Nomads use, no monetization. | Done. |
+| Tone for a workplace game | Proposed: tense but playful. Keep suspense, drop horror imagery; frame elimination as leaving the round, not harm. Affects The Quiet Ward, The Blackout and enemy designs. | Before any horror-stage production. |
+| Tagline | "Thirty enter. Only one survives." kept as a working line. | Before the art and title pass. |
+| Standup mode defaults | Quick (1 round) default; Short (3 rounds) optional. | Playtest with the team after Stage 01 is playable. |
+| Standing team room | Reusable daily link; may need storage. | Before Standup mode beta. |
 | Minimum player count | Proposed minimum 2; full design tuned for 30. | Test 2, 4, 8, 16 and 30-player tournaments. |
 | Tournament stage selection | Fixed seven round slots with alternatives in selected slots. | Approve after first stage prototypes and match pacing tests. |
 | Physics engine | Rapier versus lightweight custom server kinematic controller. | M0 technical spike. |
@@ -821,7 +857,7 @@ The following topics are not blockers for drafting the first prototype, but they
 
 ### 15.2 Proposed repository structure
 
-THE-LAST-TRIAL/
+CN-Multiplayer/   (repository; formerly THE-LAST-TRIAL/)
   apps/
     web/                  # React UI, Three.js scene, camera, input, HUD
     server/               # Colyseus rooms, simulation, stages, match rules
