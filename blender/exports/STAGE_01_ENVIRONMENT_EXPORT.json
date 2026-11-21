@@ -1,0 +1,308 @@
+{
+  "glb": "blender/exports/STAGE_01_ENVIRONMENT.glb",
+  "blend": "blender/scenes/STAGE_01_ENVIRONMENT_FINAL.blend",
+  "blender": "5.3.0",
+  "modular_scene": {
+    "VISUAL_ARCHITECTURE": {
+      "objects": 155,
+      "triangles": 31652,
+      "unique_meshes": 60
+    },
+    "VISUAL_BACKDROP": {
+      "objects": 32,
+      "triangles": 2280,
+      "unique_meshes": 11
+    },
+    "VISUAL_FOLIAGE": {
+      "objects": 139,
+      "triangles": 3088,
+      "unique_meshes": 2
+    },
+    "VISUAL_MACHINERY": {
+      "objects": 17,
+      "triangles": 3204,
+      "unique_meshes": 14
+    },
+    "VISUAL_PROPS": {
+      "objects": 13,
+      "triangles": 13234,
+      "unique_meshes": 13
+    },
+    "VISUAL_SIGNAL_DEVICES": {
+      "objects": 14,
+      "triangles": 1800,
+      "unique_meshes": 4
+    },
+    "VISUAL_VFX": {
+      "objects": 1,
+      "triangles": 100,
+      "unique_meshes": 1
+    },
+    "VISUAL_WATCHER": {
+      "objects": 5,
+      "triangles": 400,
+      "unique_meshes": 5
+    }
+  },
+  "merged_for_export": {
+    "VISUAL_ARCHITECTURE": {
+      "objects": 152,
+      "triangles": 31400,
+      "materials": 15
+    },
+    "VISUAL_PROPS": {
+      "objects": 13,
+      "triangles": 13234,
+      "materials": 8
+    },
+    "VISUAL_SIGNAL_DEVICES": {
+      "objects": 14,
+      "triangles": 1800,
+      "materials": 6
+    },
+    "VISUAL_MACHINERY": {
+      "objects": 17,
+      "triangles": 3204,
+      "materials": 7
+    },
+    "VISUAL_FOLIAGE": {
+      "objects": 139,
+      "triangles": 3088,
+      "materials": 3
+    },
+    "VISUAL_BACKDROP": {
+      "objects": 32,
+      "triangles": 2280,
+      "materials": 9
+    }
+  },
+  "separate_nodes": [
+    "ENM_Shepherd_Placeholder_Body",
+    "ENM_Shepherd_Placeholder_Crook",
+    "ENM_Shepherd_Placeholder_Face",
+    "ENM_Shepherd_Placeholder_Head",
+    "ENM_Shepherd_Placeholder_Lantern",
+    "PRP_STG01_JudgesBooth_TimerBoard",
+    "PRP_STG01_StartBarrier_Arm",
+    "STG01_Ground_Yard",
+    "VFX_GroundHaze"
+  ],
+  "anchor_empties": 73,
+  "triangles": 55758,
+  "glb_summary": {
+    "bytes": 6429024,
+    "nodes": 88,
+    "mesh_nodes": 15,
+    "meshes": 15,
+    "primitives": 52,
+    "draw_calls_estimate": 52,
+    "materials": [
+      "MAT_Asphalt_Wet",
+      "MAT_Cable",
+      "MAT_ChainLink",
+      "MAT_Checker_Finish",
+      "MAT_Concrete_Weathered",
+      "MAT_Foliage",
+      "MAT_Glass_Window_Warm",
+      "MAT_Ground_DirtGrass",
+      "MAT_Ground_Far",
+      "MAT_Light_Aviation",
+      "MAT_Light_Sodium",
+      "MAT_Light_Warm",
+      "MAT_Metal_RustPaint",
+      "MAT_Paint_Line",
+      "MAT_Puddle",
+      "MAT_Shepherd_Face",
+      "MAT_Shepherd_Lantern",
+      "MAT_Shepherd_Placeholder",
+      "MAT_Signal_Amber",
+      "MAT_Signal_Green",
+      "MAT_Signal_Red",
+      "MAT_Silhouette",
+      "MAT_Steel_Dark",
+      "MAT_Steel_Galvanised",
+      "MAT_Stripes_Barrier",
+      "MAT_Stripes_Hazard",
+      "MAT_TimerBoard_Screen",
+      "MAT_VFX_Haze",
+      "MAT_Wood_Weathered"
+    ],
+    "textures": 37,
+    "images": [
+      {
+        "name": "T_Steel_Dark_N",
+        "mimeType": "image/webp",
+        "bytes": 52392
+      },
+      {
+        "name": "T_Steel_Dark_BC",
+        "mimeType": "image/webp",
+        "bytes": 11086
+      },
+      {
+        "name": "T_Steel_Dark_ORM",
+        "mimeType": "image/webp",
+        "bytes": 15218
+      },
+      {
+        "name": "T_Ground_DirtGrass_N",
+        "mimeType": "image/webp",
+        "bytes": 27994
+      },
+      {
+        "name": "T_Ground_DirtGrass_BC",
+        "mimeType": "image/webp",
+        "bytes": 10594
+      },
+      {
+        "name": "T_Ground_DirtGrass_ORM",
+        "mimeType": "image/webp",
+        "bytes": 5306
+      },
+      {
+        "name": "T_Concrete_Weathered_N",
+        "mimeType": "image/webp",
+        "bytes": 64966
+      },
+      {
+        "name": "T_Concrete_Weathered_BC",
+        "mimeType": "image/webp",
+        "bytes": 30514
+      },
+      {
+        "name": "T_Concrete_Weathered_ORM",
+        "mimeType": "image/webp",
+        "bytes": 17718
+      },
+      {
+        "name": "T_Stripes_Hazard_BC",
+        "mimeType": "image/webp",
+        "bytes": 8716
+      },
+      {
+        "name": "T_Stripes_Hazard_ORM",
+        "mimeType": "image/webp",
+        "bytes": 4398
+      },
+      {
+        "name": "T_ChainLink_BC",
+        "mimeType": "image/webp",
+        "bytes": 6776
+      },
+      {
+        "name": "T_ChainLink_ORM",
+        "mimeType": "image/webp",
+        "bytes": 4802
+      },
+      {
+        "name": "T_Steel_Galvanised_N",
+        "mimeType": "image/webp",
+        "bytes": 370
+      },
+      {
+        "name": "T_Steel_Galvanised_BC",
+        "mimeType": "image/webp",
+        "bytes": 4702
+      },
+      {
+        "name": "T_Steel_Galvanised_ORM",
+        "mimeType": "image/webp",
+        "bytes": 5268
+      },
+      {
+        "name": "T_Checker_Finish_BC",
+        "mimeType": "image/webp",
+        "bytes": 4998
+      },
+      {
+        "name": "T_Checker_Finish_ORM",
+        "mimeType": "image/webp",
+        "bytes": 202
+      },
+      {
+        "name": "T_Metal_RustPaint_N",
+        "mimeType": "image/webp",
+        "bytes": 47762
+      },
+      {
+        "name": "T_Metal_RustPaint_BC",
+        "mimeType": "image/webp",
+        "bytes": 52918
+      },
+      {
+        "name": "T_Metal_RustPaint_ORM",
+        "mimeType": "image/webp",
+        "bytes": 25688
+      },
+      {
+        "name": "T_Wood_Weathered_N",
+        "mimeType": "image/webp",
+        "bytes": 18114
+      },
+      {
+        "name": "T_Wood_Weathered_BC",
+        "mimeType": "image/webp",
+        "bytes": 5958
+      },
+      {
+        "name": "T_Wood_Weathered_ORM",
+        "mimeType": "image/webp",
+        "bytes": 1130
+      },
+      {
+        "name": "T_Paint_Worn_BC",
+        "mimeType": "image/webp",
+        "bytes": 8134
+      },
+      {
+        "name": "T_Paint_Worn_ORM",
+        "mimeType": "image/webp",
+        "bytes": 9426
+      },
+      {
+        "name": "T_Foliage_BC",
+        "mimeType": "image/webp",
+        "bytes": 1814
+      },
+      {
+        "name": "T_Foliage_ORM",
+        "mimeType": "image/webp",
+        "bytes": 202
+      },
+      {
+        "name": "T_Stripes_Barrier_BC",
+        "mimeType": "image/webp",
+        "bytes": 11862
+      },
+      {
+        "name": "T_Stripes_Barrier_ORM",
+        "mimeType": "image/webp",
+        "bytes": 9820
+      },
+      {
+        "name": "T_Asphalt_Wet_N",
+        "mimeType": "image/webp",
+        "bytes": 476470
+      },
+      {
+        "name": "T_Asphalt_Wet_BC",
+        "mimeType": "image/webp",
+        "bytes": 19726
+      },
+      {
+        "name": "T_Asphalt_Wet_ORM",
+        "mimeType": "image/webp",
+        "bytes": 13532
+      },
+      {
+        "name": "T_Haze_BC",
+        "mimeType": "image/webp",
+        "bytes": 11038
+      }
+    ],
+    "extensions_used": [
+      "KHR_materials_emissive_strength",
+      "EXT_texture_webp"
+    ]
+  }
+}

@@ -8,6 +8,8 @@
 #  - the GLB passes the Khronos glTF Validator and loads in headless Chromium with Three.js
 #  - STAGE_01_COLLISION_READY.blend matches STAGE_01_METADATA.json (schema, IDs, transforms, runtime
 #    exports) and the metadata rebuilds exactly from the approved greybox
+#  - the Prompt 05 environment exports a valid GLB (glTF Validator, Three.js scale/orientation/materials)
+#    and keeps every gameplay object identical to the collision-ready scene
 name: Checks
 
 on:
@@ -60,6 +62,12 @@ jobs:
           python blender/scripts/stage_01_collision_setup.py
           git diff --exit-code blender/exports/STAGE_01_METADATA.json blender/exports/STAGE_01_METADATA_VALIDATION.json
 
+      - name: Stage 01 environment (Prompt 05) - GLB export, browser check and scene validation
+        run: |
+          python blender/scripts/stage_01_environment_export.py
+          node tools/asset-check/check-environment.mjs
+          python blender/scripts/validate_stage_01_environment.py --report "$RUNNER_TEMP/STAGE_01_ENVIRONMENT_VALIDATION.json"
+
       - name: Exports are up to date with the spec
         run: |
           python blender/scripts/generate_stage_01_greybox.py --out "$RUNNER_TEMP/rebuild/STAGE_01_GREYBOX.blend"
@@ -79,6 +87,8 @@ jobs:
             blender/exports/STG01/browser
             ${{ runner.temp }}/STG01_validation.json
             ${{ runner.temp }}/STAGE_01_METADATA_VALIDATION.json
+            ${{ runner.temp }}/STAGE_01_ENVIRONMENT_VALIDATION.json
+            blender/exports/STAGE_01_ENVIRONMENT_browser
           retention-days: 7
 
   app:

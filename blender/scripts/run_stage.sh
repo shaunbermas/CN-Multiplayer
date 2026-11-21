@@ -35,3 +35,12 @@ if [[ "$STAGE" == "STG01" ]]; then
   if [[ $RENDER == 1 ]]; then SHOTS=--screenshots; else SHOTS=; fi
   python3 blender/scripts/stage_01_collision_setup.py $SHOTS | grep -E '^(PASS|FAIL|RESULT|Rendered)'
 fi
+if [[ "$STAGE" == "STG01" ]]; then
+  echo "== detailed environment (Prompt 05)"
+  python3 blender/scripts/stage_01_textures.py
+  python3 blender/scripts/stage_01_environment_build.py | grep Saved
+  python3 blender/scripts/stage_01_environment_export.py | tail -1
+  NODE_PATH="$(npm root -g)" node tools/asset-check/check-environment.mjs | head -4
+  python3 blender/scripts/validate_stage_01_environment.py | grep -E '^(PASS|FAIL|RESULT)'
+  if [[ $RENDER == 1 ]]; then python3 blender/scripts/stage_01_environment_render.py | grep Rendered; fi
+fi

@@ -181,6 +181,7 @@ Scripts (written and run for Stage 01 on 21 November 2026; see `blender/README.m
 | `run_stage.sh` | Runs all of the above plus the browser check in one command; installs `bpy` if missing |
 | `stage_01_collision_setup.py` | Prompt 04: collision-ready scene with gameplay collections and `STAGE_01_METADATA.json` (`docs/STAGE_01_COLLISION_VALIDATION.md`) |
 | `validate_stage_01_metadata.py` | Schema, ID, transform and runtime-consistency checks for the metadata |
+| `stage_01_textures.py`, `stage_01_environment_build.py`, `stage_01_environment_export.py`, `validate_stage_01_environment.py`, `stage_01_environment_render.py` | Prompt 05 detailed environment, test GLB and validation (`docs/STAGE_01_ENVIRONMENT_VALIDATION.md`) |
 | `../tools/asset-check/check-glb.mjs` | Khronos glTF Validator and Three.js load in headless Chromium |
 
 ### Running
