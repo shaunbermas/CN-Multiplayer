@@ -1,18 +1,24 @@
 // Small room client used by the web app and by the Node tests (Node 22+ has a global WebSocket).
-// Keeps the latest server snapshot per player; the web app adds prediction on top.
+// Keeps the latest server snapshot per player and the round state; the web app adds prediction.
 import {
-  PROTOCOL_VERSION, type ClientMessage, type RosterEntry, type ServerMessage,
+  PROTOCOL_VERSION, STATUS_OF, type ClientMessage, type RosterEntry, type RoundState, type ServerMessage,
+  type StartRequestOptions,
 } from './protocol.ts';
+import type { Placing, PlayerStatus } from './round.ts';
 
 export interface PlayerView {
   id: string; name: string; spawn: number;
   x: number; z: number; vx: number; vz: number; yaw: number;
-  ack: number; status: 'active' | 'finished'; finishTime: number;
+  ack: number; status: PlayerStatus; finishTime: number;
 }
+
+export type ResultRow = Placing & { name: string };
 
 export class RoomError extends Error {
   constructor(public code: string, message: string) { super(message); }
 }
+
+const LOBBY: RoundState = { phase: 'lobby', signal: 'none', remaining: -1, elapsed: 0, host: '', seed: 0 };
 
 export class RoomClient {
   readonly players = new Map<string, PlayerView>();
@@ -21,6 +27,11 @@ export class RoomClient {
   stage = '';
   time = 0;
   snapshots = 0;
+  round: RoundState = { ...LOBBY };
+  /** Local clock (ms) when the last snapshot arrived, to smooth timers between snapshots. */
+  roundAt = 0;
+  results: ResultRow[] = [];
+  readonly events: { kind: 'spotted' | 'finished'; id: string; at: number }[] = [];
   private ws: WebSocket;
   private closeHandlers: ((code: number, reason: string) => void)[] = [];
   private snapHandlers: (() => void)[] = [];
@@ -49,25 +60,47 @@ export class RoomClient {
       ws.addEventListener('message', (ev) => {
         let msg: ServerMessage;
         try { msg = JSON.parse(String(ev.data)); } catch { return; }
-        if (msg.t === 'error') return fail(new RoomError(msg.code, msg.message));
-        if (msg.t === 'welcome') {
-          c.id = msg.id; c.room = msg.room; c.stage = msg.stage;
-          c.applyRoster(msg.roster);
-          if (!settled) { settled = true; clearTimeout(timer); resolve(c); }
-        } else if (msg.t === 'roster') {
-          c.applyRoster(msg.roster);
-        } else if (msg.t === 'snap') {
-          c.time = msg.time;
-          c.snapshots++;
-          for (const [id, x, z, vx, vz, yaw, ack, st, ft] of msg.rows) {
-            const p = c.players.get(id);
-            if (!p) continue;
-            Object.assign(p, { x, z, vx, vz, yaw, ack, status: st ? 'finished' : 'active', finishTime: ft });
-          }
-          for (const h of c.snapHandlers) h();
+        switch (msg.t) {
+          case 'error':
+            return fail(new RoomError(msg.code, msg.message));
+          case 'welcome':
+            c.id = msg.id; c.room = msg.room; c.stage = msg.stage;
+            c.applyRoster(msg.roster);
+            c.setRound(msg.round);
+            if (!settled) { settled = true; clearTimeout(timer); resolve(c); }
+            break;
+          case 'roster':
+            c.applyRoster(msg.roster);
+            break;
+          case 'snap':
+            c.time = msg.time;
+            c.snapshots++;
+            c.setRound(msg.round);
+            for (const [id, x, z, vx, vz, yaw, ack, st, ft] of msg.rows) {
+              const p = c.players.get(id);
+              if (p) Object.assign(p, { x, z, vx, vz, yaw, ack, status: STATUS_OF[st] ?? 'active', finishTime: ft });
+            }
+            for (const h of c.snapHandlers) h();
+            break;
+          case 'results':
+            c.results = msg.placings;
+            break;
+          case 'event':
+            c.events.push({ kind: msg.kind, id: msg.id, at: Date.now() });
+            if (c.events.length > 100) c.events.shift();
+            break;
+          case 'probe':
+            c.send({ t: 'probe_ack', id: msg.id });
+            break;
         }
       });
     });
+  }
+
+  private setRound(r: RoundState): void {
+    if (r.phase === 'briefing' && this.round.phase !== 'briefing') this.results = [];
+    this.round = r;
+    this.roundAt = Date.now();
   }
 
   private applyRoster(roster: RosterEntry[]): void {
@@ -83,10 +116,20 @@ export class RoomClient {
   }
 
   get self(): PlayerView | undefined { return this.players.get(this.id); }
+  get isHost(): boolean { return this.round.host === this.id; }
+
+  /** Seconds left in the current phase, smoothed with the local clock between snapshots. */
+  remaining(): number {
+    if (this.round.remaining < 0) return -1;
+    return Math.max(0, this.round.remaining - (Date.now() - this.roundAt) / 1000);
+  }
 
   send(msg: ClientMessage): void {
     if (this.ws.readyState === 1) this.ws.send(JSON.stringify(msg));
   }
+
+  start(opts?: StartRequestOptions): void { this.send({ t: 'start', opts }); }
+  skipBriefing(): void { this.send({ t: 'skip' }); }
 
   onClose(h: (code: number, reason: string) => void): void { this.closeHandlers.push(h); }
   onSnapshot(h: () => void): void { this.snapHandlers.push(h); }
