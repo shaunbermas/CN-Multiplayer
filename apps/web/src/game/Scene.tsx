@@ -138,6 +138,9 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
     if (camPos.current.lengthSq() === 0) camPos.current.copy(target);
     camera.position.copy(camPos.current);
     camera.lookAt(fx + fwx * 4, 1.4 + Math.sin(input.pitch) * 4, fz + fwz * 4);
+    // Test hook for fixed review viewpoints (tests/e2e/views.mjs); never set by the game itself.
+    const view = (window as unknown as { __cnView?: { pos: [number, number, number]; look: [number, number, number] } }).__cnView;
+    if (view) { camera.position.set(...view.pos); camera.lookAt(...view.look); }
 
     const s = pr.state;
     hud.progress = progress(stageGeo, mobile ? s.z : me.z);

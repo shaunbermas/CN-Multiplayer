@@ -1,0 +1,57 @@
+{
+  "quality": "high",
+  "date": "2026-11-21T18:08:17.823Z",
+  "renderer": "SwiftShader",
+  "errors": [],
+  "renderInfo": {
+    "spawn_gameplay": {
+      "calls": 119,
+      "triangles": 136292,
+      "programs": 18,
+      "textures": 61,
+      "dpr": 1
+    },
+    "midfield_to_watcher": {
+      "calls": 116,
+      "triangles": 135956,
+      "programs": 18,
+      "textures": 61,
+      "dpr": 1
+    },
+    "finish_looking_back": {
+      "calls": 113,
+      "triangles": 135720,
+      "programs": 18,
+      "textures": 61,
+      "dpr": 1
+    },
+    "side_skyline_west": {
+      "calls": 108,
+      "triangles": 135004,
+      "programs": 18,
+      "textures": 61,
+      "dpr": 1
+    },
+    "side_skyline_east": {
+      "calls": 105,
+      "triangles": 132998,
+      "programs": 18,
+      "textures": 61,
+      "dpr": 1
+    },
+    "overview_high": {
+      "calls": 120,
+      "triangles": 136340,
+      "programs": 18,
+      "textures": 61,
+      "dpr": 1
+    },
+    "watcher_close": {
+      "calls": 108,
+      "triangles": 133094,
+      "programs": 18,
+      "textures": 61,
+      "dpr": 1
+    }
+  }
+}
