@@ -1,7 +1,7 @@
 # CN Trials · Stage 01 environment design spec: Red Light, Green Light
 
 Status: **APPROVED v0.1** (owner approved all of §14 on 21 November 2026, decision 017). The environment
-greybox is built from it (`blender/scripts/build_stg01_greybox.py`, spec v0.2).
+greybox is built from it (`blender/scripts/generate_stage_01_greybox.py`; report: `docs/STAGE_01_GREYBOX_REPORT.md`).
 
 | Source | Role |
 |--------|------|
@@ -116,7 +116,7 @@ any change):
 ## 5. Player spawns
 
 30 spawns in 3 rows of 10, facing +Y. Lateral spacing 3.0 m and row spacing 2.5 m leave at least
-2.4 m between capsules, so nobody starts touching a neighbour and the camera behind each player has
+1.9 m between capsules (2.4 m side by side), so nobody starts touching a neighbour and the camera behind each player has
 room. Spawns fill from the centre of the front row outward (spec L7), so a small standup group starts
 together in the middle.
 
@@ -182,7 +182,7 @@ Stage 01). Everything below sits in the margins or the backdrop.
 | Element | Placement (Blender) | Size | Collision | Purpose |
 |---------|---------------------|------|-----------|---------|
 | Inner fence | X ±30, Y −12…172; back wall Y 172 | 3 m, chain-link on posts every 4 m | Yes (existing walls) | Keeps players in; see-through so the margins stay visible |
-| Start barrier arm | Y 0, posts at X ±31 | Lowered at 1.1 m before GO, raised to 2.8 m after (the walk-test greybox shows it raised) | No | Lifts on GO (start ritual) |
+| Start barrier arm | Y 0, posts at X ±31 | Lowered at 1.1 m before GO, raised to 6 m after (decision 019; the walk-test greybox shows it raised) | No | Lifts on GO (start ritual) |
 | Finish gate | Y 160, posts at X ±32 | 9 m tall, beam 1.2 m deep (proposed, was 7 m: E7) | No | Frames the goal; warm lights; stays below every sightline (about 15 m clearance) |
 | Floodlight towers | X ±38 at Y −10, 40, 90, 140, 175 (10 towers) | 22 m mast, 4 m head (proposed, was 14 m: E6) | No | Pools of warm light down both sides; strong vertical rhythm |
 | Spectator gantry | X +44, Y 30…130 | 6 m deep, deck 6 m, roof 10 m | No | Where spotted players reappear and cheer; spectator camera |
@@ -352,7 +352,7 @@ the RED flicker with a steady tint (game-ui-ux accessibility list).
 
 1. Update `docs/STAGE_01_SPEC.md` and `stg01_greybox.json` with the approved changes (E5–E7), and
    merge the layout into the build spec. Done.
-2. Extend `build_stg01_greybox.py` with the environment blockout (primitives for every §7 element and
+2. Extend the greybox generator with the environment blockout (primitives for every §7 element and
    §10 asset footprint), the new colliders, markers and cameras; add the "no dressing taller than 3 m
    inside the yard" validator rule.
 3. Run `bash blender/scripts/run_stage.sh STG01`; review renders from every camera; rerun the browser

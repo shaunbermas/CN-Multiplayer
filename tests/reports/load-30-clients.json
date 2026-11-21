@@ -1,38 +1,38 @@
 {
   "result": "PASS",
   "errors": [],
-  "date": "2026-11-21T10:52:12.337Z",
+  "date": "2026-11-21T11:18:46.727Z",
   "server": "Cloudflare Worker + Durable Object (wrangler dev, local)",
   "clients": 30,
   "join_ms": {
-    "avg": 10.7,
-    "max": 24.4
+    "avg": 12.7,
+    "max": 43.1
   },
   "every_client_sees": 30,
   "client_31": {
     "rejected": true,
     "message": "Room load-test is full (30 players)"
   },
-  "load_seconds": 42.5,
+  "load_seconds": 43.3,
   "room": {
     "ok": true,
     "room": "load-test",
     "players": 30,
     "running": true,
-    "ticks": 1216,
+    "ticks": 1221,
     "tickMs": {
-      "avg": 0.104,
+      "avg": 0.12,
       "p95": 1,
       "max": 1
     },
     "inputs": {
-      "accepted": 38282,
-      "dropped": 178
+      "accepted": 38460,
+      "dropped": 690
     }
   },
   "snapshots_per_client_per_s": {
-    "min": 19.1,
-    "avg": 19.1
+    "min": 18.9,
+    "avg": 18.9
   },
   "walk_test": {
     "from": "spawn 1 (front row, centre)",

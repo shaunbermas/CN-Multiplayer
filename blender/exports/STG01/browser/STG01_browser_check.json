@@ -1,6 +1,6 @@
 {
   "stage": "STG01",
-  "glb": "STG01_RedLightGreenLight.glb",
+  "glb": "STAGE_01_GREYBOX.glb",
   "result": "PASS",
   "errors": [],
   "gltf_validator": {

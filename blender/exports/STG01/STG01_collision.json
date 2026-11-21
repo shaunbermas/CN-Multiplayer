@@ -1,7 +1,7 @@
 {
   "stage": "STG01",
-  "source": "blender/scenes/STG01_RedLightGreenLight.blend",
-  "spec_hash": "5bcff9a761d04178",
+  "source": "blender/scenes/STAGE_01_GREYBOX.blend",
+  "spec_hash": "c483532e570f7804",
   "blender": "5.3.0",
   "units": "m",
   "coordinates": "game / glTF: Y up, right-handed; Blender +Y (course direction) = game -Z",

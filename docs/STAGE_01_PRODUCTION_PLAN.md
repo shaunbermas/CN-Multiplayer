@@ -52,7 +52,7 @@ the round (GDD §10.1: "prove it with real clients before building the full rost
 
 | ID | Asset | Phase | Notes |
 |----|-------|-------|-------|
-| `STG01_RedLightGreenLight.blend` | Stage scene | S1-2 | Collections per `BLENDER_PIPELINE.md` §5 |
+| `STAGE_01_GREYBOX.blend` | Stage greybox scene | S1-2 | Collections per `BLENDER_PIPELINE.md` §5 (Prompt 03 structure) |
 | `COL_STG01_*` | Ground, boundary walls, finish trigger volume, Shepherd platform | S1-2 | Primitives; exported as `STG01_collision.json` |
 | `GMK_SPAWN_01–30`, `GMK_FINISH`, `GMK_SHEPHERD`, `GMK_BOUNDS`, `GMK_SPECTATOR_01–n` | Gameplay markers | S1-2 | Exported as `STG01_markers.json` |
 | `ENM_Shepherd` (placeholder, then final) | The Shepherd | S1-2 / S1-5 | Original design (GDD v0.2) |
@@ -153,7 +153,7 @@ first everyday deliverable. It adds these requirements to the phases above:
 2. Claude: write `docs/STAGE_01_SPEC.md` (S1-1) with the approved numbers, and `docs/DECISIONS.md`
    for the decision log (GDD §15.1 rule 8).
 3. Claude: add `pip install bpy==<pinned>` to the cloud environment setup and write
-   `blender/scripts/build_stg01_greybox.py`, `export_stage.py` and `validate_asset.py`; run them; commit
+   `blender/scripts/generate_stage_01_greybox.py`, `export_stage.py` and `validate_asset.py`; run them; commit
    the greybox `.blend`, GLB, JSON and validation report (S1-2).
 4. In parallel, M0: scaffold `apps/web`, `apps/server`, `packages/shared` with pinned versions; connect
    two browser clients to one room locally; load the greybox GLB in the browser.

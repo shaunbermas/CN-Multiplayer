@@ -1,7 +1,7 @@
 {
   "stage": "STG01",
-  "source": "blender/scenes/STG01_RedLightGreenLight.blend",
-  "spec_hash": "5bcff9a761d04178",
+  "source": "blender/scenes/STAGE_01_GREYBOX.blend",
+  "spec_hash": "c483532e570f7804",
   "blender": "5.3.0",
   "units": "m",
   "coordinates": "game / glTF: Y up, right-handed; Blender +Y (course direction) = game -Z",
@@ -19,7 +19,8 @@
         1.0
       ],
       "kind": "bench",
-      "index": 1
+      "index": 1,
+      "role": "marker"
     },
     {
       "id": "GMK_BENCH_02",
@@ -34,7 +35,8 @@
         1.0
       ],
       "kind": "bench",
-      "index": 2
+      "index": 2,
+      "role": "marker"
     },
     {
       "id": "GMK_BENCH_03",
@@ -49,7 +51,8 @@
         1.0
       ],
       "kind": "bench",
-      "index": 3
+      "index": 3,
+      "role": "marker"
     },
     {
       "id": "GMK_BENCH_04",
@@ -64,7 +67,8 @@
         1.0
       ],
       "kind": "bench",
-      "index": 4
+      "index": 4,
+      "role": "marker"
     },
     {
       "id": "GMK_BENCH_05",
@@ -79,7 +83,8 @@
         1.0
       ],
       "kind": "bench",
-      "index": 5
+      "index": 5,
+      "role": "marker"
     },
     {
       "id": "GMK_BENCH_06",
@@ -94,7 +99,8 @@
         1.0
       ],
       "kind": "bench",
-      "index": 6
+      "index": 6,
+      "role": "marker"
     },
     {
       "id": "GMK_BENCH_07",
@@ -109,7 +115,8 @@
         1.0
       ],
       "kind": "bench",
-      "index": 7
+      "index": 7,
+      "role": "marker"
     },
     {
       "id": "GMK_BENCH_08",
@@ -124,7 +131,8 @@
         1.0
       ],
       "kind": "bench",
-      "index": 8
+      "index": 8,
+      "role": "marker"
     },
     {
       "id": "GMK_BENCH_09",
@@ -139,7 +147,8 @@
         1.0
       ],
       "kind": "bench",
-      "index": 9
+      "index": 9,
+      "role": "marker"
     },
     {
       "id": "GMK_BENCH_10",
@@ -154,7 +163,8 @@
         1.0
       ],
       "kind": "bench",
-      "index": 10
+      "index": 10,
+      "role": "marker"
     },
     {
       "id": "GMK_BENCH_11",
@@ -169,7 +179,8 @@
         1.0
       ],
       "kind": "bench",
-      "index": 11
+      "index": 11,
+      "role": "marker"
     },
     {
       "id": "GMK_BENCH_12",
@@ -184,7 +195,8 @@
         1.0
       ],
       "kind": "bench",
-      "index": 12
+      "index": 12,
+      "role": "marker"
     },
     {
       "id": "GMK_BENCH_13",
@@ -199,7 +211,8 @@
         1.0
       ],
       "kind": "bench",
-      "index": 13
+      "index": 13,
+      "role": "marker"
     },
     {
       "id": "GMK_BENCH_14",
@@ -214,7 +227,8 @@
         1.0
       ],
       "kind": "bench",
-      "index": 14
+      "index": 14,
+      "role": "marker"
     },
     {
       "id": "GMK_BENCH_15",
@@ -229,7 +243,8 @@
         1.0
       ],
       "kind": "bench",
-      "index": 15
+      "index": 15,
+      "role": "marker"
     },
     {
       "id": "GMK_BOUNDS",
@@ -247,7 +262,8 @@
       "min_x": -30.0,
       "max_x": 30.0,
       "min_y": -15.0,
-      "max_y": 172.0
+      "max_y": 172.0,
+      "role": "marker"
     },
     {
       "id": "GMK_FINISH",
@@ -262,7 +278,8 @@
         1.0
       ],
       "kind": "finish_line",
-      "width": 60.0
+      "width": 60.0,
+      "role": "marker"
     },
     {
       "id": "GMK_SHEPHERD",
@@ -278,7 +295,8 @@
       ],
       "kind": "shepherd",
       "height": 28.0,
-      "head_z": 28.08
+      "head_z": 28.08,
+      "role": "marker"
     },
     {
       "id": "GMK_SPAWN_01",
@@ -293,7 +311,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 1
+      "index": 1,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_02",
@@ -308,7 +327,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 2
+      "index": 2,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_03",
@@ -323,7 +343,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 3
+      "index": 3,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_04",
@@ -338,7 +359,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 4
+      "index": 4,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_05",
@@ -353,7 +375,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 5
+      "index": 5,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_06",
@@ -368,7 +391,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 6
+      "index": 6,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_07",
@@ -383,7 +407,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 7
+      "index": 7,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_08",
@@ -398,7 +423,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 8
+      "index": 8,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_09",
@@ -413,7 +439,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 9
+      "index": 9,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_10",
@@ -428,7 +455,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 10
+      "index": 10,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_11",
@@ -443,7 +471,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 11
+      "index": 11,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_12",
@@ -458,7 +487,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 12
+      "index": 12,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_13",
@@ -473,7 +503,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 13
+      "index": 13,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_14",
@@ -488,7 +519,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 14
+      "index": 14,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_15",
@@ -503,7 +535,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 15
+      "index": 15,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_16",
@@ -518,7 +551,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 16
+      "index": 16,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_17",
@@ -533,7 +567,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 17
+      "index": 17,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_18",
@@ -548,7 +583,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 18
+      "index": 18,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_19",
@@ -563,7 +599,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 19
+      "index": 19,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_20",
@@ -578,7 +615,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 20
+      "index": 20,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_21",
@@ -593,7 +631,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 21
+      "index": 21,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_22",
@@ -608,7 +647,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 22
+      "index": 22,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_23",
@@ -623,7 +663,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 23
+      "index": 23,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_24",
@@ -638,7 +679,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 24
+      "index": 24,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_25",
@@ -653,7 +695,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 25
+      "index": 25,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_26",
@@ -668,7 +711,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 26
+      "index": 26,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_27",
@@ -683,7 +727,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 27
+      "index": 27,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_28",
@@ -698,7 +743,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 28
+      "index": 28,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_29",
@@ -713,7 +759,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 29
+      "index": 29,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPAWN_30",
@@ -728,7 +775,8 @@
         -1.0
       ],
       "kind": "spawn",
-      "index": 30
+      "index": 30,
+      "role": "spawn"
     },
     {
       "id": "GMK_SPECTATOR_01",
@@ -747,7 +795,8 @@
         0.0,
         80.0,
         0.0
-      ]
+      ],
+      "role": "marker"
     },
     {
       "id": "GMK_START",
@@ -762,7 +811,8 @@
         1.0
       ],
       "kind": "start_line",
-      "width": 60.0
+      "width": 60.0,
+      "role": "marker"
     }
   ]
 }

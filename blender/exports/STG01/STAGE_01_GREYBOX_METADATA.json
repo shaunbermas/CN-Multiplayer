@@ -1,0 +1,10402 @@
+{
+  "stage": "STG01",
+  "source": "blender/scenes/STAGE_01_GREYBOX.blend",
+  "spec_hash": "c483532e570f7804",
+  "blender": "5.3.0",
+  "units": {
+    "length": "m",
+    "angle": "deg"
+  },
+  "coordinates": "Blender: Z up, X across (west -, east +), Y along the course (start line 0, finish 160); game/glTF = (x, z, -y)",
+  "collections": [
+    "00_REFERENCE",
+    "01_ARCHITECTURE",
+    "02_GAMEPLAY_ZONES",
+    "03_ENVIRONMENT_BLOCKERS",
+    "04_WATCHER_PLACEHOLDER",
+    "05_LIGHTING_PLACEHOLDERS",
+    "06_COLLISION",
+    "07_PLAYER_SPAWNS",
+    "08_CAMERAS"
+  ],
+  "runtime_glb": "STAGE_01_GREYBOX.glb",
+  "object_count": 310,
+  "objects": [
+    {
+      "id": "REF_STG01_NorthArrow",
+      "name": "REF_STG01_NorthArrow",
+      "collection": "00_REFERENCE",
+      "type": "MESH",
+      "role": "reference",
+      "review_only": true,
+      "location_m": [
+        40.0,
+        -30.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        3.464,
+        3.0,
+        0.3
+      ],
+      "bounds_min_m": [
+        38.268,
+        -31.0,
+        -0.0
+      ],
+      "bounds_max_m": [
+        41.732,
+        -28.0,
+        0.3
+      ]
+    },
+    {
+      "id": "REF_STG01_ScaleFigure_1_2m",
+      "name": "REF_STG01_ScaleFigure_1_2m",
+      "collection": "00_REFERENCE",
+      "type": "MESH",
+      "role": "reference",
+      "review_only": true,
+      "location_m": [
+        -24.0,
+        -10.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        -24.3,
+        -10.3,
+        -0.0
+      ],
+      "bounds_max_m": [
+        -23.7,
+        -9.7,
+        1.2
+      ]
+    },
+    {
+      "id": "PRP_KIT_Bench_01",
+      "name": "PRP_KIT_Bench_01",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "bench",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        10.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        4.0,
+        0.45
+      ],
+      "bounds_min_m": [
+        33.2,
+        8.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        33.8,
+        12.0,
+        0.45
+      ]
+    },
+    {
+      "id": "PRP_KIT_Bench_02",
+      "name": "PRP_KIT_Bench_02",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "bench",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        20.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        4.0,
+        0.45
+      ],
+      "bounds_min_m": [
+        33.2,
+        18.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        33.8,
+        22.0,
+        0.45
+      ]
+    },
+    {
+      "id": "PRP_KIT_Bench_03",
+      "name": "PRP_KIT_Bench_03",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "bench",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        30.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        4.0,
+        0.45
+      ],
+      "bounds_min_m": [
+        33.2,
+        28.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        33.8,
+        32.0,
+        0.45
+      ]
+    },
+    {
+      "id": "PRP_KIT_Bench_04",
+      "name": "PRP_KIT_Bench_04",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "bench",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        40.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        4.0,
+        0.45
+      ],
+      "bounds_min_m": [
+        33.2,
+        38.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        33.8,
+        42.0,
+        0.45
+      ]
+    },
+    {
+      "id": "PRP_KIT_Bench_05",
+      "name": "PRP_KIT_Bench_05",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "bench",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        50.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        4.0,
+        0.45
+      ],
+      "bounds_min_m": [
+        33.2,
+        48.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        33.8,
+        52.0,
+        0.45
+      ]
+    },
+    {
+      "id": "PRP_KIT_Bench_06",
+      "name": "PRP_KIT_Bench_06",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "bench",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        60.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        4.0,
+        0.45
+      ],
+      "bounds_min_m": [
+        33.2,
+        58.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        33.8,
+        62.0,
+        0.45
+      ]
+    },
+    {
+      "id": "PRP_KIT_Bench_07",
+      "name": "PRP_KIT_Bench_07",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "bench",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        70.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        4.0,
+        0.45
+      ],
+      "bounds_min_m": [
+        33.2,
+        68.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        33.8,
+        72.0,
+        0.45
+      ]
+    },
+    {
+      "id": "PRP_KIT_Bench_08",
+      "name": "PRP_KIT_Bench_08",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "bench",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        80.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        4.0,
+        0.45
+      ],
+      "bounds_min_m": [
+        33.2,
+        78.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        33.8,
+        82.0,
+        0.45
+      ]
+    },
+    {
+      "id": "PRP_KIT_Bench_09",
+      "name": "PRP_KIT_Bench_09",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "bench",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        90.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        4.0,
+        0.45
+      ],
+      "bounds_min_m": [
+        33.2,
+        88.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        33.8,
+        92.0,
+        0.45
+      ]
+    },
+    {
+      "id": "PRP_KIT_Bench_10",
+      "name": "PRP_KIT_Bench_10",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "bench",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        100.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        4.0,
+        0.45
+      ],
+      "bounds_min_m": [
+        33.2,
+        98.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        33.8,
+        102.0,
+        0.45
+      ]
+    },
+    {
+      "id": "PRP_KIT_Bench_11",
+      "name": "PRP_KIT_Bench_11",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "bench",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        110.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        4.0,
+        0.45
+      ],
+      "bounds_min_m": [
+        33.2,
+        108.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        33.8,
+        112.0,
+        0.45
+      ]
+    },
+    {
+      "id": "PRP_KIT_Bench_12",
+      "name": "PRP_KIT_Bench_12",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "bench",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        120.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        4.0,
+        0.45
+      ],
+      "bounds_min_m": [
+        33.2,
+        118.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        33.8,
+        122.0,
+        0.45
+      ]
+    },
+    {
+      "id": "PRP_KIT_Bench_13",
+      "name": "PRP_KIT_Bench_13",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "bench",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        130.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        4.0,
+        0.45
+      ],
+      "bounds_min_m": [
+        33.2,
+        128.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        33.8,
+        132.0,
+        0.45
+      ]
+    },
+    {
+      "id": "PRP_KIT_Bench_14",
+      "name": "PRP_KIT_Bench_14",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "bench",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        140.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        4.0,
+        0.45
+      ],
+      "bounds_min_m": [
+        33.2,
+        138.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        33.8,
+        142.0,
+        0.45
+      ]
+    },
+    {
+      "id": "PRP_KIT_Bench_15",
+      "name": "PRP_KIT_Bench_15",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "bench",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        150.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        4.0,
+        0.45
+      ],
+      "bounds_min_m": [
+        33.2,
+        148.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        33.8,
+        152.0,
+        0.45
+      ]
+    },
+    {
+      "id": "PRP_KIT_ServiceGate_01",
+      "name": "PRP_KIT_ServiceGate_01",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "service_gate",
+      "review_only": false,
+      "location_m": [
+        30.6,
+        20.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.3,
+        4.0,
+        3.5
+      ],
+      "bounds_min_m": [
+        30.45,
+        18.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        30.75,
+        22.0,
+        3.5
+      ]
+    },
+    {
+      "id": "PRP_KIT_ServiceGate_02",
+      "name": "PRP_KIT_ServiceGate_02",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "service_gate",
+      "review_only": false,
+      "location_m": [
+        30.6,
+        150.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.3,
+        4.0,
+        3.5
+      ],
+      "bounds_min_m": [
+        30.45,
+        148.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        30.75,
+        152.0,
+        3.5
+      ]
+    },
+    {
+      "id": "PRP_STG01_Fence_E",
+      "name": "PRP_STG01_Fence_E",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "boundary",
+      "review_only": false,
+      "location_m": [
+        30.25,
+        78.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.5,
+        187.0,
+        3.0
+      ],
+      "bounds_min_m": [
+        30.0,
+        -15.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        30.5,
+        172.0,
+        3.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_Fence_N",
+      "name": "PRP_STG01_Fence_N",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "boundary",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        172.25,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        61.0,
+        0.5,
+        3.0
+      ],
+      "bounds_min_m": [
+        -30.5,
+        172.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        30.5,
+        172.5,
+        3.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_Fence_S",
+      "name": "PRP_STG01_Fence_S",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "boundary",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        -15.25,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        61.0,
+        0.5,
+        3.0
+      ],
+      "bounds_min_m": [
+        -30.5,
+        -15.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        30.5,
+        -15.0,
+        3.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_Fence_W",
+      "name": "PRP_STG01_Fence_W",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "boundary",
+      "review_only": false,
+      "location_m": [
+        -30.25,
+        78.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.5,
+        187.0,
+        3.0
+      ],
+      "bounds_min_m": [
+        -30.5,
+        -15.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -30.0,
+        172.0,
+        3.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_FinishGate_Beam",
+      "name": "PRP_STG01_FinishGate_Beam",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "finish_gate",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        160.0,
+        7.8
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        65.2,
+        1.2,
+        1.2
+      ],
+      "bounds_min_m": [
+        -32.6,
+        159.4,
+        7.8
+      ],
+      "bounds_max_m": [
+        32.6,
+        160.6,
+        9.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_FinishGate_LightStrip",
+      "name": "PRP_STG01_FinishGate_LightStrip",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "finish_gate",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        159.5,
+        7.5
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        64.0,
+        0.3,
+        0.3
+      ],
+      "bounds_min_m": [
+        -32.0,
+        159.35,
+        7.5
+      ],
+      "bounds_max_m": [
+        32.0,
+        159.65,
+        7.8
+      ]
+    },
+    {
+      "id": "PRP_STG01_FinishGate_Post_E",
+      "name": "PRP_STG01_FinishGate_Post_E",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "finish_gate",
+      "review_only": false,
+      "location_m": [
+        32.0,
+        160.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.2,
+        1.2,
+        9.0
+      ],
+      "bounds_min_m": [
+        31.4,
+        159.4,
+        0.0
+      ],
+      "bounds_max_m": [
+        32.6,
+        160.6,
+        9.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_FinishGate_Post_W",
+      "name": "PRP_STG01_FinishGate_Post_W",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "finish_gate",
+      "review_only": false,
+      "location_m": [
+        -32.0,
+        160.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.2,
+        1.2,
+        9.0
+      ],
+      "bounds_min_m": [
+        -32.6,
+        159.4,
+        0.0
+      ],
+      "bounds_max_m": [
+        -31.4,
+        160.6,
+        9.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_JudgesBooth_Cabin",
+      "name": "PRP_STG01_JudgesBooth_Cabin",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        42.0,
+        168.0,
+        9.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        10.0,
+        8.0,
+        4.0
+      ],
+      "bounds_min_m": [
+        37.0,
+        164.0,
+        9.0
+      ],
+      "bounds_max_m": [
+        47.0,
+        172.0,
+        13.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_JudgesBooth_Leg_1",
+      "name": "PRP_STG01_JudgesBooth_Leg_1",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        37.5,
+        164.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.5,
+        0.5,
+        9.0
+      ],
+      "bounds_min_m": [
+        37.25,
+        164.25,
+        0.0
+      ],
+      "bounds_max_m": [
+        37.75,
+        164.75,
+        9.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_JudgesBooth_Leg_2",
+      "name": "PRP_STG01_JudgesBooth_Leg_2",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        46.5,
+        164.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.5,
+        0.5,
+        9.0
+      ],
+      "bounds_min_m": [
+        46.25,
+        164.25,
+        0.0
+      ],
+      "bounds_max_m": [
+        46.75,
+        164.75,
+        9.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_JudgesBooth_Leg_3",
+      "name": "PRP_STG01_JudgesBooth_Leg_3",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        37.5,
+        171.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.5,
+        0.5,
+        9.0
+      ],
+      "bounds_min_m": [
+        37.25,
+        171.25,
+        0.0
+      ],
+      "bounds_max_m": [
+        37.75,
+        171.75,
+        9.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_JudgesBooth_Leg_4",
+      "name": "PRP_STG01_JudgesBooth_Leg_4",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        46.5,
+        171.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.5,
+        0.5,
+        9.0
+      ],
+      "bounds_min_m": [
+        46.25,
+        171.25,
+        0.0
+      ],
+      "bounds_max_m": [
+        46.75,
+        171.75,
+        9.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_JudgesBooth_TimerBoard",
+      "name": "PRP_STG01_JudgesBooth_TimerBoard",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        36.9,
+        168.0,
+        10.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.3,
+        6.0,
+        2.5
+      ],
+      "bounds_min_m": [
+        36.75,
+        165.0,
+        10.0
+      ],
+      "bounds_max_m": [
+        37.05,
+        171.0,
+        12.5
+      ]
+    },
+    {
+      "id": "PRP_STG01_ShepherdPlatform",
+      "name": "PRP_STG01_ShepherdPlatform",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "watcher_platform",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        185.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        12.0,
+        12.0,
+        4.0
+      ],
+      "bounds_min_m": [
+        -6.0,
+        179.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        6.0,
+        191.0,
+        4.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Deck",
+      "name": "PRP_STG01_SpectatorGantry_Deck",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        44.0,
+        80.0,
+        5.6
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        100.0,
+        0.4
+      ],
+      "bounds_min_m": [
+        41.0,
+        30.0,
+        5.6
+      ],
+      "bounds_max_m": [
+        47.0,
+        130.0,
+        6.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_01",
+      "name": "PRP_STG01_SpectatorGantry_Leg_01",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        41.3,
+        30.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.4,
+        0.4,
+        10.0
+      ],
+      "bounds_min_m": [
+        41.1,
+        29.8,
+        0.0
+      ],
+      "bounds_max_m": [
+        41.5,
+        30.2,
+        10.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_02",
+      "name": "PRP_STG01_SpectatorGantry_Leg_02",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        46.7,
+        30.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.4,
+        0.4,
+        10.0
+      ],
+      "bounds_min_m": [
+        46.5,
+        29.8,
+        0.0
+      ],
+      "bounds_max_m": [
+        46.9,
+        30.2,
+        10.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_03",
+      "name": "PRP_STG01_SpectatorGantry_Leg_03",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        41.3,
+        40.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.4,
+        0.4,
+        10.0
+      ],
+      "bounds_min_m": [
+        41.1,
+        39.8,
+        0.0
+      ],
+      "bounds_max_m": [
+        41.5,
+        40.2,
+        10.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_04",
+      "name": "PRP_STG01_SpectatorGantry_Leg_04",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        46.7,
+        40.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.4,
+        0.4,
+        10.0
+      ],
+      "bounds_min_m": [
+        46.5,
+        39.8,
+        0.0
+      ],
+      "bounds_max_m": [
+        46.9,
+        40.2,
+        10.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_05",
+      "name": "PRP_STG01_SpectatorGantry_Leg_05",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        41.3,
+        50.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.4,
+        0.4,
+        10.0
+      ],
+      "bounds_min_m": [
+        41.1,
+        49.8,
+        0.0
+      ],
+      "bounds_max_m": [
+        41.5,
+        50.2,
+        10.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_06",
+      "name": "PRP_STG01_SpectatorGantry_Leg_06",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        46.7,
+        50.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.4,
+        0.4,
+        10.0
+      ],
+      "bounds_min_m": [
+        46.5,
+        49.8,
+        0.0
+      ],
+      "bounds_max_m": [
+        46.9,
+        50.2,
+        10.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_07",
+      "name": "PRP_STG01_SpectatorGantry_Leg_07",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        41.3,
+        60.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.4,
+        0.4,
+        10.0
+      ],
+      "bounds_min_m": [
+        41.1,
+        59.8,
+        0.0
+      ],
+      "bounds_max_m": [
+        41.5,
+        60.2,
+        10.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_08",
+      "name": "PRP_STG01_SpectatorGantry_Leg_08",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        46.7,
+        60.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.4,
+        0.4,
+        10.0
+      ],
+      "bounds_min_m": [
+        46.5,
+        59.8,
+        0.0
+      ],
+      "bounds_max_m": [
+        46.9,
+        60.2,
+        10.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_09",
+      "name": "PRP_STG01_SpectatorGantry_Leg_09",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        41.3,
+        70.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.4,
+        0.4,
+        10.0
+      ],
+      "bounds_min_m": [
+        41.1,
+        69.8,
+        0.0
+      ],
+      "bounds_max_m": [
+        41.5,
+        70.2,
+        10.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_10",
+      "name": "PRP_STG01_SpectatorGantry_Leg_10",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        46.7,
+        70.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.4,
+        0.4,
+        10.0
+      ],
+      "bounds_min_m": [
+        46.5,
+        69.8,
+        0.0
+      ],
+      "bounds_max_m": [
+        46.9,
+        70.2,
+        10.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_11",
+      "name": "PRP_STG01_SpectatorGantry_Leg_11",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        41.3,
+        80.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.4,
+        0.4,
+        10.0
+      ],
+      "bounds_min_m": [
+        41.1,
+        79.8,
+        0.0
+      ],
+      "bounds_max_m": [
+        41.5,
+        80.2,
+        10.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_12",
+      "name": "PRP_STG01_SpectatorGantry_Leg_12",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        46.7,
+        80.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.4,
+        0.4,
+        10.0
+      ],
+      "bounds_min_m": [
+        46.5,
+        79.8,
+        0.0
+      ],
+      "bounds_max_m": [
+        46.9,
+        80.2,
+        10.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_13",
+      "name": "PRP_STG01_SpectatorGantry_Leg_13",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        41.3,
+        90.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.4,
+        0.4,
+        10.0
+      ],
+      "bounds_min_m": [
+        41.1,
+        89.8,
+        0.0
+      ],
+      "bounds_max_m": [
+        41.5,
+        90.2,
+        10.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_14",
+      "name": "PRP_STG01_SpectatorGantry_Leg_14",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        46.7,
+        90.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.4,
+        0.4,
+        10.0
+      ],
+      "bounds_min_m": [
+        46.5,
+        89.8,
+        0.0
+      ],
+      "bounds_max_m": [
+        46.9,
+        90.2,
+        10.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_15",
+      "name": "PRP_STG01_SpectatorGantry_Leg_15",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        41.3,
+        100.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.4,
+        0.4,
+        10.0
+      ],
+      "bounds_min_m": [
+        41.1,
+        99.8,
+        0.0
+      ],
+      "bounds_max_m": [
+        41.5,
+        100.2,
+        10.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_16",
+      "name": "PRP_STG01_SpectatorGantry_Leg_16",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        46.7,
+        100.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.4,
+        0.4,
+        10.0
+      ],
+      "bounds_min_m": [
+        46.5,
+        99.8,
+        0.0
+      ],
+      "bounds_max_m": [
+        46.9,
+        100.2,
+        10.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_17",
+      "name": "PRP_STG01_SpectatorGantry_Leg_17",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        41.3,
+        110.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.4,
+        0.4,
+        10.0
+      ],
+      "bounds_min_m": [
+        41.1,
+        109.8,
+        0.0
+      ],
+      "bounds_max_m": [
+        41.5,
+        110.2,
+        10.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_18",
+      "name": "PRP_STG01_SpectatorGantry_Leg_18",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        46.7,
+        110.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.4,
+        0.4,
+        10.0
+      ],
+      "bounds_min_m": [
+        46.5,
+        109.8,
+        0.0
+      ],
+      "bounds_max_m": [
+        46.9,
+        110.2,
+        10.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_19",
+      "name": "PRP_STG01_SpectatorGantry_Leg_19",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        41.3,
+        120.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.4,
+        0.4,
+        10.0
+      ],
+      "bounds_min_m": [
+        41.1,
+        119.8,
+        0.0
+      ],
+      "bounds_max_m": [
+        41.5,
+        120.2,
+        10.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_20",
+      "name": "PRP_STG01_SpectatorGantry_Leg_20",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        46.7,
+        120.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.4,
+        0.4,
+        10.0
+      ],
+      "bounds_min_m": [
+        46.5,
+        119.8,
+        0.0
+      ],
+      "bounds_max_m": [
+        46.9,
+        120.2,
+        10.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_21",
+      "name": "PRP_STG01_SpectatorGantry_Leg_21",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        41.3,
+        130.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.4,
+        0.4,
+        10.0
+      ],
+      "bounds_min_m": [
+        41.1,
+        129.8,
+        0.0
+      ],
+      "bounds_max_m": [
+        41.5,
+        130.2,
+        10.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_22",
+      "name": "PRP_STG01_SpectatorGantry_Leg_22",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        46.7,
+        130.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.4,
+        0.4,
+        10.0
+      ],
+      "bounds_min_m": [
+        46.5,
+        129.8,
+        0.0
+      ],
+      "bounds_max_m": [
+        46.9,
+        130.2,
+        10.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Rail",
+      "name": "PRP_STG01_SpectatorGantry_Rail",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        41.05,
+        80.0,
+        6.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.1,
+        100.0,
+        1.1
+      ],
+      "bounds_min_m": [
+        41.0,
+        30.0,
+        6.0
+      ],
+      "bounds_max_m": [
+        41.1,
+        130.0,
+        7.1
+      ]
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Roof",
+      "name": "PRP_STG01_SpectatorGantry_Roof",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "observation",
+      "review_only": false,
+      "location_m": [
+        44.0,
+        80.0,
+        10.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        7.0,
+        100.0,
+        0.3
+      ],
+      "bounds_min_m": [
+        40.5,
+        30.0,
+        10.0
+      ],
+      "bounds_max_m": [
+        47.5,
+        130.0,
+        10.3
+      ]
+    },
+    {
+      "id": "PRP_STG01_StartBarrier_Arm",
+      "name": "PRP_STG01_StartBarrier_Arm",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "start_gate",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        0.1,
+        6.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        62.0,
+        0.12,
+        0.12
+      ],
+      "bounds_min_m": [
+        -31.0,
+        0.04,
+        6.0
+      ],
+      "bounds_max_m": [
+        31.0,
+        0.16,
+        6.12
+      ]
+    },
+    {
+      "id": "PRP_STG01_StartBarrier_Post_E",
+      "name": "PRP_STG01_StartBarrier_Post_E",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "start_gate",
+      "review_only": false,
+      "location_m": [
+        31.0,
+        0.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.5,
+        0.5,
+        6.2
+      ],
+      "bounds_min_m": [
+        30.75,
+        -0.25,
+        0.0
+      ],
+      "bounds_max_m": [
+        31.25,
+        0.25,
+        6.2
+      ]
+    },
+    {
+      "id": "PRP_STG01_StartBarrier_Post_W",
+      "name": "PRP_STG01_StartBarrier_Post_W",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "start_gate",
+      "review_only": false,
+      "location_m": [
+        -31.0,
+        0.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.5,
+        0.5,
+        6.2
+      ],
+      "bounds_min_m": [
+        -31.25,
+        -0.25,
+        0.0
+      ],
+      "bounds_max_m": [
+        -30.75,
+        0.25,
+        6.2
+      ]
+    },
+    {
+      "id": "STG01_Ground_Outer",
+      "name": "STG01_Ground_Outer",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "ground",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        98.5,
+        -0.13
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        100.0,
+        247.0,
+        0.1
+      ],
+      "bounds_min_m": [
+        -50.0,
+        -25.0,
+        -0.13
+      ],
+      "bounds_max_m": [
+        50.0,
+        222.0,
+        -0.03
+      ]
+    },
+    {
+      "id": "STG01_Ground_Yard",
+      "name": "STG01_Ground_Yard",
+      "collection": "01_ARCHITECTURE",
+      "type": "MESH",
+      "role": "ground",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        78.5,
+        -0.02
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        60.0,
+        187.0,
+        0.02
+      ],
+      "bounds_min_m": [
+        -30.0,
+        -15.0,
+        -0.02
+      ],
+      "bounds_max_m": [
+        30.0,
+        172.0,
+        0.0
+      ]
+    },
+    {
+      "id": "GMK_BENCH_01",
+      "name": "GMK_BENCH_01",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "EMPTY",
+      "role": "marker",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        10.0,
+        0.45
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        33.5,
+        10.0,
+        0.45
+      ],
+      "bounds_max_m": [
+        33.5,
+        10.0,
+        0.45
+      ],
+      "index": 1,
+      "kind": "bench"
+    },
+    {
+      "id": "GMK_BENCH_02",
+      "name": "GMK_BENCH_02",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "EMPTY",
+      "role": "marker",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        20.0,
+        0.45
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        33.5,
+        20.0,
+        0.45
+      ],
+      "bounds_max_m": [
+        33.5,
+        20.0,
+        0.45
+      ],
+      "index": 2,
+      "kind": "bench"
+    },
+    {
+      "id": "GMK_BENCH_03",
+      "name": "GMK_BENCH_03",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "EMPTY",
+      "role": "marker",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        30.0,
+        0.45
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        33.5,
+        30.0,
+        0.45
+      ],
+      "bounds_max_m": [
+        33.5,
+        30.0,
+        0.45
+      ],
+      "index": 3,
+      "kind": "bench"
+    },
+    {
+      "id": "GMK_BENCH_04",
+      "name": "GMK_BENCH_04",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "EMPTY",
+      "role": "marker",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        40.0,
+        0.45
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        33.5,
+        40.0,
+        0.45
+      ],
+      "bounds_max_m": [
+        33.5,
+        40.0,
+        0.45
+      ],
+      "index": 4,
+      "kind": "bench"
+    },
+    {
+      "id": "GMK_BENCH_05",
+      "name": "GMK_BENCH_05",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "EMPTY",
+      "role": "marker",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        50.0,
+        0.45
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        33.5,
+        50.0,
+        0.45
+      ],
+      "bounds_max_m": [
+        33.5,
+        50.0,
+        0.45
+      ],
+      "index": 5,
+      "kind": "bench"
+    },
+    {
+      "id": "GMK_BENCH_06",
+      "name": "GMK_BENCH_06",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "EMPTY",
+      "role": "marker",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        60.0,
+        0.45
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        33.5,
+        60.0,
+        0.45
+      ],
+      "bounds_max_m": [
+        33.5,
+        60.0,
+        0.45
+      ],
+      "index": 6,
+      "kind": "bench"
+    },
+    {
+      "id": "GMK_BENCH_07",
+      "name": "GMK_BENCH_07",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "EMPTY",
+      "role": "marker",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        70.0,
+        0.45
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        33.5,
+        70.0,
+        0.45
+      ],
+      "bounds_max_m": [
+        33.5,
+        70.0,
+        0.45
+      ],
+      "index": 7,
+      "kind": "bench"
+    },
+    {
+      "id": "GMK_BENCH_08",
+      "name": "GMK_BENCH_08",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "EMPTY",
+      "role": "marker",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        80.0,
+        0.45
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        33.5,
+        80.0,
+        0.45
+      ],
+      "bounds_max_m": [
+        33.5,
+        80.0,
+        0.45
+      ],
+      "index": 8,
+      "kind": "bench"
+    },
+    {
+      "id": "GMK_BENCH_09",
+      "name": "GMK_BENCH_09",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "EMPTY",
+      "role": "marker",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        90.0,
+        0.45
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        33.5,
+        90.0,
+        0.45
+      ],
+      "bounds_max_m": [
+        33.5,
+        90.0,
+        0.45
+      ],
+      "index": 9,
+      "kind": "bench"
+    },
+    {
+      "id": "GMK_BENCH_10",
+      "name": "GMK_BENCH_10",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "EMPTY",
+      "role": "marker",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        100.0,
+        0.45
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        33.5,
+        100.0,
+        0.45
+      ],
+      "bounds_max_m": [
+        33.5,
+        100.0,
+        0.45
+      ],
+      "index": 10,
+      "kind": "bench"
+    },
+    {
+      "id": "GMK_BENCH_11",
+      "name": "GMK_BENCH_11",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "EMPTY",
+      "role": "marker",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        110.0,
+        0.45
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        33.5,
+        110.0,
+        0.45
+      ],
+      "bounds_max_m": [
+        33.5,
+        110.0,
+        0.45
+      ],
+      "index": 11,
+      "kind": "bench"
+    },
+    {
+      "id": "GMK_BENCH_12",
+      "name": "GMK_BENCH_12",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "EMPTY",
+      "role": "marker",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        120.0,
+        0.45
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        33.5,
+        120.0,
+        0.45
+      ],
+      "bounds_max_m": [
+        33.5,
+        120.0,
+        0.45
+      ],
+      "index": 12,
+      "kind": "bench"
+    },
+    {
+      "id": "GMK_BENCH_13",
+      "name": "GMK_BENCH_13",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "EMPTY",
+      "role": "marker",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        130.0,
+        0.45
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        33.5,
+        130.0,
+        0.45
+      ],
+      "bounds_max_m": [
+        33.5,
+        130.0,
+        0.45
+      ],
+      "index": 13,
+      "kind": "bench"
+    },
+    {
+      "id": "GMK_BENCH_14",
+      "name": "GMK_BENCH_14",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "EMPTY",
+      "role": "marker",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        140.0,
+        0.45
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        33.5,
+        140.0,
+        0.45
+      ],
+      "bounds_max_m": [
+        33.5,
+        140.0,
+        0.45
+      ],
+      "index": 14,
+      "kind": "bench"
+    },
+    {
+      "id": "GMK_BENCH_15",
+      "name": "GMK_BENCH_15",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "EMPTY",
+      "role": "marker",
+      "review_only": false,
+      "location_m": [
+        33.5,
+        150.0,
+        0.45
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        33.5,
+        150.0,
+        0.45
+      ],
+      "bounds_max_m": [
+        33.5,
+        150.0,
+        0.45
+      ],
+      "index": 15,
+      "kind": "bench"
+    },
+    {
+      "id": "GMK_BOUNDS",
+      "name": "GMK_BOUNDS",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "EMPTY",
+      "role": "marker",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        78.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        0.0,
+        78.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        0.0,
+        78.5,
+        0.0
+      ],
+      "kind": "bounds"
+    },
+    {
+      "id": "GMK_FINISH",
+      "name": "GMK_FINISH",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "EMPTY",
+      "role": "marker",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        160.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        0.0,
+        160.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        0.0,
+        160.0,
+        0.0
+      ],
+      "kind": "finish_line"
+    },
+    {
+      "id": "GMK_SHEPHERD",
+      "name": "GMK_SHEPHERD",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "EMPTY",
+      "role": "marker",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        185.0,
+        4.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        0.0,
+        185.0,
+        4.0
+      ],
+      "bounds_max_m": [
+        0.0,
+        185.0,
+        4.0
+      ],
+      "kind": "shepherd"
+    },
+    {
+      "id": "GMK_SPECTATOR_01",
+      "name": "GMK_SPECTATOR_01",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "EMPTY",
+      "role": "marker",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        200.0,
+        42.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        0.0,
+        200.0,
+        42.0
+      ],
+      "bounds_max_m": [
+        0.0,
+        200.0,
+        42.0
+      ],
+      "kind": "spectator_camera"
+    },
+    {
+      "id": "GMK_START",
+      "name": "GMK_START",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "EMPTY",
+      "role": "marker",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "kind": "start_line"
+    },
+    {
+      "id": "STG01_FinishBand",
+      "name": "STG01_FinishBand",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "MESH",
+      "role": "finish_line",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        160.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        60.0,
+        1.0,
+        0.01
+      ],
+      "bounds_min_m": [
+        -30.0,
+        160.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        30.0,
+        161.0,
+        0.01
+      ]
+    },
+    {
+      "id": "STG01_LaneLine_01",
+      "name": "STG01_LaneLine_01",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "MESH",
+      "role": "lane_marking",
+      "review_only": false,
+      "location_m": [
+        -24.0,
+        80.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.15,
+        160.0,
+        0.01
+      ],
+      "bounds_min_m": [
+        -24.075,
+        0.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -23.925,
+        160.0,
+        0.01
+      ]
+    },
+    {
+      "id": "STG01_LaneLine_02",
+      "name": "STG01_LaneLine_02",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "MESH",
+      "role": "lane_marking",
+      "review_only": false,
+      "location_m": [
+        -18.0,
+        80.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.15,
+        160.0,
+        0.01
+      ],
+      "bounds_min_m": [
+        -18.075,
+        0.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -17.925,
+        160.0,
+        0.01
+      ]
+    },
+    {
+      "id": "STG01_LaneLine_03",
+      "name": "STG01_LaneLine_03",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "MESH",
+      "role": "lane_marking",
+      "review_only": false,
+      "location_m": [
+        -12.0,
+        80.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.15,
+        160.0,
+        0.01
+      ],
+      "bounds_min_m": [
+        -12.075,
+        0.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -11.925,
+        160.0,
+        0.01
+      ]
+    },
+    {
+      "id": "STG01_LaneLine_04",
+      "name": "STG01_LaneLine_04",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "MESH",
+      "role": "lane_marking",
+      "review_only": false,
+      "location_m": [
+        -6.0,
+        80.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.15,
+        160.0,
+        0.01
+      ],
+      "bounds_min_m": [
+        -6.075,
+        0.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -5.925,
+        160.0,
+        0.01
+      ]
+    },
+    {
+      "id": "STG01_LaneLine_05",
+      "name": "STG01_LaneLine_05",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "MESH",
+      "role": "lane_marking",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        80.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.15,
+        160.0,
+        0.01
+      ],
+      "bounds_min_m": [
+        -0.075,
+        0.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        0.075,
+        160.0,
+        0.01
+      ]
+    },
+    {
+      "id": "STG01_LaneLine_06",
+      "name": "STG01_LaneLine_06",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "MESH",
+      "role": "lane_marking",
+      "review_only": false,
+      "location_m": [
+        6.0,
+        80.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.15,
+        160.0,
+        0.01
+      ],
+      "bounds_min_m": [
+        5.925,
+        0.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        6.075,
+        160.0,
+        0.01
+      ]
+    },
+    {
+      "id": "STG01_LaneLine_07",
+      "name": "STG01_LaneLine_07",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "MESH",
+      "role": "lane_marking",
+      "review_only": false,
+      "location_m": [
+        12.0,
+        80.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.15,
+        160.0,
+        0.01
+      ],
+      "bounds_min_m": [
+        11.925,
+        0.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        12.075,
+        160.0,
+        0.01
+      ]
+    },
+    {
+      "id": "STG01_LaneLine_08",
+      "name": "STG01_LaneLine_08",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "MESH",
+      "role": "lane_marking",
+      "review_only": false,
+      "location_m": [
+        18.0,
+        80.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.15,
+        160.0,
+        0.01
+      ],
+      "bounds_min_m": [
+        17.925,
+        0.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        18.075,
+        160.0,
+        0.01
+      ]
+    },
+    {
+      "id": "STG01_LaneLine_09",
+      "name": "STG01_LaneLine_09",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "MESH",
+      "role": "lane_marking",
+      "review_only": false,
+      "location_m": [
+        24.0,
+        80.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.15,
+        160.0,
+        0.01
+      ],
+      "bounds_min_m": [
+        23.925,
+        0.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        24.075,
+        160.0,
+        0.01
+      ]
+    },
+    {
+      "id": "STG01_StartBand",
+      "name": "STG01_StartBand",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "MESH",
+      "role": "start_line",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        -0.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        60.0,
+        1.0,
+        0.01
+      ],
+      "bounds_min_m": [
+        -30.0,
+        -1.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        30.0,
+        0.0,
+        0.01
+      ]
+    },
+    {
+      "id": "ZONE_STG01_Course",
+      "name": "ZONE_STG01_Course",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "MESH",
+      "role": "zone_course",
+      "review_only": true,
+      "location_m": [
+        0.0,
+        80.0,
+        0.02
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        60.0,
+        160.0,
+        0.01
+      ],
+      "bounds_min_m": [
+        -30.0,
+        0.0,
+        0.02
+      ],
+      "bounds_max_m": [
+        30.0,
+        160.0,
+        0.03
+      ],
+      "y_min": 0.0,
+      "y_max": 160.0
+    },
+    {
+      "id": "ZONE_STG01_Finish",
+      "name": "ZONE_STG01_Finish",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "MESH",
+      "role": "zone_finish",
+      "review_only": true,
+      "location_m": [
+        0.0,
+        161.5,
+        0.02
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        60.0,
+        3.0,
+        0.01
+      ],
+      "bounds_min_m": [
+        -30.0,
+        160.0,
+        0.02
+      ],
+      "bounds_max_m": [
+        30.0,
+        163.0,
+        0.03
+      ],
+      "y_min": 160.0,
+      "y_max": 163.0
+    },
+    {
+      "id": "ZONE_STG01_Safe",
+      "name": "ZONE_STG01_Safe",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "MESH",
+      "role": "zone_safe",
+      "review_only": true,
+      "location_m": [
+        0.0,
+        167.5,
+        0.02
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        60.0,
+        9.0,
+        0.01
+      ],
+      "bounds_min_m": [
+        -30.0,
+        163.0,
+        0.02
+      ],
+      "bounds_max_m": [
+        30.0,
+        172.0,
+        0.03
+      ],
+      "y_min": 163.0,
+      "y_max": 172.0
+    },
+    {
+      "id": "ZONE_STG01_ShepherdCoverage",
+      "name": "ZONE_STG01_ShepherdCoverage",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "MESH",
+      "role": "watcher_coverage",
+      "review_only": true,
+      "location_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        579.451,
+        353.689,
+        0.0
+      ],
+      "bounds_min_m": [
+        -289.725,
+        -168.689,
+        0.03
+      ],
+      "bounds_max_m": [
+        289.725,
+        185.0,
+        0.03
+      ]
+    },
+    {
+      "id": "ZONE_STG01_Start",
+      "name": "ZONE_STG01_Start",
+      "collection": "02_GAMEPLAY_ZONES",
+      "type": "MESH",
+      "role": "zone_start",
+      "review_only": true,
+      "location_m": [
+        0.0,
+        -7.5,
+        0.02
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        60.0,
+        15.0,
+        0.01
+      ],
+      "bounds_min_m": [
+        -30.0,
+        -15.0,
+        0.02
+      ],
+      "bounds_max_m": [
+        30.0,
+        0.0,
+        0.03
+      ],
+      "y_min": -15.0,
+      "y_max": 0.0
+    },
+    {
+      "id": "PRP_KIT_ConcreteBarrier_E",
+      "name": "PRP_KIT_ConcreteBarrier_E",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "outer_barrier",
+      "review_only": false,
+      "location_m": [
+        52.0,
+        87.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.8,
+        255.0,
+        1.2
+      ],
+      "bounds_min_m": [
+        51.6,
+        -40.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        52.4,
+        215.0,
+        1.2
+      ]
+    },
+    {
+      "id": "PRP_KIT_ConcreteBarrier_N",
+      "name": "PRP_KIT_ConcreteBarrier_N",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "outer_barrier",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        215.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        104.0,
+        0.8,
+        1.2
+      ],
+      "bounds_min_m": [
+        -52.0,
+        214.6,
+        0.0
+      ],
+      "bounds_max_m": [
+        52.0,
+        215.4,
+        1.2
+      ]
+    },
+    {
+      "id": "PRP_KIT_ConcreteBarrier_S",
+      "name": "PRP_KIT_ConcreteBarrier_S",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "outer_barrier",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        -40.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        104.0,
+        0.8,
+        1.2
+      ],
+      "bounds_min_m": [
+        -52.0,
+        -40.4,
+        0.0
+      ],
+      "bounds_max_m": [
+        52.0,
+        -39.6,
+        1.2
+      ]
+    },
+    {
+      "id": "PRP_KIT_ConcreteBarrier_W",
+      "name": "PRP_KIT_ConcreteBarrier_W",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "outer_barrier",
+      "review_only": false,
+      "location_m": [
+        -52.0,
+        87.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.8,
+        255.0,
+        1.2
+      ],
+      "bounds_min_m": [
+        -52.4,
+        -40.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -51.6,
+        215.0,
+        1.2
+      ]
+    },
+    {
+      "id": "PRP_STG01_RocketFrame_A",
+      "name": "PRP_STG01_RocketFrame_A",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "playground_relic",
+      "review_only": false,
+      "location_m": [
+        -44.0,
+        70.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        16.0
+      ],
+      "bounds_min_m": [
+        -47.0,
+        67.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -41.0,
+        73.0,
+        16.0
+      ]
+    },
+    {
+      "id": "PRP_STG01_RoundaboutSpinner_A",
+      "name": "PRP_STG01_RoundaboutSpinner_A",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "playground_relic",
+      "review_only": false,
+      "location_m": [
+        -40.0,
+        32.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        5.0,
+        5.0,
+        1.2
+      ],
+      "bounds_min_m": [
+        -42.5,
+        29.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        -37.5,
+        34.5,
+        1.2
+      ]
+    },
+    {
+      "id": "PRP_STG01_SeeSaw_A",
+      "name": "PRP_STG01_SeeSaw_A",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "playground_relic",
+      "review_only": false,
+      "location_m": [
+        -40.0,
+        110.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        1.0,
+        1.5
+      ],
+      "bounds_min_m": [
+        -43.0,
+        109.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        -37.0,
+        110.5,
+        1.5
+      ]
+    },
+    {
+      "id": "PRP_STG01_Slide_A",
+      "name": "PRP_STG01_Slide_A",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "playground_relic",
+      "review_only": false,
+      "location_m": [
+        -46.0,
+        12.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        3.0,
+        8.0,
+        4.5
+      ],
+      "bounds_min_m": [
+        -47.5,
+        8.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -44.5,
+        16.0,
+        4.5
+      ]
+    },
+    {
+      "id": "PRP_STG01_SwingSet_A",
+      "name": "PRP_STG01_SwingSet_A",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "playground_relic",
+      "review_only": false,
+      "location_m": [
+        -42.0,
+        -8.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        7.0,
+        3.0,
+        4.0
+      ],
+      "bounds_min_m": [
+        -45.5,
+        -9.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        -38.5,
+        -6.5,
+        4.0
+      ]
+    },
+    {
+      "id": "STG01_BG_OverpassPier_01",
+      "name": "STG01_BG_OverpassPier_01",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -78.0,
+        -60.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        2.0,
+        2.0,
+        14.0
+      ],
+      "bounds_min_m": [
+        -79.0,
+        -61.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -77.0,
+        -59.0,
+        14.0
+      ]
+    },
+    {
+      "id": "STG01_BG_OverpassPier_02",
+      "name": "STG01_BG_OverpassPier_02",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -78.0,
+        -30.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        2.0,
+        2.0,
+        14.0
+      ],
+      "bounds_min_m": [
+        -79.0,
+        -31.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -77.0,
+        -29.0,
+        14.0
+      ]
+    },
+    {
+      "id": "STG01_BG_OverpassPier_03",
+      "name": "STG01_BG_OverpassPier_03",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -78.0,
+        0.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        2.0,
+        2.0,
+        14.0
+      ],
+      "bounds_min_m": [
+        -79.0,
+        -1.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -77.0,
+        1.0,
+        14.0
+      ]
+    },
+    {
+      "id": "STG01_BG_OverpassPier_04",
+      "name": "STG01_BG_OverpassPier_04",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -78.0,
+        30.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        2.0,
+        2.0,
+        14.0
+      ],
+      "bounds_min_m": [
+        -79.0,
+        29.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -77.0,
+        31.0,
+        14.0
+      ]
+    },
+    {
+      "id": "STG01_BG_OverpassPier_05",
+      "name": "STG01_BG_OverpassPier_05",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -78.0,
+        60.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        2.0,
+        2.0,
+        14.0
+      ],
+      "bounds_min_m": [
+        -79.0,
+        59.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -77.0,
+        61.0,
+        14.0
+      ]
+    },
+    {
+      "id": "STG01_BG_OverpassPier_06",
+      "name": "STG01_BG_OverpassPier_06",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -78.0,
+        90.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        2.0,
+        2.0,
+        14.0
+      ],
+      "bounds_min_m": [
+        -79.0,
+        89.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -77.0,
+        91.0,
+        14.0
+      ]
+    },
+    {
+      "id": "STG01_BG_OverpassPier_07",
+      "name": "STG01_BG_OverpassPier_07",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -78.0,
+        120.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        2.0,
+        2.0,
+        14.0
+      ],
+      "bounds_min_m": [
+        -79.0,
+        119.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -77.0,
+        121.0,
+        14.0
+      ]
+    },
+    {
+      "id": "STG01_BG_OverpassPier_08",
+      "name": "STG01_BG_OverpassPier_08",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -78.0,
+        150.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        2.0,
+        2.0,
+        14.0
+      ],
+      "bounds_min_m": [
+        -79.0,
+        149.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -77.0,
+        151.0,
+        14.0
+      ]
+    },
+    {
+      "id": "STG01_BG_OverpassPier_09",
+      "name": "STG01_BG_OverpassPier_09",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -78.0,
+        180.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        2.0,
+        2.0,
+        14.0
+      ],
+      "bounds_min_m": [
+        -79.0,
+        179.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -77.0,
+        181.0,
+        14.0
+      ]
+    },
+    {
+      "id": "STG01_BG_OverpassPier_10",
+      "name": "STG01_BG_OverpassPier_10",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -78.0,
+        210.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        2.0,
+        2.0,
+        14.0
+      ],
+      "bounds_min_m": [
+        -79.0,
+        209.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -77.0,
+        211.0,
+        14.0
+      ]
+    },
+    {
+      "id": "STG01_BG_OverpassPier_11",
+      "name": "STG01_BG_OverpassPier_11",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -78.0,
+        240.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        2.0,
+        2.0,
+        14.0
+      ],
+      "bounds_min_m": [
+        -79.0,
+        239.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -77.0,
+        241.0,
+        14.0
+      ]
+    },
+    {
+      "id": "STG01_BG_OverpassPier_12",
+      "name": "STG01_BG_OverpassPier_12",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -78.0,
+        270.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        2.0,
+        2.0,
+        14.0
+      ],
+      "bounds_min_m": [
+        -79.0,
+        269.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -77.0,
+        271.0,
+        14.0
+      ]
+    },
+    {
+      "id": "STG01_BG_OverpassPier_13",
+      "name": "STG01_BG_OverpassPier_13",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -78.0,
+        300.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        2.0,
+        2.0,
+        14.0
+      ],
+      "bounds_min_m": [
+        -79.0,
+        299.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -77.0,
+        301.0,
+        14.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Overpass_Deck",
+      "name": "STG01_BG_Overpass_Deck",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -78.0,
+        130.0,
+        14.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        12.0,
+        380.0,
+        1.5
+      ],
+      "bounds_min_m": [
+        -84.0,
+        -60.0,
+        14.0
+      ],
+      "bounds_max_m": [
+        -72.0,
+        320.0,
+        15.5
+      ]
+    },
+    {
+      "id": "STG01_BG_Overpass_Rail",
+      "name": "STG01_BG_Overpass_Rail",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -72.15,
+        130.0,
+        15.5
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.3,
+        380.0,
+        1.2
+      ],
+      "bounds_min_m": [
+        -72.3,
+        -60.0,
+        15.5
+      ],
+      "bounds_max_m": [
+        -72.0,
+        320.0,
+        16.7
+      ]
+    },
+    {
+      "id": "STG01_BG_Silhouette_01",
+      "name": "STG01_BG_Silhouette_01",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -70.0,
+        260.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        40.0,
+        25.0,
+        45.0
+      ],
+      "bounds_min_m": [
+        -90.0,
+        247.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        -50.0,
+        272.5,
+        45.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Silhouette_02",
+      "name": "STG01_BG_Silhouette_02",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -40.0,
+        280.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        30.0,
+        20.0,
+        70.0
+      ],
+      "bounds_min_m": [
+        -55.0,
+        270.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -25.0,
+        290.0,
+        70.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Silhouette_03",
+      "name": "STG01_BG_Silhouette_03",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        35.0,
+        270.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        45.0,
+        30.0,
+        55.0
+      ],
+      "bounds_min_m": [
+        12.5,
+        255.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        57.5,
+        285.0,
+        55.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Silhouette_04",
+      "name": "STG01_BG_Silhouette_04",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        85.0,
+        250.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        25.0,
+        25.0,
+        35.0
+      ],
+      "bounds_min_m": [
+        72.5,
+        237.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        97.5,
+        262.5,
+        35.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_01",
+      "name": "STG01_BG_Tree_01",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        230.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        227.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        233.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_02",
+      "name": "STG01_BG_Tree_02",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -53.0,
+        230.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -56.0,
+        227.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -50.0,
+        233.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_03",
+      "name": "STG01_BG_Tree_03",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -46.0,
+        230.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -49.0,
+        227.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -43.0,
+        233.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_04",
+      "name": "STG01_BG_Tree_04",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -39.0,
+        230.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -42.0,
+        227.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -36.0,
+        233.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_05",
+      "name": "STG01_BG_Tree_05",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -32.0,
+        230.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -35.0,
+        227.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -29.0,
+        233.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_06",
+      "name": "STG01_BG_Tree_06",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -25.0,
+        230.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -28.0,
+        227.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -22.0,
+        233.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_07",
+      "name": "STG01_BG_Tree_07",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -18.0,
+        230.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -21.0,
+        227.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -15.0,
+        233.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_08",
+      "name": "STG01_BG_Tree_08",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -11.0,
+        230.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -14.0,
+        227.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -8.0,
+        233.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_09",
+      "name": "STG01_BG_Tree_09",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -4.0,
+        230.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -7.0,
+        227.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -1.0,
+        233.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_10",
+      "name": "STG01_BG_Tree_10",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        3.0,
+        230.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        0.0,
+        227.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        6.0,
+        233.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_11",
+      "name": "STG01_BG_Tree_11",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        10.0,
+        230.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        7.0,
+        227.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        13.0,
+        233.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_12",
+      "name": "STG01_BG_Tree_12",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        17.0,
+        230.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        14.0,
+        227.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        20.0,
+        233.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_13",
+      "name": "STG01_BG_Tree_13",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        24.0,
+        230.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        21.0,
+        227.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        27.0,
+        233.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_14",
+      "name": "STG01_BG_Tree_14",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        31.0,
+        230.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        28.0,
+        227.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        34.0,
+        233.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_15",
+      "name": "STG01_BG_Tree_15",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        38.0,
+        230.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        35.0,
+        227.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        41.0,
+        233.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_16",
+      "name": "STG01_BG_Tree_16",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        45.0,
+        230.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        42.0,
+        227.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        48.0,
+        233.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_17",
+      "name": "STG01_BG_Tree_17",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        -40.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        -43.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        -37.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_18",
+      "name": "STG01_BG_Tree_18",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        -32.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        -35.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        -29.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_19",
+      "name": "STG01_BG_Tree_19",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        -24.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        -27.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        -21.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_20",
+      "name": "STG01_BG_Tree_20",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        -16.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        -19.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        -13.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_21",
+      "name": "STG01_BG_Tree_21",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        -8.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        -11.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        -5.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_22",
+      "name": "STG01_BG_Tree_22",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        0.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        -3.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        3.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_23",
+      "name": "STG01_BG_Tree_23",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        8.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        5.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        11.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_24",
+      "name": "STG01_BG_Tree_24",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        16.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        13.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        19.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_25",
+      "name": "STG01_BG_Tree_25",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        24.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        21.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        27.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_26",
+      "name": "STG01_BG_Tree_26",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        32.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        29.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        35.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_27",
+      "name": "STG01_BG_Tree_27",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        40.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        37.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        43.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_28",
+      "name": "STG01_BG_Tree_28",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        48.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        45.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        51.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_29",
+      "name": "STG01_BG_Tree_29",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        56.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        53.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        59.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_30",
+      "name": "STG01_BG_Tree_30",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        64.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        61.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        67.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_31",
+      "name": "STG01_BG_Tree_31",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        72.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        69.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        75.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_32",
+      "name": "STG01_BG_Tree_32",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        80.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        77.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        83.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_33",
+      "name": "STG01_BG_Tree_33",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        88.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        85.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        91.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_34",
+      "name": "STG01_BG_Tree_34",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        96.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        93.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        99.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_35",
+      "name": "STG01_BG_Tree_35",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        104.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        101.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        107.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_36",
+      "name": "STG01_BG_Tree_36",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        112.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        109.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        115.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_37",
+      "name": "STG01_BG_Tree_37",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        120.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        117.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        123.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_38",
+      "name": "STG01_BG_Tree_38",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        128.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        125.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        131.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_39",
+      "name": "STG01_BG_Tree_39",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        136.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        133.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        139.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_40",
+      "name": "STG01_BG_Tree_40",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        144.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        141.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        147.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_41",
+      "name": "STG01_BG_Tree_41",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        152.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        149.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        155.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_42",
+      "name": "STG01_BG_Tree_42",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        160.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        157.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        163.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_43",
+      "name": "STG01_BG_Tree_43",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        168.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        165.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        171.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_44",
+      "name": "STG01_BG_Tree_44",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        176.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        173.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        179.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_45",
+      "name": "STG01_BG_Tree_45",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        184.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        181.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        187.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_46",
+      "name": "STG01_BG_Tree_46",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        192.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        189.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        195.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_47",
+      "name": "STG01_BG_Tree_47",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        200.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        197.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        203.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_48",
+      "name": "STG01_BG_Tree_48",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        208.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        205.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        211.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_Tree_49",
+      "name": "STG01_BG_Tree_49",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        216.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        6.0,
+        6.0,
+        12.0
+      ],
+      "bounds_min_m": [
+        -63.0,
+        213.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -57.0,
+        219.0,
+        12.0
+      ]
+    },
+    {
+      "id": "STG01_BG_WaterTower_Stem",
+      "name": "STG01_BG_WaterTower_Stem",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        72.0,
+        245.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        2.283,
+        2.4,
+        30.0
+      ],
+      "bounds_min_m": [
+        70.859,
+        243.8,
+        0.0
+      ],
+      "bounds_max_m": [
+        73.141,
+        246.2,
+        30.0
+      ]
+    },
+    {
+      "id": "STG01_BG_WaterTower_Tank",
+      "name": "STG01_BG_WaterTower_Tank",
+      "collection": "03_ENVIRONMENT_BLOCKERS",
+      "type": "MESH",
+      "role": "backdrop",
+      "review_only": false,
+      "location_m": [
+        72.0,
+        245.0,
+        30.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        16.0,
+        16.0,
+        9.0
+      ],
+      "bounds_min_m": [
+        64.0,
+        237.0,
+        30.0
+      ],
+      "bounds_max_m": [
+        80.0,
+        253.0,
+        39.0
+      ]
+    },
+    {
+      "id": "ENM_Shepherd_Envelope",
+      "name": "ENM_Shepherd_Envelope",
+      "collection": "04_WATCHER_PLACEHOLDER",
+      "type": "MESH",
+      "role": "watcher_envelope",
+      "review_only": true,
+      "location_m": [
+        0.0,
+        185.0,
+        4.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        8.0,
+        8.0,
+        28.0
+      ],
+      "bounds_min_m": [
+        -4.0,
+        181.0,
+        4.0
+      ],
+      "bounds_max_m": [
+        4.0,
+        189.0,
+        32.0
+      ]
+    },
+    {
+      "id": "ENM_Shepherd_Facing_Arrow",
+      "name": "ENM_Shepherd_Facing_Arrow",
+      "collection": "04_WATCHER_PLACEHOLDER",
+      "type": "MESH",
+      "role": "watcher_facing",
+      "review_only": true,
+      "location_m": [
+        0.0,
+        182.0,
+        4.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.0,
+        6.0,
+        0.2
+      ],
+      "bounds_min_m": [
+        -0.5,
+        179.0,
+        4.0
+      ],
+      "bounds_max_m": [
+        0.5,
+        185.0,
+        4.2
+      ],
+      "facing": "-Y"
+    },
+    {
+      "id": "ENM_Shepherd_Placeholder_Body",
+      "name": "ENM_Shepherd_Placeholder_Body",
+      "collection": "04_WATCHER_PLACEHOLDER",
+      "type": "MESH",
+      "role": "watcher",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        185.0,
+        4.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        7.28,
+        7.28,
+        20.16
+      ],
+      "bounds_min_m": [
+        -3.64,
+        181.36,
+        4.0
+      ],
+      "bounds_max_m": [
+        3.64,
+        188.64,
+        24.16
+      ]
+    },
+    {
+      "id": "ENM_Shepherd_Placeholder_Crook",
+      "name": "ENM_Shepherd_Placeholder_Crook",
+      "collection": "04_WATCHER_PLACEHOLDER",
+      "type": "MESH",
+      "role": "watcher",
+      "review_only": false,
+      "location_m": [
+        -6.16,
+        184.0,
+        4.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.5,
+        0.5,
+        25.2
+      ],
+      "bounds_min_m": [
+        -6.41,
+        183.75,
+        4.0
+      ],
+      "bounds_max_m": [
+        -5.91,
+        184.25,
+        29.2
+      ]
+    },
+    {
+      "id": "ENM_Shepherd_Placeholder_Face",
+      "name": "ENM_Shepherd_Placeholder_Face",
+      "collection": "04_WATCHER_PLACEHOLDER",
+      "type": "MESH",
+      "role": "watcher",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        182.06,
+        27.1
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        3.92,
+        2.352,
+        1.96
+      ],
+      "bounds_min_m": [
+        -1.96,
+        180.884,
+        27.1
+      ],
+      "bounds_max_m": [
+        1.96,
+        183.236,
+        29.06
+      ]
+    },
+    {
+      "id": "ENM_Shepherd_Placeholder_Head",
+      "name": "ENM_Shepherd_Placeholder_Head",
+      "collection": "04_WATCHER_PLACEHOLDER",
+      "type": "MESH",
+      "role": "watcher",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        185.0,
+        28.08
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        7.84,
+        7.84,
+        7.84
+      ],
+      "bounds_min_m": [
+        -3.92,
+        181.08,
+        24.16
+      ],
+      "bounds_max_m": [
+        3.92,
+        188.92,
+        32.0
+      ]
+    },
+    {
+      "id": "ENM_Shepherd_Placeholder_Lantern",
+      "name": "ENM_Shepherd_Placeholder_Lantern",
+      "collection": "04_WATCHER_PLACEHOLDER",
+      "type": "MESH",
+      "role": "watcher",
+      "review_only": false,
+      "location_m": [
+        6.16,
+        183.5,
+        15.088
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.2,
+        1.2,
+        1.6
+      ],
+      "bounds_min_m": [
+        5.56,
+        182.9,
+        15.088
+      ],
+      "bounds_max_m": [
+        6.76,
+        184.1,
+        16.688
+      ]
+    },
+    {
+      "id": "LGT_STG01_Flood_01",
+      "name": "LGT_STG01_Flood_01",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "LIGHT",
+      "role": "light",
+      "review_only": false,
+      "location_m": [
+        -37.0,
+        -10.0,
+        22.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -55.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        -37.0,
+        -10.0,
+        22.0
+      ],
+      "bounds_max_m": [
+        -37.0,
+        -10.0,
+        22.0
+      ]
+    },
+    {
+      "id": "LGT_STG01_Flood_02",
+      "name": "LGT_STG01_Flood_02",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "LIGHT",
+      "role": "light",
+      "review_only": false,
+      "location_m": [
+        37.0,
+        -10.0,
+        22.0
+      ],
+      "rotation_deg": [
+        0.0,
+        55.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        37.0,
+        -10.0,
+        22.0
+      ],
+      "bounds_max_m": [
+        37.0,
+        -10.0,
+        22.0
+      ]
+    },
+    {
+      "id": "LGT_STG01_Flood_03",
+      "name": "LGT_STG01_Flood_03",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "LIGHT",
+      "role": "light",
+      "review_only": false,
+      "location_m": [
+        -37.0,
+        40.0,
+        22.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -55.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        -37.0,
+        40.0,
+        22.0
+      ],
+      "bounds_max_m": [
+        -37.0,
+        40.0,
+        22.0
+      ]
+    },
+    {
+      "id": "LGT_STG01_Flood_04",
+      "name": "LGT_STG01_Flood_04",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "LIGHT",
+      "role": "light",
+      "review_only": false,
+      "location_m": [
+        37.0,
+        40.0,
+        22.0
+      ],
+      "rotation_deg": [
+        0.0,
+        55.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        37.0,
+        40.0,
+        22.0
+      ],
+      "bounds_max_m": [
+        37.0,
+        40.0,
+        22.0
+      ]
+    },
+    {
+      "id": "LGT_STG01_Flood_05",
+      "name": "LGT_STG01_Flood_05",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "LIGHT",
+      "role": "light",
+      "review_only": false,
+      "location_m": [
+        -37.0,
+        90.0,
+        22.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -55.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        -37.0,
+        90.0,
+        22.0
+      ],
+      "bounds_max_m": [
+        -37.0,
+        90.0,
+        22.0
+      ]
+    },
+    {
+      "id": "LGT_STG01_Flood_06",
+      "name": "LGT_STG01_Flood_06",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "LIGHT",
+      "role": "light",
+      "review_only": false,
+      "location_m": [
+        37.0,
+        90.0,
+        22.0
+      ],
+      "rotation_deg": [
+        0.0,
+        55.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        37.0,
+        90.0,
+        22.0
+      ],
+      "bounds_max_m": [
+        37.0,
+        90.0,
+        22.0
+      ]
+    },
+    {
+      "id": "LGT_STG01_Flood_07",
+      "name": "LGT_STG01_Flood_07",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "LIGHT",
+      "role": "light",
+      "review_only": false,
+      "location_m": [
+        -37.0,
+        140.0,
+        22.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -55.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        -37.0,
+        140.0,
+        22.0
+      ],
+      "bounds_max_m": [
+        -37.0,
+        140.0,
+        22.0
+      ]
+    },
+    {
+      "id": "LGT_STG01_Flood_08",
+      "name": "LGT_STG01_Flood_08",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "LIGHT",
+      "role": "light",
+      "review_only": false,
+      "location_m": [
+        37.0,
+        140.0,
+        22.0
+      ],
+      "rotation_deg": [
+        0.0,
+        55.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        37.0,
+        140.0,
+        22.0
+      ],
+      "bounds_max_m": [
+        37.0,
+        140.0,
+        22.0
+      ]
+    },
+    {
+      "id": "LGT_STG01_Flood_09",
+      "name": "LGT_STG01_Flood_09",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "LIGHT",
+      "role": "light",
+      "review_only": false,
+      "location_m": [
+        -37.0,
+        175.0,
+        22.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -55.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        -37.0,
+        175.0,
+        22.0
+      ],
+      "bounds_max_m": [
+        -37.0,
+        175.0,
+        22.0
+      ]
+    },
+    {
+      "id": "LGT_STG01_Flood_10",
+      "name": "LGT_STG01_Flood_10",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "LIGHT",
+      "role": "light",
+      "review_only": false,
+      "location_m": [
+        37.0,
+        175.0,
+        22.0
+      ],
+      "rotation_deg": [
+        0.0,
+        55.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        37.0,
+        175.0,
+        22.0
+      ],
+      "bounds_max_m": [
+        37.0,
+        175.0,
+        22.0
+      ]
+    },
+    {
+      "id": "LGT_STG01_Moon",
+      "name": "LGT_STG01_Moon",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "LIGHT",
+      "role": "light",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        0.0,
+        50.0
+      ],
+      "rotation_deg": [
+        50.0,
+        -0.0,
+        -160.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        0.0,
+        0.0,
+        50.0
+      ],
+      "bounds_max_m": [
+        0.0,
+        0.0,
+        50.0
+      ]
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_01",
+      "name": "PRP_KIT_FloodlightTower_01",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "light_tower",
+      "review_only": false,
+      "location_m": [
+        -38.0,
+        -10.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.0,
+        1.0,
+        22.0
+      ],
+      "bounds_min_m": [
+        -38.5,
+        -10.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        -37.5,
+        -9.5,
+        22.0
+      ]
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_02",
+      "name": "PRP_KIT_FloodlightTower_02",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "light_tower",
+      "review_only": false,
+      "location_m": [
+        38.0,
+        -10.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.0,
+        1.0,
+        22.0
+      ],
+      "bounds_min_m": [
+        37.5,
+        -10.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        38.5,
+        -9.5,
+        22.0
+      ]
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_03",
+      "name": "PRP_KIT_FloodlightTower_03",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "light_tower",
+      "review_only": false,
+      "location_m": [
+        -38.0,
+        40.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.0,
+        1.0,
+        22.0
+      ],
+      "bounds_min_m": [
+        -38.5,
+        39.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        -37.5,
+        40.5,
+        22.0
+      ]
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_04",
+      "name": "PRP_KIT_FloodlightTower_04",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "light_tower",
+      "review_only": false,
+      "location_m": [
+        38.0,
+        40.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.0,
+        1.0,
+        22.0
+      ],
+      "bounds_min_m": [
+        37.5,
+        39.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        38.5,
+        40.5,
+        22.0
+      ]
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_05",
+      "name": "PRP_KIT_FloodlightTower_05",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "light_tower",
+      "review_only": false,
+      "location_m": [
+        -38.0,
+        90.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.0,
+        1.0,
+        22.0
+      ],
+      "bounds_min_m": [
+        -38.5,
+        89.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        -37.5,
+        90.5,
+        22.0
+      ]
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_06",
+      "name": "PRP_KIT_FloodlightTower_06",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "light_tower",
+      "review_only": false,
+      "location_m": [
+        38.0,
+        90.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.0,
+        1.0,
+        22.0
+      ],
+      "bounds_min_m": [
+        37.5,
+        89.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        38.5,
+        90.5,
+        22.0
+      ]
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_07",
+      "name": "PRP_KIT_FloodlightTower_07",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "light_tower",
+      "review_only": false,
+      "location_m": [
+        -38.0,
+        140.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.0,
+        1.0,
+        22.0
+      ],
+      "bounds_min_m": [
+        -38.5,
+        139.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        -37.5,
+        140.5,
+        22.0
+      ]
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_08",
+      "name": "PRP_KIT_FloodlightTower_08",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "light_tower",
+      "review_only": false,
+      "location_m": [
+        38.0,
+        140.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.0,
+        1.0,
+        22.0
+      ],
+      "bounds_min_m": [
+        37.5,
+        139.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        38.5,
+        140.5,
+        22.0
+      ]
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_09",
+      "name": "PRP_KIT_FloodlightTower_09",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "light_tower",
+      "review_only": false,
+      "location_m": [
+        -38.0,
+        175.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.0,
+        1.0,
+        22.0
+      ],
+      "bounds_min_m": [
+        -38.5,
+        174.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        -37.5,
+        175.5,
+        22.0
+      ]
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_10",
+      "name": "PRP_KIT_FloodlightTower_10",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "light_tower",
+      "review_only": false,
+      "location_m": [
+        38.0,
+        175.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        1.0,
+        1.0,
+        22.0
+      ],
+      "bounds_min_m": [
+        37.5,
+        174.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        38.5,
+        175.5,
+        22.0
+      ]
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_Head_01",
+      "name": "PRP_KIT_FloodlightTower_Head_01",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "light_tower",
+      "review_only": false,
+      "location_m": [
+        -37.2,
+        -10.0,
+        22.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        4.0,
+        0.8,
+        1.6
+      ],
+      "bounds_min_m": [
+        -39.2,
+        -10.4,
+        22.0
+      ],
+      "bounds_max_m": [
+        -35.2,
+        -9.6,
+        23.6
+      ]
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_Head_02",
+      "name": "PRP_KIT_FloodlightTower_Head_02",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "light_tower",
+      "review_only": false,
+      "location_m": [
+        37.2,
+        -10.0,
+        22.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        4.0,
+        0.8,
+        1.6
+      ],
+      "bounds_min_m": [
+        35.2,
+        -10.4,
+        22.0
+      ],
+      "bounds_max_m": [
+        39.2,
+        -9.6,
+        23.6
+      ]
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_Head_03",
+      "name": "PRP_KIT_FloodlightTower_Head_03",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "light_tower",
+      "review_only": false,
+      "location_m": [
+        -37.2,
+        40.0,
+        22.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        4.0,
+        0.8,
+        1.6
+      ],
+      "bounds_min_m": [
+        -39.2,
+        39.6,
+        22.0
+      ],
+      "bounds_max_m": [
+        -35.2,
+        40.4,
+        23.6
+      ]
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_Head_04",
+      "name": "PRP_KIT_FloodlightTower_Head_04",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "light_tower",
+      "review_only": false,
+      "location_m": [
+        37.2,
+        40.0,
+        22.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        4.0,
+        0.8,
+        1.6
+      ],
+      "bounds_min_m": [
+        35.2,
+        39.6,
+        22.0
+      ],
+      "bounds_max_m": [
+        39.2,
+        40.4,
+        23.6
+      ]
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_Head_05",
+      "name": "PRP_KIT_FloodlightTower_Head_05",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "light_tower",
+      "review_only": false,
+      "location_m": [
+        -37.2,
+        90.0,
+        22.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        4.0,
+        0.8,
+        1.6
+      ],
+      "bounds_min_m": [
+        -39.2,
+        89.6,
+        22.0
+      ],
+      "bounds_max_m": [
+        -35.2,
+        90.4,
+        23.6
+      ]
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_Head_06",
+      "name": "PRP_KIT_FloodlightTower_Head_06",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "light_tower",
+      "review_only": false,
+      "location_m": [
+        37.2,
+        90.0,
+        22.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        4.0,
+        0.8,
+        1.6
+      ],
+      "bounds_min_m": [
+        35.2,
+        89.6,
+        22.0
+      ],
+      "bounds_max_m": [
+        39.2,
+        90.4,
+        23.6
+      ]
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_Head_07",
+      "name": "PRP_KIT_FloodlightTower_Head_07",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "light_tower",
+      "review_only": false,
+      "location_m": [
+        -37.2,
+        140.0,
+        22.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        4.0,
+        0.8,
+        1.6
+      ],
+      "bounds_min_m": [
+        -39.2,
+        139.6,
+        22.0
+      ],
+      "bounds_max_m": [
+        -35.2,
+        140.4,
+        23.6
+      ]
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_Head_08",
+      "name": "PRP_KIT_FloodlightTower_Head_08",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "light_tower",
+      "review_only": false,
+      "location_m": [
+        37.2,
+        140.0,
+        22.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        4.0,
+        0.8,
+        1.6
+      ],
+      "bounds_min_m": [
+        35.2,
+        139.6,
+        22.0
+      ],
+      "bounds_max_m": [
+        39.2,
+        140.4,
+        23.6
+      ]
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_Head_09",
+      "name": "PRP_KIT_FloodlightTower_Head_09",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "light_tower",
+      "review_only": false,
+      "location_m": [
+        -37.2,
+        175.0,
+        22.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        4.0,
+        0.8,
+        1.6
+      ],
+      "bounds_min_m": [
+        -39.2,
+        174.6,
+        22.0
+      ],
+      "bounds_max_m": [
+        -35.2,
+        175.4,
+        23.6
+      ]
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_Head_10",
+      "name": "PRP_KIT_FloodlightTower_Head_10",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "light_tower",
+      "review_only": false,
+      "location_m": [
+        37.2,
+        175.0,
+        22.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        4.0,
+        0.8,
+        1.6
+      ],
+      "bounds_min_m": [
+        35.2,
+        174.6,
+        22.0
+      ],
+      "bounds_max_m": [
+        39.2,
+        175.4,
+        23.6
+      ]
+    },
+    {
+      "id": "PRP_KIT_Loudspeaker_03",
+      "name": "PRP_KIT_Loudspeaker_03",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "loudspeaker",
+      "review_only": false,
+      "location_m": [
+        -37.2,
+        40.0,
+        19.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.951,
+        1.0,
+        1.0
+      ],
+      "bounds_min_m": [
+        -37.676,
+        39.5,
+        19.0
+      ],
+      "bounds_max_m": [
+        -36.724,
+        40.5,
+        20.0
+      ]
+    },
+    {
+      "id": "PRP_KIT_Loudspeaker_04",
+      "name": "PRP_KIT_Loudspeaker_04",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "loudspeaker",
+      "review_only": false,
+      "location_m": [
+        37.2,
+        40.0,
+        19.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.951,
+        1.0,
+        1.0
+      ],
+      "bounds_min_m": [
+        36.724,
+        39.5,
+        19.0
+      ],
+      "bounds_max_m": [
+        37.676,
+        40.5,
+        20.0
+      ]
+    },
+    {
+      "id": "PRP_KIT_Loudspeaker_07",
+      "name": "PRP_KIT_Loudspeaker_07",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "loudspeaker",
+      "review_only": false,
+      "location_m": [
+        -37.2,
+        140.0,
+        19.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.951,
+        1.0,
+        1.0
+      ],
+      "bounds_min_m": [
+        -37.676,
+        139.5,
+        19.0
+      ],
+      "bounds_max_m": [
+        -36.724,
+        140.5,
+        20.0
+      ]
+    },
+    {
+      "id": "PRP_KIT_Loudspeaker_08",
+      "name": "PRP_KIT_Loudspeaker_08",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "loudspeaker",
+      "review_only": false,
+      "location_m": [
+        37.2,
+        140.0,
+        19.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.951,
+        1.0,
+        1.0
+      ],
+      "bounds_min_m": [
+        36.724,
+        139.5,
+        19.0
+      ],
+      "bounds_max_m": [
+        37.676,
+        140.5,
+        20.0
+      ]
+    },
+    {
+      "id": "PRP_KIT_SignalLamp_01",
+      "name": "PRP_KIT_SignalLamp_01",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "signal_lamp",
+      "review_only": false,
+      "location_m": [
+        -38.0,
+        -10.0,
+        20.8
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.8,
+        0.8,
+        0.8
+      ],
+      "bounds_min_m": [
+        -38.4,
+        -10.4,
+        20.8
+      ],
+      "bounds_max_m": [
+        -37.6,
+        -9.6,
+        21.6
+      ]
+    },
+    {
+      "id": "PRP_KIT_SignalLamp_02",
+      "name": "PRP_KIT_SignalLamp_02",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "signal_lamp",
+      "review_only": false,
+      "location_m": [
+        38.0,
+        -10.0,
+        20.8
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.8,
+        0.8,
+        0.8
+      ],
+      "bounds_min_m": [
+        37.6,
+        -10.4,
+        20.8
+      ],
+      "bounds_max_m": [
+        38.4,
+        -9.6,
+        21.6
+      ]
+    },
+    {
+      "id": "PRP_KIT_SignalLamp_03",
+      "name": "PRP_KIT_SignalLamp_03",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "signal_lamp",
+      "review_only": false,
+      "location_m": [
+        -38.0,
+        40.0,
+        20.8
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.8,
+        0.8,
+        0.8
+      ],
+      "bounds_min_m": [
+        -38.4,
+        39.6,
+        20.8
+      ],
+      "bounds_max_m": [
+        -37.6,
+        40.4,
+        21.6
+      ]
+    },
+    {
+      "id": "PRP_KIT_SignalLamp_04",
+      "name": "PRP_KIT_SignalLamp_04",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "signal_lamp",
+      "review_only": false,
+      "location_m": [
+        38.0,
+        40.0,
+        20.8
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.8,
+        0.8,
+        0.8
+      ],
+      "bounds_min_m": [
+        37.6,
+        39.6,
+        20.8
+      ],
+      "bounds_max_m": [
+        38.4,
+        40.4,
+        21.6
+      ]
+    },
+    {
+      "id": "PRP_KIT_SignalLamp_05",
+      "name": "PRP_KIT_SignalLamp_05",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "signal_lamp",
+      "review_only": false,
+      "location_m": [
+        -38.0,
+        90.0,
+        20.8
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.8,
+        0.8,
+        0.8
+      ],
+      "bounds_min_m": [
+        -38.4,
+        89.6,
+        20.8
+      ],
+      "bounds_max_m": [
+        -37.6,
+        90.4,
+        21.6
+      ]
+    },
+    {
+      "id": "PRP_KIT_SignalLamp_06",
+      "name": "PRP_KIT_SignalLamp_06",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "signal_lamp",
+      "review_only": false,
+      "location_m": [
+        38.0,
+        90.0,
+        20.8
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.8,
+        0.8,
+        0.8
+      ],
+      "bounds_min_m": [
+        37.6,
+        89.6,
+        20.8
+      ],
+      "bounds_max_m": [
+        38.4,
+        90.4,
+        21.6
+      ]
+    },
+    {
+      "id": "PRP_KIT_SignalLamp_07",
+      "name": "PRP_KIT_SignalLamp_07",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "signal_lamp",
+      "review_only": false,
+      "location_m": [
+        -38.0,
+        140.0,
+        20.8
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.8,
+        0.8,
+        0.8
+      ],
+      "bounds_min_m": [
+        -38.4,
+        139.6,
+        20.8
+      ],
+      "bounds_max_m": [
+        -37.6,
+        140.4,
+        21.6
+      ]
+    },
+    {
+      "id": "PRP_KIT_SignalLamp_08",
+      "name": "PRP_KIT_SignalLamp_08",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "signal_lamp",
+      "review_only": false,
+      "location_m": [
+        38.0,
+        140.0,
+        20.8
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.8,
+        0.8,
+        0.8
+      ],
+      "bounds_min_m": [
+        37.6,
+        139.6,
+        20.8
+      ],
+      "bounds_max_m": [
+        38.4,
+        140.4,
+        21.6
+      ]
+    },
+    {
+      "id": "PRP_KIT_SignalLamp_09",
+      "name": "PRP_KIT_SignalLamp_09",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "signal_lamp",
+      "review_only": false,
+      "location_m": [
+        -38.0,
+        175.0,
+        20.8
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.8,
+        0.8,
+        0.8
+      ],
+      "bounds_min_m": [
+        -38.4,
+        174.6,
+        20.8
+      ],
+      "bounds_max_m": [
+        -37.6,
+        175.4,
+        21.6
+      ]
+    },
+    {
+      "id": "PRP_KIT_SignalLamp_10",
+      "name": "PRP_KIT_SignalLamp_10",
+      "collection": "05_LIGHTING_PLACEHOLDERS",
+      "type": "MESH",
+      "role": "signal_lamp",
+      "review_only": false,
+      "location_m": [
+        38.0,
+        175.0,
+        20.8
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.8,
+        0.8,
+        0.8
+      ],
+      "bounds_min_m": [
+        37.6,
+        174.6,
+        20.8
+      ],
+      "bounds_max_m": [
+        38.4,
+        175.4,
+        21.6
+      ]
+    },
+    {
+      "id": "COL_CAM_STG01_Fence_E",
+      "name": "COL_CAM_STG01_Fence_E",
+      "collection": "06_COLLISION",
+      "type": "MESH",
+      "role": "collision_camera",
+      "review_only": false,
+      "location_m": [
+        30.25,
+        78.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.5,
+        187.0,
+        4.0
+      ],
+      "bounds_min_m": [
+        30.0,
+        -15.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        30.5,
+        172.0,
+        4.0
+      ],
+      "col_type": "camera"
+    },
+    {
+      "id": "COL_CAM_STG01_Fence_S",
+      "name": "COL_CAM_STG01_Fence_S",
+      "collection": "06_COLLISION",
+      "type": "MESH",
+      "role": "collision_camera",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        -15.25,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        61.0,
+        0.5,
+        4.0
+      ],
+      "bounds_min_m": [
+        -30.5,
+        -15.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        30.5,
+        -15.0,
+        4.0
+      ],
+      "col_type": "camera"
+    },
+    {
+      "id": "COL_CAM_STG01_Fence_W",
+      "name": "COL_CAM_STG01_Fence_W",
+      "collection": "06_COLLISION",
+      "type": "MESH",
+      "role": "collision_camera",
+      "review_only": false,
+      "location_m": [
+        -30.25,
+        78.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.5,
+        187.0,
+        4.0
+      ],
+      "bounds_min_m": [
+        -30.5,
+        -15.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -30.0,
+        172.0,
+        4.0
+      ],
+      "col_type": "camera"
+    },
+    {
+      "id": "COL_STG01_FinishTrigger",
+      "name": "COL_STG01_FinishTrigger",
+      "collection": "06_COLLISION",
+      "type": "MESH",
+      "role": "collision_trigger",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        161.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        60.0,
+        3.0,
+        3.0
+      ],
+      "bounds_min_m": [
+        -30.0,
+        160.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        30.0,
+        163.0,
+        3.0
+      ],
+      "trigger_role": "finish",
+      "col_type": "trigger"
+    },
+    {
+      "id": "COL_STG01_Ground",
+      "name": "COL_STG01_Ground",
+      "collection": "06_COLLISION",
+      "type": "MESH",
+      "role": "collision_solid",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        78.5,
+        -0.5
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        60.0,
+        187.0,
+        0.5
+      ],
+      "bounds_min_m": [
+        -30.0,
+        -15.0,
+        -0.5
+      ],
+      "bounds_max_m": [
+        30.0,
+        172.0,
+        0.0
+      ],
+      "col_type": "solid"
+    },
+    {
+      "id": "COL_STG01_SafeZone",
+      "name": "COL_STG01_SafeZone",
+      "collection": "06_COLLISION",
+      "type": "MESH",
+      "role": "collision_trigger",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        167.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        60.0,
+        9.0,
+        3.0
+      ],
+      "bounds_min_m": [
+        -30.0,
+        163.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        30.0,
+        172.0,
+        3.0
+      ],
+      "trigger_role": "safe",
+      "col_type": "trigger"
+    },
+    {
+      "id": "COL_STG01_Wall_E",
+      "name": "COL_STG01_Wall_E",
+      "collection": "06_COLLISION",
+      "type": "MESH",
+      "role": "collision_solid",
+      "review_only": false,
+      "location_m": [
+        30.25,
+        78.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.5,
+        187.0,
+        3.0
+      ],
+      "bounds_min_m": [
+        30.0,
+        -15.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        30.5,
+        172.0,
+        3.0
+      ],
+      "col_type": "solid"
+    },
+    {
+      "id": "COL_STG01_Wall_N",
+      "name": "COL_STG01_Wall_N",
+      "collection": "06_COLLISION",
+      "type": "MESH",
+      "role": "collision_solid",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        172.25,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        61.0,
+        0.5,
+        3.0
+      ],
+      "bounds_min_m": [
+        -30.5,
+        172.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        30.5,
+        172.5,
+        3.0
+      ],
+      "col_type": "solid"
+    },
+    {
+      "id": "COL_STG01_Wall_S",
+      "name": "COL_STG01_Wall_S",
+      "collection": "06_COLLISION",
+      "type": "MESH",
+      "role": "collision_solid",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        -15.25,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        61.0,
+        0.5,
+        3.0
+      ],
+      "bounds_min_m": [
+        -30.5,
+        -15.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        30.5,
+        -15.0,
+        3.0
+      ],
+      "col_type": "solid"
+    },
+    {
+      "id": "COL_STG01_Wall_W",
+      "name": "COL_STG01_Wall_W",
+      "collection": "06_COLLISION",
+      "type": "MESH",
+      "role": "collision_solid",
+      "review_only": false,
+      "location_m": [
+        -30.25,
+        78.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.5,
+        187.0,
+        3.0
+      ],
+      "bounds_min_m": [
+        -30.5,
+        -15.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -30.0,
+        172.0,
+        3.0
+      ],
+      "col_type": "solid"
+    },
+    {
+      "id": "GMK_SPAWN_01",
+      "name": "GMK_SPAWN_01",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        -1.5,
+        -2.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        -1.5,
+        -2.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -1.5,
+        -2.0,
+        0.0
+      ],
+      "index": 1,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_01_Capsule",
+      "name": "GMK_SPAWN_01_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        -1.5,
+        -2.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        -1.8,
+        -2.3,
+        -0.0
+      ],
+      "bounds_max_m": [
+        -1.2,
+        -1.7,
+        1.2
+      ],
+      "spawn": 1
+    },
+    {
+      "id": "GMK_SPAWN_02",
+      "name": "GMK_SPAWN_02",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        1.5,
+        -2.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        1.5,
+        -2.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        1.5,
+        -2.0,
+        0.0
+      ],
+      "index": 2,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_02_Capsule",
+      "name": "GMK_SPAWN_02_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        1.5,
+        -2.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        1.2,
+        -2.3,
+        -0.0
+      ],
+      "bounds_max_m": [
+        1.8,
+        -1.7,
+        1.2
+      ],
+      "spawn": 2
+    },
+    {
+      "id": "GMK_SPAWN_03",
+      "name": "GMK_SPAWN_03",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        -4.5,
+        -2.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        -4.5,
+        -2.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -4.5,
+        -2.0,
+        0.0
+      ],
+      "index": 3,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_03_Capsule",
+      "name": "GMK_SPAWN_03_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        -4.5,
+        -2.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        -4.8,
+        -2.3,
+        -0.0
+      ],
+      "bounds_max_m": [
+        -4.2,
+        -1.7,
+        1.2
+      ],
+      "spawn": 3
+    },
+    {
+      "id": "GMK_SPAWN_04",
+      "name": "GMK_SPAWN_04",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        4.5,
+        -2.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        4.5,
+        -2.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        4.5,
+        -2.0,
+        0.0
+      ],
+      "index": 4,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_04_Capsule",
+      "name": "GMK_SPAWN_04_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        4.5,
+        -2.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        4.2,
+        -2.3,
+        -0.0
+      ],
+      "bounds_max_m": [
+        4.8,
+        -1.7,
+        1.2
+      ],
+      "spawn": 4
+    },
+    {
+      "id": "GMK_SPAWN_05",
+      "name": "GMK_SPAWN_05",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        -7.5,
+        -2.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        -7.5,
+        -2.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -7.5,
+        -2.0,
+        0.0
+      ],
+      "index": 5,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_05_Capsule",
+      "name": "GMK_SPAWN_05_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        -7.5,
+        -2.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        -7.8,
+        -2.3,
+        -0.0
+      ],
+      "bounds_max_m": [
+        -7.2,
+        -1.7,
+        1.2
+      ],
+      "spawn": 5
+    },
+    {
+      "id": "GMK_SPAWN_06",
+      "name": "GMK_SPAWN_06",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        7.5,
+        -2.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        7.5,
+        -2.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        7.5,
+        -2.0,
+        0.0
+      ],
+      "index": 6,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_06_Capsule",
+      "name": "GMK_SPAWN_06_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        7.5,
+        -2.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        7.2,
+        -2.3,
+        -0.0
+      ],
+      "bounds_max_m": [
+        7.8,
+        -1.7,
+        1.2
+      ],
+      "spawn": 6
+    },
+    {
+      "id": "GMK_SPAWN_07",
+      "name": "GMK_SPAWN_07",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        -10.5,
+        -2.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        -10.5,
+        -2.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -10.5,
+        -2.0,
+        0.0
+      ],
+      "index": 7,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_07_Capsule",
+      "name": "GMK_SPAWN_07_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        -10.5,
+        -2.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        -10.8,
+        -2.3,
+        -0.0
+      ],
+      "bounds_max_m": [
+        -10.2,
+        -1.7,
+        1.2
+      ],
+      "spawn": 7
+    },
+    {
+      "id": "GMK_SPAWN_08",
+      "name": "GMK_SPAWN_08",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        10.5,
+        -2.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        10.5,
+        -2.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        10.5,
+        -2.0,
+        0.0
+      ],
+      "index": 8,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_08_Capsule",
+      "name": "GMK_SPAWN_08_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        10.5,
+        -2.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        10.2,
+        -2.3,
+        -0.0
+      ],
+      "bounds_max_m": [
+        10.8,
+        -1.7,
+        1.2
+      ],
+      "spawn": 8
+    },
+    {
+      "id": "GMK_SPAWN_09",
+      "name": "GMK_SPAWN_09",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        -13.5,
+        -2.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        -13.5,
+        -2.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -13.5,
+        -2.0,
+        0.0
+      ],
+      "index": 9,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_09_Capsule",
+      "name": "GMK_SPAWN_09_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        -13.5,
+        -2.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        -13.8,
+        -2.3,
+        -0.0
+      ],
+      "bounds_max_m": [
+        -13.2,
+        -1.7,
+        1.2
+      ],
+      "spawn": 9
+    },
+    {
+      "id": "GMK_SPAWN_10",
+      "name": "GMK_SPAWN_10",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        13.5,
+        -2.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        13.5,
+        -2.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        13.5,
+        -2.0,
+        0.0
+      ],
+      "index": 10,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_10_Capsule",
+      "name": "GMK_SPAWN_10_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        13.5,
+        -2.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        13.2,
+        -2.3,
+        -0.0
+      ],
+      "bounds_max_m": [
+        13.8,
+        -1.7,
+        1.2
+      ],
+      "spawn": 10
+    },
+    {
+      "id": "GMK_SPAWN_11",
+      "name": "GMK_SPAWN_11",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        -1.5,
+        -4.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        -1.5,
+        -4.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        -1.5,
+        -4.5,
+        0.0
+      ],
+      "index": 11,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_11_Capsule",
+      "name": "GMK_SPAWN_11_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        -1.5,
+        -4.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        -1.8,
+        -4.8,
+        -0.0
+      ],
+      "bounds_max_m": [
+        -1.2,
+        -4.2,
+        1.2
+      ],
+      "spawn": 11
+    },
+    {
+      "id": "GMK_SPAWN_12",
+      "name": "GMK_SPAWN_12",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        1.5,
+        -4.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        1.5,
+        -4.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        1.5,
+        -4.5,
+        0.0
+      ],
+      "index": 12,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_12_Capsule",
+      "name": "GMK_SPAWN_12_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        1.5,
+        -4.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        1.2,
+        -4.8,
+        -0.0
+      ],
+      "bounds_max_m": [
+        1.8,
+        -4.2,
+        1.2
+      ],
+      "spawn": 12
+    },
+    {
+      "id": "GMK_SPAWN_13",
+      "name": "GMK_SPAWN_13",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        -4.5,
+        -4.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        -4.5,
+        -4.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        -4.5,
+        -4.5,
+        0.0
+      ],
+      "index": 13,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_13_Capsule",
+      "name": "GMK_SPAWN_13_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        -4.5,
+        -4.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        -4.8,
+        -4.8,
+        -0.0
+      ],
+      "bounds_max_m": [
+        -4.2,
+        -4.2,
+        1.2
+      ],
+      "spawn": 13
+    },
+    {
+      "id": "GMK_SPAWN_14",
+      "name": "GMK_SPAWN_14",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        4.5,
+        -4.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        4.5,
+        -4.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        4.5,
+        -4.5,
+        0.0
+      ],
+      "index": 14,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_14_Capsule",
+      "name": "GMK_SPAWN_14_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        4.5,
+        -4.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        4.2,
+        -4.8,
+        -0.0
+      ],
+      "bounds_max_m": [
+        4.8,
+        -4.2,
+        1.2
+      ],
+      "spawn": 14
+    },
+    {
+      "id": "GMK_SPAWN_15",
+      "name": "GMK_SPAWN_15",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        -7.5,
+        -4.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        -7.5,
+        -4.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        -7.5,
+        -4.5,
+        0.0
+      ],
+      "index": 15,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_15_Capsule",
+      "name": "GMK_SPAWN_15_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        -7.5,
+        -4.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        -7.8,
+        -4.8,
+        -0.0
+      ],
+      "bounds_max_m": [
+        -7.2,
+        -4.2,
+        1.2
+      ],
+      "spawn": 15
+    },
+    {
+      "id": "GMK_SPAWN_16",
+      "name": "GMK_SPAWN_16",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        7.5,
+        -4.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        7.5,
+        -4.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        7.5,
+        -4.5,
+        0.0
+      ],
+      "index": 16,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_16_Capsule",
+      "name": "GMK_SPAWN_16_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        7.5,
+        -4.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        7.2,
+        -4.8,
+        -0.0
+      ],
+      "bounds_max_m": [
+        7.8,
+        -4.2,
+        1.2
+      ],
+      "spawn": 16
+    },
+    {
+      "id": "GMK_SPAWN_17",
+      "name": "GMK_SPAWN_17",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        -10.5,
+        -4.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        -10.5,
+        -4.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        -10.5,
+        -4.5,
+        0.0
+      ],
+      "index": 17,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_17_Capsule",
+      "name": "GMK_SPAWN_17_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        -10.5,
+        -4.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        -10.8,
+        -4.8,
+        -0.0
+      ],
+      "bounds_max_m": [
+        -10.2,
+        -4.2,
+        1.2
+      ],
+      "spawn": 17
+    },
+    {
+      "id": "GMK_SPAWN_18",
+      "name": "GMK_SPAWN_18",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        10.5,
+        -4.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        10.5,
+        -4.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        10.5,
+        -4.5,
+        0.0
+      ],
+      "index": 18,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_18_Capsule",
+      "name": "GMK_SPAWN_18_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        10.5,
+        -4.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        10.2,
+        -4.8,
+        -0.0
+      ],
+      "bounds_max_m": [
+        10.8,
+        -4.2,
+        1.2
+      ],
+      "spawn": 18
+    },
+    {
+      "id": "GMK_SPAWN_19",
+      "name": "GMK_SPAWN_19",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        -13.5,
+        -4.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        -13.5,
+        -4.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        -13.5,
+        -4.5,
+        0.0
+      ],
+      "index": 19,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_19_Capsule",
+      "name": "GMK_SPAWN_19_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        -13.5,
+        -4.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        -13.8,
+        -4.8,
+        -0.0
+      ],
+      "bounds_max_m": [
+        -13.2,
+        -4.2,
+        1.2
+      ],
+      "spawn": 19
+    },
+    {
+      "id": "GMK_SPAWN_20",
+      "name": "GMK_SPAWN_20",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        13.5,
+        -4.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        13.5,
+        -4.5,
+        0.0
+      ],
+      "bounds_max_m": [
+        13.5,
+        -4.5,
+        0.0
+      ],
+      "index": 20,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_20_Capsule",
+      "name": "GMK_SPAWN_20_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        13.5,
+        -4.5,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        13.2,
+        -4.8,
+        -0.0
+      ],
+      "bounds_max_m": [
+        13.8,
+        -4.2,
+        1.2
+      ],
+      "spawn": 20
+    },
+    {
+      "id": "GMK_SPAWN_21",
+      "name": "GMK_SPAWN_21",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        -1.5,
+        -7.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        -1.5,
+        -7.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -1.5,
+        -7.0,
+        0.0
+      ],
+      "index": 21,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_21_Capsule",
+      "name": "GMK_SPAWN_21_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        -1.5,
+        -7.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        -1.8,
+        -7.3,
+        -0.0
+      ],
+      "bounds_max_m": [
+        -1.2,
+        -6.7,
+        1.2
+      ],
+      "spawn": 21
+    },
+    {
+      "id": "GMK_SPAWN_22",
+      "name": "GMK_SPAWN_22",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        1.5,
+        -7.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        1.5,
+        -7.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        1.5,
+        -7.0,
+        0.0
+      ],
+      "index": 22,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_22_Capsule",
+      "name": "GMK_SPAWN_22_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        1.5,
+        -7.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        1.2,
+        -7.3,
+        -0.0
+      ],
+      "bounds_max_m": [
+        1.8,
+        -6.7,
+        1.2
+      ],
+      "spawn": 22
+    },
+    {
+      "id": "GMK_SPAWN_23",
+      "name": "GMK_SPAWN_23",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        -4.5,
+        -7.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        -4.5,
+        -7.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -4.5,
+        -7.0,
+        0.0
+      ],
+      "index": 23,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_23_Capsule",
+      "name": "GMK_SPAWN_23_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        -4.5,
+        -7.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        -4.8,
+        -7.3,
+        -0.0
+      ],
+      "bounds_max_m": [
+        -4.2,
+        -6.7,
+        1.2
+      ],
+      "spawn": 23
+    },
+    {
+      "id": "GMK_SPAWN_24",
+      "name": "GMK_SPAWN_24",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        4.5,
+        -7.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        4.5,
+        -7.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        4.5,
+        -7.0,
+        0.0
+      ],
+      "index": 24,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_24_Capsule",
+      "name": "GMK_SPAWN_24_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        4.5,
+        -7.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        4.2,
+        -7.3,
+        -0.0
+      ],
+      "bounds_max_m": [
+        4.8,
+        -6.7,
+        1.2
+      ],
+      "spawn": 24
+    },
+    {
+      "id": "GMK_SPAWN_25",
+      "name": "GMK_SPAWN_25",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        -7.5,
+        -7.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        -7.5,
+        -7.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -7.5,
+        -7.0,
+        0.0
+      ],
+      "index": 25,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_25_Capsule",
+      "name": "GMK_SPAWN_25_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        -7.5,
+        -7.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        -7.8,
+        -7.3,
+        -0.0
+      ],
+      "bounds_max_m": [
+        -7.2,
+        -6.7,
+        1.2
+      ],
+      "spawn": 25
+    },
+    {
+      "id": "GMK_SPAWN_26",
+      "name": "GMK_SPAWN_26",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        7.5,
+        -7.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        7.5,
+        -7.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        7.5,
+        -7.0,
+        0.0
+      ],
+      "index": 26,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_26_Capsule",
+      "name": "GMK_SPAWN_26_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        7.5,
+        -7.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        7.2,
+        -7.3,
+        -0.0
+      ],
+      "bounds_max_m": [
+        7.8,
+        -6.7,
+        1.2
+      ],
+      "spawn": 26
+    },
+    {
+      "id": "GMK_SPAWN_27",
+      "name": "GMK_SPAWN_27",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        -10.5,
+        -7.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        -10.5,
+        -7.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -10.5,
+        -7.0,
+        0.0
+      ],
+      "index": 27,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_27_Capsule",
+      "name": "GMK_SPAWN_27_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        -10.5,
+        -7.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        -10.8,
+        -7.3,
+        -0.0
+      ],
+      "bounds_max_m": [
+        -10.2,
+        -6.7,
+        1.2
+      ],
+      "spawn": 27
+    },
+    {
+      "id": "GMK_SPAWN_28",
+      "name": "GMK_SPAWN_28",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        10.5,
+        -7.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        10.5,
+        -7.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        10.5,
+        -7.0,
+        0.0
+      ],
+      "index": 28,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_28_Capsule",
+      "name": "GMK_SPAWN_28_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        10.5,
+        -7.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        10.2,
+        -7.3,
+        -0.0
+      ],
+      "bounds_max_m": [
+        10.8,
+        -6.7,
+        1.2
+      ],
+      "spawn": 28
+    },
+    {
+      "id": "GMK_SPAWN_29",
+      "name": "GMK_SPAWN_29",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        -13.5,
+        -7.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        -13.5,
+        -7.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        -13.5,
+        -7.0,
+        0.0
+      ],
+      "index": 29,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_29_Capsule",
+      "name": "GMK_SPAWN_29_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        -13.5,
+        -7.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        -13.8,
+        -7.3,
+        -0.0
+      ],
+      "bounds_max_m": [
+        -13.2,
+        -6.7,
+        1.2
+      ],
+      "spawn": 29
+    },
+    {
+      "id": "GMK_SPAWN_30",
+      "name": "GMK_SPAWN_30",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "EMPTY",
+      "role": "spawn",
+      "review_only": false,
+      "location_m": [
+        13.5,
+        -7.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        13.5,
+        -7.0,
+        0.0
+      ],
+      "bounds_max_m": [
+        13.5,
+        -7.0,
+        0.0
+      ],
+      "index": 30,
+      "kind": "spawn"
+    },
+    {
+      "id": "GMK_SPAWN_30_Capsule",
+      "name": "GMK_SPAWN_30_Capsule",
+      "collection": "07_PLAYER_SPAWNS",
+      "type": "MESH",
+      "role": "spawn_proxy",
+      "review_only": true,
+      "location_m": [
+        13.5,
+        -7.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.6,
+        0.6,
+        1.2
+      ],
+      "bounds_min_m": [
+        13.2,
+        -7.3,
+        -0.0
+      ],
+      "bounds_max_m": [
+        13.8,
+        -6.7,
+        1.2
+      ],
+      "spawn": 30
+    },
+    {
+      "id": "CAM_STG01_Finish",
+      "name": "CAM_STG01_Finish",
+      "collection": "08_CAMERAS",
+      "type": "CAMERA",
+      "role": "camera",
+      "review_only": false,
+      "location_m": [
+        -20.0,
+        175.0,
+        6.0
+      ],
+      "rotation_deg": [
+        81.12,
+        0.0,
+        -141.34
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        -20.0,
+        175.0,
+        6.0
+      ],
+      "bounds_max_m": [
+        -20.0,
+        175.0,
+        6.0
+      ]
+    },
+    {
+      "id": "CAM_STG01_Gameplay",
+      "name": "CAM_STG01_Gameplay",
+      "collection": "08_CAMERAS",
+      "type": "CAMERA",
+      "role": "camera",
+      "review_only": false,
+      "location_m": [
+        -1.5,
+        -12.5,
+        2.6
+      ],
+      "rotation_deg": [
+        93.3,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        -1.5,
+        -12.5,
+        2.6
+      ],
+      "bounds_max_m": [
+        -1.5,
+        -12.5,
+        2.6
+      ]
+    },
+    {
+      "id": "CAM_STG01_Intro_A",
+      "name": "CAM_STG01_Intro_A",
+      "collection": "08_CAMERAS",
+      "type": "CAMERA",
+      "role": "camera",
+      "review_only": false,
+      "location_m": [
+        -60.0,
+        -45.0,
+        22.0
+      ],
+      "rotation_deg": [
+        86.74,
+        -0.0,
+        -19.98
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        -60.0,
+        -45.0,
+        22.0
+      ],
+      "bounds_max_m": [
+        -60.0,
+        -45.0,
+        22.0
+      ]
+    },
+    {
+      "id": "CAM_STG01_Intro_B",
+      "name": "CAM_STG01_Intro_B",
+      "collection": "08_CAMERAS",
+      "type": "CAMERA",
+      "role": "camera",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        150.0,
+        18.0
+      ],
+      "rotation_deg": [
+        105.95,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        0.0,
+        150.0,
+        18.0
+      ],
+      "bounds_max_m": [
+        0.0,
+        150.0,
+        18.0
+      ]
+    },
+    {
+      "id": "CAM_STG01_Overview",
+      "name": "CAM_STG01_Overview",
+      "collection": "08_CAMERAS",
+      "type": "CAMERA",
+      "role": "camera",
+      "review_only": false,
+      "location_m": [
+        -130.0,
+        -70.0,
+        150.0
+      ],
+      "rotation_deg": [
+        52.92,
+        -0.0,
+        -40.91
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        -130.0,
+        -70.0,
+        150.0
+      ],
+      "bounds_max_m": [
+        -130.0,
+        -70.0,
+        150.0
+      ]
+    },
+    {
+      "id": "CAM_STG01_Perspective",
+      "name": "CAM_STG01_Perspective",
+      "collection": "08_CAMERAS",
+      "type": "CAMERA",
+      "role": "camera",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        -75.0,
+        48.0
+      ],
+      "rotation_deg": [
+        77.21,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        0.0,
+        -75.0,
+        48.0
+      ],
+      "bounds_max_m": [
+        0.0,
+        -75.0,
+        48.0
+      ]
+    },
+    {
+      "id": "CAM_STG01_Spectator_01",
+      "name": "CAM_STG01_Spectator_01",
+      "collection": "08_CAMERAS",
+      "type": "CAMERA",
+      "role": "camera",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        200.0,
+        42.0
+      ],
+      "rotation_deg": [
+        70.71,
+        0.0,
+        -180.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        0.0,
+        200.0,
+        42.0
+      ],
+      "bounds_max_m": [
+        0.0,
+        200.0,
+        42.0
+      ]
+    },
+    {
+      "id": "CAM_STG01_Spectator_02",
+      "name": "CAM_STG01_Spectator_02",
+      "collection": "08_CAMERAS",
+      "type": "CAMERA",
+      "role": "camera",
+      "review_only": false,
+      "location_m": [
+        44.0,
+        80.0,
+        12.0
+      ],
+      "rotation_deg": [
+        74.74,
+        -0.0,
+        90.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        44.0,
+        80.0,
+        12.0
+      ],
+      "bounds_max_m": [
+        44.0,
+        80.0,
+        12.0
+      ]
+    },
+    {
+      "id": "CAM_STG01_TopDown",
+      "name": "CAM_STG01_TopDown",
+      "collection": "08_CAMERAS",
+      "type": "CAMERA",
+      "role": "camera",
+      "review_only": false,
+      "location_m": [
+        0.0,
+        115.0,
+        300.0
+      ],
+      "rotation_deg": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "dimensions_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "bounds_min_m": [
+        0.0,
+        115.0,
+        300.0
+      ],
+      "bounds_max_m": [
+        0.0,
+        115.0,
+        300.0
+      ]
+    }
+  ]
+}
