@@ -1,17 +1,24 @@
 {
   "result": "PASS",
   "errors": [],
-  "date": "2026-11-21T11:18:00.892Z",
+  "date": "2026-11-21T11:42:32.379Z",
   "same_room": true,
   "both_see_players": 2,
   "walk_4s": {
-    "moved_m_seen_by_other_browser": 16.74,
-    "prediction_error_m": 0.022
+    "moved_m_seen_by_other_browser": 16.47,
+    "prediction_error_m": 0
+  },
+  "round": {
+    "results": "Alpha (stood still) 1st, Beta (walked into red) spotted"
   },
   "screenshots": [
     "tests/reports/screenshots/s1-3_start_view.png",
     "tests/reports/screenshots/s1-3_after_walk.png",
-    "tests/reports/screenshots/s1-3_other_player_view.png"
+    "tests/reports/screenshots/s1-3_other_player_view.png",
+    "tests/reports/screenshots/s1-4_green_view.png",
+    "tests/reports/screenshots/s1-4_red_view.png",
+    "tests/reports/screenshots/s1-4_spotted_view.png",
+    "tests/reports/screenshots/s1-4_results_view.png"
   ],
   "renderer": "headless Chromium, software WebGL (SwiftShader)",
   "player_a_cpu_throttle": 6

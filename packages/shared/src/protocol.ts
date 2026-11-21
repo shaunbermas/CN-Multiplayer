@@ -1,41 +1,70 @@
 // WebSocket protocol between the browser and the room (a Cloudflare Durable Object, ADR 0002).
-// JSON text frames. The client only ever sends inputs; the server owns movement and results (GDD §7.3).
+// JSON text frames. The client only ever sends inputs and requests; the server owns movement,
+// signals, detection and results (GDD §7.3).
+import type { Phase, Placing, PlayerStatus, Signal } from './round.ts';
 
-export const PROTOCOL_VERSION = 1;
+export const PROTOCOL_VERSION = 2;
+
+export interface StartRequestOptions {
+  /** Honoured only when the room runs with CN_TEST=1 (deterministic tests). */
+  seed?: number;
+  roundS?: number;
+  briefingS?: number;
+}
 
 // ---- client -> server
 export type ClientMessage =
   | { t: 'join'; v: number; name: string }
   | { t: 'input'; seq: number; mx: number; mz: number; yaw: number }
   | { t: 'respawn' }
+  | { t: 'start'; opts?: StartRequestOptions }
+  | { t: 'skip' }
+  | { t: 'probe_ack'; id: number }
   | { t: 'ping'; at: number };
 
 // ---- server -> client
 export interface RosterEntry { id: string; name: string; spawn: number }
 
-/** One player in a snapshot, as a compact array: [id, x, z, vx, vz, yaw, ack, status, finishTime]. */
-export type SnapRow = [string, number, number, number, number, number, number, 0 | 1, number];
+/** One player in a snapshot: [id, x, z, vx, vz, yaw, ack, status, finishTime]. */
+export type SnapRow = [string, number, number, number, number, number, number, number, number];
+
+export interface RoundState {
+  phase: Phase;
+  signal: Signal;
+  /** Seconds left in the current phase; -1 in the lobby. */
+  remaining: number;
+  /** Seconds since GO during the active phase, else 0. */
+  elapsed: number;
+  host: string;
+  seed: number;
+}
 
 export type ServerMessage =
-  | { t: 'welcome'; v: number; id: string; room: string; stage: string; spawn: number; roster: RosterEntry[] }
+  | { t: 'welcome'; v: number; id: string; room: string; stage: string; spawn: number; roster: RosterEntry[]; round: RoundState }
   | { t: 'roster'; roster: RosterEntry[] }
-  | { t: 'snap'; time: number; rows: SnapRow[] }
+  | { t: 'snap'; time: number; rows: SnapRow[]; round: RoundState }
+  | { t: 'results'; placings: (Placing & { name: string })[] }
+  /** at = seconds since GO, on the server's clock. */
+  | { t: 'event'; kind: 'spotted' | 'finished'; id: string; at: number }
+  | { t: 'probe'; id: number }
   | { t: 'pong'; at: number }
-  | { t: 'error'; code: 'full' | 'version' | 'bad_request'; message: string };
+  | { t: 'error'; code: 'full' | 'version' | 'bad_request' | 'not_host'; message: string };
 
-export const STATUS = { active: 0, finished: 1 } as const;
+export const STATUS_CODE: Record<PlayerStatus, number> = { active: 0, finished: 1, spotted: 2, waiting: 3 };
+export const STATUS_OF: PlayerStatus[] = ['active', 'finished', 'spotted', 'waiting'];
 
 /** Close codes used by the room. */
 export const CLOSE = { full: 4001, version: 4002, replaced: 4003 } as const;
 
-export const SNAPSHOT_MS = 50; // 20 Hz, same as the Colyseus default it replaces
+export const SNAPSHOT_MS = 50; // 20 Hz
+export const PROBE_MS = 2000;  // latency probes
 export const MAX_MESSAGE_BYTES = 4096;
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
 const r3 = (n: number) => Math.round(n * 1000) / 1000;
 
 export function encodeRow(
-  id: string, p: { x: number; z: number; vx: number; vz: number; yaw: number; ack: number; finished: boolean; finishTime: number },
+  id: string, p: { x: number; z: number; vx: number; vz: number; yaw: number; ack: number; status: PlayerStatus; finishTime: number },
 ): SnapRow {
-  return [id, r3(p.x), r3(p.z), r3(p.vx), r3(p.vz), r2(p.yaw), p.ack, p.finished ? 1 : 0, p.finishTime];
+  return [id, r3(p.x), r3(p.z), r3(p.vx), r3(p.vz), r2(p.yaw), p.ack, STATUS_CODE[p.status], p.finishTime];
 }

@@ -33,6 +33,8 @@ export interface StageGeometry {
   finish: Rect | null;
   safe: Rect | null;
   spawns: Spawn[];
+  /** Bench seats for spotted and waiting players (outside the yard). */
+  benches: { x: number; z: number }[];
   /** Start line Z (game) and finish line Z (game). Progress runs from startZ toward finishZ. */
   startZ: number;
   finishZ: number;
@@ -63,6 +65,10 @@ export function buildStageGeometry(collision: CollisionFile, markers: MarkersFil
     .filter((m) => m.kind === 'spawn')
     .map((m) => ({ index: Number(m.index), x: m.position[0], z: m.position[2], yaw: yawFromForward(m.forward) }))
     .sort((a, b) => a.index - b.index);
+  const benches = markers.markers
+    .filter((m) => m.kind === 'bench')
+    .sort((a, b) => Number(a.index) - Number(b.index))
+    .map((m) => ({ x: m.position[0], z: m.position[2] }));
   const byId = Object.fromEntries(markers.markers.map((m) => [m.id, m]));
   const sh = byId['GMK_SHEPHERD'];
   return {
@@ -71,6 +77,7 @@ export function buildStageGeometry(collision: CollisionFile, markers: MarkersFil
     finish: trig('finish'),
     safe: trig('safe'),
     spawns,
+    benches,
     startZ: byId['GMK_START']?.position[2] ?? 0,
     finishZ: byId['GMK_FINISH']?.position[2] ?? 0,
     shepherd: sh

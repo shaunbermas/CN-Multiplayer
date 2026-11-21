@@ -1,0 +1,25 @@
+{
+  "result": "PASS",
+  "errors": [],
+  "date": "2026-11-21T11:41:32.811Z",
+  "seed": 12345,
+  "round_s": 25,
+  "first_red_s": 6.78,
+  "reckless_spotted_at_s": 7.13,
+  "placings": [
+    "1. Careful (active)",
+    "2. Statue (active)",
+    "3. Reckless (spotted)"
+  ],
+  "spawns": [
+    1,
+    3,
+    2
+  ],
+  "signals_seen": [
+    "green",
+    "warning",
+    "red",
+    "none"
+  ]
+}

@@ -1,7 +1,7 @@
 # CN Trials · Stage 01 spec: Red Light, Green Light
 
 Status: **v0.2** (21 November 2026): v0.1 starting values plus the approved environment design changes (decision 017: start zone 15 m, 22 m floodlight towers, 9 m finish gate, row shuffle). Environment detail lives in `docs/STAGE_01_DESIGN_SPEC.md`. Phase S1-1 of
-`STAGE_01_PRODUCTION_PLAN.md`. Values stay tunable after the S1-3 walk test and team playtests.
+`STAGE_01_PRODUCTION_PLAN.md`. Values stay tunable after the S1-3 walk test and team playtests. Implemented in `packages/shared/src/round.ts` (S1-4).
 
 The GDD (v0.3) defines the rules. This spec gives every number and state the greybox, the server and
 the presentation need. All values are **PROPOSED starting values** until approved in §10, and all are

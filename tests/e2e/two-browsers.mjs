@@ -30,7 +30,7 @@ const waitFor = async (fn, label, ms = 30_000) => {
 try {
   await worker.ready;
   browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
-  const url = (name) => `http://127.0.0.1:${PORT}/?name=${name}&autojoin=1`;
+  const url = (name, extra = '') => `http://127.0.0.1:${PORT}/?name=${name}&autojoin=1${extra}`;
   const ctxA = await browser.newContext({ viewport: { width: 1280, height: 720 } });
   const ctxB = await browser.newContext({ viewport: { width: 1280, height: 720 } });
   const pageA = await ctxA.newPage();
@@ -43,7 +43,9 @@ try {
     p.on('pageerror', (e) => consoleErrors.push(`${tag}: ${e}`));
     p.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(`${tag}: ${m.text()}`); });
   }
-  await pageA.goto(url('Alpha'));
+  // Alpha joins first, so Alpha is the host; the test seed makes the round deterministic (test mode only).
+  await pageA.goto(url('Alpha', '&testSeed=12345&testRound=20&testBriefing=1'));
+  await waitFor(async () => pageA.evaluate(() => !!window.__cn), 'Alpha joined first (host)');
   await pageB.goto(url('Beta'));
   await waitFor(async () => (await pageA.evaluate(() => !!window.__cn)) && (await pageB.evaluate(() => !!window.__cn)), 'both pages joined');
   await waitFor(async () => (await players(pageA)).length === 2 && (await players(pageB)).length === 2, 'both see 2 players');
@@ -76,6 +78,31 @@ try {
   if (predictionError > 0.5) errors.push(`Prediction differs from the server by ${predictionError.toFixed(2)} m after stopping`);
   await pageA.screenshot({ path: `${shots}/s1-3_after_walk.png` });
   await pageB.screenshot({ path: `${shots}/s1-3_other_player_view.png` });
+
+  // ---- S1-4: a full round through the UI. Alpha (host) starts; Beta keeps walking into the red light.
+  const round = (page) => page.evaluate(() => window.__cn.round());
+  await pageA.locator('[data-testid=start]').click();
+  await waitFor(async () => (await round(pageB)).phase === 'briefing', 'briefing on both');
+  await waitFor(async () => (await round(pageA)).phase === 'active', 'round active', 15_000);
+  await sleep(800);
+  await pageA.screenshot({ path: `${shots}/s1-4_green_view.png` });
+  await pageB.bringToFront();
+  await pageB.keyboard.down('KeyW');
+  await waitFor(async () => (await round(pageA)).signal === 'red', 'red light', 15_000);
+  await sleep(1200);
+  await pageA.screenshot({ path: `${shots}/s1-4_red_view.png` });
+  const idB = await pageB.evaluate(() => window.__cn.sessionId);
+  await waitFor(async () => (await players(pageA)).find((p) => p.id === idB)?.status === 'spotted', 'Beta spotted', 5000);
+  await pageB.screenshot({ path: `${shots}/s1-4_spotted_view.png` });
+  await pageB.keyboard.up('KeyW');
+  const alphaStatus = (await players(pageA)).find((p) => p.id === idA)?.status;
+  if (alphaStatus !== 'active') errors.push(`Alpha (standing still) ended up ${alphaStatus}`);
+  await waitFor(async () => (await round(pageA)).phase === 'results', 'results', 30_000);
+  await sleep(600);
+  const results = await pageA.evaluate(() => window.__cn.results());
+  if (results.map((r) => r.name).join() !== 'Alpha,Beta') errors.push(`Results order ${results.map((r) => r.name).join(', ')}`);
+  if (results.find((r) => r.name === 'Beta')?.status !== 'spotted') errors.push('Beta is not spotted in the results');
+  await pageA.screenshot({ path: `${shots}/s1-4_results_view.png` });
   if (consoleErrors.length) errors.push(...consoleErrors);
 
   const report = {
@@ -85,7 +112,8 @@ try {
     same_room: roomA === roomB,
     both_see_players: 2,
     walk_4s: { moved_m_seen_by_other_browser: +moved.toFixed(2), prediction_error_m: +predictionError.toFixed(3) },
-    screenshots: ['s1-3_start_view.png', 's1-3_after_walk.png', 's1-3_other_player_view.png'].map((f) => `tests/reports/screenshots/${f}`),
+    round: { results: 'Alpha (stood still) 1st, Beta (walked into red) spotted' },
+    screenshots: ['s1-3_start_view.png', 's1-3_after_walk.png', 's1-3_other_player_view.png', 's1-4_green_view.png', 's1-4_red_view.png', 's1-4_spotted_view.png', 's1-4_results_view.png'].map((f) => `tests/reports/screenshots/${f}`),
     renderer: 'headless Chromium, software WebGL (SwiftShader)',
     player_a_cpu_throttle: throttle,
   };

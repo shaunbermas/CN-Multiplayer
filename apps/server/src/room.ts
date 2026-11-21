@@ -1,11 +1,12 @@
 // A CN Trials room: one Cloudflare Durable Object per room (ADR 0002).
-// Holds every player's WebSocket, runs the 30 Hz authoritative simulation and broadcasts
-// snapshots at 20 Hz. M0 / S1-3 walk-test rules; Red Light, Green Light arrives in S1-4.
+// Holds every player's WebSocket, runs the 30 Hz authoritative simulation, the Red Light, Green Light
+// round (packages/shared/src/round.ts) and broadcasts snapshots at 20 Hz.
 import { DurableObject } from 'cloudflare:workers';
 import {
-  CLOSE, INPUT_BURST, INPUT_QUEUE_MAX, MAX_MESSAGE_BYTES, MAX_PLAYERS, PROTOCOL_VERSION, SIM_DT, SIM_HZ,
-  SNAPSHOT_MS, buildStageGeometry, encodeRow, insideRect, sanitizeInput, sanitizeName, step,
-  type ClientMessage, type CollisionFile, type MarkersFile, type RosterEntry, type ServerMessage, type StageGeometry,
+  CLOSE, INPUT_BURST, INPUT_QUEUE_MAX, MAX_MESSAGE_BYTES, MAX_PLAYERS, PROBE_MS, PROTOCOL_VERSION, RoundEngine, SIM_DT,
+  SIM_HZ, SNAPSHOT_MS, buildStageGeometry, encodeRow, insideRect, newRoundPlayer, sanitizeInput, sanitizeName, step,
+  type ClientMessage, type CollisionFile, type MarkersFile, type RosterEntry, type RoundEvents, type RoundPlayer,
+  type RoundState, type ServerMessage, type StageGeometry,
 } from '@cn-trials/shared';
 import collision from '../../../blender/exports/STG01/STG01_collision.json';
 import markers from '../../../blender/exports/STG01/STG01_markers.json';
@@ -13,17 +14,15 @@ import type { Env } from './env.ts';
 
 const geo: StageGeometry = buildStageGeometry(collision as unknown as CollisionFile, markers as unknown as MarkersFile);
 
-interface Player {
-  id: string;
+interface Player extends RoundPlayer {
   name: string;
-  spawn: number;
-  x: number; z: number; vx: number; vz: number; yaw: number;
+  vx: number; vz: number; yaw: number;
   ack: number;
-  finished: boolean;
-  finishTime: number;
   queue: { seq: number; mx: number; mz: number; yaw: number }[];
   tokens: number;
+  /** Lobby practice walk: room time of the first move. */
   firstMoveAt: number | null;
+  probeSentAt: Map<number, number>;
 }
 
 interface Attachment { room: string; id: string | null }
@@ -33,15 +32,23 @@ const newStats = (): Stats => ({ ticks: 0, totalMs: 0, maxMs: 0, recent: [], acc
 export class TrialRoom extends DurableObject<Env> {
   private players = new Map<string, Player>();
   private sockets = new Map<string, WebSocket>();
+  private engine = new RoundEngine(geo);
   private elapsed = 0;
+  private acc = 0;
+  private lastTickAt = 0;
   private tickTimer: ReturnType<typeof setInterval> | null = null;
   private snapTimer: ReturnType<typeof setInterval> | null = null;
+  private probeTimer: ReturnType<typeof setInterval> | null = null;
+  private probeId = 0;
   private stats = newStats();
   private nextId = 1;
+  private hostId = '';
+  private roomCode = 'default';
 
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
     const room = url.searchParams.get('room') ?? 'default';
+    this.roomCode = room;
     if (url.pathname.endsWith('/health')) return Response.json(this.health(room));
     if (url.pathname.endsWith('/metrics/reset') && request.method === 'POST' && this.env.CN_TEST === '1') {
       this.stats = newStats();
@@ -66,7 +73,7 @@ export class TrialRoom extends DurableObject<Env> {
     if (!att) return;
 
     if (msg.t === 'join') {
-      if (att.id) return; // already joined
+      if (att.id) return;
       if (msg.v !== PROTOCOL_VERSION) {
         send(ws, { t: 'error', code: 'version', message: 'Please reload the page to get the latest version' });
         ws.close(CLOSE.version, 'Old client');
@@ -78,15 +85,34 @@ export class TrialRoom extends DurableObject<Env> {
     }
     const p = att.id ? this.players.get(att.id) : undefined;
     if (!p) return;
-    if (msg.t === 'input') {
-      if (typeof msg.seq !== 'number' || !Number.isFinite(msg.seq)) return;
-      if (p.queue.length >= INPUT_QUEUE_MAX) { this.stats.dropped++; return; }
-      p.queue.push({ seq: msg.seq, mx: msg.mx, mz: msg.mz, yaw: msg.yaw });
-      this.stats.accepted++;
-    } else if (msg.t === 'respawn') {
-      this.respawn(p);
-    } else if (msg.t === 'ping') {
-      send(ws, { t: 'pong', at: msg.at });
+    switch (msg.t) {
+      case 'input':
+        if (typeof msg.seq !== 'number' || !Number.isFinite(msg.seq)) return;
+        if (p.queue.length >= INPUT_QUEUE_MAX) { this.stats.dropped++; return; }
+        p.queue.push({ seq: msg.seq, mx: msg.mx, mz: msg.mz, yaw: msg.yaw });
+        this.stats.accepted++;
+        break;
+      case 'respawn':
+        if (this.engine.phase === 'lobby') this.respawn(p);
+        break;
+      case 'start':
+        this.startRound(p, msg.opts);
+        break;
+      case 'skip':
+        this.engine.skip(p.id, this.roundPlayers().map((x) => x.id));
+        break;
+      case 'probe_ack': {
+        const sent = p.probeSentAt.get(msg.id);
+        if (sent !== undefined) {
+          p.probeSentAt.delete(msg.id);
+          const oneWay = Math.min(1, Math.max(0, (Date.now() - sent) / 2000));
+          p.latencyS = p.latencyS === 0 ? oneWay : p.latencyS * 0.7 + oneWay * 0.3; // smoothed
+        }
+        break;
+      }
+      case 'ping':
+        send(ws, { t: 'pong', at: msg.at });
+        break;
     }
   }
 
@@ -104,18 +130,20 @@ export class TrialRoom extends DurableObject<Env> {
     const spawn = geo.spawns.find((s) => !used.has(s.index)) ?? geo.spawns[0];
     const id = `p${this.nextId++}`;
     const p: Player = {
-      id, name: sanitizeName(rawName, `Nomad ${spawn.index}`), spawn: spawn.index,
-      x: spawn.x, z: spawn.z, vx: 0, vz: 0, yaw: spawn.yaw, ack: 0, finished: false, finishTime: -1,
-      queue: [], tokens: INPUT_BURST, firstMoveAt: null,
+      ...newRoundPlayer(id, this.nextId, spawn.index, spawn.x, spawn.z),
+      name: sanitizeName(rawName, `Nomad ${spawn.index}`),
+      vx: 0, vz: 0, yaw: spawn.yaw, ack: 0, queue: [], tokens: INPUT_BURST, firstMoveAt: null, probeSentAt: new Map(),
     };
+    if (this.engine.phase !== 'lobby') this.toBench(p, 'waiting'); // late arrivals watch and join the next round
     this.players.set(id, p);
     this.sockets.set(id, ws);
+    if (!this.hostId) this.hostId = id;
     ws.serializeAttachment({ room, id } satisfies Attachment);
-    send(ws, { t: 'welcome', v: PROTOCOL_VERSION, id, room, stage: geo.stage, spawn: spawn.index, roster: this.roster() });
+    send(ws, { t: 'welcome', v: PROTOCOL_VERSION, id, room, stage: geo.stage, spawn: p.spawn, roster: this.roster(), round: this.roundState() });
     this.broadcast({ t: 'roster', roster: this.roster() });
     this.broadcastSnapshot();
     this.startLoop();
-    console.log(JSON.stringify({ ev: 'join', room, id, spawn: spawn.index, n: this.players.size }));
+    console.log(JSON.stringify({ ev: 'join', room, id, spawn: p.spawn, n: this.players.size, phase: this.engine.phase }));
   }
 
   private leave(ws: WebSocket): void {
@@ -124,18 +152,67 @@ export class TrialRoom extends DurableObject<Env> {
     if (!att?.id || !this.players.has(att.id)) return;
     this.players.delete(att.id);
     this.sockets.delete(att.id);
+    if (this.hostId === att.id) {
+      // Host transfer: the earliest remaining joiner (GDD §6.2).
+      const next = [...this.players.values()].sort((a, b) => a.joinOrder - b.joinOrder)[0];
+      this.hostId = next?.id ?? '';
+    }
     this.broadcast({ t: 'roster', roster: this.roster() });
     console.log(JSON.stringify({ ev: 'leave', room: att.room, id: att.id, n: this.players.size }));
-    if (this.players.size === 0) this.stopLoop();
+    if (this.players.size === 0) { this.stopLoop(); this.engine = new RoundEngine(geo); }
   }
 
   private respawn(p: Player): void {
     const s = geo.spawns.find((x) => x.index === p.spawn) ?? geo.spawns[0];
-    Object.assign(p, { x: s.x, z: s.z, vx: 0, vz: 0, yaw: s.yaw, finished: false, finishTime: -1, firstMoveAt: null });
+    Object.assign(p, { x: s.x, z: s.z, vx: 0, vz: 0, yaw: s.yaw, status: 'active', finishTime: -1, spotTime: -1, firstMoveAt: null });
+  }
+
+  private toBench(p: Player, status: 'waiting'): void {
+    const seats = [...this.players.values()].filter((x) => x.status === 'waiting').length;
+    const b = geo.benches[seats % Math.max(1, geo.benches.length)] ?? { x: 33.5, z: -10 };
+    Object.assign(p, { x: b.x, z: b.z, vx: 0, vz: 0, status });
+  }
+
+  private roundPlayers(): Player[] {
+    return [...this.players.values()].filter((p) => p.status !== 'waiting');
   }
 
   private roster(): RosterEntry[] {
     return [...this.players.values()].map((p) => ({ id: p.id, name: p.name, spawn: p.spawn }));
+  }
+
+  private startRound(by: Player, opts: { seed?: number; roundS?: number; briefingS?: number } = {}): void {
+    if (by.id !== this.hostId) {
+      const ws = this.sockets.get(by.id);
+      if (ws) send(ws, { t: 'error', code: 'not_host', message: 'Only the host can start the round' });
+      return;
+    }
+    if (this.engine.phase !== 'lobby') return;
+    const test = this.env.CN_TEST === '1';
+    const seed = test && Number.isInteger(opts?.seed) ? Number(opts.seed) : crypto.getRandomValues(new Uint32Array(1))[0];
+    const roundS = test && typeof opts?.roundS === 'number' ? Math.max(5, Math.min(300, opts.roundS)) : undefined;
+    const briefingS = test && typeof opts?.briefingS === 'number' ? Math.max(0, Math.min(15, opts.briefingS)) : undefined;
+    const players = [...this.players.values()];
+    for (const p of players) { p.vx = 0; p.vz = 0; p.queue = []; p.firstMoveAt = null; }
+    this.engine.now = this.elapsed;
+    this.engine.start(players, { seed, roundS, briefingS });
+    for (const p of players) p.yaw = 0;
+    console.log(JSON.stringify({ ev: 'round_start', room: this.roomCode, seed, players: players.length,
+      schedule: this.engine.schedule.slice(0, 12).map((s) => [s.signal[0], s.start, s.end]) }));
+    this.broadcast({ t: 'roster', roster: this.roster() });
+    this.broadcastSnapshot();
+  }
+
+  private roundState(): RoundState {
+    const e = this.engine;
+    return {
+      phase: e.phase,
+      signal: e.signal(),
+      remaining: e.phase === 'lobby' ? -1 : Math.round(e.remaining() * 100) / 100,
+      elapsed: e.phase === 'active' ? Math.round((this.elapsed - e.goTime) * 100) / 100 : 0,
+      host: this.hostId,
+      seed: e.seed,
+    };
   }
 
   // ---------------------------------------------------------------- loop
@@ -143,46 +220,107 @@ export class TrialRoom extends DurableObject<Env> {
     if (this.tickTimer) return;
     this.tickTimer = setInterval(() => this.tick(), 1000 / SIM_HZ);
     this.snapTimer = setInterval(() => this.broadcastSnapshot(), SNAPSHOT_MS);
+    this.probeTimer = setInterval(() => this.probe(), PROBE_MS);
   }
 
   private stopLoop(): void {
-    if (this.tickTimer) clearInterval(this.tickTimer);
-    if (this.snapTimer) clearInterval(this.snapTimer);
-    this.tickTimer = this.snapTimer = null;
+    for (const t of [this.tickTimer, this.snapTimer, this.probeTimer]) if (t) clearInterval(t);
+    this.tickTimer = this.snapTimer = this.probeTimer = null;
+    this.lastTickAt = 0;
+    this.acc = 0;
   }
 
+  private probe(): void {
+    const id = ++this.probeId;
+    const now = Date.now();
+    for (const [pid, ws] of this.sockets) {
+      const p = this.players.get(pid);
+      if (!p) continue;
+      p.probeSentAt.set(id, now);
+      if (p.probeSentAt.size > 5) p.probeSentAt.delete(p.probeSentAt.keys().next().value!);
+      send(ws, { t: 'probe', id });
+    }
+  }
+
+  /**
+   * Fixed-timestep loop on real time: the timer fires about 30 times a second, but the number of 1/30 s
+   * simulation steps comes from the wall clock. Worker timers drift slightly slow; counting ticks instead
+   * would let input queues build up, so a player who stopped in time could have old movement applied
+   * during a red light.
+   */
   private tick(): void {
+    const now = Date.now();
+    if (!this.lastTickAt) this.lastTickAt = now - 1000 / SIM_HZ;
+    this.acc = Math.min(this.acc + (now - this.lastTickAt) / 1000, 0.25);
+    this.lastTickAt = now;
+    let steps = 0;
+    while (this.acc >= SIM_DT && steps < 8) {
+      this.acc -= SIM_DT;
+      this.simStep();
+      steps++;
+    }
+  }
+
+  private simStep(): void {
     const t0 = performance.now();
     this.elapsed += SIM_DT;
+    const e = this.engine;
+    const before = e.phase;
+    const ev = e.tick(this.elapsed, this.roundPlayers());
+    this.handlePhase(before, ev);
+    const moveEv: RoundEvents = { spotted: [], finished: [] };
     for (const p of this.players.values()) {
       // Token bucket: one step per tick sustained, so a client cannot move faster than real time.
       p.tokens = Math.min(INPUT_BURST, p.tokens + 1);
       while (p.tokens >= 1 && p.queue.length) {
         const m = p.queue.shift()!;
         p.tokens -= 1;
+        p.ack = m.seq;
+        if (!e.canMove(p)) { p.vx = 0; p.vz = 0; continue; }
         const input = sanitizeInput(m.mx, m.mz);
-        if (p.firstMoveAt === null && (input.mx !== 0 || input.mz !== 0)) p.firstMoveAt = this.elapsed - SIM_DT;
+        const ox = p.x, oz = p.z;
         const next = step(p, input, SIM_DT, geo.walls);
         p.x = next.x; p.z = next.z; p.vx = next.vx; p.vz = next.vz;
         if (typeof m.yaw === 'number' && Number.isFinite(m.yaw)) p.yaw = m.yaw;
-        p.ack = m.seq;
-        if (!p.finished && insideRect(geo.finish, p.x, p.z)) {
-          p.finished = true;
-          p.finishTime = p.firstMoveAt === null ? 0 : Math.round((this.elapsed - p.firstMoveAt) * 1000) / 1000;
-          console.log(JSON.stringify({ ev: 'finish', id: p.id, time: p.finishTime }));
-        }
+        if (e.phase === 'lobby') this.practiceFinish(p, input);
+        else e.afterMove(p, p.x - ox, p.z - oz, SIM_DT, moveEv);
       }
     }
-    // Note: Workers coarsen timers during synchronous work, so tick timings are approximate.
+    const at = Math.round((this.elapsed - e.goTime) * 1000) / 1000;
+    for (const id of moveEv.spotted) this.broadcast({ t: 'event', kind: 'spotted', id, at });
+    for (const id of moveEv.finished) this.broadcast({ t: 'event', kind: 'finished', id, at });
     const ms = performance.now() - t0;
     const s = this.stats;
     s.ticks++; s.totalMs += ms; s.maxMs = Math.max(s.maxMs, ms);
     s.recent.push(ms); if (s.recent.length > 3000) s.recent.shift();
   }
 
+  /** Lobby practice walk (walk test): time from the first move to the finish line. */
+  private practiceFinish(p: Player, input: { mx: number; mz: number }): void {
+    if (p.firstMoveAt === null && (input.mx !== 0 || input.mz !== 0)) p.firstMoveAt = this.elapsed - SIM_DT;
+    if (p.status === 'active' && insideRect(geo.finish, p.x, p.z)) {
+      p.status = 'finished';
+      p.finishTime = p.firstMoveAt === null ? 0 : Math.round((this.elapsed - p.firstMoveAt) * 1000) / 1000;
+    }
+  }
+
+  private handlePhase(before: string, ev: RoundEvents): void {
+    if (!ev.phase || ev.phase === before) return;
+    if (ev.results) {
+      const placings = ev.results.map((r) => ({ ...r, name: this.players.get(r.id)?.name ?? r.id }));
+      this.broadcast({ t: 'results', placings });
+      console.log(JSON.stringify({ ev: 'results', room: this.roomCode, seed: this.engine.seed, placings: placings.map((p) => [p.place, p.id, p.status, p.finishTime]) }));
+    }
+    if (ev.phase === 'lobby') {
+      for (const p of this.players.values()) this.respawn(p); // waiting players join in for the next round
+      this.broadcast({ t: 'roster', roster: this.roster() });
+    }
+    this.broadcastSnapshot();
+  }
+
   private broadcastSnapshot(): void {
     const rows = [...this.players.values()].map((p) => encodeRow(p.id, p));
-    this.broadcast({ t: 'snap', time: Math.round(this.elapsed * 1000) / 1000, rows });
+    this.broadcast({ t: 'snap', time: Math.round(this.elapsed * 1000) / 1000, rows, round: this.roundState() });
   }
 
   private broadcast(msg: ServerMessage): void {
@@ -194,7 +332,7 @@ export class TrialRoom extends DurableObject<Env> {
     const sorted = [...this.stats.recent].sort((a, b) => a - b);
     const pct = (q: number) => (sorted.length ? sorted[Math.min(sorted.length - 1, Math.floor(q * sorted.length))] : 0);
     return {
-      ok: true, room, players: this.players.size, running: !!this.tickTimer,
+      ok: true, room, players: this.players.size, running: !!this.tickTimer, phase: this.engine.phase,
       ticks: this.stats.ticks,
       tickMs: { avg: this.stats.ticks ? +(this.stats.totalMs / this.stats.ticks).toFixed(3) : 0, p95: +pct(0.95).toFixed(3), max: +this.stats.maxMs.toFixed(3) },
       inputs: { accepted: this.stats.accepted, dropped: this.stats.dropped },
