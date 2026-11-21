@@ -182,7 +182,7 @@ Stage 01). Everything below sits in the margins or the backdrop.
 | Element | Placement (Blender) | Size | Collision | Purpose |
 |---------|---------------------|------|-----------|---------|
 | Inner fence | X ±30, Y −12…172; back wall Y 172 | 3 m, chain-link on posts every 4 m | Yes (existing walls) | Keeps players in; see-through so the margins stay visible |
-| Start barrier arm | Y 0, posts at X ±31 | Lowered at 1.1 m before GO, raised to 2.8 m after (the walk-test greybox shows it raised) | No | Lifts on GO (start ritual) |
+| Start barrier arm | Y 0, posts at X ±31 | Lowered at 1.1 m before GO, raised to 6 m after (decision 019; the walk-test greybox shows it raised) | No | Lifts on GO (start ritual) |
 | Finish gate | Y 160, posts at X ±32 | 9 m tall, beam 1.2 m deep (proposed, was 7 m: E7) | No | Frames the goal; warm lights; stays below every sightline (about 15 m clearance) |
 | Floodlight towers | X ±38 at Y −10, 40, 90, 140, 175 (10 towers) | 22 m mast, 4 m head (proposed, was 14 m: E6) | No | Pools of warm light down both sides; strong vertical rhythm |
 | Spectator gantry | X +44, Y 30…130 | 6 m deep, deck 6 m, roof 10 m | No | Where spotted players reappear and cheer; spectator camera |
