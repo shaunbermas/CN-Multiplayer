@@ -31,7 +31,8 @@ export class RoomClient {
   /** Local clock (ms) when the last snapshot arrived, to smooth timers between snapshots. */
   roundAt = 0;
   results: ResultRow[] = [];
-  readonly events: { kind: 'spotted' | 'finished'; id: string; at: number }[] = [];
+  /** at = local receive time (ms); roundT = seconds since GO on the server's clock. */
+  readonly events: { kind: 'spotted' | 'finished'; id: string; at: number; roundT: number }[] = [];
   private ws: WebSocket;
   private closeHandlers: ((code: number, reason: string) => void)[] = [];
   private snapHandlers: (() => void)[] = [];
@@ -86,7 +87,7 @@ export class RoomClient {
             c.results = msg.placings;
             break;
           case 'event':
-            c.events.push({ kind: msg.kind, id: msg.id, at: Date.now() });
+            c.events.push({ kind: msg.kind, id: msg.id, at: Date.now(), roundT: msg.at });
             if (c.events.length > 100) c.events.shift();
             break;
           case 'probe':

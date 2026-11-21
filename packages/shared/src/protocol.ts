@@ -44,7 +44,8 @@ export type ServerMessage =
   | { t: 'roster'; roster: RosterEntry[] }
   | { t: 'snap'; time: number; rows: SnapRow[]; round: RoundState }
   | { t: 'results'; placings: (Placing & { name: string })[] }
-  | { t: 'event'; kind: 'spotted' | 'finished'; id: string }
+  /** at = seconds since GO, on the server's clock. */
+  | { t: 'event'; kind: 'spotted' | 'finished'; id: string; at: number }
   | { t: 'probe'; id: number }
   | { t: 'pong'; at: number }
   | { t: 'error'; code: 'full' | 'version' | 'bad_request' | 'not_host'; message: string };

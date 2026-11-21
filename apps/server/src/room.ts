@@ -34,6 +34,8 @@ export class TrialRoom extends DurableObject<Env> {
   private sockets = new Map<string, WebSocket>();
   private engine = new RoundEngine(geo);
   private elapsed = 0;
+  private acc = 0;
+  private lastTickAt = 0;
   private tickTimer: ReturnType<typeof setInterval> | null = null;
   private snapTimer: ReturnType<typeof setInterval> | null = null;
   private probeTimer: ReturnType<typeof setInterval> | null = null;
@@ -224,6 +226,8 @@ export class TrialRoom extends DurableObject<Env> {
   private stopLoop(): void {
     for (const t of [this.tickTimer, this.snapTimer, this.probeTimer]) if (t) clearInterval(t);
     this.tickTimer = this.snapTimer = this.probeTimer = null;
+    this.lastTickAt = 0;
+    this.acc = 0;
   }
 
   private probe(): void {
@@ -238,7 +242,26 @@ export class TrialRoom extends DurableObject<Env> {
     }
   }
 
+  /**
+   * Fixed-timestep loop on real time: the timer fires about 30 times a second, but the number of 1/30 s
+   * simulation steps comes from the wall clock. Worker timers drift slightly slow; counting ticks instead
+   * would let input queues build up, so a player who stopped in time could have old movement applied
+   * during a red light.
+   */
   private tick(): void {
+    const now = Date.now();
+    if (!this.lastTickAt) this.lastTickAt = now - 1000 / SIM_HZ;
+    this.acc = Math.min(this.acc + (now - this.lastTickAt) / 1000, 0.25);
+    this.lastTickAt = now;
+    let steps = 0;
+    while (this.acc >= SIM_DT && steps < 8) {
+      this.acc -= SIM_DT;
+      this.simStep();
+      steps++;
+    }
+  }
+
+  private simStep(): void {
     const t0 = performance.now();
     this.elapsed += SIM_DT;
     const e = this.engine;
@@ -263,8 +286,9 @@ export class TrialRoom extends DurableObject<Env> {
         else e.afterMove(p, p.x - ox, p.z - oz, SIM_DT, moveEv);
       }
     }
-    for (const id of moveEv.spotted) this.broadcast({ t: 'event', kind: 'spotted', id });
-    for (const id of moveEv.finished) this.broadcast({ t: 'event', kind: 'finished', id });
+    const at = Math.round((this.elapsed - e.goTime) * 1000) / 1000;
+    for (const id of moveEv.spotted) this.broadcast({ t: 'event', kind: 'spotted', id, at });
+    for (const id of moveEv.finished) this.broadcast({ t: 'event', kind: 'finished', id, at });
     const ms = performance.now() - t0;
     const s = this.stats;
     s.ticks++; s.totalMs += ms; s.maxMs = Math.max(s.maxMs, ms);

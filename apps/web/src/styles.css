@@ -14,9 +14,35 @@ canvas { display: block; }
 .pill { background: var(--panel); padding: 6px 12px; border-radius: 999px; font-weight: 600; }
 .timer { background: var(--panel); padding: 6px 16px; border-radius: 10px; font-size: 22px; font-variant-numeric: tabular-nums; font-weight: 700; }
 .hud-lower { margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 8px; padding-bottom: 10px; }
-.objective { background: var(--panel); padding: 6px 14px; border-radius: 8px; }
+.objective { align-self: center; background: var(--panel); padding: 6px 14px; border-radius: 8px; margin-top: 8px; }
 .progress { width: min(420px, 80vw); height: 6px; background: rgba(255,255,255,0.15); border-radius: 3px; overflow: hidden; }
 .progress > div { height: 100%; background: var(--accent); }
 .hud-bottom { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 13px; }
 .muted { opacity: 0.7; }
 .nametag { background: rgba(10, 12, 20, 0.7); color: #fff; padding: 2px 8px; border-radius: 6px; font-size: 13px; white-space: nowrap; pointer-events: none; }
+
+/* ---- round UI (S1-4) ---- */
+.panel { pointer-events: auto; margin: 70px auto 0; background: rgba(12, 16, 28, 0.86); border-radius: 14px; padding: 18px 22px; width: min(420px, 92vw); box-shadow: 0 10px 30px rgba(0,0,0,0.35); }
+.panel h2 { margin: 0 0 8px; font-size: 22px; }
+.panel p { margin: 6px 0; }
+.panel .rule { font-size: 18px; }
+.roster { list-style: none; padding: 0; margin: 10px 0; max-height: 160px; overflow: auto; columns: 2; }
+.roster li { padding: 2px 0; }
+button.primary { margin-top: 10px; padding: 10px 18px; border-radius: 8px; border: 0; background: var(--accent); color: #1a1205; font-weight: 700; font-size: 16px; cursor: pointer; }
+.signal { margin: 6px auto 0; display: flex; align-items: center; gap: 8px; padding: 3px 16px; border-radius: 10px; font-size: 24px; font-weight: 800; letter-spacing: 0.06em; border: 3px solid transparent; }
+.signal.go { background: rgba(22, 101, 52, 0.85); border-color: #4ade80; }
+.signal.warn { background: rgba(146, 64, 14, 0.85); border-color: #fbbf24; animation: pulse 0.45s ease-in-out infinite alternate; }
+.signal.stop { background: rgba(153, 27, 27, 0.9); border-color: #fca5a5; }
+@keyframes pulse { from { transform: scale(1); } to { transform: scale(1.06); } }
+@media (prefers-reduced-motion: reduce) { .signal.warn { animation: none; } }
+.countdown { margin: auto; font-size: 120px; font-weight: 900; text-shadow: 0 6px 30px rgba(0,0,0,0.6); }
+.stamp { position: fixed; top: 38%; left: 50%; transform: translate(-50%, -50%) rotate(-8deg); font-size: 64px; font-weight: 900; color: #fde68a; border: 6px solid #fde68a; border-radius: 14px; padding: 4px 22px; background: rgba(60, 20, 20, 0.6); animation: pop 0.25s ease-out; }
+@keyframes pop { from { transform: translate(-50%, -50%) rotate(-8deg) scale(1.6); opacity: 0; } to { transform: translate(-50%, -50%) rotate(-8deg) scale(1); opacity: 1; } }
+.results ol { padding-left: 22px; margin: 8px 0; max-height: 300px; overflow: auto; }
+.results li { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; }
+.results li.me { color: var(--accent); font-weight: 700; }
+.nametag.spotted { background: #7f1d1d; color: #fde68a; font-weight: 800; }
+
+/* Lobby panel sits at the side so nothing covers The Shepherd at the top centre. */
+.lobby-panel { position: fixed; left: 16px; top: 64px; margin: 0; width: min(320px, 80vw); }
+@media (max-width: 700px) { .lobby-panel { top: auto; bottom: 90px; } }

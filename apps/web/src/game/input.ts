@@ -1,5 +1,5 @@
 // Keyboard + pointer-lock mouse look. Camera yaw 0 faces -Z (the course).
-export const input = { forward: 0, right: 0, yaw: 0, pitch: -0.12, respawn: false };
+export const input = { forward: 0, right: 0, yaw: 0, pitch: -0.12, respawn: false, skip: false, cycle: false };
 
 const held = new Set<string>();
 function update() {
@@ -12,6 +12,8 @@ export function attachInput(canvas: HTMLElement): () => void {
     if ((e.target as HTMLElement)?.tagName === 'INPUT') return;
     held.add(e.code);
     if (e.code === 'KeyR') input.respawn = true;
+    if (e.code === 'Space' || e.code === 'Enter') input.skip = true;
+    if (e.code === 'Tab' || e.code === 'KeyT') { input.cycle = true; e.preventDefault(); }
     update();
   };
   const up = (e: KeyboardEvent) => { held.delete(e.code); update(); };

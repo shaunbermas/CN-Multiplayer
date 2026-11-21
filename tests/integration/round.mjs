@@ -73,7 +73,7 @@ try {
   clearInterval(timer);
   await waitFor(() => careful.results.length === 3, 'results message');
   const spottedEvent = careful.events.find((e) => e.kind === 'spotted' && e.id === reckless.id);
-  const spottedAt = spottedEvent ? (spottedEvent.at - goLocal) / 1000 : -1;
+  const spottedAt = spottedEvent ? spottedEvent.roundT : -1; // server clock, seconds since GO
   const placings = careful.results.map((r) => `${r.place}. ${r.name} (${r.status})`);
   const names = careful.results.map((r) => r.name);
   const statusOf = (n) => careful.results.find((r) => r.name === n)?.status;
