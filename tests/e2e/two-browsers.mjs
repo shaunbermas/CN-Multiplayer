@@ -35,6 +35,9 @@ try {
   const ctxB = await browser.newContext({ viewport: { width: 1280, height: 720 } });
   const pageA = await ctxA.newPage();
   const pageB = await ctxB.newPage();
+  // Simulate a slow computer for player A (low frame rate): movement speed must not depend on frame rate.
+  const throttle = Number(process.env.E2E_CPU_THROTTLE ?? 6);
+  if (throttle > 1) await (await ctxA.newCDPSession(pageA)).send('Emulation.setCPUThrottlingRate', { rate: throttle });
   const consoleErrors = [];
   for (const [tag, p] of [['A', pageA], ['B', pageB]]) {
     p.on('pageerror', (e) => consoleErrors.push(`${tag}: ${e}`));
@@ -57,9 +60,16 @@ try {
   await sleep(4000);
   await pageA.keyboard.up('KeyW');
   await sleep(800);
+  // After stopping, the server finishes applying queued inputs; prediction and server must then agree.
+  let serverA, predicted;
+  const settleStart = Date.now();
+  do {
+    serverA = (await players(pageA)).find((p) => p.id === idA);
+    predicted = await pageA.evaluate(() => window.__cn.self());
+    if (Math.hypot(predicted.x - serverA.x, predicted.z - serverA.z) <= 0.05) break;
+    await sleep(250);
+  } while (Date.now() - settleStart < 5000);
   const fromB = (await players(pageB)).find((p) => p.id === idA);
-  const serverA = (await players(pageA)).find((p) => p.id === idA);
-  const predicted = await pageA.evaluate(() => window.__cn.self());
   const moved = zBefore - fromB.z;
   if (!(moved > 8)) errors.push(`Player A moved only ${moved.toFixed(2)} m as seen by B (expected > 8 m in 4 s)`);
   const predictionError = Math.hypot(predicted.x - serverA.x, predicted.z - serverA.z);
@@ -77,6 +87,7 @@ try {
     walk_4s: { moved_m_seen_by_other_browser: +moved.toFixed(2), prediction_error_m: +predictionError.toFixed(3) },
     screenshots: ['s1-3_start_view.png', 's1-3_after_walk.png', 's1-3_other_player_view.png'].map((f) => `tests/reports/screenshots/${f}`),
     renderer: 'headless Chromium, software WebGL (SwiftShader)',
+    player_a_cpu_throttle: throttle,
   };
   writeReport('e2e-two-browsers.json', report);
   console.log(JSON.stringify(report, null, 2));

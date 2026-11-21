@@ -70,7 +70,10 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
     const pr = predictor.current;
     const me = room.players.get(room.id);
     if (!pr || !me) return;
-    const dt = Math.min(dtRaw, 0.25);
+    // Count real time down to 1 fps, so a slow computer still sends 30 inputs per second and walks at
+    // full speed. (A 0.25 s cap made players on slow machines walk slower.) Longer pauses, such as a
+    // hidden tab, are dropped rather than replayed as a burst.
+    const dt = Math.min(dtRaw, 1.0);
     clock.current += dt;
     if (input.respawn) {
       input.respawn = false;

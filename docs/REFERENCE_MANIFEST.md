@@ -26,6 +26,13 @@ Status: v0.2, 21 November 2026. Covers every visual reference currently in `refe
 |---|------|------|--------------------|--------|--------|
 | G1 | `references/GLOBAL/stage_environment_and_tournament_overview.png` | 1536 × 1024 PNG, 2.6 MB | `d6c8565cf9008899` | Stage 01 production pack | RECEIVED |
 | G2 | `references/GLOBAL/stage_enemy_and_asset_overview.png` | 1536 × 1024 PNG, 2.6 MB | `25f830cb6418e244` | Stage 01 production pack | RECEIVED |
+| S1 | *Not in the repository*: `playground_mood_reference_cropped.png` | 656 × 339 PNG | `befb149660249010` | Prompt 02 reference pack | RECEIVED, mood only |
+| S2 | *Not in the repository*: `user_uploaded_reference_with_prompt_context.png` (full screenshot of S1 with the prompt text) | 656 × 1105 PNG | `4ebcac0e2bf9a6c0` | Prompt 02 reference pack | RECEIVED, source context |
+
+S1 and S2 are a third-party image of unknown origin carrying a website watermark and partly legible
+lettering. This repository is public, so they are recorded here by description and fingerprint and not
+committed (design spec decision E12). The pack's copies of G1, G2 and the GDD match the files already
+here (G2 differs only in file encoding).
 
 The files keep their original names. They are not renamed to the planned slot names in §3, because
 neither board is a dedicated art-direction sheet, enemy sheet or roster sheet. §3 records which planned
@@ -67,6 +74,12 @@ These points agree with GDD §5 and are safe to carry into production briefs:
 - Atmosphere: fog, haze, distant silhouettes.
 - Scale contrast: very small contestants in a world built far too large for them.
 - Contestants: hooded, capped or masked, worn fabric, small backpacks, readable silhouettes.
+
+### S1: abandoned playground at night (Prompt 02)
+
+| Communicates | Must not be used for |
+|--------------|----------------------|
+| Mood for Stage 01's margins and backdrop: abandoned playground (swings, slide, a tall rocket-shaped cage climber), an elevated roadway curving past, a distant water tower, tree silhouettes, damp ground, heavy teal ground haze with violet sky, isolation | Copying its lettering, the antlered water tower or any other distinctive design; tracing; layout or scale. How it combines with the decided night floodlit yard is decision E1 in `STAGE_01_DESIGN_SPEC.md` |
 
 ## 3. Planned reference slots
 

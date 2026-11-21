@@ -26,5 +26,6 @@ still PROPOSED or TBD in the GDD and plans.
 
 | Item | Current proposal | Source |
 |------|------------------|--------|
+| Stage 01 environment design (E1–E14): playground mood blend, Shepherd installation option, start zone 15 m, 22 m floodlights, 9 m finish gate, violet palette, observation structures and more | See the spec's §14 | `docs/STAGE_01_DESIGN_SPEC.md` |
 | Tagline | Keep "Thirty enter. Only one survives." for now; candidates: "Move with intent.", "We guide. You go." | GDD §14 |
 | Theme names (stage names, Basecamp, Nomads, Trailblazer) | Proposed in chat on 21 Nov 2026; not adopted | — |
