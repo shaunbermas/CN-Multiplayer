@@ -91,8 +91,11 @@ def main() -> None:
         "units": "m",
         "coordinates": "game / glTF: Y up, right-handed; Blender +Y (course direction) = game -Z",
     }
-    collision = {**meta, "colliders": [collision_entry(o) for o in bpy.data.collections[f"{args.stage}_COL"].all_objects
-                                       if o.type == "MESH"]}
+    col_objs = [o for o in bpy.data.collections[f"{args.stage}_COL"].all_objects if o.type == "MESH"]
+    # Camera-only colliders (COL_CAM_*) go in their own list; the server only reads "colliders".
+    collision = {**meta,
+                 "colliders": [collision_entry(o) for o in col_objs if o.get("col_type") != "camera"],
+                 "camera_colliders": [collision_entry(o) for o in col_objs if o.get("col_type") == "camera"]}
     markers = {**meta, "markers": [marker_entry(o) for o in sorted(bpy.data.collections[f"{args.stage}_GMK"].all_objects,
                                                                    key=lambda o: o.name)]}
     cb.write_json(out_dir / f"{args.stage}_collision.json", collision)

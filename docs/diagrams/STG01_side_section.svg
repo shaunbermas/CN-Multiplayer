@@ -2,9 +2,9 @@
 <rect width="832" height="444" fill="#fbfaf7"/>
 <text x="16.0" y="26.0" font-family="system-ui,Segoe UI,sans-serif" font-size="16" fill="#1f2430" text-anchor="start" font-weight="700">Stage 01 side section along X = 0 (vertical scale exaggerated x2.8) with sightlines to The Shepherd</text>
 <line x1="40.0" y1="394.0" x2="792.0" y2="394.0" stroke="#1f2430" stroke-width="1.5"/>
-<rect x="72.0" y="390.4" width="9.6" height="3.6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1" opacity="1"/>
-<rect x="81.6" y="390.4" width="38.4" height="3.6" fill="#e5e7eb" stroke="#1f2430" stroke-width="1" opacity="1"/>
-<text x="100.8" y="410.0" font-family="system-ui,Segoe UI,sans-serif" font-size="10" fill="#1f2430" text-anchor="middle" font-weight="400">start zone</text>
+<rect x="72.0" y="390.4" width="0.0" height="3.6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1" opacity="1"/>
+<rect x="72.0" y="390.4" width="48.0" height="3.6" fill="#e5e7eb" stroke="#1f2430" stroke-width="1" opacity="1"/>
+<text x="96.0" y="410.0" font-family="system-ui,Segoe UI,sans-serif" font-size="10" fill="#1f2430" text-anchor="middle" font-weight="400">start zone</text>
 <rect x="632.0" y="367.0" width="9.6" height="27.0" fill="#fed7aa" stroke="#c2410c" stroke-width="1" opacity="1"/>
 <rect x="641.6" y="367.0" width="28.8" height="27.0" fill="#d1fae5" stroke="#0f766e" stroke-width="1" opacity="1"/>
 <text x="632.0" y="410.0" font-family="system-ui,Segoe UI,sans-serif" font-size="10" fill="#c2410c" text-anchor="middle" font-weight="400">finish 160</text>

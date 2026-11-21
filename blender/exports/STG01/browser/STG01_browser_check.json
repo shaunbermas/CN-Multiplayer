@@ -12,9 +12,9 @@
   },
   "browser": {
     "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
-    "objects": 86,
+    "objects": 242,
     "spawn_markers": 30,
-    "triangles": 1260,
+    "triangles": 3236,
     "yard_bounds": {
       "min": [
         -30,
@@ -24,7 +24,7 @@
       "max": [
         30,
         0,
-        12
+        15
       ]
     }
   },

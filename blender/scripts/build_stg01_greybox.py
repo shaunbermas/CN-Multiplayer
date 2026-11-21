@@ -29,6 +29,100 @@ def spawn_points(spec: dict) -> list[tuple[float, float]]:
     return [(x, y) for y in sp["row_y"] for x in order]
 
 
+def build_environment(spec, env, props, m_metal, m_deck, m_relic, m_tree, m_concrete, m_prop, m_lamp) -> None:
+    """Blockout of every environment element in the approved design spec (primitives only)."""
+    E = spec["environment"]
+    W = spec["width"]
+    half = W / 2.0
+
+    # Spectator gantry (east): deck, legs every 10 m, roof, rail.
+    g = E["observation"]["gantry_east"]
+    length = g["y1"] - g["y0"]
+    yc = (g["y0"] + g["y1"]) / 2
+    cb.place("PRP_STG01_SpectatorGantry_Deck", cb.box_mesh("PRP_STG01_SpectatorGantry_Deck", g["width"], length, 0.4, m_deck), props, (g["x"], yc, g["deck_z"] - 0.4))
+    cb.place("PRP_STG01_SpectatorGantry_Roof", cb.box_mesh("PRP_STG01_SpectatorGantry_Roof", g["width"] + 1, length, 0.3, m_metal), props, (g["x"], yc, g["roof_z"]))
+    cb.place("PRP_STG01_SpectatorGantry_Rail", cb.box_mesh("PRP_STG01_SpectatorGantry_Rail", 0.1, length, 1.1, m_metal), props, (g["x"] - g["width"] / 2, yc, g["deck_z"]))
+    leg = cb.box_mesh("PRP_STG01_SpectatorGantry_Leg", 0.4, 0.4, g["roof_z"], m_metal)
+    y, i = g["y0"], 0
+    while y <= g["y1"] + 1e-6:
+        for dx in (-g["width"] / 2 + 0.3, g["width"] / 2 - 0.3):
+            i += 1
+            cb.place(f"PRP_STG01_SpectatorGantry_Leg_{i:02d}", leg, props, (g["x"] + dx, y, 0.0))
+        y += 10.0
+
+    # Judges' booth with a timer board facing the yard.
+    b = E["observation"]["judges_booth"]
+    cb.place("PRP_STG01_JudgesBooth_Cabin", cb.box_mesh("PRP_STG01_JudgesBooth_Cabin", b["w"], b["d"], b["roof_z"] - b["deck_z"], m_deck), props, (b["x"], b["y"], b["deck_z"]))
+    bleg = cb.box_mesh("PRP_STG01_JudgesBooth_Leg", 0.5, 0.5, b["deck_z"], m_metal)
+    for j, (dx, dy) in enumerate(((-1, -1), (1, -1), (-1, 1), (1, 1)), 1):
+        cb.place(f"PRP_STG01_JudgesBooth_Leg_{j}", bleg, props, (b["x"] + dx * (b["w"] / 2 - 0.5), b["y"] + dy * (b["d"] / 2 - 0.5), 0.0))
+    cb.place("PRP_STG01_JudgesBooth_TimerBoard", cb.box_mesh("PRP_STG01_JudgesBooth_TimerBoard", 0.3, 6.0, 2.5, m_lamp), props, (b["x"] - b["w"] / 2 - 0.2, b["y"], b["roof_z"] - 3.0))
+
+    # Benches for spotted players (outside the east fence).
+    be = E["observation"]["benches_east"]
+    bench = cb.box_mesh("PRP_KIT_Bench_4m", 0.6, 4.0, 0.45, m_deck)
+    y, i = be["y0"], 0
+    while y <= be["y1"] + 1e-6:
+        i += 1
+        cb.place(f"PRP_KIT_Bench_{i:02d}", bench, props, (be["x"], y, 0.0))
+        y += be["spacing"]
+
+    # Service gates in the east fence (closed; the wall collider stays continuous).
+    gate = cb.box_mesh("PRP_KIT_ServiceGate_4m", 0.3, 4.0, 3.5, m_prop)
+    for j, sg in enumerate(E["perimeter"]["service_gates"], 1):
+        cb.place(f"PRP_KIT_ServiceGate_{j:02d}", gate, props, (half + 0.6, sg["y"], 0.0))
+
+    # Start barrier arm at the start line (decorative). Lowered to arm_height before GO, raised after.
+    # The walk-test greybox shows it raised (players walk under it) until S1-4 animates it.
+    sgt = E["start_gate"]
+    spost = cb.box_mesh("PRP_STG01_StartBarrier_Post", 0.5, 0.5, sgt["arm_lifted_height"] + 0.2, m_metal)
+    cb.place("PRP_STG01_StartBarrier_Post_W", spost, props, (-sgt["post_x"], sgt["y"], 0.0))
+    cb.place("PRP_STG01_StartBarrier_Post_E", spost, props, (sgt["post_x"], sgt["y"], 0.0))
+    cb.place("PRP_STG01_StartBarrier_Arm", cb.box_mesh("PRP_STG01_StartBarrier_Arm", 2 * sgt["post_x"], 0.12, 0.12, m_metal), props,
+             (0.0, sgt["y"] + 0.3, sgt["arm_lifted_height"]), {"lowered_z": sgt["arm_height"]})
+
+    # Outer barrier (low concrete line closing the world).
+    ob = E["perimeter"]["outer_barrier"]
+    bx, y0, y1, bh = ob["x"], ob["y0"], ob["y1"], ob["height"]
+    for name, sx, sy, x, y in (
+        ("PRP_KIT_ConcreteBarrier_W", 0.8, y1 - y0, -bx, (y0 + y1) / 2), ("PRP_KIT_ConcreteBarrier_E", 0.8, y1 - y0, bx, (y0 + y1) / 2),
+        ("PRP_KIT_ConcreteBarrier_S", 2 * bx, 0.8, 0.0, y0), ("PRP_KIT_ConcreteBarrier_N", 2 * bx, 0.8, 0.0, y1),
+    ):
+        cb.place(name, cb.box_mesh(name, sx, sy, bh, m_concrete), props, (x, y, 0.0))
+
+    # Playground relics (west margin).
+    for r in E["playground_relics"]:
+        if "RocketFrame" in r["id"]:
+            mesh = cb.cone_mesh(r["id"], r["w"] / 2, r["h"], 8, m_relic)
+        else:
+            mesh = cb.box_mesh(r["id"], r["w"], r["d"], r["h"], m_relic)
+        cb.place(r["id"], mesh, props, (r["x"], r["y"], 0.0))
+
+    # Backdrop: elevated roadway, water tower, tree lines.
+    bd = E["backdrop"]
+    ov = bd["overpass"]
+    cb.place("STG01_BG_Overpass_Deck", cb.box_mesh("STG01_BG_Overpass_Deck", ov["width"], ov["y1"] - ov["y0"], 1.5, m_concrete), env, (ov["x"], (ov["y0"] + ov["y1"]) / 2, ov["deck_z"]))
+    cb.place("STG01_BG_Overpass_Rail", cb.box_mesh("STG01_BG_Overpass_Rail", 0.3, ov["y1"] - ov["y0"], 1.2, m_metal), env, (ov["x"] + ov["width"] / 2, (ov["y0"] + ov["y1"]) / 2, ov["deck_z"] + 1.5))
+    pier = cb.box_mesh("STG01_BG_OverpassPier", 2.0, 2.0, ov["deck_z"], m_concrete)
+    y, i = ov["y0"], 0
+    while y <= ov["y1"] + 1e-6:
+        i += 1
+        cb.place(f"STG01_BG_OverpassPier_{i:02d}", pier, env, (ov["x"], y, 0.0))
+        y += ov["pier_spacing"]
+    wt = bd["water_tower"]
+    cb.place("STG01_BG_WaterTower_Stem", cb.cylinder_mesh("STG01_BG_WaterTower_Stem", 1.2, wt["tank_z"], 10, m_metal), env, (wt["x"], wt["y"], 0.0))
+    cb.place("STG01_BG_WaterTower_Tank", cb.cylinder_mesh("STG01_BG_WaterTower_Tank", wt["tank_r"], 9.0, 20, m_concrete), env, (wt["x"], wt["y"], wt["tank_z"]))
+    tree = cb.cone_mesh("STG01_BG_Tree", 3.0, 12.0, 8, m_tree)
+    i = 0
+    tn, tw = bd["tree_line_north"], bd["tree_line_west"]
+    for x in range(int(tn["x0"]), int(tn["x1"]) + 1, 7):
+        i += 1
+        cb.place(f"STG01_BG_Tree_{i:02d}", tree, env, (float(x), tn["y"], 0.0))
+    for y in range(int(tw["y0"]), int(tw["y1"]) + 1, 8):
+        i += 1
+        cb.place(f"STG01_BG_Tree_{i:02d}", tree, env, (tw["x"], float(y), 0.0))
+
+
 def build(spec: dict, spec_hash: str) -> dict:
     scene = cb.new_empty_scene()
     scene["cn_stage"] = spec["stage"]
@@ -56,6 +150,11 @@ def build(spec: dict, spec_hash: str) -> dict:
     m_lamp = cb.material("MAT_Greybox_Lamp", (1.0, 0.78, 0.45), emission=8.0)
     m_bg = cb.material("MAT_Greybox_Silhouette", (0.07, 0.08, 0.10))
     m_col = cb.material("MAT_Greybox_Collision", (0.9, 0.1, 0.1), alpha=0.25)
+    m_signal = cb.material("MAT_Greybox_Signal", (0.3, 0.9, 0.6), emission=6.0)
+    m_deck = cb.material("MAT_Greybox_Deck", (0.55, 0.50, 0.30))
+    m_relic = cb.material("MAT_Greybox_Relic", (0.50, 0.35, 0.60))
+    m_tree = cb.material("MAT_Greybox_Tree", (0.06, 0.10, 0.09))
+    m_concrete = cb.material("MAT_Greybox_Concrete", (0.35, 0.35, 0.37))
 
     env, props, col, gmk = cols["STG01_ENV"], cols["STG01_PROPS"], cols["STG01_COL"], cols["STG01_GMK"]
 
@@ -88,36 +187,43 @@ def build(spec: dict, spec_hash: str) -> dict:
     ):
         cb.place(name, cb.box_mesh(name, sx, sy, fh, m_metal), props, (x, y, 0.0))
     gp, gh = vis["gate_post_size"], vis["gate_height"]
+    gx_post = vis["gate_post_x"]
     post = cb.box_mesh("PRP_STG01_FinishGate_Post", gp, gp, gh, m_prop)
-    cb.place("PRP_STG01_FinishGate_Post_W", post, props, (-half - gp, L, 0.0))
-    cb.place("PRP_STG01_FinishGate_Post_E", post, props, (half + gp, L, 0.0))
-    cb.place("PRP_STG01_FinishGate_Beam", cb.box_mesh("PRP_STG01_FinishGate_Beam", W + 4 * gp, gp, gp, m_prop),
+    cb.place("PRP_STG01_FinishGate_Post_W", post, props, (-gx_post, L, 0.0))
+    cb.place("PRP_STG01_FinishGate_Post_E", post, props, (gx_post, L, 0.0))
+    cb.place("PRP_STG01_FinishGate_Beam", cb.box_mesh("PRP_STG01_FinishGate_Beam", 2 * gx_post + gp, gp, gp, m_prop),
              props, (0.0, L, gh - gp))
+    cb.place("PRP_STG01_FinishGate_LightStrip", cb.box_mesh("PRP_STG01_FinishGate_LightStrip", 2 * gx_post, 0.3, 0.3, m_lamp),
+             props, (0.0, L - gp / 2 - 0.2, gh - gp - 0.3))
     ps, ph = sh["platform_size"], sh["platform_height"]
     cb.place("PRP_STG01_ShepherdPlatform", cb.box_mesh("PRP_STG01_ShepherdPlatform", ps, ps, ph, m_metal),
              props, (sh["x"], sh["y"], 0.0))
+    # Floodlight towers (decision E6): 22 m, five per side at X ±38, heads aimed in and down at 55°.
     fl = spec["floodlights"]
-    mast = cb.cylinder_mesh("PRP_STG01_FloodlightMast", 0.35, fl["height"], 12, m_metal)
-    lamp = cb.box_mesh("PRP_STG01_FloodlightLamp", 2.4, 0.6, 1.2, m_lamp)
+    mast = cb.cylinder_mesh("PRP_KIT_FloodlightTower_Mast", 0.5, fl["height"], 12, m_metal)
+    head = cb.box_mesh("PRP_KIT_FloodlightTower_Head", fl["head_w"], 0.8, 1.6, m_lamp)
+    sig = cb.box_mesh("PRP_KIT_SignalLamp", 0.8, 0.8, 0.8, m_signal)
+    horn = cb.cylinder_mesh("PRP_KIT_Loudspeaker", 0.5, 1.0, 10, m_metal)
     n = 0
-    y = 0.0
-    while y <= L + 1e-6:
+    for y in fl["ys"]:
         for side in (-1, 1):
             n += 1
             x = side * fl["x"]
-            cb.place(f"PRP_STG01_FloodlightMast_{n:02d}", mast, props, (x, y, 0.0))
-            cb.place(f"PRP_STG01_FloodlightLamp_{n:02d}", lamp, props, (x - side * 0.6, y, fl["height"]))
+            cb.place(f"PRP_KIT_FloodlightTower_{n:02d}", mast, props, (x, y, 0.0))
+            cb.place(f"PRP_KIT_FloodlightTower_Head_{n:02d}", head, props, (x - side * 0.8, y, fl["height"]))
+            cb.place(f"PRP_KIT_SignalLamp_{n:02d}", sig, props, (x, y, fl["height"] - 1.2))
+            if y in (40.0, 140.0):
+                cb.place(f"PRP_KIT_Loudspeaker_{n:02d}", horn, props, (x - side * 0.8, y, fl["height"] - 3.0))
             light = bpy.data.lights.new(f"LGT_STG01_Flood_{n:02d}", "SPOT")
-            light.energy = 60000.0
-            light.spot_size = math.radians(70)
-            light.color = (1.0, 0.85, 0.65)
+            light.energy = 90000.0
+            light.spot_size = math.radians(75)
+            light.color = (1.0, 0.84, 0.62)
             lo = cb.place(f"LGT_STG01_Flood_{n:02d}", light, cols["STG01_LIGHTS"], (x - side * 1.0, y, fl["height"]),
                           {"bake": "dynamic"})
             lo.rotation_euler = (0.0, math.radians(side * 55), 0.0)  # tilt toward the yard
-        y += fl["spacing_y"]
     moon = bpy.data.lights.new("LGT_STG01_Moon", "SUN")
     moon.energy = 0.6
-    moon.color = (0.55, 0.65, 0.9)
+    moon.color = (0.45, 0.75, 0.8)  # cool teal moonlight (decision E8 palette)
     mo = cb.place("LGT_STG01_Moon", moon, cols["STG01_LIGHTS"], (0, 0, 50), {"bake": "baked"})
     mo.rotation_euler = (math.radians(50), 0.0, math.radians(200))
 
@@ -138,6 +244,9 @@ def build(spec: dict, spec_hash: str) -> dict:
     cb.place("ENM_Shepherd_Placeholder_Crook", cb.cylinder_mesh("ENM_Shepherd_Placeholder_Crook", 0.25, H * 0.9, 8, m_prop),
              props, (sh["x"] - H * 0.22, sh["y"] - 1.0, top), {"placeholder": True})
 
+    # ---- environment blockout (docs/STAGE_01_DESIGN_SPEC.md §7; nothing with collision inside the yard)
+    build_environment(spec, env, props, m_metal, m_deck, m_relic, m_tree, m_concrete, m_prop, m_lamp)
+
     # ---- collision (server data; never rendered or exported to the runtime GLB)
     wh, wt = spec["wall_height"], spec["wall_thickness"]
     col_items = [
@@ -150,6 +259,14 @@ def build(spec: dict, spec_hash: str) -> dict:
          0.0, L + spec["finish_trigger_depth"] / 2, 0.0, "trigger", "finish"),
         ("COL_STG01_SafeZone", W, spec["safe_zone_depth"], spec["finish_trigger_height"],
          0.0, y_finish_end + spec["safe_zone_depth"] / 2, 0.0, "trigger", "safe"),
+    ]
+    # Camera-only collision (decision E10): keeps the third-person camera out of the fence and towers.
+    # Exported separately; the server never sees these.
+    cam_h = 4.0
+    col_items += [
+        ("COL_CAM_STG01_Fence_W", wt, y_back - y0, cam_h, -half - wt / 2, (y0 + y_back) / 2, 0.0, "camera", None),
+        ("COL_CAM_STG01_Fence_E", wt, y_back - y0, cam_h, half + wt / 2, (y0 + y_back) / 2, 0.0, "camera", None),
+        ("COL_CAM_STG01_Fence_S", W + 2 * wt, wt, cam_h, 0.0, y0 - wt / 2, 0.0, "camera", None),
     ]
     for name, sx, sy, sz, x, y, z, kind, role in col_items:
         p = {"col_shape": "box", "col_type": kind}
@@ -169,6 +286,12 @@ def build(spec: dict, spec_hash: str) -> dict:
              props={"kind": "shepherd", "height": H, "head_z": round(head_z, 3)})
     cb.empty("GMK_BOUNDS", gmk, (0.0, (y0 + y_back) / 2, 0.0), "CUBE", 1.0,
              props={"kind": "bounds", "min_x": -half, "max_x": half, "min_y": y0, "max_y": y_back})
+    be = spec["environment"]["observation"]["benches_east"]
+    yb, nb = be["y0"], 0
+    while yb <= be["y1"] + 1e-6:
+        nb += 1
+        cb.empty(f"GMK_BENCH_{nb:02d}", gmk, (be["x"], yb, 0.45), "PLAIN_AXES", 0.5, props={"kind": "bench", "index": nb})
+        yb += be["spacing"]
     cb.empty("GMK_SPECTATOR_01", gmk, (0.0, sh["y"] + 15.0, top + H + 10.0), "PLAIN_AXES", 1.0,
              props={"kind": "spectator_camera", "look_at": [0.0, L / 2, 0.0]})
 
@@ -183,18 +306,17 @@ def build(spec: dict, spec_hash: str) -> dict:
         o.rotation_euler = Vector(d).to_track_quat("-Z", "Y").to_euler()
         return o
 
-    camera("CAM_STG01_Gameplay", (0.0, spec["spawns"]["row_y"][0] - 5.0, 3.0), (0.0, sh["y"], head_z * 0.6), 24.0)
-    camera("CAM_STG01_Overview", (-130.0, -70.0, 150.0), (0.0, L * 0.5, 0.0), 30.0)
-    camera("CAM_STG01_Spectator_01", (0.0, sh["y"] + 15.0, top + H + 10.0), (0.0, L / 2, 0.0), 24.0)
+    for name, c in spec["environment"]["cameras"].items():
+        camera(name, tuple(c["pos"]), tuple(c["look"]), 24.0 if "Overview" not in name else 30.0)
     scene.camera = bpy.data.objects["CAM_STG01_Gameplay"]
 
     world = bpy.data.worlds.new("STG01_NightSky")
     if world.node_tree is None:
         world.use_nodes = True
-    world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.02, 0.025, 0.04, 1.0)
+    world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.035, 0.025, 0.065, 1.0)  # violet night (E8)
     world.node_tree.nodes["Background"].inputs["Strength"].default_value = 1.0
     scene.world = world
-    return {"spawns": len(spawn_points(spec)), "floodlights": n}
+    return {"spawns": len(spawn_points(spec)), "floodlight_towers": n}
 
 
 def main() -> None:

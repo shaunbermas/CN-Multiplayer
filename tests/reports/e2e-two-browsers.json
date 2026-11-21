@@ -1,11 +1,11 @@
 {
   "result": "PASS",
   "errors": [],
-  "date": "2026-11-21T09:06:23.624Z",
+  "date": "2026-11-21T10:54:12.220Z",
   "same_room": true,
   "both_see_players": 2,
   "walk_4s": {
-    "moved_m_seen_by_other_browser": 16.34,
+    "moved_m_seen_by_other_browser": 16.21,
     "prediction_error_m": 0
   },
   "screenshots": [
@@ -13,5 +13,6 @@
     "tests/reports/screenshots/s1-3_after_walk.png",
     "tests/reports/screenshots/s1-3_other_player_view.png"
   ],
-  "renderer": "headless Chromium, software WebGL (SwiftShader)"
+  "renderer": "headless Chromium, software WebGL (SwiftShader)",
+  "player_a_cpu_throttle": 6
 }
