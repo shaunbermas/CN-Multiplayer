@@ -10,6 +10,7 @@ Status: pre-production. Nothing is built yet.
 |------|-----|
 | `docs/GAME_DESIGN_DOCUMENT.md` | Canonical rules and scope (v0.2) |
 | `docs/DECISIONS.md` | What has been decided and what is open |
+| `docs/STAGE_01_SPEC.md` | Stage 01 numbers, states and rules (draft for approval) |
 | `docs/STAGE_01_PRODUCTION_PLAN.md` | First stage: Red Light, Green Light with The Shepherd |
 | `docs/BLENDER_PIPELINE.md` | Blender 5.3.0 conventions, export and validation |
 | `docs/REFERENCE_MANIFEST.md` | Concept images and what each may be used for |

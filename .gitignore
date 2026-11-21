@@ -1,0 +1,23 @@
+# Blender backups and caches
+*.blend1
+*.blend2
+*.blend@
+__pycache__/
+*.pyc
+
+# Node and build output
+node_modules/
+dist/
+.wrangler/
+test-output/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local secrets
+.env
+.env.*
+.dev.vars

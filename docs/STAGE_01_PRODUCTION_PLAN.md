@@ -36,8 +36,8 @@ Each phase ends at a gate. The next phase starts only after the owner signs off 
 
 | Phase | Work | Owner inputs needed | Gate |
 |-------|------|---------------------|------|
-| **S1-0 References and decisions** | Resolve the remaining manifest conflicts (C2, C3, C4; C1 and C5 are decided); supply or approve Stage 01 references (overview, layout, environment, Shepherd concept and turnaround); pick base setting (night yard vs dusk field) | Decisions and images | Manifest shows the Stage 01 slots APPROVED or explicitly waived |
-| **S1-1 Stage 01 spec** | Write `docs/STAGE_01_SPEC.md`: every number in §5 with a chosen starting value, the signal state machine, elimination and spectator presentation, audio cue list, HUD list | Approve values | Spec approved; no TBD left that blocks greybox or server rules |
+| **S1-0 References and decisions** | Resolve the remaining manifest conflicts (C2, C3, C4; C1 and C5 are decided); supply or approve Stage 01 references (overview, layout, environment, Shepherd concept and turnaround); base setting decided: night floodlit yard | Decisions and images | Manifest shows the Stage 01 slots APPROVED or explicitly waived |
+| **S1-1 Stage 01 spec** | Draft written: `docs/STAGE_01_SPEC.md` (awaiting approval). It covers every number in §5 with a chosen starting value, the signal state machine, elimination and spectator presentation, audio cue list, HUD list | Approve values | Spec approved; no TBD left that blocks greybox or server rules |
 | **S1-2 Greybox in Blender** | `build_stg01_greybox.py` builds primitives only from the spec JSON: ground, start zone, finish gate, Shepherd platform, a box-and-cylinder Shepherd placeholder, bounds, `COL_` proxies, 30 `GMK_SPAWN_` markers; export GLB + collision + marker JSON; validation report; preview renders | Review renders | Validation passes; layout matches spec in metres |
 | **S1-3 Greybox in the browser (with M1)** | Load the greybox in Three.js / R3F with a capsule contestant and the third-person camera; test sightlines to The Shepherd from every spawn; walk the course and time it at the spec speed | Play it | Owner confirms the space reads; measured crossing time is within the spec target |
 | **S1-4 Server rules (with M0, M2)** | Signal state machine, red-window motion validation with latency handling, finish detection, timer, qualification scaling, elimination, results, spectator hand-off; automated tests (§7) | None beyond spec | Tests pass; a small real-browser group plays a full round to results |
@@ -163,10 +163,10 @@ first everyday deliverable. It adds these requirements to the phases above:
 | # | Decision | Default if you agree |
 |---|----------|----------------------|
 | D1 | Stage 01 figure name (C1) | **Decided: The Shepherd (`ENM_Shepherd`)** |
-| D2 | Stage 01 base setting (C2) | G1 night floodlit yard |
+| D2 | Stage 01 base setting (C2) | **Decided: night floodlit yard (G1)** |
 | D3 | Original design to replace the doll look (C5) | **Decided: The Shepherd**; concept still to be produced |
 | D4 | Approve G1 and G2 as mood-only global references | Yes, mood only |
 | D5 | Who supplies the missing Stage 01 references (artist, AI concept tool, or Claude-written spec instead of a layout image) | Layout from the written spec; images for environment and observer |
 | D6 | Blender version | Decided: 5.3.0 (owner's desktop) |
 | D7 | Hosting approach for the Colyseus server | Decide in M0 after a short comparison |
-| D8 | Git LFS for `.blend`, `.glb` and textures | Yes, after a quota check |
+| D8 | Git LFS for `.blend`, `.glb` and textures | **Decided: yes** (set up in `.gitattributes`) |

@@ -13,7 +13,7 @@ INITIAL PRE-PRODUCTION SPECIFICATION
 | DOCUMENT CONTROL | VALUE |
 | --- | --- |
 | Project title | CN TRIALS (CN = Creative Nomads). Formerly THE LAST TRIAL |
-| Document version | 0.2 - Renamed; The Shepherd; Standup mode |
+| Document version | 0.3 - Playful tone; Stage 01 night yard |
 | Prepared | 21 November 2026 (v0.1); updated 21 November 2026 (v0.2) |
 | Owner and purpose | Creative Nomads, internal. A team icebreaker for standups, with a longer tournament for team events |
 | Status | Working baseline. Gameplay, technical and production assumptions require validation. |
@@ -28,6 +28,7 @@ INITIAL PRE-PRODUCTION SPECIFICATION
 | --- | --- | --- | --- |
 | 0.1 | 21 Nov 2026 | Initial direction and pre-production baseline as THE LAST TRIAL. | Project owner |
 | 0.2 | 21 Nov 2026 | Renamed to CN TRIALS. Purpose set: Creative Nomads team standup icebreaker. The Stage 01 figure becomes The Shepherd, an original design replacing the earlier doll concept. Added Standup mode (§2.3.1) alongside the full tournament. "Monetization: private" confirmed as internal use with no monetization. | Project owner (APPROVED). Standup mode details are PROPOSED |
+| 0.3 | 21 Nov 2026 | Tone set to playful (§1.3). Stage 01 setting: night floodlit yard. Git LFS adopted for assets. | Project owner (APPROVED) |
 
 ## Document guide
 
@@ -92,7 +93,7 @@ CONFIRMED (v0.2): “Monetization: private” means internal use by the Creative
 - Secondary genres: obstacle course, reaction game, team challenge, escape room, stealth horror, precision platforming.
 - Camera: third-person follow camera with optional camera sensitivity and field-of-view settings.
 - Session structure: private room, lobby, tournament, winner presentation, replay or return to lobby.
-- Tone: tense and mysterious, with moments of physical comedy, surprise, panic and triumph.
+- Tone (APPROVED v0.3): **playful**. Light suspense and physical comedy, surprise and triumph; no horror imagery, gore or cruelty. Elimination reads as being out of the round, never harm.
 ### 1.4 Target players
 
 Primary audience: the Creative Nomads team (20+ people, remote-first, working across time zones in US business hours) playing together at standups and team events. Secondary: other private groups who want an easy-to-organize online competition. A guest should be able to open a link, enter a nickname, select a character and join without creating an account.
@@ -180,7 +181,7 @@ APPROVED: a short session format for team standups. All details below are PROPOS
 | Formats | Host picks **Quick** (1 round, about 3 to 5 minutes) or **Short** (3 rounds, about 8 to 10 minutes). Quick is the default. |
 | Quick format | One race stage, normally Stage 01 Red Light, Green Light. The server ranks players by recorded finish time; the first finisher is the champion. Players still on the course at time-out rank by progress; eliminated players rank last, latest elimination first. Every player gets a placing. |
 | Short format | Round 1: Stage 01 (about half advance). Round 2: one short stage from those that have passed acceptance (Tug of War, The Factory or The Hollow Bridge). Round 3: a final that produces exactly one winner (The Last Bell, or a race final where the first finisher wins). Qualification targets scale to the actual starting count. |
-| Stages allowed | Only stages that have passed their acceptance gate (§3.1) and normally run 3 minutes or less. The Clockwork House (3 to 5 minutes, pairs) is excluded from the default rotation. Horror stages are excluded until the tone decision in §14 is made. |
+| Stages allowed | Only stages that have passed their acceptance gate (§3.1) and normally run 3 minutes or less. The Clockwork House (3 to 5 minutes, pairs) is excluded from the default rotation. The Quiet Ward and The Blackout are excluded until they are reworked for the playful tone (§1.3). |
 | Briefing | At most 15 seconds, one sentence plus one icon. A player who has seen a stage's briefing before can skip it; the countdown waits for the longest remaining briefing. No stage-intro cinematics in Standup mode. |
 | Results | Results screen of about 20 seconds with podium and full placings, then Play again (same room and roster) or End. |
 | Late arrivals | People who join during a match wait in the lobby as spectators and enter the next match. They never join a match in progress. |
@@ -237,7 +238,7 @@ Each stage must have one primary gameplay verb, one clear win/qualification cond
 | Player count | 30 target starters; 22 target qualifiers. |
 | Core loop | Contestants cross a large outdoor testing yard while The Shepherd, a giant mechanical observer, controls the signal. Move during green. Stop during red. Crossing the finish line before time expires qualifies. |
 | Rules and failure | The Shepherd turns away or displays green. On red, The Shepherd turns and scans. Movement above an approved tolerance during the red window triggers elimination. The server validates motion and accounts for latency. |
-| Environment | Large yard, start zone, finish gate, Shepherd platform, cover-free lanes, side dressing and distant silhouettes. |
+| Environment | Night, floodlit yard (APPROVED v0.3): large yard, start zone, finish gate, Shepherd platform, cover-free lanes, floodlight masts, side dressing and distant silhouettes. |
 | Implementation needs | Signal state machine, scan timing, movement validation, finish detection, elimination, timer, results and spectator handoff. |
 | Design notes | This is the first vertical-slice stage. Its environment and mechanic must be fully playable before large-scale content production. |
 
@@ -816,7 +817,7 @@ The following topics are not blockers for drafting the first prototype, but they
 | ITEM | CURRENT POSITION | DECISION / TEST REQUIRED BY |
 | --- | --- | --- |
 | Meaning of “private” monetization | RESOLVED v0.2: internal Creative Nomads use, no monetization. | Done. |
-| Tone for a workplace game | Proposed: tense but playful. Keep suspense, drop horror imagery; frame elimination as leaving the round, not harm. Affects The Quiet Ward, The Blackout and enemy designs. | Before any horror-stage production. |
+| Tone for a workplace game | RESOLVED v0.3: playful (§1.3). Horror-themed stages (The Quiet Ward, The Blackout) and enemy designs must be reworked in a playful register before production. | Done; rework before those stages start. |
 | Tagline | "Thirty enter. Only one survives." kept as a working line. | Before the art and title pass. |
 | Standup mode defaults | Quick (1 round) default; Short (3 rounds) optional. | Playtest with the team after Stage 01 is playable. |
 | Standing team room | Reusable daily link; may need storage. | Before Standup mode beta. |

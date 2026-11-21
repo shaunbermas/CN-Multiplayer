@@ -104,9 +104,16 @@ STG01_RedLightGreenLight.blend
 | `blender/exports/` | Raw GLB exports straight from Blender, plus the sidecar JSON (§7). Not loaded by the game directly |
 | `apps/web/public/assets/` (later) | Optimised, validated runtime GLBs produced from `blender/exports/` |
 
-Large binaries (`.blend`, `.glb`, textures, audio) should go in **Git LFS**. To decide before the first
-`.blend` is committed: GitHub's LFS quota and whether this session's git proxy supports LFS still need
-to be checked. Until then, commit scripts and the small greybox exports only.
+Large binaries go in **Git LFS** (decided). `.gitattributes` tracks `.blend`, `.glb`, `.bin`, `.fbx`,
+`.obj`, image textures (`.png`, `.jpg`, `.jpeg`, `.webp`, `.exr`, `.hdr`, `.tga`, `.psd`, `.ktx2`), audio
+(`.wav`, `.ogg`, `.mp3`, `.flac`) and `.docx`. The two concept boards and the GDD `.docx` committed before
+LFS stay as normal git files.
+
+- Install once per machine: `git lfs install` (Git for Windows includes Git LFS).
+- `.blend1` / `.blend@` backup files are ignored, never committed.
+- GitHub meters LFS storage and bandwidth per account; check usage under GitHub Settings → Billing
+  before large uploads. CI checkouts that need the files use `lfs: true`.
+- Keep source textures in `blender/materials/`; only compressed runtime textures reach the web app.
 
 ## 7. Export conventions
 
