@@ -2,7 +2,7 @@
 
 Status: **integrated and tested** (21 November 2026). Stage 01 now runs in the browser on the approved
 environment GLB and THE_WATCHER.glb, with every coordinate taken from `STAGE_01_METADATA.json`.
-Points that need a decision are in §8 (decision 025).
+The points in §8 are approved (decision 025).
 
 ## 1. Preflight
 
@@ -123,7 +123,7 @@ Screenshots (`tests/reports/screenshots/`):
   outcomes always come from the server.
 - **The Shepherd placeholder is hidden, not removed,** from the environment GLB.
 
-## 8. Points for decision (decision 025, PROPOSED)
+## 8. Decision points (decision 025, APPROVED by the owner on 21 November 2026)
 
 1. **Metadata signal anchors.** `SIGNAL_RED_ANCHOR`, `SIGNAL_GREEN_ANCHOR` and
    `SIGNAL_SCAN_BEAM_ANCHOR` still point at the old Shepherd lantern. The runtime does not use them:
