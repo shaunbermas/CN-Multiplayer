@@ -46,3 +46,13 @@ button.primary { margin-top: 10px; padding: 10px 18px; border-radius: 8px; borde
 /* Lobby panel sits at the side so nothing covers The Shepherd at the top centre. */
 .lobby-panel { position: fixed; left: 16px; top: 64px; margin: 0; width: min(320px, 80vw); }
 @media (max-width: 700px) { .lobby-panel { top: auto; bottom: 90px; } }
+
+/* Prompt 07: stage loading, asset errors, qualification tags */
+.loading-stage { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(8, 14, 16, 0.85); color: #cfe3e8; font-size: 20px; letter-spacing: 0.04em; z-index: 5; pointer-events: none; }
+.error-panel { position: fixed; top: 30%; left: 50%; transform: translateX(-50%); max-width: 520px; z-index: 6; border: 1px solid #b91c1c; }
+.mode-toggle { display: flex; gap: 8px; align-items: center; font-size: 14px; margin: 8px 0; }
+.tag { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 1px 6px; border-radius: 4px; margin-left: 8px; }
+.tag.in { background: #14532d; color: #bbf7d0; }
+.tag.out { background: #7f1d1d; color: #fecaca; }
+.status-in { background: #14532d; }
+.status-out { background: #3f1d1d; }

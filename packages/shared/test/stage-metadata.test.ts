@@ -1,6 +1,5 @@
-// The server and client load the greybox exports (STG01_collision.json, STG01_markers.json). Prompt 04
-// added blender/exports/STAGE_01_METADATA.json (Blender coordinates, Z up). This keeps the two in step:
-// the geometry the server plays on must equal the collision-ready metadata. Game = (x, z, -y).
+// The runtime reads blender/exports/STAGE_01_METADATA.json (Prompt 04). The greybox pipeline still exports
+// STG01_collision.json / _markers.json; this cross-check keeps the two sources in step. Game = (x, z, -y).
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { buildStageGeometry } from '../src/index.ts';
@@ -56,11 +55,11 @@ describe('STAGE_01_METADATA.json matches the runtime stage geometry', () => {
     expect(-(finishLine.position.y - finishLine.dimensions.y / 2)).toBeCloseTo(geo.finishZ, 3);
   });
 
-  it('puts The Shepherd where the server expects it', () => {
+  it('places The Watcher root on the plinth the greybox marker describes', () => {
     const root = meta.sceneObjects.find((o: { id: string }) => o.id === 'WATCHER_ROOT_ANCHOR');
     expect(root?.collection).toBe('WATCHER_REFERENCE');
     expect(meta.watcherDetectionReference.anchorObjectId).toBe('WATCHER_ROOT_ANCHOR');
-    expect(geo.shepherd!.z).toBeCloseTo(-meta.watcherDetectionReference.position.y, 3);
+    expect(geo.watcher!.z).toBeCloseTo(-meta.watcherDetectionReference.position.y, 3);
     expect(meta.signalAnchors.map((s: { signalType: string }) => s.signalType)).toEqual(expect.arrayContaining(['red', 'green']));
   });
 });

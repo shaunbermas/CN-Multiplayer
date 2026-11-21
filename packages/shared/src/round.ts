@@ -2,6 +2,7 @@
 // (server) drives it with tick(); the same code is unit tested. Coordinates are game coordinates
 // (metres, course toward -Z). Times are seconds of room time.
 import { insideRect, type StageGeometry } from './stage.ts';
+import type { Mode } from './tournament.ts';
 
 export type Phase = 'lobby' | 'briefing' | 'countdown' | 'active' | 'results';
 export type Signal = 'none' | 'green' | 'warning' | 'red';
@@ -95,7 +96,30 @@ export function graceFor(latencyS: number): number {
   return Math.min(ROUND.graceMaxS, ROUND.graceBaseS + Math.max(0, latencyS));
 }
 
-export interface Placing { id: string; place: number; status: PlayerStatus; finishTime: number; progress: number }
+export interface Placing { id: string; place: number; status: PlayerStatus; finishTime: number; progress: number; qualified: boolean }
+
+/** Spec R3: qualifier target for a full tournament; 30 starters -> 22. Standup Quick has no target. */
+export function qualifierTarget(mode: Mode, starters: number): number {
+  if (mode !== 'tournament' || starters <= 0) return Infinity;
+  return Math.max(Math.min(2, starters), Math.min(starters, Math.round(0.73 * starters)));
+}
+
+/**
+ * Spec R3/R4: who qualifies, from placings already in R5 order. Standup: every finisher. Tournament:
+ * finishers up to the target; if fewer than min(2, starters) finished, the furthest-progressed unspotted
+ * players fill up to that minimum.
+ */
+export function qualify(placings: Placing[], mode: Mode, starters: number): Placing[] {
+  const target = qualifierTarget(mode, starters);
+  const out = placings.map((p) => ({ ...p, qualified: false }));
+  let n = 0;
+  for (const p of out) if (p.status === 'finished' && n < target) { p.qualified = true; n++; }
+  if (mode === 'tournament') {
+    const minimum = Math.min(2, starters);
+    for (const p of out) if (n < minimum && !p.qualified && p.status === 'active') { p.qualified = true; n++; }
+  }
+  return out;
+}
 
 /** Spec R5–R7: finishers by time, then unfinished by progress, then spotted (latest spot first). */
 export function rankPlayers(players: RoundPlayer[], geo: StageGeometry): Placing[] {
@@ -107,7 +131,7 @@ export function rankPlayers(players: RoundPlayer[], geo: StageGeometry): Placing
   const spotted = players.filter((p) => p.status === 'spotted')
     .sort((a, b) => b.spotTime - a.spotTime || a.z - b.z || a.joinOrder - b.joinOrder);
   return [...finished, ...active, ...spotted].map((p, i) => ({
-    id: p.id, place: i + 1, status: p.status, finishTime: p.finishTime, progress: Math.round(progress(p) * 1000) / 1000,
+    id: p.id, place: i + 1, status: p.status, finishTime: p.finishTime, progress: Math.round(progress(p) * 1000) / 1000, qualified: false,
   }));
 }
 
@@ -119,7 +143,7 @@ export interface RoundEvents {
   results?: Placing[];
 }
 
-export interface StartOptions { seed: number; roundS?: number; briefingS?: number }
+export interface StartOptions { seed: number; roundS?: number; briefingS?: number; mode?: Mode }
 
 /**
  * Phase machine for one room. The room calls:
@@ -139,6 +163,10 @@ export class RoundEngine {
   now = 0;
   skipped = new Set<string>();
   lastResults: Placing[] = [];
+  mode: Mode = 'standup';
+  starters = 0;
+  /** Finishers needed to end the round early (tournament only; R2/R3). */
+  target = Infinity;
 
   constructor(private geo: StageGeometry) {}
 
@@ -155,6 +183,9 @@ export class RoundEngine {
     this.schedule = buildSchedule(this.seed, this.roundS);
     this.skipped.clear();
     this.lastResults = [];
+    this.mode = opts.mode === 'tournament' ? 'tournament' : 'standup';
+    this.starters = players.length;
+    this.target = qualifierTarget(this.mode, this.starters);
     const order = shuffled(players.map((p) => p.id), this.seed);
     const spawnOf = new Map<string, number>();
     order.forEach((id, i) => spawnOf.set(id, this.geo.spawns[i % this.geo.spawns.length].index));
@@ -215,7 +246,9 @@ export class RoundEngine {
     this.now = now;
     const ev: RoundEvents = { spotted: [], finished: [] };
     if (this.phase === 'lobby' || now < this.phaseEnd) {
-      if (this.phase === 'active' && !players.some((p) => p.status === 'active')) this.phaseEnd = now; // nobody left
+      const done = this.phase === 'active' && (!players.some((p) => p.status === 'active') // nobody left (R2)
+        || players.filter((p) => p.status === 'finished').length >= this.target);         // qualifier target reached (R2)
+      if (done) this.phaseEnd = now;
       else return ev;
     }
     switch (this.phase) {
@@ -227,7 +260,7 @@ export class RoundEngine {
         this.goTime = now;
         break;
       case 'active':
-        this.lastResults = rankPlayers(players.filter((p) => p.status !== 'waiting'), this.geo);
+        this.lastResults = qualify(rankPlayers(players.filter((p) => p.status !== 'waiting'), this.geo), this.mode, this.starters);
         ev.results = this.lastResults;
         this.setPhase('results', ROUND.resultsS);
         break;

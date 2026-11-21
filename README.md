@@ -4,21 +4,22 @@ A desktop browser 3D multiplayer elimination game for the Creative Nomads team: 
 standups (Standup mode) and a seven-round tournament for team events. Up to 30 players in a private
 invite-link room. Formerly titled THE LAST TRIAL.
 
-Status: Stage 01 Red Light, Green Light is playable (greybox): lobby practice walk, host-started rounds, The Shepherd's signals, server-side spotting, results. See `docs/reports/M0_S1-3_REPORT.md` and `docs/STAGE_01_GREYBOX_REPORT.md`.
+Status: Stage 01 Red Light, Green Light is playable in the browser with the final environment and The Watcher: lobby practice walk, host-started rounds (Standup or tournament rules), server-side signals, spotting and qualification, spectating and results. See `docs/STAGE_01_BROWSER_INTEGRATION_REPORT.md`.
 
 | Read | For |
 |------|-----|
 | `docs/GAME_DESIGN_DOCUMENT.md` | Canonical rules and scope (v0.2) |
 | `docs/DECISIONS.md` | What has been decided and what is open |
-| `docs/STAGE_01_DESIGN_SPEC.md` | Stage 01 environment design: layout, The Shepherd, props, cameras, assets, lighting (approved) |
+| `docs/STAGE_01_DESIGN_SPEC.md` | Stage 01 environment design: layout, figure plinth, props, cameras, assets, lighting (approved; the figure is now The Watcher) |
 | `docs/STAGE_01_GREYBOX_REPORT.md` | Stage 01 greybox: files, dimensions, coordinates, validation (approved) |
+| `docs/STAGE_01_BROWSER_INTEGRATION_REPORT.md` | Stage 01 in the browser (Prompt 07): stage registry, metadata parser, Watcher and environment loading, authority, tests |
 | `docs/THE_WATCHER_SPEC.md` | THE WATCHER, the Stage 01 enemy: design, rig, clips, anchors (decision 023) |
 | `docs/THE_WATCHER_VALIDATION.md` | THE WATCHER checks, GLB test and renders |
 | `docs/STAGE_01_ENVIRONMENT_VALIDATION.md` | Stage 01 detailed environment: checks, GLB test, renders, reference comparison (for review) |
 | `docs/STAGE_01_ENVIRONMENT_ASSET_MANIFEST.md` | Stage 01 environment: collections, modular assets, materials, textures, GLB contents |
 | `docs/STAGE_01_COLLISION_VALIDATION.md` | Stage 01 collision-ready scene and `STAGE_01_METADATA.json`: gameplay objects, collision coverage, validation (approved) |
 | `docs/STAGE_01_SPEC.md` | Stage 01 numbers, states and rules (draft for approval) |
-| `docs/STAGE_01_PRODUCTION_PLAN.md` | First stage: Red Light, Green Light with The Shepherd |
+| `docs/STAGE_01_PRODUCTION_PLAN.md` | First stage plan: Red Light, Green Light (written for The Shepherd, now The Watcher) |
 | `docs/reports/M0_S1-3_REPORT.md` | Technical spike and walk test results |
 | `docs/adr/` | Architecture decisions (physics, hosting, versions) |
 | `docs/BLENDER_PIPELINE.md` | Blender 5.3.0 conventions, export and validation |

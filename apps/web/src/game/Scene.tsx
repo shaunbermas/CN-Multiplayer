@@ -1,14 +1,14 @@
-import { Html, useGLTF } from '@react-three/drei';
+import { Html } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { inputFromKeys, MOVEMENT, progress, SIM_DT } from '@cn-trials/shared';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Component, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import * as THREE from 'three';
 import type { PlayerView, TrialRoom } from '../net.ts';
 import { hud } from './hudStore.ts';
 import { attachInput, input } from './input.ts';
 import { Predictor } from './predictor.ts';
-import { signalView } from './roundClock.ts';
-import { STAGE_URL, stageGeo } from './stage.ts';
+import { STAGE_SCENES } from '../stages/registry.ts';
+import { stageDef, stageGeo } from './stage.ts';
 
 const CAPSULE_LENGTH = MOVEMENT.capsuleHeight - 2 * MOVEMENT.capsuleRadius;
 const capsuleGeo = new THREE.CapsuleGeometry(MOVEMENT.capsuleRadius, CAPSULE_LENGTH, 6, 12);
@@ -16,8 +16,6 @@ capsuleGeo.translate(0, MOVEMENT.capsuleHeight / 2, 0);
 const noseGeo = new THREE.BoxGeometry(0.16, 0.12, 0.2);
 noseGeo.translate(0, 0.85, -0.3);
 const spottedMat = new THREE.MeshStandardMaterial({ color: '#8a8f99', roughness: 0.9, transparent: true, opacity: 0.55 });
-
-const LANTERN = { none: '#ffcf8a', green: '#4ade80', warning: '#fbbf24', red: '#ef4444' } as const;
 
 function colorFor(spawn: number) {
   return new THREE.Color().setHSL(((spawn * 0.137) % 1), 0.65, 0.55);
@@ -29,67 +27,6 @@ export function canMove(room: TrialRoom): boolean {
   if (!me) return false;
   if (room.round.phase === 'lobby') return true;
   return room.round.phase === 'active' && (me.status === 'active' || me.status === 'finished');
-}
-
-/**
- * The stage GLB plus The Shepherd's signal animation (spec §6): turned away on GREEN, turning to face
- * the players during WARNING, facing and scanning ±55° on RED. Lantern colour follows the signal.
- */
-function StageModel({ room }: { room: TrialRoom }) {
-  const gltf = useGLTF(STAGE_URL);
-  const rig = useMemo(() => {
-    const scene = gltf.scene;
-    const find = (n: string) => scene.getObjectByName(n);
-    const body = find('ENM_Shepherd_Placeholder_Body');
-    if (!body) return null;
-    const sh = stageGeo.shepherd!;
-    const pivot = new THREE.Group();
-    pivot.name = 'ShepherdPivot';
-    pivot.position.set(sh.x, sh.y, sh.z);
-    scene.add(pivot);
-    const headPivot = new THREE.Group();
-    headPivot.name = 'ShepherdHeadPivot';
-    headPivot.position.set(0, sh.headY - sh.y, 0); // pivot has no rotation yet, so local = world offset
-    pivot.add(headPivot);
-    scene.updateMatrixWorld(true);
-    for (const n of ['ENM_Shepherd_Placeholder_Body', 'ENM_Shepherd_Placeholder_Lantern', 'ENM_Shepherd_Placeholder_Crook']) {
-      const o = find(n);
-      if (o) pivot.attach(o);
-    }
-    for (const n of ['ENM_Shepherd_Placeholder_Head', 'ENM_Shepherd_Placeholder_Face']) {
-      const o = find(n);
-      if (o) headPivot.attach(o);
-    }
-    let lanternMat: THREE.MeshStandardMaterial | null = null;
-    const lantern = find('ENM_Shepherd_Placeholder_Lantern') as THREE.Mesh | undefined;
-    if (lantern?.material) {
-      lanternMat = (lantern.material as THREE.MeshStandardMaterial).clone();
-      lantern.material = lanternMat;
-    }
-    return { pivot, headPivot, lanternMat, yaw: 0 };
-  }, [gltf]);
-
-  useFrame((_, dt) => {
-    if (!rig) return;
-    const v = signalView(room);
-    // Yaw 0 = facing the players (+Z); PI = turned away toward the backdrop.
-    let target = 0;
-    let head = 0;
-    if (v.signal === 'green') target = Math.PI;
-    else if (v.signal === 'warning') target = Math.PI * (1 - v.progress); // turns to face exactly as RED starts
-    else if (v.signal === 'red') head = Math.sin(v.into * Math.PI / 2) * THREE.MathUtils.degToRad(55);
-    const k = v.signal === 'warning' ? 1 : 1 - Math.exp(-dt * 6);
-    rig.yaw += (target - rig.yaw) * k;
-    rig.pivot.rotation.y = rig.yaw;
-    rig.headPivot.rotation.y += (head - rig.headPivot.rotation.y) * (1 - Math.exp(-dt * 10));
-    if (rig.lanternMat) {
-      const c = new THREE.Color(LANTERN[v.signal]);
-      rig.lanternMat.color.copy(c);
-      rig.lanternMat.emissive.copy(c);
-      rig.lanternMat.emissiveIntensity = v.signal === 'red' ? 6 : v.signal === 'none' ? 1.5 : 4;
-    }
-  });
-  return <primitive object={gltf.scene} />;
 }
 
 function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoom; local: boolean; predictor?: React.RefObject<Predictor | null> }) {
@@ -225,8 +162,17 @@ function Players({ room, predictor }: { room: TrialRoom; predictor: React.RefObj
   return <>{ids.current.map((id) => <Contestant key={id} id={id} room={room} local={id === room.id} predictor={predictor} />)}</>;
 }
 
-export function Scene({ room }: { room: TrialRoom }) {
+/** Shows a readable error instead of a blank or fake stage when an asset fails to load (Prompt 07 contract). */
+class StageErrorBoundary extends Component<{ children: ReactNode; onError: (msg: string) => void }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  componentDidCatch(e: unknown) { this.props.onError(e instanceof Error ? e.message : String(e)); }
+  render() { return this.state.failed ? null : this.props.children; }
+}
+
+export function Scene({ room, onStageError }: { room: TrialRoom; onStageError: (msg: string) => void }) {
   const predictor = useRef<Predictor | null>(null);
+  const stageModule = STAGE_SCENES[stageDef.id];
   if (!predictor.current) {
     const me = room.self;
     const sp = stageGeo.spawns.find((s) => s.index === me?.spawn) ?? stageGeo.spawns[0];
@@ -236,24 +182,29 @@ export function Scene({ room }: { room: TrialRoom }) {
     (window as unknown as { __cn: unknown }).__cn = {
       roomId: room.room,
       sessionId: room.id,
+      stage: stageDef.id,
       players: () => [...room.players.values()].map((p) => ({ id: p.id, name: p.name, x: p.x, z: p.z, status: p.status, finishTime: p.finishTime })),
       self: () => predictor.current?.state,
       round: () => ({ ...room.round }),
       results: () => room.results,
-      shepherd: stageGeo.shepherd,
+      resultsMeta: () => room.resultsMeta,
+      watcher: stageGeo.watcher,
+      spawns: stageGeo.spawns,
+      assets: () => ({ ...stageModule.assets, problems: [...stageModule.assets.problems] }),
     };
-  }, [room]);
+  }, [room, stageModule]);
+  const StageScene = stageModule.Scene;
   return (
-    <Canvas camera={{ fov: 60, near: 0.1, far: 1200 }} gl={{ antialias: true, preserveDrawingBuffer: true }} dpr={[1, 2]}>
-      <color attach="background" args={['#141a2b']} />
-      <fog attach="fog" args={['#141a2b', 90, 420]} />
-      <hemisphereLight args={['#9fb3ff', '#2a2420', 1.1]} />
-      <directionalLight position={[-40, 80, 30]} intensity={1.3} color="#ffe2b8" />
-      <StageModel room={room} />
+    <Canvas camera={{ fov: 60, near: 0.1, far: 1500 }} gl={{ antialias: true, preserveDrawingBuffer: true }} dpr={[1, 2]}>
+      <StageErrorBoundary onError={onStageError}>
+        <Suspense fallback={null}>
+          <StageScene room={room} />
+        </Suspense>
+      </StageErrorBoundary>
       <Players room={room} predictor={predictor} />
       <LocalController room={room} predictor={predictor} />
     </Canvas>
   );
 }
 
-useGLTF.preload(STAGE_URL);
+for (const m of Object.values(STAGE_SCENES)) m.preload();

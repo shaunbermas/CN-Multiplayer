@@ -4,15 +4,14 @@
 import { DurableObject } from 'cloudflare:workers';
 import {
   CLOSE, INPUT_BURST, INPUT_QUEUE_MAX, MAX_MESSAGE_BYTES, MAX_PLAYERS, PROBE_MS, PROTOCOL_VERSION, RoundEngine, SIM_DT,
-  SIM_HZ, SNAPSHOT_MS, buildStageGeometry, encodeRow, insideRect, newRoundPlayer, sanitizeInput, sanitizeName, step,
-  type ClientMessage, type CollisionFile, type MarkersFile, type RosterEntry, type RoundEvents, type RoundPlayer,
-  type RoundState, type ServerMessage, type StageGeometry,
+  SIM_HZ, SNAPSHOT_MS, TOURNAMENT_ORDER, Tournament, encodeRow, getStage, insideRect, newRoundPlayer, sanitizeInput,
+  sanitizeName, step, type ClientMessage, type Mode, type RosterEntry, type RoundEvents, type RoundPlayer, type RoundState,
+  type ServerMessage, type StageGeometry,
 } from '@cn-trials/shared';
-import collision from '../../../blender/exports/STG01/STG01_collision.json';
-import markers from '../../../blender/exports/STG01/STG01_markers.json';
 import type { Env } from './env.ts';
 
-const geo: StageGeometry = buildStageGeometry(collision as unknown as CollisionFile, markers as unknown as MarkersFile);
+// Stage geometry comes from the approved stage metadata via the shared stage registry (no copied coordinates).
+let geo: StageGeometry = getStage(TOURNAMENT_ORDER[0]).geometry;
 
 interface Player extends RoundPlayer {
   name: string;
@@ -44,6 +43,8 @@ export class TrialRoom extends DurableObject<Env> {
   private nextId = 1;
   private hostId = '';
   private roomCode = 'default';
+  private tournament = new Tournament(TOURNAMENT_ORDER);
+  private roundId = 0;
 
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
@@ -159,7 +160,7 @@ export class TrialRoom extends DurableObject<Env> {
     }
     this.broadcast({ t: 'roster', roster: this.roster() });
     console.log(JSON.stringify({ ev: 'leave', room: att.room, id: att.id, n: this.players.size }));
-    if (this.players.size === 0) { this.stopLoop(); this.engine = new RoundEngine(geo); }
+    if (this.players.size === 0) { this.stopLoop(); this.engine = new RoundEngine(geo); this.tournament = new Tournament(TOURNAMENT_ORDER); }
   }
 
   private respawn(p: Player): void {
@@ -169,8 +170,8 @@ export class TrialRoom extends DurableObject<Env> {
 
   private toBench(p: Player, status: 'waiting'): void {
     const seats = [...this.players.values()].filter((x) => x.status === 'waiting').length;
-    const b = geo.benches[seats % Math.max(1, geo.benches.length)] ?? { x: 33.5, z: -10 };
-    Object.assign(p, { x: b.x, z: b.z, vx: 0, vz: 0, status });
+    const b = geo.benches[seats % Math.max(1, geo.benches.length)];
+    Object.assign(p, b ? { x: b.x, z: b.z } : {}, { vx: 0, vz: 0, status });
   }
 
   private roundPlayers(): Player[] {
@@ -181,7 +182,7 @@ export class TrialRoom extends DurableObject<Env> {
     return [...this.players.values()].map((p) => ({ id: p.id, name: p.name, spawn: p.spawn }));
   }
 
-  private startRound(by: Player, opts: { seed?: number; roundS?: number; briefingS?: number } = {}): void {
+  private startRound(by: Player, opts: { seed?: number; roundS?: number; briefingS?: number; mode?: Mode } = {}): void {
     if (by.id !== this.hostId) {
       const ws = this.sockets.get(by.id);
       if (ws) send(ws, { t: 'error', code: 'not_host', message: 'Only the host can start the round' });
@@ -192,12 +193,15 @@ export class TrialRoom extends DurableObject<Env> {
     const seed = test && Number.isInteger(opts?.seed) ? Number(opts.seed) : crypto.getRandomValues(new Uint32Array(1))[0];
     const roundS = test && typeof opts?.roundS === 'number' ? Math.max(5, Math.min(300, opts.roundS)) : undefined;
     const briefingS = test && typeof opts?.briefingS === 'number' ? Math.max(0, Math.min(15, opts.briefingS)) : undefined;
+    const mode: Mode = opts?.mode === 'tournament' ? 'tournament' : 'standup';
+    geo = getStage(this.tournament.currentStageId).geometry;
     const players = [...this.players.values()];
     for (const p of players) { p.vx = 0; p.vz = 0; p.queue = []; p.firstMoveAt = null; }
     this.engine.now = this.elapsed;
-    this.engine.start(players, { seed, roundS, briefingS });
+    this.roundId++;
+    this.engine.start(players, { seed, roundS, briefingS, mode });
     for (const p of players) p.yaw = 0;
-    console.log(JSON.stringify({ ev: 'round_start', room: this.roomCode, seed, players: players.length,
+    console.log(JSON.stringify({ ev: 'round_start', room: this.roomCode, round: this.roundId, stage: geo.stage, mode, seed, players: players.length,
       schedule: this.engine.schedule.slice(0, 12).map((s) => [s.signal[0], s.start, s.end]) }));
     this.broadcast({ t: 'roster', roster: this.roster() });
     this.broadcastSnapshot();
@@ -212,6 +216,9 @@ export class TrialRoom extends DurableObject<Env> {
       elapsed: e.phase === 'active' ? Math.round((this.elapsed - e.goTime) * 100) / 100 : 0,
       host: this.hostId,
       seed: e.seed,
+      stage: geo.stage,
+      mode: e.mode,
+      target: Number.isFinite(e.target) ? e.target : -1,
     };
   }
 
@@ -307,9 +314,17 @@ export class TrialRoom extends DurableObject<Env> {
   private handlePhase(before: string, ev: RoundEvents): void {
     if (!ev.phase || ev.phase === before) return;
     if (ev.results) {
-      const placings = ev.results.map((r) => ({ ...r, name: this.players.get(r.id)?.name ?? r.id }));
-      this.broadcast({ t: 'results', placings });
-      console.log(JSON.stringify({ ev: 'results', room: this.roomCode, seed: this.engine.seed, placings: placings.map((p) => [p.place, p.id, p.status, p.finishTime]) }));
+      // Results are frozen here and handed to the tournament manager exactly once per round.
+      const next = this.tournament.complete({
+        roundId: this.roundId, stageId: geo.stage, mode: this.engine.mode, seed: this.engine.seed,
+        placings: ev.results, qualifiedIds: ev.results.filter((r) => r.qualified).map((r) => r.id),
+      });
+      if (next.recorded) {
+        const placings = ev.results.map((r) => ({ ...r, name: this.players.get(r.id)?.name ?? r.id }));
+        this.broadcast({ t: 'results', roundId: this.roundId, stage: geo.stage, mode: this.engine.mode, placings });
+        console.log(JSON.stringify({ ev: 'results', room: this.roomCode, round: this.roundId, stage: geo.stage, mode: this.engine.mode,
+          seed: this.engine.seed, next: next.nextStageId, placings: placings.map((p) => [p.place, p.id, p.status, p.finishTime, p.qualified]) }));
+      }
     }
     if (ev.phase === 'lobby') {
       for (const p of this.players.values()) this.respawn(p); // waiting players join in for the next round

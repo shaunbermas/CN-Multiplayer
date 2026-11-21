@@ -1,7 +1,7 @@
 {
   "result": "PASS",
   "errors": [],
-  "date": "2026-11-21T11:41:32.811Z",
+  "date": "2026-11-21T16:19:28.888Z",
   "seed": 12345,
   "round_s": 25,
   "first_red_s": 6.78,
@@ -21,5 +21,12 @@
     "warning",
     "red",
     "none"
-  ]
+  ],
+  "tournament_round": {
+    "target": 3,
+    "qualified": [
+      "Careful",
+      "Reckless"
+    ]
+  }
 }

@@ -1,15 +1,25 @@
 {
   "result": "PASS",
   "errors": [],
-  "date": "2026-11-21T11:42:32.379Z",
+  "date": "2026-11-21T16:26:45.485Z",
   "same_room": true,
   "both_see_players": 2,
   "walk_4s": {
-    "moved_m_seen_by_other_browser": 16.47,
+    "moved_m_seen_by_other_browser": 17.81,
     "prediction_error_m": 0
   },
   "round": {
-    "results": "Alpha (stood still) 1st, Beta (walked into red) spotted"
+    "results": "Alpha (stood still) 1st, Beta (walked into red) spotted",
+    "watcher_clips": {
+      "green": "Watcher_GreenSignal",
+      "red": "Watcher_Detect"
+    }
+  },
+  "assets": {
+    "watcher_height_m": 28,
+    "clips": 9,
+    "quality": "low",
+    "problems": []
   },
   "screenshots": [
     "tests/reports/screenshots/s1-3_start_view.png",

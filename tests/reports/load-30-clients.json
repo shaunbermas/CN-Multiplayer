@@ -1,12 +1,12 @@
 {
   "result": "PASS",
   "errors": [],
-  "date": "2026-11-21T11:43:16.383Z",
+  "date": "2026-11-21T16:27:45.204Z",
   "server": "Cloudflare Worker + Durable Object (wrangler dev, local)",
   "clients": 30,
   "join_ms": {
-    "avg": 17.1,
-    "max": 46.7
+    "avg": 14.4,
+    "max": 81.7
   },
   "every_client_sees": 30,
   "client_31": {
@@ -22,18 +22,18 @@
     "phase": "lobby",
     "ticks": 1224,
     "tickMs": {
-      "avg": 0.102,
+      "avg": 0.065,
       "p95": 1,
       "max": 1
     },
     "inputs": {
-      "accepted": 36840,
+      "accepted": 36870,
       "dropped": 0
     }
   },
   "snapshots_per_client_per_s": {
-    "min": 19.1,
-    "avg": 19.1
+    "min": 19.3,
+    "avg": 19.3
   },
   "walk_test": {
     "from": "spawn 1 (front row, centre)",

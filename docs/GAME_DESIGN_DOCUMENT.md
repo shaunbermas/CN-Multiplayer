@@ -30,6 +30,7 @@ INITIAL PRE-PRODUCTION SPECIFICATION
 | 0.2 | 21 Nov 2026 | Renamed to CN TRIALS. Purpose set: Creative Nomads team standup icebreaker. The Stage 01 figure becomes The Shepherd, an original design replacing the earlier doll concept. Added Standup mode (§2.3.1) alongside the full tournament. "Monetization: private" confirmed as internal use with no monetization. | Project owner (APPROVED). Standup mode details are PROPOSED |
 | 0.3 | 21 Nov 2026 | Tone set to playful (§1.3). Stage 01 setting: night floodlit yard. Git LFS adopted for assets. | Project owner (APPROVED) |
 | 0.4 | 21 Nov 2026 | Hosting limited to Cloudflare and GitHub. The game server moves from Colyseus on Node.js to a Cloudflare Worker with one Durable Object per room (§7.1, §7.3, §7.8; ADR 0002). The rules in this document are unchanged. | Project owner (APPROVED) |
+| 0.5 | 21 Nov 2026 | The Stage 01 figure is now **The Watcher**, an original robotic doll that replaces The Shepherd (decision 023); placement on the existing plinth (024). Stage 01 runs in the browser from the approved metadata, environment and Watcher assets (Prompt 07). | Project owner (APPROVED) |
 
 ## Document guide
 
@@ -237,9 +238,9 @@ Each stage must have one primary gameplay verb, one clear win/qualification cond
 | --- | --- |
 | Genre / role | Opening reaction / movement |
 | Player count | 30 target starters; 22 target qualifiers. |
-| Core loop | Contestants cross a large outdoor testing yard while The Shepherd, a giant mechanical observer, controls the signal. Move during green. Stop during red. Crossing the finish line before time expires qualifies. |
-| Rules and failure | The Shepherd turns away or displays green. On red, The Shepherd turns and scans. Movement above an approved tolerance during the red window triggers elimination. The server validates motion and accounts for latency. |
-| Environment | Night, floodlit yard (APPROVED v0.3): large yard, start zone, finish gate, Shepherd platform, cover-free lanes, floodlight masts, side dressing and distant silhouettes. |
+| Core loop | Contestants cross a large outdoor testing yard while The Watcher, a giant mechanical observer, controls the signal. Move during green. Stop during red. Crossing the finish line before time expires qualifies. |
+| Rules and failure | The Watcher turns away or displays green. On red, The Watcher turns and scans. Movement above an approved tolerance during the red window triggers elimination. The server validates motion and accounts for latency. |
+| Environment | Night, floodlit yard (APPROVED v0.3): large yard, start zone, finish gate, Watcher plinth, cover-free lanes, floodlight masts, side dressing and distant silhouettes. |
 | Implementation needs | Signal state machine, scan timing, movement validation, finish detection, elimination, timer, results and spectator handoff. |
 | Design notes | This is the first vertical-slice stage. Its environment and mechanic must be fully playable before large-scale content production. |
 
@@ -419,7 +420,7 @@ The first release needs a small number of memorable enemy types, not a large ene
 
 | ENEMY / PRESENCE | ROLE | AI REQUIREMENTS |
 | --- | --- | --- |
-| The Shepherd (mechanical observer) | Red Light, Green Light stage authority expressed visually. An original design: a giant mechanical shepherd watching over the flock of contestants. PROPOSED brief: turned away with its lantern lowered means move; turned to face the players with lantern and crook raised means stop. The signal never relies on colour alone. Final look comes from an approved concept. | Signal state, rotation, scan cue and movement detection window. It may be a large animated prop rather than a full roaming enemy. |
+| The Watcher (mechanical observer) | Red Light, Green Light stage authority expressed visually. An original 28 m wind-up robotic doll (decision 023, `docs/THE_WATCHER_SPEC.md`) standing on the plinth at the far end: turned away with a green lens means move; turned to face the players with a red camera-lens eye and a raised hand means stop. The signal never relies on colour alone. | Signal state, rotation, scan cue and movement detection window. It may be a large animated prop rather than a full roaming enemy. |
 | Ward pursuer | Main horror-stage enemy. | Patrol, investigate, chase, search and return. Server owns target selection and catch events. |
 | Blackout variant | Alternate pursuer or re-skinned behavior variant. | May reuse core AI if detection rules are adjusted for light and battery mechanics. |
 
@@ -696,7 +697,7 @@ These are initial engineering targets for testing. They are not guaranteed perfo
 | --- | --- | --- |
 | 1 | One contestant base body, rig and 3 preset variations. | Validate silhouette, scale, animation and modular costume workflow. |
 | 2 | Red Light, Green Light greybox and collision. | Prove the first full stage before high-detail modeling. |
-| 3 | The Shepherd / signal prop. | Core visual identity and gameplay signal. |
+| 3 | The Watcher / signal prop. | Core visual identity and gameplay signal. |
 | 4 | Red Light, Green Light final environment art pass. | Test lighting, fog, materials and 30-player readability. |
 | 5 | Factory modular prop kit. | Create reusable hazard and industrial asset workflows. |
 | 6 | Ward pursuer and stealth room kit. | Validate enemy rig, animation and stage-specific AI presentation. |
@@ -711,7 +712,7 @@ The production sequence is risk-first. Prove room networking and one complete st
 | M0 - Technical spike | Create repo, confirm stable dependency versions, render one Blender GLB, connect two browser clients to one room, test 30 simulated clients. | Architecture decision record, a working local client/server connection, 30-client load-test report and known-risk list. |
 | M1 - Graybox core | Third-person controller, camera, basic collision, lobby shell, one graybox arena. | One player can complete a simple test course. No final art required. |
 | M2 - Private room | Room creation, invite token, guest join, character preset selection, ready state, host permissions, capacity. | At least two real browsers join through a link; room rejects a 31st player. |
-| M3 - First playable stage | Red Light, Green Light rules, Shepherd state, movement validation, timer, qualification, elimination, spectator view. | A full small-group round completes correctly from start to results. |
+| M3 - First playable stage | Red Light, Green Light rules, Watcher state, movement validation, timer, qualification, elimination, spectator view. | A full small-group round completes correctly from start to results. |
 | M4 - 30-player vertical slice | Optimize shared character model, sync movement, validate full lobby, reconnect, stage load and performance. | 30 clients complete the first stage under agreed test conditions. |
 | M5 - Two-stage tournament | Add Tug of War and inter-round tournament state. | Two rounds run sequentially with correct team assignment and qualified roster. |
 | M6 - Core stage framework | Implement common stage lifecycle, stage result contract and server-owned hazard pattern. | A new stage can be added without rewriting room/tournament logic. |
