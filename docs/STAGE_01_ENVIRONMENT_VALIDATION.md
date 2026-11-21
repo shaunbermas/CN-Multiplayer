@@ -1,7 +1,7 @@
 # CN Trials · Stage 01 environment validation (Prompt 05)
 
 Status: **ready for owner review** (21 November 2026). All automated checks pass: 9 scene checks, the
-glTF Validator (0 errors) and the Three.js browser check. Points for approval are in §6 (decision 022).
+glTF Validator (0 errors) and the Three.js browser check. Decision 022 (§6) is approved.
 
 ## 1. Dependencies used
 
@@ -91,7 +91,7 @@ integration): `blender/exports/STAGE_01_ENVIRONMENT_browser/STAGE_01_ENV_browser
   stylised low-poly pines rather than broadleaf silhouettes; there's no utility building (it isn't in
   the approved layout).
 
-## 6. Limitations and points for approval (decision 022, PROPOSED)
+## 6. Limitations and approved choices (decision 022, APPROVED)
 
 1. **Tone:** eerie industrial, not horror (see §5). Say so if you want darker imagery; it would change
    decision 008.
