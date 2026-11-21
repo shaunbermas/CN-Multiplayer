@@ -1,43 +1,44 @@
 {
   "result": "PASS",
   "errors": [],
-  "date": "2026-11-21T08:36:54.757Z",
+  "date": "2026-11-21T09:06:01.357Z",
+  "server": "Cloudflare Worker + Durable Object (wrangler dev, local)",
   "clients": 30,
   "join_ms": {
-    "avg": 3,
-    "max": 5
+    "avg": 10,
+    "max": 24.4
   },
   "every_client_sees": 30,
   "client_31": {
     "rejected": true,
-    "message": "room \"Wlyc8sexk\" is locked"
+    "message": "Room load-test is full (30 players)"
   },
-  "load_seconds": 40.5,
-  "server": {
+  "load_seconds": 42,
+  "room": {
     "ok": true,
-    "uptimeS": 41,
-    "rooms": 1,
-    "clients": 30,
-    "ticks": 1223,
+    "room": "load-test",
+    "players": 30,
+    "running": true,
+    "ticks": 1215,
     "tickMs": {
-      "avg": 0.0949,
-      "p95": 0.1705,
-      "max": 1.1476
+      "avg": 0.094,
+      "p95": 1,
+      "max": 1
     },
     "inputs": {
-      "accepted": 36660,
+      "accepted": 38010,
       "dropped": 0
     }
   },
-  "state_updates_per_client_per_s": {
-    "min": 19.9,
-    "avg": 19.9
+  "snapshots_per_client_per_s": {
+    "min": 19.3,
+    "avg": 19.3
   },
   "walk_test": {
     "from": "spawn 1 (front row, centre)",
     "distance_m": 162,
-    "server_finish_time_s": 40.6,
-    "projected_with_signals_s": 71.2,
+    "server_finish_time_s": 40.47,
+    "projected_with_signals_s": 71,
     "note": "Projection assumes the average signal cycle in STAGE_01_SPEC.md §3 and a player who never hesitates."
   }
 }

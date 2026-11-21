@@ -17,31 +17,37 @@ Status: M0 technical spike done; Stage 01 greybox walkable in the browser with m
 | `docs/BLENDER_PIPELINE.md` | Blender 5.3.0 conventions, export and validation |
 | `docs/REFERENCE_MANIFEST.md` | Concept images and what each may be used for |
 
-Stack: React + Three.js / React Three Fiber (client), Colyseus (server), Blender → GLB (assets).
+Stack: React + Three.js / React Three Fiber (client), Cloudflare Worker + Durable Objects (server), Blender → GLB (assets).
+Live: https://cn-trials.shaun-bermas.workers.dev (deployed from `main` by GitHub Actions).
 Versions: `docs/adr/0003-stack-versions.md`.
 
 ## Run it locally
 
-Needs Node.js 22+. In two terminals:
+Needs Node.js 22+. One command runs the same Worker that Cloudflare runs (page and rooms together):
 
 ```bash
 npm install
+npm run build
 npm run dev:server
 ```
 
-```bash
-npm run dev:web
-```
-
-Open http://localhost:5173, enter a nickname, and join. Open a second tab to see two players.
+Open http://localhost:8787, enter a nickname and join. Open a second tab to see two players.
 WASD to move, click to look around, R to respawn.
+
+For live-reloading the client while you work on it, keep `npm run dev:server` running and also run
+`npm run dev:web`, then open http://localhost:5173 (it forwards `/api` to the Worker).
+
+## Deploy
+
+Merging into `main` deploys: `.github/workflows/deploy.yml` builds the client and runs `wrangler deploy`
+with the `CLOUDFLARE_API_TOKEN` repository secret.
 
 ## Layout
 
 | Folder | What |
 |--------|------|
 | `apps/web` | Browser client (Vite, React, React Three Fiber) |
-| `apps/server` | Game server (Colyseus): rooms, authoritative movement, `/health` |
+| `apps/server` | Cloudflare Worker: serves the client and runs each room as a Durable Object (authoritative movement, `/api/room/<code>/health`) |
 | `packages/shared` | Code both sides use: movement, stage data, messages, constants |
 | `blender/` | Blender scripts, scenes and exports (`blender/README.md`) |
 | `tests/` | Load test (30 clients), end-to-end test (two browsers), reports |

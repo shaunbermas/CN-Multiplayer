@@ -30,20 +30,23 @@ function startProcess(name, cmd, args, { cwd = root, env = {}, ready }) {
   };
 }
 
-/** Game server (apps/server) on a test port, with the test-only metrics reset route enabled. */
-export function startServer(port) {
-  return startProcess('server', 'npx', ['tsx', 'apps/server/src/index.ts'], {
-    env: { PORT: String(port), CN_TEST: '1' },
-    ready: /"ev":"listening"/,
+/**
+ * The Cloudflare Worker (web client + Durable Object rooms) under `wrangler dev`, with the test-only
+ * metrics reset enabled. Serves apps/web/dist, so build the web app first.
+ */
+export function startWorker(port) {
+  const proc = startProcess('wrangler dev', 'npx', ['wrangler', 'dev', '--port', String(port), '--ip', '127.0.0.1', '--var', 'CN_TEST:1'], {
+    ready: /Ready on|ready on/i,
   });
-}
-
-/** Built web app (apps/web/dist) served by `vite preview`. Run `npm run build` first. */
-export function startPreview(port) {
-  return startProcess('web preview', 'npx', ['vite', 'preview', '--port', String(port), '--strictPort', '--host', '127.0.0.1'], {
-    cwd: `${root}apps/web`,
-    ready: new RegExp(`127\\.0\\.0\\.1:${port}`),
+  // Also wait until the Worker answers, which is the real readiness signal.
+  proc.ready = proc.ready.then(async () => {
+    for (let i = 0; i < 60; i++) {
+      try { if ((await fetch(`http://127.0.0.1:${port}/api/health`)).ok) return; } catch { /* not yet */ }
+      await sleep(500);
+    }
+    throw new Error(`Worker on port ${port} did not answer /api/health\n${proc.log.join('')}`);
   });
+  return proc;
 }
 
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

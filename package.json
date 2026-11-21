@@ -10,19 +10,20 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev:server": "npm run dev -w @cn-trials/server",
+    "dev:server": "wrangler dev --port 8787",
     "dev:web": "npm run dev -w @cn-trials/web",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "vitest run",
     "build": "npm run build -w @cn-trials/web",
-    "test:load": "node tests/load/thirty-clients.mjs",
-    "test:e2e": "node tests/e2e/two-browsers.mjs"
+    "test:load": "tsx tests/load/thirty-clients.mjs",
+    "test:e2e": "tsx tests/e2e/two-browsers.mjs",
+    "deploy": "npm run build && wrangler deploy"
   },
   "devDependencies": {
     "@types/node": "22.20.5",
-    "colyseus.js": "^0.16.22",
     "tsx": "4.23.15",
     "typescript": "5.9.3",
-    "vitest": "3.2.7"
+    "vitest": "3.2.7",
+    "wrangler": "4.158.0"
   }
 }

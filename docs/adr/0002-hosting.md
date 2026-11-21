@@ -1,6 +1,6 @@
 # ADR 0002: Hosting for the game server
 
-Status: **Constraint decided; option awaiting owner confirmation** (21 November 2026).
+Status: **ACCEPTED: option D, Durable Objects** (owner decision, 21 November 2026). Implemented in `apps/server`.
 
 ## Owner constraint (decision 015)
 
@@ -50,7 +50,7 @@ now and gets more expensive with every Colyseus feature we adopt.
 
 Choose **A** instead if keeping Colyseus matters more than cost and simplicity.
 
-## If D is approved: what changes
+## What changed when D was adopted
 
 1. `apps/server` becomes a Cloudflare Worker with a `TrialRoom` Durable Object (same rules: 30 players,
    token-bucket input limit, server-owned movement and finish).

@@ -1,26 +1,19 @@
-import { Client, type Room } from 'colyseus.js';
-import { DEFAULT_PORT, ROOM_NAME } from '@cn-trials/shared';
+import { DEFAULT_ROOM, RoomClient } from '@cn-trials/shared';
 
-export interface PlayerView {
-  name: string; spawn: number; x: number; z: number; vx: number; vz: number; yaw: number;
-  ack: number; status: string; finishTime: number;
-}
-export interface TrialView {
-  stage: string; mode: string; time: number;
-  players: { forEach(cb: (p: PlayerView, id: string) => void): void; get(id: string): PlayerView | undefined; size: number };
-}
-export type TrialRoom = Room<TrialView>;
+export type TrialRoom = RoomClient;
+export type { PlayerView } from '@cn-trials/shared';
 
-export function serverUrl(): string {
+/** Room WebSocket URL. Same origin in production (the Worker serves both the page and /api). */
+export function roomUrl(code = DEFAULT_ROOM): string {
   const fromQuery = new URLSearchParams(location.search).get('server');
-  if (fromQuery && /^wss?:\/\//.test(fromQuery)) return fromQuery;
-  const fromEnv = import.meta.env.VITE_SERVER_URL as string | undefined;
-  if (fromEnv) return fromEnv;
+  if (fromQuery && /^wss?:\/\/[^/]+$/.test(fromQuery)) return `${fromQuery}/api/room/${code}/ws`;
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-  return `${proto}://${location.hostname}:${DEFAULT_PORT}`;
+  return `${proto}://${location.host}/api/room/${code}/ws`;
 }
 
 export async function joinTrial(name: string): Promise<TrialRoom> {
-  const client = new Client(serverUrl());
-  return client.joinOrCreate<TrialView>(ROOM_NAME, { name });
+  const room = await RoomClient.connect(roomUrl(), name);
+  // Wait for the first snapshot so our own position is known before the scene starts.
+  if (!room.snapshots) await new Promise<void>((res) => room.onSnapshot(res));
+  return room;
 }

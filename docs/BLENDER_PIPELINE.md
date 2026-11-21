@@ -133,7 +133,7 @@ LFS stay as normal git files.
 
 ### Collision and gameplay data (server)
 
-The Colyseus server should not parse visual GLBs. A script writes, from the same scene:
+The game server (Cloudflare Durable Object) should not parse visual GLBs. A script writes, from the same scene:
 
 - `blender/exports/STG01_collision.json`: one entry per `COL_` object as a primitive (box, cylinder,
   capsule or convex hull) with position, rotation and size in metres, in the **game (Y-up)

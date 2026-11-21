@@ -1,0 +1,67 @@
+# Deploys CN Trials to Cloudflare whenever main changes (i.e. when a pull request is merged).
+# One Worker serves the web client and runs each room as a Durable Object (ADR 0002).
+#
+# Needs the repository secret CLOUDFLARE_API_TOKEN
+# (GitHub repo -> Settings -> Secrets and variables -> Actions), created in Cloudflare from the
+# "Edit Cloudflare Workers" token template.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: production
+      url: https://cn-trials.shaun-bermas.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true   # the stage GLB is stored with Git LFS
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Check the Cloudflare token is set
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error::Missing the CLOUDFLARE_API_TOKEN repository secret. See the comment at the top of .github/workflows/deploy.yml."
+            exit 1
+          fi
+
+      - run: npm ci --no-audit --no-fund
+
+      - name: Build the web client
+        run: npm run build
+
+      - name: Deploy to Cloudflare
+        run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          # Cloudflare account ID (not a secret; the same account as shaun-game).
+          CLOUDFLARE_ACCOUNT_ID: f0f055ee41a625a2a17ebbc2b579e9e4
+          WRANGLER_SEND_METRICS: "false"
+
+      - name: Smoke test the live site
+        run: |
+          for i in $(seq 1 20); do
+            if curl -fsS https://cn-trials.shaun-bermas.workers.dev/api/health; then echo; exit 0; fi
+            sleep 3
+          done
+          echo "::error::The deployed Worker did not answer /api/health"
+          exit 1
