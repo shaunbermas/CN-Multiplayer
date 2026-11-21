@@ -15,6 +15,8 @@ import { useQuality, type Quality } from '../../game/quality.ts';
 import { signalView } from '../../game/roundClock.ts';
 import { stageGeo } from '../../game/stage.ts';
 import { Surroundings, surroundingsStatus } from './Surroundings.tsx';
+import { MidgroundTrees, midgroundStatus } from './MidgroundTrees.tsx';
+import { buildSkyEnvironment } from './skyModel.ts';
 import { CLIP_SECONDS, MISSING_FROM_MANIFEST, WATCHER_CLIPS, chooseWatcherClip, type WatcherChoice } from './watcherAnimation.ts';
 
 export const ENV_URL = envUrl;
@@ -35,7 +37,15 @@ export const stage01Assets = {
   effects: { lights: [] as string[], shadows: [] as string[], dust: 0, haze: false },
   /** Stage 1.5 painted surroundings: matte layers and tree cutouts drawn, and load problems. */
   surroundings: surroundingsStatus,
+  /** Stage 1.5 midground trees (lit impostors at the approved tree positions). */
+  midground: midgroundStatus,
+  /** Cone-tree triangles removed from ENV_VISUAL_FOLIAGE (grass tufts kept), and whether the sky env map is set. */
+  foliageTrianglesRemoved: 0,
+  environmentMap: false,
 };
+
+/** Environment-map strength per tier: reflections in puddles, wet asphalt and steel (Prompt 03). */
+const ENV_INTENSITY: Record<Quality, number> = { low: 0.35, medium: 0.5, high: 0.6 };
 
 type Tier = { dynamicLights: string[] | string; dust?: number; hazeCards?: boolean; shadows?: string[] | boolean };
 const tierOf = (q: Quality) => lighting.qualityTiers[q] as Tier;
@@ -133,6 +143,14 @@ function Lighting({ quality }: { quality: Quality }) {
     stage01Assets.effects.shadows = out.filter((o) => (o as THREE.Light).castShadow).map((o) => o.name);
     return out;
   }, [quality, L]);
+  const gl = useThree((st) => st.gl);
+  useEffect(() => {
+    const rt = buildSkyEnvironment(gl);
+    scene.environment = rt.texture;
+    stage01Assets.environmentMap = true;
+    return () => { scene.environment = null; stage01Assets.environmentMap = false; rt.dispose(); };
+  }, [gl, scene]);
+  useEffect(() => { scene.environmentIntensity = ENV_INTENSITY[quality]; }, [scene, quality]);
   useEffect(() => {
     scene.background = new THREE.Color(...(L.background.horizon as [number, number, number])).multiplyScalar(1.4);
     scene.fog = quality === 'low'
@@ -144,10 +162,42 @@ function Lighting({ quality }: { quality: Quality }) {
 }
 
 // ------------------------------------------------------------------------------------------ environment
+/**
+ * Stage 1.5: the approved scene's stacked-cone trees are replaced by lit impostors (MidgroundTrees). They are
+ * merged into ENV_VISUAL_FOLIAGE together with the grass tufts, so drop the tree trunks (wood) and every
+ * foliage triangle above 1 m (tufts are 0.45–0.55 m tall). The GLB itself is unchanged.
+ */
+function stripConeTrees(root: THREE.Object3D): number {
+  const node = root.getObjectByName('ENV_VISUAL_FOLIAGE');
+  if (!node) { stage01Assets.problems.push('environment: ENV_VISUAL_FOLIAGE missing'); return 0; }
+  let removed = 0;
+  node.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    const mat = mesh.material as THREE.Material;
+    const g = mesh.geometry;
+    if (mat.name === 'MAT_Wood_Weathered') { removed += (g.index ? g.index.count : g.attributes.position.count) / 3; mesh.visible = false; return; }
+    if (mat.name !== 'MAT_Foliage' || !g.index || g.userData.stripped) return;
+    const y = g.attributes.position;
+    const src = g.index.array;
+    const keep: number[] = [];
+    for (let i = 0; i < src.length; i += 3) {
+      if (Math.max(y.getY(src[i]), y.getY(src[i + 1]), y.getY(src[i + 2])) < 1.0) keep.push(src[i], src[i + 1], src[i + 2]);
+      else removed++;
+    }
+    g.setIndex(keep);
+    g.userData.stripped = true;
+    g.computeBoundingSphere();
+  });
+  return removed;
+}
+
 const LAMP: Record<string, string> = { green: 'MAT_Signal_Green', warning: 'MAT_Signal_Amber', red: 'MAT_Signal_Red' };
 
 function Environment({ room, quality }: { room: TrialRoom; quality: Quality }) {
   const gltf = useGLTF(ENV_URL);
+  const scene = useThree((st) => st.scene);
+  const puddles = useMemo(() => new Set<THREE.MeshStandardMaterial>(), []);
   const lamps = useMemo(() => {
     const mats = new Map<string, THREE.MeshStandardMaterial>();
     gltf.scene.traverse((o) => {
@@ -155,8 +205,11 @@ function Environment({ room, quality }: { room: TrialRoom; quality: Quality }) {
       if (o.name.startsWith('ENM_Shepherd_Placeholder')) o.visible = false;
       const m = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined;
       if (m && m.name?.startsWith('MAT_Signal_')) mats.set(m.name, m);
+      // Puddles: a near-black mirror in the approved material; with the sky environment it now reflects.
+      if (m && m.name === 'MAT_Puddle') puddles.add(m);
     });
     for (const n of Object.values(LAMP)) if (!mats.has(n)) stage01Assets.problems.push(`environment: material ${n} missing`);
+    stage01Assets.foliageTrianglesRemoved = stripConeTrees(gltf.scene);
     stage01Assets.environment = 'ready';
     return mats;
   }, [gltf]);
@@ -176,6 +229,17 @@ function Environment({ room, quality }: { room: TrialRoom; quality: Quality }) {
   }, [gltf, quality]);
   useEffect(() => () => { dispose(gltf.scene); useGLTF.clear(ENV_URL); stage01Assets.environment = 'loading'; }, [gltf]);
   useFrame(() => {
+    // Puddles (Stage 1.5): give the near-black mirror the sky environment map directly, so its own reflection
+    // strength applies (scene.environment ignores per-material intensity), and spread highlights a little.
+    if (scene.environment) {
+      for (const m of puddles) {
+        if (m.envMap === scene.environment) continue;
+        m.envMap = scene.environment;
+        m.envMapIntensity = 1.4;
+        m.roughness = 0.12;
+        m.needsUpdate = true;
+      }
+    }
     const sig = signalView(room).signal;
     for (const [name, mat] of lamps) mat.emissiveIntensity = LAMP[sig] === name ? 6 : sig === 'none' ? 0.35 : 0.08;
   });
@@ -330,6 +394,7 @@ export function Stage01Scene({ room }: { room: TrialRoom }) {
       <Environment room={room} quality={quality} />
       <Watcher room={room} />
       <Surroundings quality={quality} />
+      <MidgroundTrees shadows={shadowLights(quality).length > 0} />
       {dust > 0 && <Dust count={dust} />}
     </>
   );
