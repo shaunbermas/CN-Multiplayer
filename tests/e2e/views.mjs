@@ -18,7 +18,7 @@ if (process.env.SKIP_BUILD !== '1') execSync('npm run build', { cwd: root, stdio
 export const VIEWS = {
   spawn_gameplay: null, // the normal third-person camera at spawn
   midfield_to_watcher: { pos: [6, 3, -80], look: [0, 10, -185] },
-  finish_looking_back: { pos: [0, 4, -168], look: [0, 3, 0] },
+  finish_looking_back: { pos: [0, 4, -152], look: [0, 3, 0] },
   side_skyline_west: { pos: [0, 2.5, -40], look: [-120, 18, -70] },
   side_skyline_east: { pos: [0, 2.5, -120], look: [120, 18, -90] },
   overview_high: { pos: [60, 45, 40], look: [0, 0, -100] },

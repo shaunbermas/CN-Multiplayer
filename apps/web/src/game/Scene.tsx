@@ -217,7 +217,7 @@ export function Scene({ room, onStageError }: { room: TrialRoom; onStageError: (
   return (
     // Shadow maps stay enabled; whether anything casts a shadow is up to the tier (only High's moon does).
     <Canvas camera={{ fov: 60, near: 0.1, far: 1500 }} gl={{ antialias: true, powerPreference: 'high-performance' }} dpr={quality.dpr}
-      shadows={{ type: THREE.PCFSoftShadowMap }}>
+      shadows={{ type: THREE.PCFShadowMap }}>
       <AdaptiveQuality />
       <RenderInfo />
       <StageErrorBoundary onError={onStageError}>

@@ -14,6 +14,7 @@ import type { TrialRoom } from '../../net.ts';
 import { useQuality, type Quality } from '../../game/quality.ts';
 import { signalView } from '../../game/roundClock.ts';
 import { stageGeo } from '../../game/stage.ts';
+import { Surroundings, surroundingsStatus } from './Surroundings.tsx';
 import { CLIP_SECONDS, MISSING_FROM_MANIFEST, WATCHER_CLIPS, chooseWatcherClip, type WatcherChoice } from './watcherAnimation.ts';
 
 export const ENV_URL = envUrl;
@@ -32,6 +33,8 @@ export const stage01Assets = {
   quality: 'high' as Quality,
   /** What the current tier turned on, for tests: light ids, shadow casters, dust count, haze. */
   effects: { lights: [] as string[], shadows: [] as string[], dust: 0, haze: false },
+  /** Stage 1.5 painted surroundings: matte layers and tree cutouts drawn, and load problems. */
+  surroundings: surroundingsStatus,
 };
 
 type Tier = { dynamicLights: string[] | string; dust?: number; hazeCards?: boolean; shadows?: string[] | boolean };
@@ -326,6 +329,7 @@ export function Stage01Scene({ room }: { room: TrialRoom }) {
       <Lighting quality={quality} />
       <Environment room={room} quality={quality} />
       <Watcher room={room} />
+      <Surroundings quality={quality} />
       {dust > 0 && <Dust count={dust} />}
     </>
   );

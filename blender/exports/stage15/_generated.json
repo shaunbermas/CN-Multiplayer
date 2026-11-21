@@ -1,0 +1,178 @@
+{
+ "layers": {
+  "MP_FarHills": {
+   "source": "art/stage15/matte/source/MP_FarHills.png",
+   "runtime": "blender/exports/stage15/MP_FarHills.webp",
+   "source_px": [
+    4096,
+    768
+   ],
+   "runtime_px": [
+    4096,
+    768
+   ],
+   "runtime_bytes": 54622
+  },
+  "MP_IndustrialSkyline": {
+   "source": "art/stage15/matte/source/MP_IndustrialSkyline.png",
+   "runtime": "blender/exports/stage15/MP_IndustrialSkyline.webp",
+   "source_px": [
+    4096,
+    768
+   ],
+   "runtime_px": [
+    4096,
+    768
+   ],
+   "runtime_bytes": 59490
+  },
+  "MP_ForestLine": {
+   "source": "art/stage15/matte/source/MP_ForestLine.png",
+   "runtime": "blender/exports/stage15/MP_ForestLine.webp",
+   "source_px": [
+    4096,
+    512
+   ],
+   "runtime_px": [
+    4096,
+    512
+   ],
+   "runtime_bytes": 71594
+  },
+  "TREE_Cutout_Atlas": {
+   "source": "art/stage15/matte/source/TREE_Cutout_Atlas.png",
+   "runtime": "blender/exports/stage15/TREE_Cutout_Atlas.webp",
+   "source_px": [
+    2048,
+    2048
+   ],
+   "runtime_px": [
+    2048,
+    2048
+   ],
+   "runtime_bytes": 221276
+  }
+ },
+ "tree_cells": [
+  {
+   "index": 0,
+   "kind": "conifer_tall",
+   "col": 0,
+   "row": 0,
+   "uv": [
+    0.0,
+    0.5,
+    0.25,
+    0.5
+   ],
+   "aspect": 0.5,
+   "coverage": 0.294,
+   "top_frac": 0.984
+  },
+  {
+   "index": 1,
+   "kind": "conifer_narrow",
+   "col": 1,
+   "row": 0,
+   "uv": [
+    0.25,
+    0.5,
+    0.25,
+    0.5
+   ],
+   "aspect": 0.5,
+   "coverage": 0.262,
+   "top_frac": 0.984
+  },
+  {
+   "index": 2,
+   "kind": "conifer_wide",
+   "col": 2,
+   "row": 0,
+   "uv": [
+    0.5,
+    0.5,
+    0.25,
+    0.5
+   ],
+   "aspect": 0.5,
+   "coverage": 0.344,
+   "top_frac": 0.984
+  },
+  {
+   "index": 3,
+   "kind": "conifer_broken",
+   "col": 3,
+   "row": 0,
+   "uv": [
+    0.75,
+    0.5,
+    0.25,
+    0.5
+   ],
+   "aspect": 0.5,
+   "coverage": 0.304,
+   "top_frac": 0.984
+  },
+  {
+   "index": 4,
+   "kind": "broadleaf_a",
+   "col": 0,
+   "row": 1,
+   "uv": [
+    0.0,
+    0.0,
+    0.25,
+    0.5
+   ],
+   "aspect": 0.5,
+   "coverage": 0.445,
+   "top_frac": 0.984
+  },
+  {
+   "index": 5,
+   "kind": "broadleaf_b",
+   "col": 1,
+   "row": 1,
+   "uv": [
+    0.25,
+    0.0,
+    0.25,
+    0.5
+   ],
+   "aspect": 0.5,
+   "coverage": 0.382,
+   "top_frac": 0.923
+  },
+  {
+   "index": 6,
+   "kind": "dead_a",
+   "col": 2,
+   "row": 1,
+   "uv": [
+    0.5,
+    0.0,
+    0.25,
+    0.5
+   ],
+   "aspect": 0.5,
+   "coverage": 0.035,
+   "top_frac": 0.588
+  },
+  {
+   "index": 7,
+   "kind": "dead_b",
+   "col": 3,
+   "row": 1,
+   "uv": [
+    0.75,
+    0.0,
+    0.25,
+    0.5
+   ],
+   "aspect": 0.5,
+   "coverage": 0.04,
+   "top_frac": 0.629
+  }
+ ]
+}
