@@ -25,6 +25,12 @@ needed; it runs the same in a Claude cloud session, in CI and on a desktop.
 | `scripts/stage_01_collision_setup.py` | Prompt 04: opens the approved greybox and saves `scenes/STAGE_01_COLLISION_READY.blend` with gameplay collections (collision, triggers, boundaries, spawns, watcher reference, spectators, signal anchors), then writes `exports/STAGE_01_METADATA.json`. `--screenshots` renders `renders/STAGE_01_COLLISION_*.png` |
 | `scripts/validate_stage_01_metadata.py` | Validates the metadata against `schemas/STAGE_01_METADATA.schema.json`, the scene transforms and the runtime exports; writes `exports/STAGE_01_METADATA_VALIDATION.json` |
 | `scripts/stage_01_collision_screens.py` | Top, side and perspective validation renders of the collision-ready scene (CPU Cycles) |
+| `scripts/stage_01_textures.py` | Prompt 05: original procedural tileable textures into `textures/STG01/` |
+| `scripts/stage_01_environment_build.py` (+ `stage_01_env_kit.py`) | Prompt 05: copies the collision-ready scene and saves `scenes/STAGE_01_ENVIRONMENT_FINAL.blend` with the detailed visual environment; gameplay collections untouched |
+| `scripts/stage_01_environment_export.py` | Writes `exports/STAGE_01_ENVIRONMENT.glb`, `STAGE_01_LIGHTING.json` and the export report |
+| `scripts/validate_stage_01_environment.py` | Gameplay unchanged, metadata still valid, yard clear, sightlines, materials, budgets |
+| `scripts/stage_01_environment_render.py` | Wide, third-person, front, side and top renders into `renders/` |
+| `../tools/asset-check/check-environment.mjs` | glTF Validator + Three.js check of the environment GLB (scale, orientation, materials) |
 | `scripts/cn_blender.py` | Shared helpers |
 
 ## Editing by hand

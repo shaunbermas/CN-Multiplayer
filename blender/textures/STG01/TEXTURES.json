@@ -1,0 +1,200 @@
+{
+  "T_Asphalt_Wet": {
+    "BC": {
+      "file": "T_Asphalt_Wet_BC.png",
+      "size": 1024,
+      "mode": "RGB"
+    },
+    "ORM": {
+      "file": "T_Asphalt_Wet_ORM.png",
+      "size": 512,
+      "mode": "RGB"
+    },
+    "N": {
+      "file": "T_Asphalt_Wet_N.png",
+      "size": 1024,
+      "mode": "RGB"
+    }
+  },
+  "T_Concrete_Weathered": {
+    "BC": {
+      "file": "T_Concrete_Weathered_BC.png",
+      "size": 1024,
+      "mode": "RGB"
+    },
+    "ORM": {
+      "file": "T_Concrete_Weathered_ORM.png",
+      "size": 512,
+      "mode": "RGB"
+    },
+    "N": {
+      "file": "T_Concrete_Weathered_N.png",
+      "size": 512,
+      "mode": "RGB"
+    }
+  },
+  "T_Metal_RustPaint": {
+    "BC": {
+      "file": "T_Metal_RustPaint_BC.png",
+      "size": 1024,
+      "mode": "RGB"
+    },
+    "ORM": {
+      "file": "T_Metal_RustPaint_ORM.png",
+      "size": 512,
+      "mode": "RGB"
+    },
+    "N": {
+      "file": "T_Metal_RustPaint_N.png",
+      "size": 512,
+      "mode": "RGB"
+    }
+  },
+  "T_Steel_Dark": {
+    "BC": {
+      "file": "T_Steel_Dark_BC.png",
+      "size": 512,
+      "mode": "RGB"
+    },
+    "ORM": {
+      "file": "T_Steel_Dark_ORM.png",
+      "size": 512,
+      "mode": "RGB"
+    },
+    "N": {
+      "file": "T_Steel_Dark_N.png",
+      "size": 512,
+      "mode": "RGB"
+    }
+  },
+  "T_Steel_Galvanised": {
+    "BC": {
+      "file": "T_Steel_Galvanised_BC.png",
+      "size": 512,
+      "mode": "RGB"
+    },
+    "ORM": {
+      "file": "T_Steel_Galvanised_ORM.png",
+      "size": 256,
+      "mode": "RGB"
+    },
+    "N": {
+      "file": "T_Steel_Galvanised_N.png",
+      "size": 256,
+      "mode": "RGB"
+    }
+  },
+  "T_ChainLink": {
+    "BC": {
+      "file": "T_ChainLink_BC.png",
+      "size": 512,
+      "mode": "RGBA"
+    },
+    "ORM": {
+      "file": "T_ChainLink_ORM.png",
+      "size": 256,
+      "mode": "RGB"
+    }
+  },
+  "T_Wood_Weathered": {
+    "BC": {
+      "file": "T_Wood_Weathered_BC.png",
+      "size": 512,
+      "mode": "RGB"
+    },
+    "ORM": {
+      "file": "T_Wood_Weathered_ORM.png",
+      "size": 256,
+      "mode": "RGB"
+    },
+    "N": {
+      "file": "T_Wood_Weathered_N.png",
+      "size": 512,
+      "mode": "RGB"
+    }
+  },
+  "T_Ground_DirtGrass": {
+    "BC": {
+      "file": "T_Ground_DirtGrass_BC.png",
+      "size": 1024,
+      "mode": "RGB"
+    },
+    "ORM": {
+      "file": "T_Ground_DirtGrass_ORM.png",
+      "size": 512,
+      "mode": "RGB"
+    },
+    "N": {
+      "file": "T_Ground_DirtGrass_N.png",
+      "size": 512,
+      "mode": "RGB"
+    }
+  },
+  "T_Paint_Worn": {
+    "BC": {
+      "file": "T_Paint_Worn_BC.png",
+      "size": 256,
+      "mode": "RGBA"
+    },
+    "ORM": {
+      "file": "T_Paint_Worn_ORM.png",
+      "size": 256,
+      "mode": "RGB"
+    }
+  },
+  "T_Stripes_Hazard": {
+    "BC": {
+      "file": "T_Stripes_Hazard_BC.png",
+      "size": 256,
+      "mode": "RGB"
+    },
+    "ORM": {
+      "file": "T_Stripes_Hazard_ORM.png",
+      "size": 256,
+      "mode": "RGB"
+    }
+  },
+  "T_Stripes_Barrier": {
+    "BC": {
+      "file": "T_Stripes_Barrier_BC.png",
+      "size": 256,
+      "mode": "RGB"
+    },
+    "ORM": {
+      "file": "T_Stripes_Barrier_ORM.png",
+      "size": 256,
+      "mode": "RGB"
+    }
+  },
+  "T_Checker_Finish": {
+    "BC": {
+      "file": "T_Checker_Finish_BC.png",
+      "size": 256,
+      "mode": "RGB"
+    },
+    "ORM": {
+      "file": "T_Checker_Finish_ORM.png",
+      "size": 256,
+      "mode": "RGB"
+    }
+  },
+  "T_Foliage": {
+    "BC": {
+      "file": "T_Foliage_BC.png",
+      "size": 256,
+      "mode": "RGB"
+    },
+    "ORM": {
+      "file": "T_Foliage_ORM.png",
+      "size": 256,
+      "mode": "RGB"
+    }
+  },
+  "T_Haze": {
+    "BC": {
+      "file": "T_Haze_BC.png",
+      "size": 256,
+      "mode": "RGBA"
+    }
+  }
+}

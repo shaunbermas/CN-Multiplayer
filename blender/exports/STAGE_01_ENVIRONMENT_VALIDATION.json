@@ -1,0 +1,389 @@
+{
+  "result": "PASS",
+  "blend": "blender/scenes/STAGE_01_ENVIRONMENT_FINAL.blend",
+  "baseline": "blender/scenes/STAGE_01_COLLISION_READY.blend",
+  "checks": {
+    "gameplay_unchanged": {
+      "pass": true,
+      "problems": [],
+      "objects_compared": 189
+    },
+    "metadata_gameplay": {
+      "pass": true,
+      "problems": [],
+      "sections": [
+        "spawnPoints",
+        "triggerZones",
+        "movementBoundaries",
+        "watcherDetectionReference",
+        "collisionObjects",
+        "spectatorLocations",
+        "signalAnchors"
+      ]
+    },
+    "metadata_checks": {
+      "pass": true,
+      "problems": [],
+      "prompt04_checks": {
+        "schema": true,
+        "ids_resolve": false,
+        "transforms_match": true,
+        "spawns": true,
+        "triggers": true,
+        "boundaries": true,
+        "collision_separation": true,
+        "watcher_reference": true,
+        "spectators": true,
+        "signal_anchors": true,
+        "runtime_consistency": true,
+        "conventions": true,
+        "no_game_logic": true
+      },
+      "expected_inventory_differences": 20,
+      "note": "sceneObjects lists the collision-ready scene; the environment adds visual objects and regroups some visual collections"
+    },
+    "yard_clear": {
+      "pass": true,
+      "problems": [],
+      "allowed_overhead": [
+        "PRP_STG01_FinishGate_Beam",
+        "PRP_STG01_FinishGate_LightStrip",
+        "PRP_STG01_StartBarrier_Arm"
+      ],
+      "min_overhead_height_m": 6.0
+    },
+    "sightline": {
+      "pass": true,
+      "problems": [],
+      "spawns": 30,
+      "eye_height_m": 1.0,
+      "target": "WATCHER_HEAD_ANCHOR"
+    },
+    "collections": {
+      "pass": true,
+      "problems": [],
+      "objects_per_collection": {
+        "VISUAL_ARCHITECTURE": 155,
+        "VISUAL_PROPS": 13,
+        "VISUAL_SIGNAL_DEVICES": 14,
+        "VISUAL_MACHINERY": 17,
+        "VISUAL_FOLIAGE": 139,
+        "VISUAL_BACKDROP": 32,
+        "VISUAL_WATCHER": 5,
+        "VISUAL_VFX": 3,
+        "GAMEPLAY_COLLISION": 77,
+        "GAMEPLAY_TRIGGERS": 3,
+        "GAMEPLAY_BOUNDARIES": 5,
+        "GAMEPLAY_MARKERS": 3,
+        "PLAYER_SPAWNS": 60,
+        "WATCHER_REFERENCE": 3,
+        "SPECTATOR_LOCATIONS": 21,
+        "SIGNAL_ANCHORS": 17,
+        "LIGHTING": 15,
+        "CAMERAS": 14,
+        "REFERENCE": 5
+      }
+    },
+    "materials": {
+      "pass": true,
+      "problems": [],
+      "materials": 29,
+      "images": 34,
+      "texture_memory_MB_uncompressed_with_mips": 50.3
+    },
+    "budgets": {
+      "pass": true,
+      "problems": [],
+      "triangles_visual": 55758,
+      "glb_MB": 6.43,
+      "draw_calls_estimate": 52,
+      "glb_materials": 29,
+      "browser_check": "PASS",
+      "browser_draw_calls": {
+        "third_person": 51,
+        "wide": 52,
+        "finish": 44
+      }
+    },
+    "conventions": {
+      "pass": true,
+      "problems": [],
+      "blender": "5.3.0",
+      "units": "metric, scale 1.0"
+    }
+  },
+  "images": {
+    "T_Asphalt_Wet_BC.png": {
+      "size": [
+        1024,
+        1024
+      ],
+      "colorspace": "sRGB",
+      "file": "blender/textures/STG01/T_Asphalt_Wet_BC.png"
+    },
+    "T_Asphalt_Wet_ORM.png": {
+      "size": [
+        512,
+        512
+      ],
+      "colorspace": "Non-Color",
+      "file": "blender/textures/STG01/T_Asphalt_Wet_ORM.png"
+    },
+    "T_Asphalt_Wet_N.png": {
+      "size": [
+        1024,
+        1024
+      ],
+      "colorspace": "Non-Color",
+      "file": "blender/textures/STG01/T_Asphalt_Wet_N.png"
+    },
+    "T_ChainLink_BC.png": {
+      "size": [
+        512,
+        512
+      ],
+      "colorspace": "sRGB",
+      "file": "blender/textures/STG01/T_ChainLink_BC.png"
+    },
+    "T_ChainLink_ORM.png": {
+      "size": [
+        256,
+        256
+      ],
+      "colorspace": "Non-Color",
+      "file": "blender/textures/STG01/T_ChainLink_ORM.png"
+    },
+    "T_Checker_Finish_BC.png": {
+      "size": [
+        256,
+        256
+      ],
+      "colorspace": "sRGB",
+      "file": "blender/textures/STG01/T_Checker_Finish_BC.png"
+    },
+    "T_Checker_Finish_ORM.png": {
+      "size": [
+        256,
+        256
+      ],
+      "colorspace": "Non-Color",
+      "file": "blender/textures/STG01/T_Checker_Finish_ORM.png"
+    },
+    "T_Concrete_Weathered_BC.png": {
+      "size": [
+        1024,
+        1024
+      ],
+      "colorspace": "sRGB",
+      "file": "blender/textures/STG01/T_Concrete_Weathered_BC.png"
+    },
+    "T_Concrete_Weathered_ORM.png": {
+      "size": [
+        512,
+        512
+      ],
+      "colorspace": "Non-Color",
+      "file": "blender/textures/STG01/T_Concrete_Weathered_ORM.png"
+    },
+    "T_Concrete_Weathered_N.png": {
+      "size": [
+        512,
+        512
+      ],
+      "colorspace": "Non-Color",
+      "file": "blender/textures/STG01/T_Concrete_Weathered_N.png"
+    },
+    "T_Foliage_BC.png": {
+      "size": [
+        256,
+        256
+      ],
+      "colorspace": "sRGB",
+      "file": "blender/textures/STG01/T_Foliage_BC.png"
+    },
+    "T_Foliage_ORM.png": {
+      "size": [
+        256,
+        256
+      ],
+      "colorspace": "Non-Color",
+      "file": "blender/textures/STG01/T_Foliage_ORM.png"
+    },
+    "T_Ground_DirtGrass_BC.png": {
+      "size": [
+        1024,
+        1024
+      ],
+      "colorspace": "sRGB",
+      "file": "blender/textures/STG01/T_Ground_DirtGrass_BC.png"
+    },
+    "T_Ground_DirtGrass_ORM.png": {
+      "size": [
+        512,
+        512
+      ],
+      "colorspace": "Non-Color",
+      "file": "blender/textures/STG01/T_Ground_DirtGrass_ORM.png"
+    },
+    "T_Ground_DirtGrass_N.png": {
+      "size": [
+        512,
+        512
+      ],
+      "colorspace": "Non-Color",
+      "file": "blender/textures/STG01/T_Ground_DirtGrass_N.png"
+    },
+    "T_Metal_RustPaint_BC.png": {
+      "size": [
+        1024,
+        1024
+      ],
+      "colorspace": "sRGB",
+      "file": "blender/textures/STG01/T_Metal_RustPaint_BC.png"
+    },
+    "T_Metal_RustPaint_ORM.png": {
+      "size": [
+        512,
+        512
+      ],
+      "colorspace": "Non-Color",
+      "file": "blender/textures/STG01/T_Metal_RustPaint_ORM.png"
+    },
+    "T_Metal_RustPaint_N.png": {
+      "size": [
+        512,
+        512
+      ],
+      "colorspace": "Non-Color",
+      "file": "blender/textures/STG01/T_Metal_RustPaint_N.png"
+    },
+    "T_Paint_Worn_BC.png": {
+      "size": [
+        256,
+        256
+      ],
+      "colorspace": "sRGB",
+      "file": "blender/textures/STG01/T_Paint_Worn_BC.png"
+    },
+    "T_Paint_Worn_ORM.png": {
+      "size": [
+        256,
+        256
+      ],
+      "colorspace": "Non-Color",
+      "file": "blender/textures/STG01/T_Paint_Worn_ORM.png"
+    },
+    "T_Steel_Dark_BC.png": {
+      "size": [
+        512,
+        512
+      ],
+      "colorspace": "sRGB",
+      "file": "blender/textures/STG01/T_Steel_Dark_BC.png"
+    },
+    "T_Steel_Dark_ORM.png": {
+      "size": [
+        512,
+        512
+      ],
+      "colorspace": "Non-Color",
+      "file": "blender/textures/STG01/T_Steel_Dark_ORM.png"
+    },
+    "T_Steel_Dark_N.png": {
+      "size": [
+        512,
+        512
+      ],
+      "colorspace": "Non-Color",
+      "file": "blender/textures/STG01/T_Steel_Dark_N.png"
+    },
+    "T_Steel_Galvanised_BC.png": {
+      "size": [
+        512,
+        512
+      ],
+      "colorspace": "sRGB",
+      "file": "blender/textures/STG01/T_Steel_Galvanised_BC.png"
+    },
+    "T_Steel_Galvanised_ORM.png": {
+      "size": [
+        256,
+        256
+      ],
+      "colorspace": "Non-Color",
+      "file": "blender/textures/STG01/T_Steel_Galvanised_ORM.png"
+    },
+    "T_Steel_Galvanised_N.png": {
+      "size": [
+        256,
+        256
+      ],
+      "colorspace": "Non-Color",
+      "file": "blender/textures/STG01/T_Steel_Galvanised_N.png"
+    },
+    "T_Stripes_Barrier_BC.png": {
+      "size": [
+        256,
+        256
+      ],
+      "colorspace": "sRGB",
+      "file": "blender/textures/STG01/T_Stripes_Barrier_BC.png"
+    },
+    "T_Stripes_Barrier_ORM.png": {
+      "size": [
+        256,
+        256
+      ],
+      "colorspace": "Non-Color",
+      "file": "blender/textures/STG01/T_Stripes_Barrier_ORM.png"
+    },
+    "T_Stripes_Hazard_BC.png": {
+      "size": [
+        256,
+        256
+      ],
+      "colorspace": "sRGB",
+      "file": "blender/textures/STG01/T_Stripes_Hazard_BC.png"
+    },
+    "T_Stripes_Hazard_ORM.png": {
+      "size": [
+        256,
+        256
+      ],
+      "colorspace": "Non-Color",
+      "file": "blender/textures/STG01/T_Stripes_Hazard_ORM.png"
+    },
+    "T_Haze_BC.png": {
+      "size": [
+        256,
+        256
+      ],
+      "colorspace": "sRGB",
+      "file": "blender/textures/STG01/T_Haze_BC.png"
+    },
+    "T_Wood_Weathered_BC.png": {
+      "size": [
+        512,
+        512
+      ],
+      "colorspace": "sRGB",
+      "file": "blender/textures/STG01/T_Wood_Weathered_BC.png"
+    },
+    "T_Wood_Weathered_ORM.png": {
+      "size": [
+        256,
+        256
+      ],
+      "colorspace": "Non-Color",
+      "file": "blender/textures/STG01/T_Wood_Weathered_ORM.png"
+    },
+    "T_Wood_Weathered_N.png": {
+      "size": [
+        512,
+        512
+      ],
+      "colorspace": "Non-Color",
+      "file": "blender/textures/STG01/T_Wood_Weathered_N.png"
+    }
+  }
+}

@@ -1,0 +1,451 @@
+{
+  "stage": "STAGE_01_RED_LIGHT",
+  "coordinates": "game (metres, Y up, course toward -Z): game = (x, z, -y) of Blender",
+  "note": "Blender watts do not map 1:1 to Three.js intensities; tune intensity in the client. Signal colours come from the MAT_Signal_Red / _Amber / _Green and MAT_Shepherd_Lantern materials (emissive), which the runtime drives; no signal colour is baked into a texture.",
+  "toneMapping": {
+    "type": "ACESFilmic",
+    "exposure": 1.0
+  },
+  "background": {
+    "top": [
+      0.06,
+      0.035,
+      0.1
+    ],
+    "horizon": [
+      0.035,
+      0.11,
+      0.12
+    ]
+  },
+  "ambient": {
+    "type": "hemisphere",
+    "sky": [
+      0.25,
+      0.42,
+      0.45
+    ],
+    "ground": [
+      0.05,
+      0.05,
+      0.06
+    ],
+    "intensity": 0.6
+  },
+  "fog": {
+    "type": "exp2",
+    "color": [
+      0.06,
+      0.13,
+      0.14
+    ],
+    "density": 0.0045,
+    "rule": "The Shepherd's rim light and silhouette must stay readable from the start line (design spec \u00a712)"
+  },
+  "lights": [
+    {
+      "id": "LGT_STG01_Booth",
+      "type": "point",
+      "position": [
+        42.0,
+        11.0,
+        -163.0
+      ],
+      "direction": [
+        0.0,
+        -1.0,
+        -0.0
+      ],
+      "color": [
+        1.0,
+        0.6,
+        0.3
+      ],
+      "blenderWatts": 3000.0,
+      "range": 25.0
+    },
+    {
+      "id": "LGT_STG01_Finish",
+      "type": "rect_area",
+      "position": [
+        0.0,
+        7.4,
+        -162.0
+      ],
+      "direction": [
+        0.0,
+        -1.0,
+        -0.0
+      ],
+      "color": [
+        1.0,
+        0.62,
+        0.35
+      ],
+      "blenderWatts": 9000.0,
+      "width": 60.0,
+      "height": 0.25
+    },
+    {
+      "id": "LGT_STG01_Flood_01",
+      "type": "spot",
+      "position": [
+        -37.0,
+        22.0,
+        10.0
+      ],
+      "direction": [
+        0.574,
+        -0.819,
+        -0.0
+      ],
+      "color": [
+        1.0,
+        0.52,
+        0.24
+      ],
+      "blenderWatts": 60000.0,
+      "angleDeg": 42.5,
+      "penumbra": 0.7,
+      "range": 60.0
+    },
+    {
+      "id": "LGT_STG01_Flood_02",
+      "type": "spot",
+      "position": [
+        37.0,
+        22.0,
+        10.0
+      ],
+      "direction": [
+        -0.574,
+        -0.819,
+        -0.0
+      ],
+      "color": [
+        1.0,
+        0.52,
+        0.24
+      ],
+      "blenderWatts": 60000.0,
+      "angleDeg": 42.5,
+      "penumbra": 0.7,
+      "range": 60.0
+    },
+    {
+      "id": "LGT_STG01_Flood_03",
+      "type": "spot",
+      "position": [
+        -37.0,
+        22.0,
+        -40.0
+      ],
+      "direction": [
+        0.574,
+        -0.819,
+        -0.0
+      ],
+      "color": [
+        1.0,
+        0.52,
+        0.24
+      ],
+      "blenderWatts": 60000.0,
+      "angleDeg": 42.5,
+      "penumbra": 0.7,
+      "range": 60.0
+    },
+    {
+      "id": "LGT_STG01_Flood_04",
+      "type": "spot",
+      "position": [
+        37.0,
+        22.0,
+        -40.0
+      ],
+      "direction": [
+        -0.574,
+        -0.819,
+        -0.0
+      ],
+      "color": [
+        1.0,
+        0.52,
+        0.24
+      ],
+      "blenderWatts": 60000.0,
+      "angleDeg": 42.5,
+      "penumbra": 0.7,
+      "range": 60.0
+    },
+    {
+      "id": "LGT_STG01_Flood_05",
+      "type": "spot",
+      "position": [
+        -37.0,
+        22.0,
+        -90.0
+      ],
+      "direction": [
+        0.574,
+        -0.819,
+        -0.0
+      ],
+      "color": [
+        1.0,
+        0.52,
+        0.24
+      ],
+      "blenderWatts": 60000.0,
+      "angleDeg": 42.5,
+      "penumbra": 0.7,
+      "range": 60.0
+    },
+    {
+      "id": "LGT_STG01_Flood_06",
+      "type": "spot",
+      "position": [
+        37.0,
+        22.0,
+        -90.0
+      ],
+      "direction": [
+        -0.574,
+        -0.819,
+        -0.0
+      ],
+      "color": [
+        1.0,
+        0.52,
+        0.24
+      ],
+      "blenderWatts": 60000.0,
+      "angleDeg": 42.5,
+      "penumbra": 0.7,
+      "range": 60.0
+    },
+    {
+      "id": "LGT_STG01_Flood_07",
+      "type": "spot",
+      "position": [
+        -37.0,
+        22.0,
+        -140.0
+      ],
+      "direction": [
+        0.574,
+        -0.819,
+        -0.0
+      ],
+      "color": [
+        1.0,
+        0.52,
+        0.24
+      ],
+      "blenderWatts": 60000.0,
+      "angleDeg": 42.5,
+      "penumbra": 0.7,
+      "range": 60.0
+    },
+    {
+      "id": "LGT_STG01_Flood_08",
+      "type": "spot",
+      "position": [
+        37.0,
+        22.0,
+        -140.0
+      ],
+      "direction": [
+        -0.574,
+        -0.819,
+        -0.0
+      ],
+      "color": [
+        1.0,
+        0.52,
+        0.24
+      ],
+      "blenderWatts": 60000.0,
+      "angleDeg": 42.5,
+      "penumbra": 0.7,
+      "range": 60.0
+    },
+    {
+      "id": "LGT_STG01_Flood_09",
+      "type": "spot",
+      "position": [
+        -37.0,
+        22.0,
+        -175.0
+      ],
+      "direction": [
+        0.574,
+        -0.819,
+        -0.0
+      ],
+      "color": [
+        1.0,
+        0.52,
+        0.24
+      ],
+      "blenderWatts": 60000.0,
+      "angleDeg": 42.5,
+      "penumbra": 0.7,
+      "range": 60.0
+    },
+    {
+      "id": "LGT_STG01_Flood_10",
+      "type": "spot",
+      "position": [
+        37.0,
+        22.0,
+        -175.0
+      ],
+      "direction": [
+        -0.574,
+        -0.819,
+        -0.0
+      ],
+      "color": [
+        1.0,
+        0.52,
+        0.24
+      ],
+      "blenderWatts": 60000.0,
+      "angleDeg": 42.5,
+      "penumbra": 0.7,
+      "range": 60.0
+    },
+    {
+      "id": "LGT_STG01_Lantern",
+      "type": "point",
+      "position": [
+        6.16,
+        15.888,
+        -182.3
+      ],
+      "direction": [
+        0.0,
+        -1.0,
+        -0.0
+      ],
+      "color": [
+        1.0,
+        0.7,
+        0.3
+      ],
+      "blenderWatts": 6000.0,
+      "range": 25.0,
+      "follows": "ENM_Shepherd_Placeholder_Lantern"
+    },
+    {
+      "id": "LGT_STG01_Moon",
+      "type": "directional",
+      "position": [
+        0.0,
+        50.0,
+        -0.0
+      ],
+      "direction": [
+        0.568,
+        -0.469,
+        0.676
+      ],
+      "color": [
+        0.45,
+        0.65,
+        0.75
+      ],
+      "blenderWatts": 0.8
+    },
+    {
+      "id": "LGT_STG01_ShepherdRim",
+      "type": "spot",
+      "position": [
+        0.0,
+        40.0,
+        -215.0
+      ],
+      "direction": [
+        -0.0,
+        -0.479,
+        0.878
+      ],
+      "color": [
+        0.45,
+        0.85,
+        0.9
+      ],
+      "blenderWatts": 400000.0,
+      "angleDeg": 20.0,
+      "penumbra": 0.5,
+      "range": 60.0
+    }
+  ],
+  "qualityTiers": {
+    "low": {
+      "fog": "linear 60-260 m",
+      "hazeCards": false,
+      "dust": 0,
+      "dynamicLights": [
+        "LGT_STG01_Moon"
+      ],
+      "notes": "Floodlight pools come from emissive lamps only; ambient raised by 30 %"
+    },
+    "medium": {
+      "fog": "exp2",
+      "hazeCards": false,
+      "dust": 150,
+      "dynamicLights": [
+        "LGT_STG01_Moon",
+        "LGT_STG01_Flood_*",
+        "LGT_STG01_ShepherdRim"
+      ],
+      "shadows": false
+    },
+    "high": {
+      "fog": "exp2",
+      "hazeCards": true,
+      "dust": 400,
+      "dynamicLights": "all",
+      "shadows": [
+        "LGT_STG01_Moon"
+      ]
+    }
+  },
+  "particles": {
+    "dust": {
+      "area": {
+        "min": [
+          -45,
+          1,
+          -190
+        ],
+        "max": [
+          45,
+          20,
+          20
+        ]
+      },
+      "size": [
+        0.01,
+        0.03
+      ],
+      "color": [
+        1.0,
+        0.75,
+        0.5
+      ],
+      "speed": 0.15,
+      "additive": true
+    }
+  },
+  "runtimeMaterials": [
+    "MAT_Signal_Red",
+    "MAT_Signal_Amber",
+    "MAT_Signal_Green",
+    "MAT_Shepherd_Lantern",
+    "MAT_TimerBoard_Screen",
+    "MAT_VFX_Haze"
+  ]
+}

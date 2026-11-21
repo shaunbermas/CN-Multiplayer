@@ -28,10 +28,13 @@ Status: v0.2, 21 November 2026. Covers every visual reference currently in `refe
 | G2 | `references/GLOBAL/stage_enemy_and_asset_overview.png` | 1536 × 1024 PNG, 2.6 MB | `25f830cb6418e244` | Stage 01 production pack | RECEIVED |
 | S1 | *Not in the repository*: `playground_mood_reference_cropped.png` | 656 × 339 PNG | `befb149660249010` | Prompt 02 reference pack | RECEIVED, mood only |
 | S2 | *Not in the repository*: `user_uploaded_reference_with_prompt_context.png` (full screenshot of S1 with the prompt text) | 656 × 1105 PNG | `4ebcac0e2bf9a6c0` | Prompt 02 reference pack | RECEIVED, source context |
+| S3 | *Not in the repository*: `03_PROPOSED_CINEMATIC_ENVIRONMENT_RENDER.png` | 1672 × 941 PNG | `443b503c462447d9` | Prompt 05 reference pack (AI-generated proposal derived from S1) | RECEIVED; used by the owner's Prompt 05 request as the cinematic mood and lighting reference (decision 022). Not a layout |
 
 S1 and S2 are a third-party image of unknown origin carrying a website watermark and partly legible
 lettering. This repository is public, so they are recorded here by description and fingerprint and not
-committed (design spec decision E12). The pack's copies of G1, G2 and the GDD match the files already
+committed (design spec decision E12). S3 is generated from S1, so it is handled the same way. The Prompt 05 pack's
+S1/S2 and G1 copies match these fingerprints exactly; its G2 copy is a different encoding with pixel differences
+(not used for Prompt 05, which takes mood from S1/S3 and the approved design spec). The pack's copies of G1, G2 and the GDD match the files already
 here (G2 differs only in file encoding).
 
 The files keep their original names. They are not renamed to the planned slot names in §3, because

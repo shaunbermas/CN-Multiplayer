@@ -1,0 +1,858 @@
+{
+  "result": "PASS",
+  "errors": [],
+  "glb": "blender/exports/STAGE_01_ENVIRONMENT.glb",
+  "glb_bytes": 6429024,
+  "gltf_validator": {
+    "version": "2.0.0-dev.3.10",
+    "errors": 0,
+    "warnings": 14,
+    "infos": 46,
+    "messages": [
+      {
+        "code": "IMAGE_FEATURES_UNSUPPORTED",
+        "message": "Image contains unsupported features like non-default colorspace information, non-square pixels, or animation.",
+        "severity": 1,
+        "pointer": "/images/1"
+      },
+      {
+        "code": "IMAGE_FEATURES_UNSUPPORTED",
+        "message": "Image contains unsupported features like non-default colorspace information, non-square pixels, or animation.",
+        "severity": 1,
+        "pointer": "/images/4"
+      },
+      {
+        "code": "IMAGE_FEATURES_UNSUPPORTED",
+        "message": "Image contains unsupported features like non-default colorspace information, non-square pixels, or animation.",
+        "severity": 1,
+        "pointer": "/images/7"
+      },
+      {
+        "code": "IMAGE_FEATURES_UNSUPPORTED",
+        "message": "Image contains unsupported features like non-default colorspace information, non-square pixels, or animation.",
+        "severity": 1,
+        "pointer": "/images/9"
+      },
+      {
+        "code": "IMAGE_FEATURES_UNSUPPORTED",
+        "message": "Image contains unsupported features like non-default colorspace information, non-square pixels, or animation.",
+        "severity": 1,
+        "pointer": "/images/11"
+      },
+      {
+        "code": "IMAGE_FEATURES_UNSUPPORTED",
+        "message": "Image contains unsupported features like non-default colorspace information, non-square pixels, or animation.",
+        "severity": 1,
+        "pointer": "/images/14"
+      },
+      {
+        "code": "IMAGE_FEATURES_UNSUPPORTED",
+        "message": "Image contains unsupported features like non-default colorspace information, non-square pixels, or animation.",
+        "severity": 1,
+        "pointer": "/images/16"
+      },
+      {
+        "code": "IMAGE_FEATURES_UNSUPPORTED",
+        "message": "Image contains unsupported features like non-default colorspace information, non-square pixels, or animation.",
+        "severity": 1,
+        "pointer": "/images/19"
+      },
+      {
+        "code": "IMAGE_FEATURES_UNSUPPORTED",
+        "message": "Image contains unsupported features like non-default colorspace information, non-square pixels, or animation.",
+        "severity": 1,
+        "pointer": "/images/22"
+      },
+      {
+        "code": "IMAGE_FEATURES_UNSUPPORTED",
+        "message": "Image contains unsupported features like non-default colorspace information, non-square pixels, or animation.",
+        "severity": 1,
+        "pointer": "/images/24"
+      },
+      {
+        "code": "IMAGE_FEATURES_UNSUPPORTED",
+        "message": "Image contains unsupported features like non-default colorspace information, non-square pixels, or animation.",
+        "severity": 1,
+        "pointer": "/images/26"
+      },
+      {
+        "code": "IMAGE_FEATURES_UNSUPPORTED",
+        "message": "Image contains unsupported features like non-default colorspace information, non-square pixels, or animation.",
+        "severity": 1,
+        "pointer": "/images/28"
+      },
+      {
+        "code": "IMAGE_FEATURES_UNSUPPORTED",
+        "message": "Image contains unsupported features like non-default colorspace information, non-square pixels, or animation.",
+        "severity": 1,
+        "pointer": "/images/31"
+      },
+      {
+        "code": "IMAGE_FEATURES_UNSUPPORTED",
+        "message": "Image contains unsupported features like non-default colorspace information, non-square pixels, or animation.",
+        "severity": 1,
+        "pointer": "/images/33"
+      }
+    ]
+  },
+  "browser": {
+    "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+    "nodes": 133,
+    "nodes_with_extras": 89,
+    "triangles": 55758,
+    "render": {
+      "third_person": {
+        "calls": 51,
+        "triangles": 55710
+      },
+      "wide": {
+        "calls": 52,
+        "triangles": 55758
+      },
+      "finish": {
+        "calls": 44,
+        "triangles": 54994
+      }
+    },
+    "yard_bounds": {
+      "min": [
+        -30,
+        -0.019999999552965164,
+        -172
+      ],
+      "max": [
+        30,
+        0,
+        15
+      ]
+    },
+    "shepherd_anchor": {
+      "pos": [
+        0,
+        4,
+        -185
+      ],
+      "fwd": [
+        0,
+        0,
+        1
+      ]
+    },
+    "spawn_01": {
+      "pos": [
+        -1.5,
+        0,
+        2
+      ],
+      "fwd": [
+        -8.742277657347553e-8,
+        0,
+        -0.9999999999999964
+      ]
+    }
+  },
+  "materials": [
+    {
+      "name": "MAT_Shepherd_Placeholder",
+      "type": "MeshStandardMaterial",
+      "map": null,
+      "normal": null,
+      "rough": null,
+      "metal": null,
+      "alphaTest": 0,
+      "transparent": false,
+      "side": 0,
+      "emissive": [
+        0,
+        0,
+        0
+      ],
+      "emissiveIntensity": 1
+    },
+    {
+      "name": "MAT_Steel_Dark",
+      "type": "MeshStandardMaterial",
+      "map": {
+        "w": 512,
+        "h": 512,
+        "cs": "srgb"
+      },
+      "normal": {
+        "w": 512,
+        "h": 512,
+        "cs": ""
+      },
+      "rough": {
+        "w": 512,
+        "h": 512,
+        "cs": ""
+      },
+      "metal": {
+        "w": 512,
+        "h": 512,
+        "cs": ""
+      },
+      "alphaTest": 0,
+      "transparent": false,
+      "side": 0,
+      "emissive": [
+        0,
+        0,
+        0
+      ],
+      "emissiveIntensity": 1
+    },
+    {
+      "name": "MAT_Shepherd_Face",
+      "type": "MeshStandardMaterial",
+      "map": null,
+      "normal": null,
+      "rough": null,
+      "metal": null,
+      "alphaTest": 0,
+      "transparent": false,
+      "side": 0,
+      "emissive": [
+        0.5100000345706945,
+        0.4920000152587889,
+        0.4200000095367429
+      ],
+      "emissiveIntensity": 1
+    },
+    {
+      "name": "MAT_Shepherd_Lantern",
+      "type": "MeshStandardMaterial",
+      "map": null,
+      "normal": null,
+      "rough": null,
+      "metal": null,
+      "alphaTest": 0,
+      "transparent": false,
+      "side": 0,
+      "emissive": [
+        1,
+        0.699999988079071,
+        0.30000001192092896
+      ],
+      "emissiveIntensity": 6
+    },
+    {
+      "name": "MAT_Ground_DirtGrass",
+      "type": "MeshStandardMaterial",
+      "map": {
+        "w": 1024,
+        "h": 1024,
+        "cs": "srgb"
+      },
+      "normal": {
+        "w": 512,
+        "h": 512,
+        "cs": ""
+      },
+      "rough": {
+        "w": 512,
+        "h": 512,
+        "cs": ""
+      },
+      "metal": {
+        "w": 512,
+        "h": 512,
+        "cs": ""
+      },
+      "alphaTest": 0,
+      "transparent": false,
+      "side": 0,
+      "emissive": [
+        0,
+        0,
+        0
+      ],
+      "emissiveIntensity": 1
+    },
+    {
+      "name": "MAT_Concrete_Weathered",
+      "type": "MeshStandardMaterial",
+      "map": {
+        "w": 1024,
+        "h": 1024,
+        "cs": "srgb"
+      },
+      "normal": {
+        "w": 512,
+        "h": 512,
+        "cs": ""
+      },
+      "rough": {
+        "w": 512,
+        "h": 512,
+        "cs": ""
+      },
+      "metal": {
+        "w": 512,
+        "h": 512,
+        "cs": ""
+      },
+      "alphaTest": 0,
+      "transparent": false,
+      "side": 0,
+      "emissive": [
+        0,
+        0,
+        0
+      ],
+      "emissiveIntensity": 1
+    },
+    {
+      "name": "MAT_Stripes_Hazard",
+      "type": "MeshStandardMaterial",
+      "map": {
+        "w": 256,
+        "h": 256,
+        "cs": "srgb"
+      },
+      "normal": null,
+      "rough": {
+        "w": 256,
+        "h": 256,
+        "cs": ""
+      },
+      "metal": {
+        "w": 256,
+        "h": 256,
+        "cs": ""
+      },
+      "alphaTest": 0,
+      "transparent": false,
+      "side": 0,
+      "emissive": [
+        0,
+        0,
+        0
+      ],
+      "emissiveIntensity": 1
+    },
+    {
+      "name": "MAT_ChainLink",
+      "type": "MeshStandardMaterial",
+      "map": {
+        "w": 512,
+        "h": 512,
+        "cs": "srgb"
+      },
+      "normal": null,
+      "rough": {
+        "w": 256,
+        "h": 256,
+        "cs": ""
+      },
+      "metal": {
+        "w": 256,
+        "h": 256,
+        "cs": ""
+      },
+      "alphaTest": 0.5,
+      "transparent": false,
+      "side": 2,
+      "emissive": [
+        0,
+        0,
+        0
+      ],
+      "emissiveIntensity": 1
+    },
+    {
+      "name": "MAT_Steel_Galvanised",
+      "type": "MeshStandardMaterial",
+      "map": {
+        "w": 512,
+        "h": 512,
+        "cs": "srgb"
+      },
+      "normal": {
+        "w": 256,
+        "h": 256,
+        "cs": ""
+      },
+      "rough": {
+        "w": 256,
+        "h": 256,
+        "cs": ""
+      },
+      "metal": {
+        "w": 256,
+        "h": 256,
+        "cs": ""
+      },
+      "alphaTest": 0,
+      "transparent": false,
+      "side": 0,
+      "emissive": [
+        0,
+        0,
+        0
+      ],
+      "emissiveIntensity": 1
+    },
+    {
+      "name": "MAT_Checker_Finish",
+      "type": "MeshStandardMaterial",
+      "map": {
+        "w": 256,
+        "h": 256,
+        "cs": "srgb"
+      },
+      "normal": null,
+      "rough": {
+        "w": 256,
+        "h": 256,
+        "cs": ""
+      },
+      "metal": {
+        "w": 256,
+        "h": 256,
+        "cs": ""
+      },
+      "alphaTest": 0,
+      "transparent": false,
+      "side": 0,
+      "emissive": [
+        0,
+        0,
+        0
+      ],
+      "emissiveIntensity": 1
+    },
+    {
+      "name": "MAT_Light_Warm",
+      "type": "MeshStandardMaterial",
+      "map": null,
+      "normal": null,
+      "rough": null,
+      "metal": null,
+      "alphaTest": 0,
+      "transparent": false,
+      "side": 0,
+      "emissive": [
+        1,
+        0.5799999833106995,
+        0.25999999046325684
+      ],
+      "emissiveIntensity": 12
+    },
+    {
+      "name": "MAT_Metal_RustPaint",
+      "type": "MeshStandardMaterial",
+      "map": {
+        "w": 1024,
+        "h": 1024,
+        "cs": "srgb"
+      },
+      "normal": {
+        "w": 512,
+        "h": 512,
+        "cs": ""
+      },
+      "rough": {
+        "w": 512,
+        "h": 512,
+        "cs": ""
+      },
+      "metal": {
+        "w": 512,
+        "h": 512,
+        "cs": ""
+      },
+      "alphaTest": 0,
+      "transparent": false,
+      "side": 0,
+      "emissive": [
+        0,
+        0,
+        0
+      ],
+      "emissiveIntensity": 1
+    },
+    {
+      "name": "MAT_Cable",
+      "type": "MeshStandardMaterial",
+      "map": null,
+      "normal": null,
+      "rough": null,
+      "metal": null,
+      "alphaTest": 0,
+      "transparent": false,
+      "side": 0,
+      "emissive": [
+        0,
+        0,
+        0
+      ],
+      "emissiveIntensity": 1
+    },
+    {
+      "name": "MAT_Glass_Window_Warm",
+      "type": "MeshStandardMaterial",
+      "map": null,
+      "normal": null,
+      "rough": null,
+      "metal": null,
+      "alphaTest": 0,
+      "transparent": false,
+      "side": 0,
+      "emissive": [
+        1,
+        0.550000011920929,
+        0.2199999988079071
+      ],
+      "emissiveIntensity": 3
+    },
+    {
+      "name": "MAT_Wood_Weathered",
+      "type": "MeshStandardMaterial",
+      "map": {
+        "w": 512,
+        "h": 512,
+        "cs": "srgb"
+      },
+      "normal": {
+        "w": 512,
+        "h": 512,
+        "cs": ""
+      },
+      "rough": {
+        "w": 256,
+        "h": 256,
+        "cs": ""
+      },
+      "metal": {
+        "w": 256,
+        "h": 256,
+        "cs": ""
+      },
+      "alphaTest": 0,
+      "transparent": false,
+      "side": 0,
+      "emissive": [
+        0,
+        0,
+        0
+      ],
+      "emissiveIntensity": 1
+    },
+    {
+      "name": "MAT_Paint_Line",
+      "type": "MeshStandardMaterial",
+      "map": {
+        "w": 256,
+        "h": 256,
+        "cs": "srgb"
+      },
+      "normal": null,
+      "rough": {
+        "w": 256,
+        "h": 256,
+        "cs": ""
+      },
+      "metal": {
+        "w": 256,
+        "h": 256,
+        "cs": ""
+      },
+      "alphaTest": 0.5,
+      "transparent": false,
+      "side": 0,
+      "emissive": [
+        0,
+        0,
+        0
+      ],
+      "emissiveIntensity": 1
+    },
+    {
+      "name": "MAT_Puddle",
+      "type": "MeshStandardMaterial",
+      "map": null,
+      "normal": null,
+      "rough": null,
+      "metal": null,
+      "alphaTest": 0,
+      "transparent": false,
+      "side": 0,
+      "emissive": [
+        0,
+        0,
+        0
+      ],
+      "emissiveIntensity": 1
+    },
+    {
+      "name": "MAT_Light_Aviation",
+      "type": "MeshStandardMaterial",
+      "map": null,
+      "normal": null,
+      "rough": null,
+      "metal": null,
+      "alphaTest": 0,
+      "transparent": false,
+      "side": 0,
+      "emissive": [
+        1,
+        0.41999998688697815,
+        0.07999999821186066
+      ],
+      "emissiveIntensity": 20
+    },
+    {
+      "name": "MAT_Silhouette",
+      "type": "MeshStandardMaterial",
+      "map": null,
+      "normal": null,
+      "rough": null,
+      "metal": null,
+      "alphaTest": 0,
+      "transparent": false,
+      "side": 0,
+      "emissive": [
+        0,
+        0,
+        0
+      ],
+      "emissiveIntensity": 1
+    },
+    {
+      "name": "MAT_Ground_Far",
+      "type": "MeshStandardMaterial",
+      "map": {
+        "w": 1024,
+        "h": 1024,
+        "cs": "srgb"
+      },
+      "normal": {
+        "w": 512,
+        "h": 512,
+        "cs": ""
+      },
+      "rough": {
+        "w": 512,
+        "h": 512,
+        "cs": ""
+      },
+      "metal": {
+        "w": 512,
+        "h": 512,
+        "cs": ""
+      },
+      "alphaTest": 0,
+      "transparent": false,
+      "side": 0,
+      "emissive": [
+        0,
+        0,
+        0
+      ],
+      "emissiveIntensity": 1
+    },
+    {
+      "name": "MAT_Light_Sodium",
+      "type": "MeshStandardMaterial",
+      "map": null,
+      "normal": null,
+      "rough": null,
+      "metal": null,
+      "alphaTest": 0,
+      "transparent": false,
+      "side": 0,
+      "emissive": [
+        1,
+        0.5,
+        0.18000000715255737
+      ],
+      "emissiveIntensity": 8
+    },
+    {
+      "name": "MAT_Foliage",
+      "type": "MeshStandardMaterial",
+      "map": {
+        "w": 256,
+        "h": 256,
+        "cs": "srgb"
+      },
+      "normal": null,
+      "rough": {
+        "w": 256,
+        "h": 256,
+        "cs": ""
+      },
+      "metal": {
+        "w": 256,
+        "h": 256,
+        "cs": ""
+      },
+      "alphaTest": 0,
+      "transparent": false,
+      "side": 2,
+      "emissive": [
+        0,
+        0,
+        0
+      ],
+      "emissiveIntensity": 1
+    },
+    {
+      "name": "MAT_Signal_Red",
+      "type": "MeshStandardMaterial",
+      "map": null,
+      "normal": null,
+      "rough": null,
+      "metal": null,
+      "alphaTest": 0,
+      "transparent": false,
+      "side": 0,
+      "emissive": [
+        1,
+        0.03999999910593033,
+        0.029999999329447746
+      ],
+      "emissiveIntensity": 1
+    },
+    {
+      "name": "MAT_Signal_Amber",
+      "type": "MeshStandardMaterial",
+      "map": null,
+      "normal": null,
+      "rough": null,
+      "metal": null,
+      "alphaTest": 0,
+      "transparent": false,
+      "side": 0,
+      "emissive": [
+        1,
+        0.44999998807907104,
+        0.019999999552965164
+      ],
+      "emissiveIntensity": 1
+    },
+    {
+      "name": "MAT_Signal_Green",
+      "type": "MeshStandardMaterial",
+      "map": null,
+      "normal": null,
+      "rough": null,
+      "metal": null,
+      "alphaTest": 0,
+      "transparent": false,
+      "side": 0,
+      "emissive": [
+        0.05000000074505806,
+        1,
+        0.25
+      ],
+      "emissiveIntensity": 1
+    },
+    {
+      "name": "MAT_TimerBoard_Screen",
+      "type": "MeshStandardMaterial",
+      "map": null,
+      "normal": null,
+      "rough": null,
+      "metal": null,
+      "alphaTest": 0,
+      "transparent": false,
+      "side": 0,
+      "emissive": [
+        0.4000000059604645,
+        0.17999999791383736,
+        0.040000001192092904
+      ],
+      "emissiveIntensity": 1
+    },
+    {
+      "name": "MAT_Stripes_Barrier",
+      "type": "MeshStandardMaterial",
+      "map": {
+        "w": 256,
+        "h": 256,
+        "cs": "srgb"
+      },
+      "normal": null,
+      "rough": {
+        "w": 256,
+        "h": 256,
+        "cs": ""
+      },
+      "metal": {
+        "w": 256,
+        "h": 256,
+        "cs": ""
+      },
+      "alphaTest": 0,
+      "transparent": false,
+      "side": 0,
+      "emissive": [
+        0,
+        0,
+        0
+      ],
+      "emissiveIntensity": 1
+    },
+    {
+      "name": "MAT_Asphalt_Wet",
+      "type": "MeshStandardMaterial",
+      "map": {
+        "w": 1024,
+        "h": 1024,
+        "cs": "srgb"
+      },
+      "normal": {
+        "w": 1024,
+        "h": 1024,
+        "cs": ""
+      },
+      "rough": {
+        "w": 512,
+        "h": 512,
+        "cs": ""
+      },
+      "metal": {
+        "w": 512,
+        "h": 512,
+        "cs": ""
+      },
+      "alphaTest": 0,
+      "transparent": false,
+      "side": 0,
+      "emissive": [
+        0,
+        0,
+        0
+      ],
+      "emissiveIntensity": 1
+    },
+    {
+      "name": "MAT_VFX_Haze",
+      "type": "MeshStandardMaterial",
+      "map": {
+        "w": 256,
+        "h": 256,
+        "cs": "srgb"
+      },
+      "normal": null,
+      "rough": null,
+      "metal": null,
+      "alphaTest": 0,
+      "transparent": true,
+      "side": 0,
+      "emissive": [
+        0.07500000298023224,
+        0.13750000298023224,
+        0.13750000298023224
+      ],
+      "emissiveIntensity": 1
+    }
+  ],
+  "screenshots": [
+    "blender/exports/STAGE_01_ENVIRONMENT_browser/STAGE_01_ENV_browser_third_person.png",
+    "blender/exports/STAGE_01_ENVIRONMENT_browser/STAGE_01_ENV_browser_wide.png",
+    "blender/exports/STAGE_01_ENVIRONMENT_browser/STAGE_01_ENV_browser_finish.png"
+  ]
+}
