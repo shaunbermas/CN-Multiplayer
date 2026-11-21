@@ -1,4 +1,5 @@
 // Keyboard + pointer-lock mouse look. Camera yaw 0 faces -Z (the course).
+import { settings } from '../ui/settings.ts';
 export const input = { forward: 0, right: 0, yaw: 0, pitch: -0.12, respawn: false, skip: false, cycle: false };
 
 const held = new Set<string>();
@@ -21,8 +22,9 @@ export function attachInput(canvas: HTMLElement): () => void {
   const click = () => { if (document.pointerLockElement !== canvas) canvas.requestPointerLock?.(); };
   const move = (e: MouseEvent) => {
     if (document.pointerLockElement !== canvas) return;
-    input.yaw -= e.movementX * 0.0025;
-    input.pitch = Math.max(-0.6, Math.min(0.35, input.pitch - e.movementY * 0.002));
+    input.yaw -= e.movementX * 0.0025 * settings.sensitivity;
+    const dy = e.movementY * 0.002 * settings.sensitivity * (settings.invertY ? -1 : 1);
+    input.pitch = Math.max(-0.6, Math.min(0.35, input.pitch - dy));
   };
   window.addEventListener('keydown', down);
   window.addEventListener('keyup', up);

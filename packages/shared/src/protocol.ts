@@ -25,10 +25,12 @@ export type ClientMessage =
   | { t: 'start'; opts?: StartRequestOptions }
   | { t: 'skip' }
   | { t: 'probe_ack'; id: number }
-  | { t: 'ping'; at: number };
+  | { t: 'ping'; at: number }
+  /** Stage 1.5 lobby: the player is ready (the host can still start at any time). */
+  | { t: 'ready'; ready: boolean };
 
 // ---- server -> client
-export interface RosterEntry { id: string; name: string; spawn: number }
+export interface RosterEntry { id: string; name: string; spawn: number; /** Ready in the lobby (Stage 1.5). */ ready?: boolean }
 
 /** One player in a snapshot: [id, x, z, vx, vz, yaw, ack, status, finishTime]. */
 export type SnapRow = [string, number, number, number, number, number, number, number, number];

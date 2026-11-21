@@ -10,6 +10,8 @@ export interface PlayerView {
   id: string; name: string; spawn: number;
   x: number; z: number; vx: number; vz: number; yaw: number;
   ack: number; status: PlayerStatus; finishTime: number;
+  /** Lobby ready flag (Stage 1.5). */
+  ready: boolean;
 }
 
 export type ResultRow = Placing & { name: string };
@@ -93,6 +95,9 @@ export class RoomClient {
             c.events.push({ kind: msg.kind, id: msg.id, at: Date.now(), roundT: msg.at });
             if (c.events.length > 100) c.events.shift();
             break;
+          case 'pong':
+            if (typeof msg.at === 'number') c.rttMs = Math.max(0, Date.now() - msg.at);
+            break;
           case 'probe':
             c.send({ t: 'probe_ack', id: msg.id });
             break;
@@ -112,12 +117,17 @@ export class RoomClient {
     for (const id of [...this.players.keys()]) if (!ids.has(id)) this.players.delete(id);
     for (const r of roster) {
       const p = this.players.get(r.id);
-      if (p) { p.name = r.name; p.spawn = r.spawn; continue; }
+      if (p) { p.name = r.name; p.spawn = r.spawn; p.ready = !!r.ready; continue; }
       this.players.set(r.id, {
-        id: r.id, name: r.name, spawn: r.spawn, x: 0, z: 0, vx: 0, vz: 0, yaw: 0, ack: 0, status: 'active', finishTime: -1,
+        id: r.id, name: r.name, spawn: r.spawn, x: 0, z: 0, vx: 0, vz: 0, yaw: 0, ack: 0, status: 'active', finishTime: -1, ready: !!r.ready,
       });
     }
   }
+
+  /** Last measured round trip to the room (ms), from ping/pong; -1 until measured (Stage 1.5 HUD). */
+  rttMs = -1;
+  /** Measure the round trip (the server echoes `at`). */
+  ping(): void { this.send({ t: 'ping', at: Date.now() }); }
 
   get self(): PlayerView | undefined { return this.players.get(this.id); }
   get isHost(): boolean { return this.round.host === this.id; }
@@ -133,6 +143,8 @@ export class RoomClient {
   }
 
   start(opts?: StartRequestOptions): void { this.send({ t: 'start', opts }); }
+  /** Stage 1.5 lobby ready toggle. */
+  setReady(ready: boolean): void { this.send({ t: 'ready', ready }); }
   skipBriefing(): void { this.send({ t: 'skip' }); }
 
   onClose(h: (code: number, reason: string) => void): void { this.closeHandlers.push(h); }

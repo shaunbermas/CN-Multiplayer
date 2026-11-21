@@ -5,6 +5,7 @@
 // It never steps back up during a session, so the picture does not flicker between tiers.
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef, useSyncExternalStore } from 'react';
+import { settings } from '../ui/settings.ts';
 
 export type Quality = 'low' | 'medium' | 'high';
 export const QUALITY_ORDER: Quality[] = ['low', 'medium', 'high'];
@@ -25,7 +26,8 @@ function pinnedFromUrl(): Quality | null {
   return q === 'low' || q === 'medium' || q === 'high' ? q : null;
 }
 
-const pinned = pinnedFromUrl();
+// The URL wins (tests, support links); otherwise the player's saved Settings choice; otherwise Auto.
+const pinned = pinnedFromUrl() ?? (settings.graphics === 'auto' ? null : settings.graphics);
 const deviceDpr = typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1;
 
 export const quality = {
@@ -46,6 +48,13 @@ export function setQuality(tier: Quality) {
   if (tier === quality.tier) return;
   quality.tier = tier;
   emit();
+}
+
+/** Settings screen: Auto (High with the adaptive fallback) or a pinned tier. */
+export function applyGraphicsSetting(g: 'auto' | Quality) {
+  if (g === 'auto') { quality.pinned = false; setQuality('high'); return; }
+  quality.pinned = true;
+  setQuality(g);
 }
 
 /** React hook: the current tier, re-rendering when it changes. */

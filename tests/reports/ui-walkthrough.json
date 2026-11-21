@@ -1,0 +1,26 @@
+{
+  "result": "PASS",
+  "errors": [],
+  "date": "2026-11-21T21:25:15.101Z",
+  "screens": [
+    "01_menu",
+    "01b_menu_keyboard_focus",
+    "02_how_to_play",
+    "03_settings",
+    "04_join_with_code",
+    "05_invite_link",
+    "06_lobby_30_slots",
+    "07_character_select_pending",
+    "08_briefing",
+    "09_countdown",
+    "10_hud_green",
+    "11_hud_red_scanning",
+    "12_elimination_feed",
+    "13_you_were_spotted",
+    "14_spectator",
+    "15_results",
+    "16_room_full",
+    "17_connection_lost"
+  ],
+  "renderer": "headless Chromium, SwiftShader, low tier"
+}

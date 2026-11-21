@@ -76,7 +76,7 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
       <mesh ref={body} geometry={capsuleGeo} material={material} castShadow />
       <mesh ref={nose} geometry={noseGeo} material={material} castShadow />
       {(!local || status === 'spotted') && (
-        <Html position={[0, 1.65, 0]} center distanceFactor={14} zIndexRange={[10, 0]}>
+        <Html position={[0, 1.65, 0]} center distanceFactor={9} zIndexRange={[10, 0]}>
           <div className={`nametag ${status}`}>{status === 'spotted' ? 'SPOTTED!' : p0?.name}</div>
         </Html>
       )}
@@ -138,7 +138,8 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
       if (active.length) {
         const t = active[watch.current % active.length];
         fx = t.x; fz = t.z;
-      }
+        hud.spectating = t.name;
+      } else hud.spectating = '';
     }
     const fwx = -Math.sin(input.yaw), fwz = -Math.cos(input.yaw);
     const dist = 5.5;

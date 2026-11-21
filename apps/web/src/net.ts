@@ -11,8 +11,19 @@ export function roomUrl(code = DEFAULT_ROOM): string {
   return `${proto}://${location.host}/api/room/${code}/ws`;
 }
 
-export async function joinTrial(name: string): Promise<TrialRoom> {
-  const room = await RoomClient.connect(roomUrl(), name);
+/** Private room codes: 5 letters/digits without look-alikes (server accepts [a-z0-9-]{1,32}). */
+export function newRoomCode(): string {
+  const abc = 'abcdefghjkmnpqrstuvwxyz23456789';
+  const r = crypto.getRandomValues(new Uint32Array(5));
+  return Array.from(r, (n) => abc[n % abc.length]).join('');
+}
+
+export function inviteLink(code: string): string {
+  return `${location.origin}${location.pathname}?room=${encodeURIComponent(code)}`;
+}
+
+export async function joinTrial(name: string, code = DEFAULT_ROOM): Promise<TrialRoom> {
+  const room = await RoomClient.connect(roomUrl(code), name);
   // Wait for the first snapshot so our own position is known before the scene starts.
   if (!room.snapshots) await new Promise<void>((res) => room.onSnapshot(res));
   return room;
