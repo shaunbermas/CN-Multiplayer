@@ -139,7 +139,14 @@ function Watcher({ room }: { room: TrialRoom }) {
       if (!gltf.scene.getObjectByName(a)) stage01Assets.problems.push(`watcher: anchor ${a} missing`);
     }
     gltf.scene.traverse((o) => { if ((o as THREE.Mesh).isMesh) o.frustumCulled = false; }); // skinned bounds move with the clips
+    // Measure in the asset's own frame: by now the scene may already sit under the plinth-height group,
+    // so detach it for the measurement (skinned bounds use the bones' world matrices).
+    const parent = gltf.scene.parent;
+    parent?.remove(gltf.scene);
+    gltf.scene.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(gltf.scene, true);
+    parent?.add(gltf.scene);
+    gltf.scene.updateMatrixWorld(true);
     stage01Assets.watcherHeight = +(box.max.y - box.min.y).toFixed(3);
     if (Math.abs(stage01Assets.watcherHeight - w.height) > 0.2) stage01Assets.problems.push(`watcher: height ${stage01Assets.watcherHeight} m, stage expects ${w.height} m`);
     if (Math.abs(box.min.y) > 0.05) stage01Assets.problems.push(`watcher: feet at ${box.min.y.toFixed(2)} m, expected 0 at the root`);

@@ -132,7 +132,12 @@ try {
   await pageB.keyboard.up('KeyW');
   const alphaStatus = (await players(pageA)).find((p) => p.id === idA)?.status;
   if (alphaStatus !== 'active') errors.push(`Alpha (standing still) ended up ${alphaStatus}`);
-  await waitFor(async () => (await round(pageA)).phase === 'results', 'results', 30_000);
+  // Round end comes from the server: wait on Beta (unthrottled, in front), then let the CPU-throttled Alpha
+  // catch up on its snapshot backlog before reading its results screen.
+  await waitFor(async () => (await round(pageB)).phase === 'results', 'results (seen by Beta)', 45_000);
+  await pageA.bringToFront();
+  await waitFor(async () => (await pageA.evaluate(() => window.__cn.results().length)) >= 2
+    && (await pageA.locator('.results').count()) > 0, 'results (seen by Alpha)', 30_000);
   await sleep(600);
   const results = await pageA.evaluate(() => window.__cn.results());
   if (results.map((r) => r.name).join() !== 'Alpha,Beta') errors.push(`Results order ${results.map((r) => r.name).join(', ')}`);
