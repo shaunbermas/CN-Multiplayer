@@ -1,7 +1,7 @@
 {
   "result": "PASS",
   "errors": [],
-  "date": "2026-11-21T16:19:28.888Z",
+  "date": "2026-11-21T17:54:09.764Z",
   "seed": 12345,
   "round_s": 25,
   "first_red_s": 6.78,
@@ -19,8 +19,7 @@
   "signals_seen": [
     "green",
     "warning",
-    "red",
-    "none"
+    "red"
   ],
   "tournament_round": {
     "target": 3,

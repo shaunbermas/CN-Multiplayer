@@ -36,6 +36,12 @@ describe('Watcher clip adapter', () => {
     expect(pick({ signal: 'red', into: 3, sinceSpotted: 2 }).clip).toBe('Watcher_RedSignal');
   });
 
+  it('plays the opening clip in full on a slow client that first draws a segment late', () => {
+    expect(pick({ signal: 'red', into: 1.6, sinceSegmentSeen: 0 }).clip).toBe('Watcher_FocusLock');
+    expect(pick({ signal: 'red', into: 2.8, sinceSegmentSeen: 1.2 }).clip).toBe('Watcher_RedSignal');
+    expect(pick({ signal: 'green', into: 2, sinceSegmentSeen: 0.1 }).clip).toBe('Watcher_TurnAway');
+  });
+
   it('restarts a clip only when its key changes (same segment = same key)', () => {
     expect(pick({ into: 2 }).key).toBe(pick({ into: 3 }).key);
     expect(pick({ into: 2 }).key).not.toBe(pick({ into: 2, segmentStart: 10 }).key);

@@ -17,12 +17,16 @@ const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 
 const PORT = Number(process.env.E2E_PORT ?? 8797);
+// Test round length (test mode only). Long enough that a slow 2-core CI runner, where each check of the
+// software-rendered pages takes seconds, still finishes the in-round checks before the round ends.
+const ROUND_S = 75;
 const shots = `${root}tests/reports/screenshots`;
 mkdirSync(shots, { recursive: true });
 if (process.env.SKIP_BUILD !== '1') execSync('npm run build', { cwd: root, stdio: 'ignore' });
 const errors = [];
 const t0 = Date.now();
-const step = (label) => console.log(`[e2e ${((Date.now() - t0) / 1000).toFixed(1)} s] ${label}`);
+const steps = [];
+const step = (label) => { const line = `${((Date.now() - t0) / 1000).toFixed(1)} s ${label}`; steps.push(line); console.log(`[e2e] ${line}`); };
 let greenClip = '', redClip = '', sigAtSpot = '', assetA = { watcherHeight: 0, watcherClips: [], quality: '', problems: [] };
 const worker = startWorker(PORT);
 let browser;
@@ -52,7 +56,7 @@ try {
     p.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(`${tag}: ${m.text()}`); });
   }
   // Alpha joins first, so Alpha is the host; the test seed makes the round deterministic (test mode only).
-  await pageA.goto(url('Alpha', '&testSeed=12345&testRound=30&testBriefing=1'));
+  await pageA.goto(url('Alpha', `&testSeed=12345&testRound=${ROUND_S}&testBriefing=1`));
   await waitFor(async () => pageA.evaluate(() => !!window.__cn), 'Alpha joined first (host)');
   await pageB.goto(url('Beta'));
   await waitFor(async () => (await pageA.evaluate(() => !!window.__cn)) && (await pageB.evaluate(() => !!window.__cn)), 'both pages joined');
@@ -119,7 +123,7 @@ try {
   step('Beta spotted');
   // The server stamps each spotting with its round time; the seeded schedule says which signal that was.
   const spotEv = (await pageB.evaluate(() => window.__cn.events())).find((e) => e.kind === 'spotted' && e.id === idB);
-  sigAtSpot = segmentAt(buildSchedule(12345, 30), spotEv?.roundT ?? -1)?.signal ?? 'none';
+  sigAtSpot = segmentAt(buildSchedule(12345, ROUND_S), spotEv?.roundT ?? -1)?.signal ?? 'none';
   if (sigAtSpot !== 'red') errors.push(`Beta was spotted at ${spotEv?.roundT} s during ${sigAtSpot}, expected red`);
   // The Watcher reacts to the server's event: Watcher_Detect plays after the spot (clip history, so slow
   // polling cannot miss it).
@@ -143,7 +147,7 @@ try {
   // Round end comes from the server. The results message persists after the 20 s results screen closes, so
   // wait on it (from unthrottled Beta) rather than on the phase, which a slow CI runner can poll past.
   step('waiting for results');
-  await waitFor(async () => (await pageB.evaluate(() => window.__cn.resultsMeta())) !== null, 'results message (Beta)', 60_000);
+  await waitFor(async () => (await pageB.evaluate(() => window.__cn.resultsMeta())) !== null, 'results message (Beta)', (ROUND_S + 30) * 1000);
   step(`results on Beta, phase ${(await round(pageB)).phase}`);
   if ((await round(pageB)).phase === 'results') {
     await waitFor(async () => (await pageB.locator('.results .tag.out').count()) > 0, 'results screen on Beta', 10_000)
@@ -172,12 +176,14 @@ try {
     screenshots: ['s1-3_start_view.png', 's1-3_after_walk.png', 's1-3_other_player_view.png', 's1-4_green_view.png', 's1-4_red_view.png', 's1-4_spotted_view.png', 's1-4_results_view.png'].map((f) => `tests/reports/screenshots/${f}`),
     renderer: 'headless Chromium, software WebGL (SwiftShader)',
     player_a_cpu_throttle: throttle,
+    steps,
   };
   writeReport('e2e-two-browsers.json', report);
   console.log(JSON.stringify(report, null, 2));
 } catch (e) {
   errors.push(String(e?.stack ?? e));
   console.error(e);
+  console.error(JSON.stringify({ steps }, null, 2));
 } finally {
   await browser?.close();
   worker.stop();

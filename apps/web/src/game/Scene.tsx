@@ -5,6 +5,7 @@ import { Component, Suspense, useEffect, useMemo, useRef, useState, type ReactNo
 import * as THREE from 'three';
 import type { PlayerView, TrialRoom } from '../net.ts';
 import { hud } from './hudStore.ts';
+import { AdaptiveQuality, quality } from './quality.ts';
 import { attachInput, input } from './input.ts';
 import { Predictor } from './predictor.ts';
 import { STAGE_SCENES } from '../stages/registry.ts';
@@ -63,8 +64,8 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
   const waiting = status === 'waiting';
   return (
     <group ref={group} position={[p0?.x ?? 0, 0, p0?.z ?? 0]} visible={!waiting || !local}>
-      <mesh ref={body} geometry={capsuleGeo} material={material} />
-      <mesh ref={nose} geometry={noseGeo} material={material} />
+      <mesh ref={body} geometry={capsuleGeo} material={material} castShadow />
+      <mesh ref={nose} geometry={noseGeo} material={material} castShadow />
       {(!local || status === 'spotted') && (
         <Html position={[0, 1.65, 0]} center distanceFactor={14} zIndexRange={[10, 0]}>
           <div className={`nametag ${status}`}>{status === 'spotted' ? 'SPOTTED!' : p0?.name}</div>
@@ -162,6 +163,19 @@ function Players({ room, predictor }: { room: TrialRoom; predictor: React.RefObj
   return <>{ids.current.map((id) => <Contestant key={id} id={id} room={room} local={id === room.id} predictor={predictor} />)}</>;
 }
 
+/** Renderer statistics of the last frame, for tests (window.__cn.renderInfo). */
+const renderInfo = { calls: 0, triangles: 0, programs: 0, textures: 0, dpr: 1 };
+function RenderInfo() {
+  useFrame(({ gl }) => {
+    renderInfo.calls = gl.info.render.calls;
+    renderInfo.triangles = gl.info.render.triangles;
+    renderInfo.programs = gl.info.programs?.length ?? 0;
+    renderInfo.textures = gl.info.memory.textures;
+    renderInfo.dpr = gl.getPixelRatio();
+  });
+  return null;
+}
+
 /** Shows a readable error instead of a blank or fake stage when an asset fails to load (Prompt 07 contract). */
 class StageErrorBoundary extends Component<{ children: ReactNode; onError: (msg: string) => void }, { failed: boolean }> {
   state = { failed: false };
@@ -192,11 +206,17 @@ export function Scene({ room, onStageError }: { room: TrialRoom; onStageError: (
       watcher: stageGeo.watcher,
       spawns: stageGeo.spawns,
       assets: () => JSON.parse(JSON.stringify(stageModule.assets)),
+      quality: () => JSON.parse(JSON.stringify(quality)),
+      renderInfo: () => ({ ...renderInfo }),
     };
   }, [room, stageModule]);
   const StageScene = stageModule.Scene;
   return (
-    <Canvas camera={{ fov: 60, near: 0.1, far: 1500 }} gl={{ antialias: true, preserveDrawingBuffer: true }} dpr={[1, 2]}>
+    // Shadow maps stay enabled; whether anything casts a shadow is up to the tier (only High's moon does).
+    <Canvas camera={{ fov: 60, near: 0.1, far: 1500 }} gl={{ antialias: true, powerPreference: 'high-performance' }} dpr={quality.dpr}
+      shadows={{ type: THREE.PCFSoftShadowMap }}>
+      <AdaptiveQuality />
+      <RenderInfo />
       <StageErrorBoundary onError={onStageError}>
         <Suspense fallback={null}>
           <StageScene room={room} />
