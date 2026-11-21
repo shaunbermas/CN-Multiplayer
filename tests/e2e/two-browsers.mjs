@@ -125,7 +125,9 @@ try {
   if (!hist.includes('Watcher_FocusLock')) errors.push(`Watcher_FocusLock never played at red (clips: ${hist.join(', ')})`);
   await pageB.screenshot({ path: `${shots}/s1-4_red_view.png` });
   await sleep(2600); // past the SPOTTED! stamp
-  if (!(await pageB.locator('[data-testid=spectating]').count())) errors.push('Spotted player does not see the spectator status');
+  // The HUD shows the spectator status after the 2.5 s SPOTTED! stamp; allow for a slow software-rendered page.
+  await waitFor(async () => (await pageB.locator('[data-testid=spectating]').count()) > 0, 'spectator status on Beta', 10_000)
+    .catch(() => errors.push('Spotted player does not see the spectator status'));
   await pageB.screenshot({ path: `${shots}/s1-4_spotted_view.png` });
   await pageB.keyboard.up('KeyW');
   const alphaStatus = (await players(pageA)).find((p) => p.id === idA)?.status;
