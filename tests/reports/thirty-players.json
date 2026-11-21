@@ -1,0 +1,54 @@
+{
+  "result": "PASS",
+  "errors": [],
+  "date": "2026-11-21T21:50:28.462Z",
+  "machine": "4 vCPU Xeon 2.3 GHz, 15 GB, no GPU (SwiftShader software WebGL)",
+  "real_browsers": 5,
+  "simulated_clients": 25,
+  "lobby_slots_taken": 30,
+  "observer": {
+    "render": {
+      "calls": 292,
+      "triangles": 161305,
+      "programs": 38,
+      "textures": 81,
+      "dpr": 1
+    },
+    "players_drawn": 30,
+    "quality": "high",
+    "heap_mb": 27.7,
+    "obstacles": {
+      "shown": true,
+      "barricades": 14,
+      "gateX": -3.69,
+      "gateMoving": true
+    },
+    "software_fps": 0.5
+  },
+  "low_pages_software_fps": [
+    0.59,
+    0.78,
+    0.67,
+    0.88
+  ],
+  "signal_seen_by_pages": [
+    "red",
+    "red",
+    "red",
+    "red",
+    "red"
+  ],
+  "results_identical_on_all_pages": true,
+  "results": {
+    "players": 30,
+    "spotted": 13,
+    "active_or_finished": 17
+  },
+  "memory_heap_mb_after_gc": [
+    10.4,
+    9.1,
+    9.3,
+    9.3
+  ],
+  "memory_note": "Full page reloads between cycles; in-page join/leave reuse is covered by test:ui (Exit to menu)."
+}
