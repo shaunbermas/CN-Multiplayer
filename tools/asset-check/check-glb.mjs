@@ -98,7 +98,8 @@ const spawnNames = result.names.filter((n) => /^GMK_SPAWN_\d\d$/.test(n));
 const expectedSpawns = markers.markers.filter((m) => m.kind === 'spawn').length;
 if (spawnNames.length !== expectedSpawns) errors.push(`Browser sees ${spawnNames.length} spawn markers, expected ${expectedSpawns}`);
 if (!result.extras.GMK_SHEPHERD || result.extras.GMK_SHEPHERD.kind !== 'shepherd') errors.push('glTF extras missing on GMK_SHEPHERD');
-if (result.names.some((n) => n.startsWith('COL_') || n.startsWith('CAM_') || n.startsWith('LGT_'))) errors.push('Collision, camera or light objects leaked into the runtime GLB');
+const leaked = result.names.filter((n) => /^(COL_|CAM_|LGT_|ZONE_|REF_)/.test(n) || /_Capsule$|_Envelope$|_Facing_Arrow$/.test(n));
+if (leaked.length) errors.push(`Collision, camera, light or review-only objects leaked into the runtime GLB: ${leaked.slice(0, 5).join(', ')}`);
 const bounds = byId.GMK_BOUNDS;
 if (result.yard) {
   const [minX, , minZ] = result.yard.min; const [maxX, , maxZ] = result.yard.max;

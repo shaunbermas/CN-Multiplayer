@@ -1,7 +1,7 @@
 # CN Trials · Stage 01 environment design spec: Red Light, Green Light
 
 Status: **APPROVED v0.1** (owner approved all of §14 on 21 November 2026, decision 017). The environment
-greybox is built from it (`blender/scripts/build_stg01_greybox.py`, spec v0.2).
+greybox is built from it (`blender/scripts/generate_stage_01_greybox.py`; report: `docs/STAGE_01_GREYBOX_REPORT.md`).
 
 | Source | Role |
 |--------|------|
@@ -116,7 +116,7 @@ any change):
 ## 5. Player spawns
 
 30 spawns in 3 rows of 10, facing +Y. Lateral spacing 3.0 m and row spacing 2.5 m leave at least
-2.4 m between capsules, so nobody starts touching a neighbour and the camera behind each player has
+1.9 m between capsules (2.4 m side by side), so nobody starts touching a neighbour and the camera behind each player has
 room. Spawns fill from the centre of the front row outward (spec L7), so a small standup group starts
 together in the middle.
 
@@ -352,7 +352,7 @@ the RED flicker with a steady tint (game-ui-ux accessibility list).
 
 1. Update `docs/STAGE_01_SPEC.md` and `stg01_greybox.json` with the approved changes (E5–E7), and
    merge the layout into the build spec. Done.
-2. Extend `build_stg01_greybox.py` with the environment blockout (primitives for every §7 element and
+2. Extend the greybox generator with the environment blockout (primitives for every §7 element and
    §10 asset footprint), the new colliders, markers and cameras; add the "no dressing taller than 3 m
    inside the yard" validator rule.
 3. Run `bash blender/scripts/run_stage.sh STG01`; review renders from every camera; rerun the browser

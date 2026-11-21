@@ -5,6 +5,7 @@ still PROPOSED or TBD in the GDD and plans.
 
 | # | Date | Decision | Status | Where it applies |
 |---|------|----------|--------|------------------|
+| 018 | 21 Nov 2026 | Greybox scene structure and names follow Prompt 03: `STAGE_01_GREYBOX.blend`, `generate_stage_01_greybox.py`, collections `00_REFERENCE`–`08_CAMERAS`, `ZONE_`/`REF_` prefixes, `review_only` objects excluded from the game | APPLIED | `docs/STAGE_01_GREYBOX_REPORT.md` |
 | 017 | 21 Nov 2026 | **Stage 01 environment design approved** (all of E1–E14 as proposed): playground mood blended into the night floodlit yard; The Shepherd keeps its name; installation option A (figure on platform) with the rocket-frame relic; eerie atmosphere, playful outcomes; start zone 15 m; 22 m floodlight towers at X ±38; 9 m finish gate; violet added to the palette; detection not line-of-sight; camera-only collision; naming additions; mood reference kept out of the repo; row shuffle; gantry, booth, benches and service gates | APPROVED | `docs/STAGE_01_DESIGN_SPEC.md`, spec v0.2 |
 | 016 | 21 Nov 2026 | **Game server on Cloudflare Durable Objects** (one per room), replacing Colyseus; GDD v0.4. Deployed with `wrangler deploy` from GitHub Actions on every merge to `main` | APPROVED | `docs/adr/0002-hosting.md`, `wrangler.jsonc` |
 | 015 | 21 Nov 2026 | Hosting: **Cloudflare and GitHub only**, managed in the browser and deployed by GitHub Actions. Option still to confirm: Durable Objects (recommended) or Containers | APPROVED (constraint) | `docs/adr/0002-hosting.md` |
@@ -27,5 +28,6 @@ still PROPOSED or TBD in the GDD and plans.
 
 | Item | Current proposal | Source |
 |------|------------------|--------|
+| Stage 01 greybox approval (G1: start barrier raised to 6 m; G4: no obstacles inside the course) | See the report's last section | `docs/STAGE_01_GREYBOX_REPORT.md` |
 | Tagline | Keep "Thirty enter. Only one survives." for now; candidates: "Move with intent.", "We guide. You go." | GDD §14 |
 | Theme names (stage names, Basecamp, Nomads, Trailblazer) | Proposed in chat on 21 Nov 2026; not adopted | — |

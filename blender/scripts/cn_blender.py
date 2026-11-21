@@ -161,3 +161,25 @@ def cone_mesh(name: str, radius: float, height: float, segments: int = 12, mat=N
     for v in bm.verts:
         v.co.z += height / 2.0
     return _finish_mesh(name, bm, mat)
+
+
+# Stage scene collections (Prompt 03 structure). One stage per .blend file.
+COLL = {
+    "ref": "00_REFERENCE",
+    "arch": "01_ARCHITECTURE",
+    "zones": "02_GAMEPLAY_ZONES",
+    "blockers": "03_ENVIRONMENT_BLOCKERS",
+    "watcher": "04_WATCHER_PLACEHOLDER",
+    "lights": "05_LIGHTING_PLACEHOLDERS",
+    "col": "06_COLLISION",
+    "spawns": "07_PLAYER_SPAWNS",
+    "cams": "08_CAMERAS",
+    "work": "_WORK",
+}
+# Collections whose objects go into the runtime GLB (minus review-only objects).
+RUNTIME = ("arch", "zones", "blockers", "watcher", "lights", "spawns")
+
+
+def is_review_only(obj) -> bool:
+    """Review aids (zone overlays, spawn capsules, envelopes) never reach the game."""
+    return bool(obj.get("review_only", False))

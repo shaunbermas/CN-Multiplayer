@@ -1,16 +1,71 @@
 {
   "stage": "STG01",
-  "blend": "blender/scenes/STG01_RedLightGreenLight.blend",
-  "spec_hash": "5bcff9a761d04178",
+  "blend": "STAGE_01_GREYBOX.blend",
+  "spec_hash": "c483532e570f7804",
+  "spec_version": "0.3",
   "blender": "5.3.0",
   "result": "PASS",
   "errors": [],
   "warnings": [],
+  "checks": {
+    "9_scale_naming": {
+      "title": "Scale, units, applied transforms, naming",
+      "result": "PASS",
+      "detail": "metric, 1 unit = 1 m; 310 objects follow the collection naming rules; 21 MAT_ materials"
+    },
+    "1_zones": {
+      "title": "Zones match the approved dimensions",
+      "result": "PASS",
+      "detail": "width 60.0 m; start Y -15.0..0, course 0..160.0, finish 160.0..163.0, safe 163.0..172.0"
+    },
+    "2_spawn_count": {
+      "title": "Exactly 30 spawns with unique stable names",
+      "result": "PASS",
+      "detail": "30 markers GMK_SPAWN_01..30; 30 capsule proxies"
+    },
+    "3_spawn_overlap": {
+      "title": "Spawn capsules do not overlap at the player radius",
+      "result": "PASS",
+      "detail": "radius 0.3 m; smallest gap between two capsules 1.90 m; all 30 inside the start zone"
+    },
+    "4_route_readable": {
+      "title": "Start-to-finish route clear; Shepherd visible from every spawn",
+      "result": "PASS",
+      "detail": "30 straight routes to the finish clear of solid colliders; Shepherd head visible from 30/30 spawns"
+    },
+    "5_finish_coverage": {
+      "title": "Finish boundary and Watcher coverage visibly marked",
+      "result": "PASS",
+      "detail": "finish band, finish and safe zone overlays, finish gate, 110\u00b0 coverage wedge reaching the start zone"
+    },
+    "6_watcher": {
+      "title": "Watcher placeholder at the approved location and facing",
+      "result": "PASS",
+      "detail": "platform centre (0.0, 185.0), top 4.0 m; figure 28.0 m; faces -Y toward the players"
+    },
+    "7_collision": {
+      "title": "Collision separate from render geometry, not duplicated",
+      "result": "PASS",
+      "detail": "10 boxes in 06_COLLISION (5 solid, 2 trigger, 3 camera-only); hidden from renders; excluded from the runtime GLB"
+    },
+    "8_geometry": {
+      "title": "No floating parts, z-fighting, bad meshes or tall objects inside the yard",
+      "result": "PASS",
+      "detail": "191 runtime meshes (52 unique) checked: none floating, no coplanar overlaps, all closed and non-degenerate, nothing over 3 m inside the yard except the finish gate and raised start barrier"
+    },
+    "10_dependencies": {
+      "title": "Scene opens without missing dependencies",
+      "result": "PASS",
+      "detail": "0 linked libraries, 0 images; everything is generated in the file"
+    }
+  },
   "stats": {
-    "objects": 269,
+    "objects": 310,
+    "runtime_meshes": 191,
     "runtime_triangles": 3236,
     "triangle_budget": 300000,
     "spawn_markers": 30,
+    "min_spawn_gap_m": 1.9,
     "materials": [
       "MAT_Greybox_Collision",
       "MAT_Greybox_Concrete",
@@ -25,12 +80,20 @@
       "MAT_Greybox_Signal",
       "MAT_Greybox_Silhouette",
       "MAT_Greybox_Tree",
-      "MAT_Greybox_Yard"
+      "MAT_Greybox_Yard",
+      "MAT_Ref_Marker",
+      "MAT_Ref_SpawnCapsule",
+      "MAT_Zone_Course",
+      "MAT_Zone_Coverage",
+      "MAT_Zone_Finish",
+      "MAT_Zone_Safe",
+      "MAT_Zone_Start"
     ],
     "export_files_bytes": {
-      "STG01_RedLightGreenLight.glb": 103820,
-      "STG01_collision.json": 3408,
-      "STG01_markers.json": 11336
+      "STAGE_01_GREYBOX.glb": 110372,
+      "STAGE_01_GREYBOX_METADATA.json": 180680,
+      "STG01_collision.json": 3400,
+      "STG01_markers.json": 12498
     }
   },
   "shepherd_sightline": {

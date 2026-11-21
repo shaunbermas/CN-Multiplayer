@@ -65,7 +65,9 @@ GDD §9.2 prefixes, plus the additions marked NEW.
 |--------|-----|---------|
 | `CHR_` | Character meshes and files | `CHR_Contestant_Base` |
 | `ENM_` | Enemies and stage figures | `ENM_Shepherd` (Stage 01) |
-| `STG01_` | Stage files and stage-only objects (two-digit stage number) | `STG01_RedLightGreenLight.blend` |
+| `STG01_` | Stage-only objects (two-digit stage number) | `STG01_Ground_Yard` |
+| `ZONE_` NEW (Prompt 03) | Gameplay zone overlays and coverage markers (review only) | `ZONE_STG01_Finish` |
+| `REF_` NEW (Prompt 03) | Reference aids (review only) | `REF_STG01_ScaleFigure_1_2m` |
 | `PRP_` | Props; stage-specific props add the stage | `PRP_STG01_FloodlightMast` |
 | `VFX_` | Effect meshes | `VFX_SignalSweep` |
 | `COL_` | Collision proxies | `COL_STG01_Ground`, `COL_STG01_Wall_E` |
@@ -84,24 +86,30 @@ clips use lower snake case, shared across the rig: `idle`, `walk`, `run`, `sprin
 `land`, `stumble`, `eliminated`, `victory`, `spectator_idle` (GDD §4.3). Object names are permanent IDs:
 renaming one is a code change.
 
-### Scene collections (every stage file)
+### Scene collections (every stage file; Prompt 03 structure, adopted 21 Nov 2026)
 
 ```
-STG01_RedLightGreenLight.blend
-├── STG01_ENV        visual environment meshes
-├── STG01_PROPS      placed props (linked from prop files where possible)
-├── STG01_LIGHTS     LGT_ objects, with a custom property bake = baked | dynamic | decorative
-├── STG01_COL        COL_ proxies (not rendered)
-├── STG01_GMK        GMK_ empties (spawns, finish, Shepherd, bounds, camera targets)
-├── STG01_CAM        CAM_ objects
-└── _WORK            scratch; never exported
+STAGE_01_GREYBOX.blend
+├── 00_REFERENCE              REF_ scale figure, north arrow (review only)
+├── 01_ARCHITECTURE           ground, fences, gates, platforms, observation structures
+├── 02_GAMEPLAY_ZONES         line bands, lane lines, GMK_ markers; ZONE_ overlays and coverage (review only)
+├── 03_ENVIRONMENT_BLOCKERS   outer barrier, relics, backdrop (nothing inside the course in Stage 01)
+├── 04_WATCHER_PLACEHOLDER    ENM_ proxy; facing arrow and envelope (review only)
+├── 05_LIGHTING_PLACEHOLDERS  PRP_KIT_ towers, lamps, speakers; LGT_ lights (bake = baked | dynamic | decorative)
+├── 06_COLLISION              COL_ and COL_CAM_ boxes (never rendered or exported to the GLB)
+├── 07_PLAYER_SPAWNS          GMK_SPAWN_01..30 markers; capsule proxies at the player radius (review only)
+├── 08_CAMERAS                CAM_ review cameras (res and review_name properties)
+└── _WORK                     scratch; never exported
 ```
+
+Objects with the custom property `review_only` (zone overlays, capsules, envelopes, reference aids) are
+review aids: they appear in review renders and are excluded from the runtime GLB.
 
 ## 6. Files and folders
 
 | Folder | Holds |
 |--------|-------|
-| `blender/scenes/` | Stage `.blend` files (`STG01_RedLightGreenLight.blend`) |
+| `blender/scenes/` | Stage `.blend` files (`STAGE_01_GREYBOX.blend`) |
 | `blender/models/` | Character, enemy and prop `.blend` files |
 | `blender/materials/` | Shared material library `.blend` and texture sources |
 | `blender/scripts/` | Python scripts (§8). Only scripts that have been run and validated are committed |
@@ -126,7 +134,7 @@ LFS stay as normal git files.
 | Setting | Value |
 |---------|-------|
 | Format | glTF Binary (`.glb`) |
-| Include | The export collection only (`STG01_ENV`, `STG01_PROPS`, plus `STG01_GMK` as empties); never `_WORK` or `STG01_COL` |
+| Include | Collections 01–05 and 07 (markers as empties), minus `review_only` objects; never 00, 06, 08 or `_WORK` |
 | Transform | +Y Up |
 | Mesh | Apply modifiers, UVs, normals; tangents only when a normal map is used |
 | Materials | Principled BSDF only (exports cleanly to glTF PBR). Image textures as PNG/JPEG at export; converted to KTX2 later |
@@ -166,7 +174,7 @@ Scripts (written and run for Stage 01 on 21 November 2026; see `blender/README.m
 
 | Script | Job |
 |--------|-----|
-| `build_stg01_greybox.py` | Build the greybox from the spec: ground, start zone, finish gate, Shepherd platform and placeholder, boundaries, `COL_` proxies, `GMK_` markers |
+| `generate_stage_01_greybox.py` | Build the greybox from the spec: ground, start zone, finish gate, Shepherd platform and placeholder, boundaries, `COL_` proxies, `GMK_` markers |
 | `export_stage.py` | Export the runtime GLB and the collision and marker JSON for a stage |
 | `validate_asset.py` | Check a `.blend` or `.glb` against §4, §5, §7 and the budgets; write a JSON report |
 | `render_preview.py` | CPU Cycles preview renders from `CAM_` objects for review |
@@ -179,13 +187,13 @@ Cloud container (headless):
 
 ```bash
 pip install bpy==5.3.0
-python blender/scripts/build_stg01_greybox.py --spec blender/scripts/specs/stg01_greybox.json --out blender/scenes/STG01_RedLightGreenLight.blend
+python blender/scripts/generate_stage_01_greybox.py --spec blender/scripts/specs/stg01_greybox.json
 ```
 
 Owner's desktop (same scripts):
 
 ```bash
-blender --background blender/scenes/STG01_RedLightGreenLight.blend --python blender/scripts/export_stage.py -- --stage STG01
+blender --background blender/scenes/STAGE_01_GREYBOX.blend --python blender/scripts/export_stage.py -- --stage STG01
 ```
 
 Scripts accept their own arguments after `--` and work both through `blender --python` and as a plain

@@ -2,7 +2,7 @@
   "stage": "STG01",
   "name": "RedLightGreenLight",
   "spec_doc": "docs/STAGE_01_SPEC.md",
-  "spec_version": "0.2",
+  "spec_version": "0.3",
   "units": "m",
   "width": 60.0,
   "start_zone_depth": 15.0,
@@ -141,7 +141,7 @@
       "y": 0.0,
       "arm_height": 1.1,
       "post_x": 31.0,
-      "arm_lifted_height": 2.8
+      "arm_lifted_height": 6.0
     },
     "backdrop": {
       "overpass": {
@@ -240,16 +240,17 @@
       },
       "CAM_STG01_Gameplay": {
         "pos": [
-          0.0,
-          -7.5,
-          3.0
+          -1.5,
+          -12.5,
+          2.6
         ],
         "look": [
-          0.0,
+          -1.5,
           185.0,
-          17.0
+          14.0
         ],
-        "note": "reference third-person view from spawn 1"
+        "note": "third-person view behind spawn 21 (back row): runtime camera is 5.5 m behind and about 2.2-2.6 m up",
+        "review_name": "STAGE_01_GREYBOX_THIRD_PERSON"
       },
       "CAM_STG01_Overview": {
         "pos": [
@@ -302,7 +303,42 @@
           1.0
         ],
         "note": "finish line, facing the arrivals"
+      },
+      "CAM_STG01_TopDown": {
+        "pos": [
+          0.0,
+          115.0,
+          300.0
+        ],
+        "look": [
+          0.0,
+          115.0,
+          0.0
+        ],
+        "ortho_scale": 340.0,
+        "res": [
+          1200,
+          1600
+        ],
+        "review_name": "STAGE_01_GREYBOX_TOP",
+        "note": "orthographic top-down review"
+      },
+      "CAM_STG01_Perspective": {
+        "pos": [
+          0.0,
+          -75.0,
+          48.0
+        ],
+        "look": [
+          0.0,
+          110.0,
+          6.0
+        ],
+        "review_name": "STAGE_01_GREYBOX_PERSPECTIVE",
+        "note": "front perspective from behind the start zone"
       }
     }
-  }
+  },
+  "blend_name": "STAGE_01_GREYBOX",
+  "generator": "generate_stage_01_greybox.py"
 }

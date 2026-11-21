@@ -46,12 +46,12 @@ jobs:
           npx playwright install --with-deps chromium
 
       - name: Validate committed Stage 01 scene
-        run: python blender/scripts/validate_asset.py --blend blender/scenes/STG01_RedLightGreenLight.blend --spec blender/scripts/specs/stg01_greybox.json --stage STG01 --report "$RUNNER_TEMP/STG01_validation.json"
+        run: python blender/scripts/validate_asset.py --blend blender/scenes/STAGE_01_GREYBOX.blend --spec blender/scripts/specs/stg01_greybox.json --stage STG01 --report "$RUNNER_TEMP/STG01_validation.json"
 
       - name: Exports are up to date with the spec
         run: |
-          python blender/scripts/build_stg01_greybox.py --out "$RUNNER_TEMP/rebuild/STG01_RedLightGreenLight.blend"
-          python blender/scripts/export_stage.py --blend "$RUNNER_TEMP/rebuild/STG01_RedLightGreenLight.blend" --stage STG01 --out-dir "$RUNNER_TEMP/rebuild/exp"
+          python blender/scripts/generate_stage_01_greybox.py --out "$RUNNER_TEMP/rebuild/STAGE_01_GREYBOX.blend"
+          python blender/scripts/export_stage.py --blend "$RUNNER_TEMP/rebuild/STAGE_01_GREYBOX.blend" --stage STG01 --out-dir "$RUNNER_TEMP/rebuild/exp"
           diff -u blender/exports/STG01/STG01_collision.json "$RUNNER_TEMP/rebuild/exp/STG01_collision.json"
           diff -u blender/exports/STG01/STG01_markers.json "$RUNNER_TEMP/rebuild/exp/STG01_markers.json"
 
