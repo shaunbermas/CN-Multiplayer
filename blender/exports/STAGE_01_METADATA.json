@@ -1,0 +1,5665 @@
+{
+  "schemaVersion": "1.0.0",
+  "stageId": "STAGE_01_RED_LIGHT",
+  "stageName": "Red Light, Green Light",
+  "sourceFiles": {
+    "designSpec": "docs/STAGE_01_DESIGN_SPEC.md",
+    "greyboxBlend": "blender/scenes/STAGE_01_GREYBOX.blend",
+    "prompt03ValidationReport": "docs/STAGE_01_GREYBOX_REPORT.md"
+  },
+  "coordinateSystem": {
+    "units": "meters",
+    "positionSpace": "world",
+    "rotationUnit": "degrees",
+    "originDescription": "Blender world origin = centre of the start line on the ground (X 0, Y 0, Z 0), as in docs/BLENDER_PIPELINE.md \u00a74 and docs/STAGE_01_SPEC.md. Positions are object origins; box volumes (collision, triggers, boundaries) have their origin at the bottom centre. Rotations are Euler XYZ. A marker's forward direction is its local -Y axis. The runtime (glTF, server, web client) uses Y-up game coordinates: game = (x, z, -y).",
+    "upAxis": "+Z (Blender world)",
+    "forwardAxis": "+Y: the course runs from the start line (Y 0) to the finish line (Y 160)"
+  },
+  "spawnPoints": [
+    {
+      "id": "SPAWN_PLAYER_01",
+      "objectName": "SPAWN_PLAYER_01",
+      "position": {
+        "x": -1.5,
+        "y": -2.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 1, slot 1 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_01."
+    },
+    {
+      "id": "SPAWN_PLAYER_02",
+      "objectName": "SPAWN_PLAYER_02",
+      "position": {
+        "x": 1.5,
+        "y": -2.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 1, slot 2 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_02."
+    },
+    {
+      "id": "SPAWN_PLAYER_03",
+      "objectName": "SPAWN_PLAYER_03",
+      "position": {
+        "x": -4.5,
+        "y": -2.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 1, slot 3 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_03."
+    },
+    {
+      "id": "SPAWN_PLAYER_04",
+      "objectName": "SPAWN_PLAYER_04",
+      "position": {
+        "x": 4.5,
+        "y": -2.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 1, slot 4 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_04."
+    },
+    {
+      "id": "SPAWN_PLAYER_05",
+      "objectName": "SPAWN_PLAYER_05",
+      "position": {
+        "x": -7.5,
+        "y": -2.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 1, slot 5 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_05."
+    },
+    {
+      "id": "SPAWN_PLAYER_06",
+      "objectName": "SPAWN_PLAYER_06",
+      "position": {
+        "x": 7.5,
+        "y": -2.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 1, slot 6 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_06."
+    },
+    {
+      "id": "SPAWN_PLAYER_07",
+      "objectName": "SPAWN_PLAYER_07",
+      "position": {
+        "x": -10.5,
+        "y": -2.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 1, slot 7 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_07."
+    },
+    {
+      "id": "SPAWN_PLAYER_08",
+      "objectName": "SPAWN_PLAYER_08",
+      "position": {
+        "x": 10.5,
+        "y": -2.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 1, slot 8 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_08."
+    },
+    {
+      "id": "SPAWN_PLAYER_09",
+      "objectName": "SPAWN_PLAYER_09",
+      "position": {
+        "x": -13.5,
+        "y": -2.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 1, slot 9 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_09."
+    },
+    {
+      "id": "SPAWN_PLAYER_10",
+      "objectName": "SPAWN_PLAYER_10",
+      "position": {
+        "x": 13.5,
+        "y": -2.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 1, slot 10 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_10."
+    },
+    {
+      "id": "SPAWN_PLAYER_11",
+      "objectName": "SPAWN_PLAYER_11",
+      "position": {
+        "x": -1.5,
+        "y": -4.5,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 2, slot 1 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_11."
+    },
+    {
+      "id": "SPAWN_PLAYER_12",
+      "objectName": "SPAWN_PLAYER_12",
+      "position": {
+        "x": 1.5,
+        "y": -4.5,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 2, slot 2 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_12."
+    },
+    {
+      "id": "SPAWN_PLAYER_13",
+      "objectName": "SPAWN_PLAYER_13",
+      "position": {
+        "x": -4.5,
+        "y": -4.5,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 2, slot 3 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_13."
+    },
+    {
+      "id": "SPAWN_PLAYER_14",
+      "objectName": "SPAWN_PLAYER_14",
+      "position": {
+        "x": 4.5,
+        "y": -4.5,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 2, slot 4 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_14."
+    },
+    {
+      "id": "SPAWN_PLAYER_15",
+      "objectName": "SPAWN_PLAYER_15",
+      "position": {
+        "x": -7.5,
+        "y": -4.5,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 2, slot 5 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_15."
+    },
+    {
+      "id": "SPAWN_PLAYER_16",
+      "objectName": "SPAWN_PLAYER_16",
+      "position": {
+        "x": 7.5,
+        "y": -4.5,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 2, slot 6 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_16."
+    },
+    {
+      "id": "SPAWN_PLAYER_17",
+      "objectName": "SPAWN_PLAYER_17",
+      "position": {
+        "x": -10.5,
+        "y": -4.5,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 2, slot 7 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_17."
+    },
+    {
+      "id": "SPAWN_PLAYER_18",
+      "objectName": "SPAWN_PLAYER_18",
+      "position": {
+        "x": 10.5,
+        "y": -4.5,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 2, slot 8 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_18."
+    },
+    {
+      "id": "SPAWN_PLAYER_19",
+      "objectName": "SPAWN_PLAYER_19",
+      "position": {
+        "x": -13.5,
+        "y": -4.5,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 2, slot 9 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_19."
+    },
+    {
+      "id": "SPAWN_PLAYER_20",
+      "objectName": "SPAWN_PLAYER_20",
+      "position": {
+        "x": 13.5,
+        "y": -4.5,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 2, slot 10 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_20."
+    },
+    {
+      "id": "SPAWN_PLAYER_21",
+      "objectName": "SPAWN_PLAYER_21",
+      "position": {
+        "x": -1.5,
+        "y": -7.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 3, slot 1 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_21."
+    },
+    {
+      "id": "SPAWN_PLAYER_22",
+      "objectName": "SPAWN_PLAYER_22",
+      "position": {
+        "x": 1.5,
+        "y": -7.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 3, slot 2 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_22."
+    },
+    {
+      "id": "SPAWN_PLAYER_23",
+      "objectName": "SPAWN_PLAYER_23",
+      "position": {
+        "x": -4.5,
+        "y": -7.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 3, slot 3 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_23."
+    },
+    {
+      "id": "SPAWN_PLAYER_24",
+      "objectName": "SPAWN_PLAYER_24",
+      "position": {
+        "x": 4.5,
+        "y": -7.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 3, slot 4 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_24."
+    },
+    {
+      "id": "SPAWN_PLAYER_25",
+      "objectName": "SPAWN_PLAYER_25",
+      "position": {
+        "x": -7.5,
+        "y": -7.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 3, slot 5 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_25."
+    },
+    {
+      "id": "SPAWN_PLAYER_26",
+      "objectName": "SPAWN_PLAYER_26",
+      "position": {
+        "x": 7.5,
+        "y": -7.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 3, slot 6 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_26."
+    },
+    {
+      "id": "SPAWN_PLAYER_27",
+      "objectName": "SPAWN_PLAYER_27",
+      "position": {
+        "x": -10.5,
+        "y": -7.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 3, slot 7 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_27."
+    },
+    {
+      "id": "SPAWN_PLAYER_28",
+      "objectName": "SPAWN_PLAYER_28",
+      "position": {
+        "x": 10.5,
+        "y": -7.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 3, slot 8 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_28."
+    },
+    {
+      "id": "SPAWN_PLAYER_29",
+      "objectName": "SPAWN_PLAYER_29",
+      "position": {
+        "x": -13.5,
+        "y": -7.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 3, slot 9 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_29."
+    },
+    {
+      "id": "SPAWN_PLAYER_30",
+      "objectName": "SPAWN_PLAYER_30",
+      "position": {
+        "x": 13.5,
+        "y": -7.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -180.0
+      },
+      "notes": "Row 3, slot 10 (numbered from the centre of the front row outward). Faces +Y. Capsule r 0.3 m, h 1.2 m. Greybox / runtime ID: GMK_SPAWN_30."
+    }
+  ],
+  "triggerZones": [
+    {
+      "id": "TRIGGER_FINISH_LINE",
+      "objectName": "TRIGGER_FINISH_LINE",
+      "position": {
+        "x": 0.0,
+        "y": 161.5,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 60.0,
+        "y": 3.0,
+        "z": 3.0
+      },
+      "notes": "Finish trigger (spec L4: Y 160 to 163, full width, 3 m high). Entering it finishes the player; the server records the time. Greybox / runtime ID: COL_STG01_FinishTrigger.",
+      "role": "finish",
+      "isTrigger": true
+    },
+    {
+      "id": "TRIGGER_SAFE_ZONE",
+      "objectName": "TRIGGER_SAFE_ZONE",
+      "position": {
+        "x": 0.0,
+        "y": 167.5,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 60.0,
+        "y": 9.0,
+        "z": 3.0
+      },
+      "notes": "Safe zone beyond the finish (spec L5: Y 163 to 172). Counts as finished and immune (spec D5); role 'finish' because the schema has only start and finish roles. Greybox / runtime ID: COL_STG01_SafeZone.",
+      "role": "finish",
+      "isTrigger": true
+    },
+    {
+      "id": "TRIGGER_START_LINE",
+      "objectName": "TRIGGER_START_LINE",
+      "position": {
+        "x": 0.0,
+        "y": -7.5,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 60.0,
+        "y": 15.0,
+        "z": 3.0
+      },
+      "notes": "Approved start zone (spec L2: Y -15 to 0, full width, 3 m high). Players wait here before GO; leaving through its +Y face (Y = 0) is crossing the start line. New in Prompt 04.",
+      "role": "start",
+      "isTrigger": true
+    }
+  ],
+  "movementBoundaries": [
+    {
+      "id": "BOUNDARY_BACK",
+      "objectName": "BOUNDARY_BACK",
+      "position": {
+        "x": 0.0,
+        "y": -15.25,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 61.0,
+        "y": 0.5,
+        "z": 3.0
+      },
+      "notes": "Start wall at Y -15 behind the spawn rows (spec L6), solid. Greybox / runtime ID: COL_STG01_Wall_S."
+    },
+    {
+      "id": "BOUNDARY_FINISH",
+      "objectName": "BOUNDARY_FINISH",
+      "position": {
+        "x": 0.0,
+        "y": 172.25,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 61.0,
+        "y": 0.5,
+        "z": 3.0
+      },
+      "notes": "Back wall at Y 172 beyond the safe zone (spec L6), solid. Greybox / runtime ID: COL_STG01_Wall_N."
+    },
+    {
+      "id": "BOUNDARY_LEFT",
+      "objectName": "BOUNDARY_LEFT",
+      "position": {
+        "x": -30.25,
+        "y": 78.5,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.5,
+        "y": 187.0,
+        "z": 3.0
+      },
+      "notes": "West fence wall at X -30 (spec L6), 3 m high, solid for players. Greybox / runtime ID: COL_STG01_Wall_W."
+    },
+    {
+      "id": "BOUNDARY_PLAYABLE_AREA",
+      "objectName": "BOUNDARY_PLAYABLE_AREA",
+      "position": {
+        "x": 0.0,
+        "y": 78.5,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 60.0,
+        "y": 187.0,
+        "z": 3.0
+      },
+      "notes": "The fenced yard (X -30 to 30, Y -15 to 172). Not a collider: positions outside it are out of bounds. Same extents as the greybox GMK_BOUNDS marker. Greybox / runtime ID: GMK_BOUNDS."
+    },
+    {
+      "id": "BOUNDARY_RIGHT",
+      "objectName": "BOUNDARY_RIGHT",
+      "position": {
+        "x": 30.25,
+        "y": 78.5,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.5,
+        "y": 187.0,
+        "z": 3.0
+      },
+      "notes": "East fence wall at X +30 (spec L6), 3 m high, solid for players. The service gates sit in this line and stay closed. Greybox / runtime ID: COL_STG01_Wall_E."
+    }
+  ],
+  "watcherDetectionReference": {
+    "id": "WATCHER_DETECTION_REFERENCE",
+    "anchorObjectId": "WATCHER_ROOT_ANCHOR",
+    "position": {
+      "x": 0.0,
+      "y": 185.0,
+      "z": 0.05
+    },
+    "rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    "coverageShape": "sector",
+    "coverageDimensions": {
+      "x": 332.5757,
+      "y": 203.0,
+      "z": 0.0
+    },
+    "notes": "Presentation coverage only (design spec \u00a75): a flat \u00b155\u00b0 sector from The Shepherd's position facing the players (-Y), reach 203 m so it covers every yard corner; the head is at Z 28.08 m (WATCHER_HEAD_ANCHOR). coverageDimensions are the sector's bounds (width, depth, 0). Server detection is the authority and is not line-of-sight: every active player in the yard outside the finish and safe volumes is checked during RED (decision E9, spec \u00a74). No detection logic lives in Blender."
+  },
+  "collisionObjects": [
+    {
+      "id": "COLLISION_BENCH_01",
+      "objectName": "COLLISION_BENCH_01",
+      "position": {
+        "x": 33.5,
+        "y": 10.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.6,
+        "y": 4.0,
+        "z": 0.45
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_Bench_01",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_BENCH_02",
+      "objectName": "COLLISION_BENCH_02",
+      "position": {
+        "x": 33.5,
+        "y": 20.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.6,
+        "y": 4.0,
+        "z": 0.45
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_Bench_02",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_BENCH_03",
+      "objectName": "COLLISION_BENCH_03",
+      "position": {
+        "x": 33.5,
+        "y": 30.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.6,
+        "y": 4.0,
+        "z": 0.45
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_Bench_03",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_BENCH_04",
+      "objectName": "COLLISION_BENCH_04",
+      "position": {
+        "x": 33.5,
+        "y": 40.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.6,
+        "y": 4.0,
+        "z": 0.45
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_Bench_04",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_BENCH_05",
+      "objectName": "COLLISION_BENCH_05",
+      "position": {
+        "x": 33.5,
+        "y": 50.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.6,
+        "y": 4.0,
+        "z": 0.45
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_Bench_05",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_BENCH_06",
+      "objectName": "COLLISION_BENCH_06",
+      "position": {
+        "x": 33.5,
+        "y": 60.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.6,
+        "y": 4.0,
+        "z": 0.45
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_Bench_06",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_BENCH_07",
+      "objectName": "COLLISION_BENCH_07",
+      "position": {
+        "x": 33.5,
+        "y": 70.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.6,
+        "y": 4.0,
+        "z": 0.45
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_Bench_07",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_BENCH_08",
+      "objectName": "COLLISION_BENCH_08",
+      "position": {
+        "x": 33.5,
+        "y": 80.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.6,
+        "y": 4.0,
+        "z": 0.45
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_Bench_08",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_BENCH_09",
+      "objectName": "COLLISION_BENCH_09",
+      "position": {
+        "x": 33.5,
+        "y": 90.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.6,
+        "y": 4.0,
+        "z": 0.45
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_Bench_09",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_BENCH_10",
+      "objectName": "COLLISION_BENCH_10",
+      "position": {
+        "x": 33.5,
+        "y": 100.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.6,
+        "y": 4.0,
+        "z": 0.45
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_Bench_10",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_BENCH_11",
+      "objectName": "COLLISION_BENCH_11",
+      "position": {
+        "x": 33.5,
+        "y": 110.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.6,
+        "y": 4.0,
+        "z": 0.45
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_Bench_11",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_BENCH_12",
+      "objectName": "COLLISION_BENCH_12",
+      "position": {
+        "x": 33.5,
+        "y": 120.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.6,
+        "y": 4.0,
+        "z": 0.45
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_Bench_12",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_BENCH_13",
+      "objectName": "COLLISION_BENCH_13",
+      "position": {
+        "x": 33.5,
+        "y": 130.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.6,
+        "y": 4.0,
+        "z": 0.45
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_Bench_13",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_BENCH_14",
+      "objectName": "COLLISION_BENCH_14",
+      "position": {
+        "x": 33.5,
+        "y": 140.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.6,
+        "y": 4.0,
+        "z": 0.45
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_Bench_14",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_BENCH_15",
+      "objectName": "COLLISION_BENCH_15",
+      "position": {
+        "x": 33.5,
+        "y": 150.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.6,
+        "y": 4.0,
+        "z": 0.45
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_Bench_15",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_CAMERA_FENCE_BACK",
+      "objectName": "COLLISION_CAMERA_FENCE_BACK",
+      "position": {
+        "x": 0.0,
+        "y": -15.25,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 61.0,
+        "y": 0.5,
+        "z": 4.0
+      },
+      "notes": "Camera-only collider (decision E10): keeps the third-person camera inside the fence; never blocks players. Greybox / runtime ID: COL_CAM_STG01_Fence_S.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_Fence_S",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_CAMERA_FENCE_LEFT",
+      "objectName": "COLLISION_CAMERA_FENCE_LEFT",
+      "position": {
+        "x": -30.25,
+        "y": 78.5,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.5,
+        "y": 187.0,
+        "z": 4.0
+      },
+      "notes": "Camera-only collider (decision E10): keeps the third-person camera inside the fence; never blocks players. Greybox / runtime ID: COL_CAM_STG01_Fence_W.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_Fence_W",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_CAMERA_FENCE_RIGHT",
+      "objectName": "COLLISION_CAMERA_FENCE_RIGHT",
+      "position": {
+        "x": 30.25,
+        "y": 78.5,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.5,
+        "y": 187.0,
+        "z": 4.0
+      },
+      "notes": "Camera-only collider (decision E10): keeps the third-person camera inside the fence; never blocks players. Greybox / runtime ID: COL_CAM_STG01_Fence_E.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_Fence_E",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_CONCRETE_BARRIER_E",
+      "objectName": "COLLISION_CONCRETE_BARRIER_E",
+      "position": {
+        "x": 52.0,
+        "y": 87.5,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.8,
+        "y": 255.0,
+        "z": 1.2
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_ConcreteBarrier_E",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_CONCRETE_BARRIER_N",
+      "objectName": "COLLISION_CONCRETE_BARRIER_N",
+      "position": {
+        "x": 0.0,
+        "y": 215.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 104.0,
+        "y": 0.8,
+        "z": 1.2
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_ConcreteBarrier_N",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_CONCRETE_BARRIER_S",
+      "objectName": "COLLISION_CONCRETE_BARRIER_S",
+      "position": {
+        "x": 0.0,
+        "y": -40.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 104.0,
+        "y": 0.8,
+        "z": 1.2
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_ConcreteBarrier_S",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_CONCRETE_BARRIER_W",
+      "objectName": "COLLISION_CONCRETE_BARRIER_W",
+      "position": {
+        "x": -52.0,
+        "y": 87.5,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.8,
+        "y": 255.0,
+        "z": 1.2
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_ConcreteBarrier_W",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_FINISH_GATE_BEAM",
+      "objectName": "COLLISION_FINISH_GATE_BEAM",
+      "position": {
+        "x": 0.0,
+        "y": 160.0,
+        "z": 7.8
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 65.2,
+        "y": 1.2,
+        "z": 1.2
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_FinishGate_Beam",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_FINISH_GATE_POST_E",
+      "objectName": "COLLISION_FINISH_GATE_POST_E",
+      "position": {
+        "x": 32.0,
+        "y": 160.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 1.2,
+        "y": 1.2,
+        "z": 9.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_FinishGate_Post_E",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_FINISH_GATE_POST_W",
+      "objectName": "COLLISION_FINISH_GATE_POST_W",
+      "position": {
+        "x": -32.0,
+        "y": 160.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 1.2,
+        "y": 1.2,
+        "z": 9.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_FinishGate_Post_W",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_FLOODLIGHT_TOWER_01",
+      "objectName": "COLLISION_FLOODLIGHT_TOWER_01",
+      "position": {
+        "x": -38.0,
+        "y": -10.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 22.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_FloodlightTower_01",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_FLOODLIGHT_TOWER_02",
+      "objectName": "COLLISION_FLOODLIGHT_TOWER_02",
+      "position": {
+        "x": 38.0,
+        "y": -10.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 22.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_FloodlightTower_02",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_FLOODLIGHT_TOWER_03",
+      "objectName": "COLLISION_FLOODLIGHT_TOWER_03",
+      "position": {
+        "x": -38.0,
+        "y": 40.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 22.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_FloodlightTower_03",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_FLOODLIGHT_TOWER_04",
+      "objectName": "COLLISION_FLOODLIGHT_TOWER_04",
+      "position": {
+        "x": 38.0,
+        "y": 40.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 22.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_FloodlightTower_04",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_FLOODLIGHT_TOWER_05",
+      "objectName": "COLLISION_FLOODLIGHT_TOWER_05",
+      "position": {
+        "x": -38.0,
+        "y": 90.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 22.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_FloodlightTower_05",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_FLOODLIGHT_TOWER_06",
+      "objectName": "COLLISION_FLOODLIGHT_TOWER_06",
+      "position": {
+        "x": 38.0,
+        "y": 90.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 22.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_FloodlightTower_06",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_FLOODLIGHT_TOWER_07",
+      "objectName": "COLLISION_FLOODLIGHT_TOWER_07",
+      "position": {
+        "x": -38.0,
+        "y": 140.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 22.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_FloodlightTower_07",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_FLOODLIGHT_TOWER_08",
+      "objectName": "COLLISION_FLOODLIGHT_TOWER_08",
+      "position": {
+        "x": 38.0,
+        "y": 140.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 22.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_FloodlightTower_08",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_FLOODLIGHT_TOWER_09",
+      "objectName": "COLLISION_FLOODLIGHT_TOWER_09",
+      "position": {
+        "x": -38.0,
+        "y": 175.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 22.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_FloodlightTower_09",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_FLOODLIGHT_TOWER_10",
+      "objectName": "COLLISION_FLOODLIGHT_TOWER_10",
+      "position": {
+        "x": 38.0,
+        "y": 175.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 22.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_KIT_FloodlightTower_10",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_GROUND_MAIN",
+      "objectName": "COLLISION_GROUND_MAIN",
+      "position": {
+        "x": 0.0,
+        "y": 78.5,
+        "z": -0.5
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 60.0,
+        "y": 187.0,
+        "z": 0.5
+      },
+      "notes": "Yard floor; the top face is Z = 0. Greybox / runtime ID: COL_STG01_Ground.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "STG01_Ground_Yard",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_GROUND_OUTER",
+      "objectName": "COLLISION_GROUND_OUTER",
+      "position": {
+        "x": 0.0,
+        "y": 98.5,
+        "z": -0.13
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 100.0,
+        "y": 247.0,
+        "z": 0.1
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "STG01_Ground_Outer",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_JUDGES_BOOTH_CABIN",
+      "objectName": "COLLISION_JUDGES_BOOTH_CABIN",
+      "position": {
+        "x": 42.0,
+        "y": 168.0,
+        "z": 9.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 10.0,
+        "y": 8.0,
+        "z": 4.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_JudgesBooth_Cabin",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_JUDGES_BOOTH_LEG_1",
+      "objectName": "COLLISION_JUDGES_BOOTH_LEG_1",
+      "position": {
+        "x": 37.5,
+        "y": 164.5,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.5,
+        "y": 0.5,
+        "z": 9.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_JudgesBooth_Leg_1",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_JUDGES_BOOTH_LEG_2",
+      "objectName": "COLLISION_JUDGES_BOOTH_LEG_2",
+      "position": {
+        "x": 46.5,
+        "y": 164.5,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.5,
+        "y": 0.5,
+        "z": 9.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_JudgesBooth_Leg_2",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_JUDGES_BOOTH_LEG_3",
+      "objectName": "COLLISION_JUDGES_BOOTH_LEG_3",
+      "position": {
+        "x": 37.5,
+        "y": 171.5,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.5,
+        "y": 0.5,
+        "z": 9.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_JudgesBooth_Leg_3",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_JUDGES_BOOTH_LEG_4",
+      "objectName": "COLLISION_JUDGES_BOOTH_LEG_4",
+      "position": {
+        "x": 46.5,
+        "y": 171.5,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.5,
+        "y": 0.5,
+        "z": 9.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_JudgesBooth_Leg_4",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_JUDGES_BOOTH_TIMER_BOARD",
+      "objectName": "COLLISION_JUDGES_BOOTH_TIMER_BOARD",
+      "position": {
+        "x": 36.9,
+        "y": 168.0,
+        "z": 10.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.3,
+        "y": 6.0,
+        "z": 2.5
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_JudgesBooth_TimerBoard",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_ROCKET_FRAME_A",
+      "objectName": "COLLISION_ROCKET_FRAME_A",
+      "position": {
+        "x": -44.0,
+        "y": 70.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 6.0,
+        "y": 6.0,
+        "z": 16.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_RocketFrame_A",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_ROUNDABOUT_SPINNER_A",
+      "objectName": "COLLISION_ROUNDABOUT_SPINNER_A",
+      "position": {
+        "x": -40.0,
+        "y": 32.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 5.0,
+        "y": 5.0,
+        "z": 1.2
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_RoundaboutSpinner_A",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SEE_SAW_A",
+      "objectName": "COLLISION_SEE_SAW_A",
+      "position": {
+        "x": -40.0,
+        "y": 110.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 6.0,
+        "y": 1.0,
+        "z": 1.5
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_SeeSaw_A",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SHEPHERD_PLATFORM",
+      "objectName": "COLLISION_SHEPHERD_PLATFORM",
+      "position": {
+        "x": 0.0,
+        "y": 185.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 12.0,
+        "y": 12.0,
+        "z": 4.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_ShepherdPlatform",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SLIDE_A",
+      "objectName": "COLLISION_SLIDE_A",
+      "position": {
+        "x": -46.0,
+        "y": 12.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 3.0,
+        "y": 8.0,
+        "z": 4.5
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_Slide_A",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_DECK",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_DECK",
+      "position": {
+        "x": 44.0,
+        "y": 80.0,
+        "z": 5.6
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 6.0,
+        "y": 100.0,
+        "z": 0.4
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_SpectatorGantry_Deck",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_01",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_01",
+      "position": {
+        "x": 41.3,
+        "y": 30.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.4,
+        "y": 0.4,
+        "z": 10.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_SpectatorGantry_Leg_01",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_02",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_02",
+      "position": {
+        "x": 46.7,
+        "y": 30.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.4,
+        "y": 0.4,
+        "z": 10.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_SpectatorGantry_Leg_02",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_03",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_03",
+      "position": {
+        "x": 41.3,
+        "y": 40.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.4,
+        "y": 0.4,
+        "z": 10.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_SpectatorGantry_Leg_03",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_04",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_04",
+      "position": {
+        "x": 46.7,
+        "y": 40.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.4,
+        "y": 0.4,
+        "z": 10.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_SpectatorGantry_Leg_04",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_05",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_05",
+      "position": {
+        "x": 41.3,
+        "y": 50.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.4,
+        "y": 0.4,
+        "z": 10.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_SpectatorGantry_Leg_05",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_06",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_06",
+      "position": {
+        "x": 46.7,
+        "y": 50.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.4,
+        "y": 0.4,
+        "z": 10.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_SpectatorGantry_Leg_06",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_07",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_07",
+      "position": {
+        "x": 41.3,
+        "y": 60.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.4,
+        "y": 0.4,
+        "z": 10.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_SpectatorGantry_Leg_07",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_08",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_08",
+      "position": {
+        "x": 46.7,
+        "y": 60.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.4,
+        "y": 0.4,
+        "z": 10.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_SpectatorGantry_Leg_08",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_09",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_09",
+      "position": {
+        "x": 41.3,
+        "y": 70.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.4,
+        "y": 0.4,
+        "z": 10.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_SpectatorGantry_Leg_09",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_10",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_10",
+      "position": {
+        "x": 46.7,
+        "y": 70.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.4,
+        "y": 0.4,
+        "z": 10.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_SpectatorGantry_Leg_10",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_11",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_11",
+      "position": {
+        "x": 41.3,
+        "y": 80.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.4,
+        "y": 0.4,
+        "z": 10.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_SpectatorGantry_Leg_11",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_12",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_12",
+      "position": {
+        "x": 46.7,
+        "y": 80.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.4,
+        "y": 0.4,
+        "z": 10.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_SpectatorGantry_Leg_12",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_13",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_13",
+      "position": {
+        "x": 41.3,
+        "y": 90.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.4,
+        "y": 0.4,
+        "z": 10.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_SpectatorGantry_Leg_13",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_14",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_14",
+      "position": {
+        "x": 46.7,
+        "y": 90.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.4,
+        "y": 0.4,
+        "z": 10.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_SpectatorGantry_Leg_14",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_15",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_15",
+      "position": {
+        "x": 41.3,
+        "y": 100.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.4,
+        "y": 0.4,
+        "z": 10.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_SpectatorGantry_Leg_15",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_16",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_16",
+      "position": {
+        "x": 46.7,
+        "y": 100.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.4,
+        "y": 0.4,
+        "z": 10.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_SpectatorGantry_Leg_16",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_17",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_17",
+      "position": {
+        "x": 41.3,
+        "y": 110.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.4,
+        "y": 0.4,
+        "z": 10.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_SpectatorGantry_Leg_17",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_18",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_18",
+      "position": {
+        "x": 46.7,
+        "y": 110.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.4,
+        "y": 0.4,
+        "z": 10.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_SpectatorGantry_Leg_18",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_19",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_19",
+      "position": {
+        "x": 41.3,
+        "y": 120.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.4,
+        "y": 0.4,
+        "z": 10.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_SpectatorGantry_Leg_19",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_20",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_20",
+      "position": {
+        "x": 46.7,
+        "y": 120.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.4,
+        "y": 0.4,
+        "z": 10.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_SpectatorGantry_Leg_20",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_21",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_21",
+      "position": {
+        "x": 41.3,
+        "y": 130.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.4,
+        "y": 0.4,
+        "z": 10.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_SpectatorGantry_Leg_21",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_22",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_22",
+      "position": {
+        "x": 46.7,
+        "y": 130.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.4,
+        "y": 0.4,
+        "z": 10.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_SpectatorGantry_Leg_22",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_RAIL",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_RAIL",
+      "position": {
+        "x": 41.05,
+        "y": 80.0,
+        "z": 6.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.1,
+        "y": 100.0,
+        "z": 1.1
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_SpectatorGantry_Rail",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_ROOF",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_ROOF",
+      "position": {
+        "x": 44.0,
+        "y": 80.0,
+        "z": 10.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 7.0,
+        "y": 100.0,
+        "z": 0.3
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_SpectatorGantry_Roof",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_START_BARRIER_ARM",
+      "objectName": "COLLISION_START_BARRIER_ARM",
+      "position": {
+        "x": 0.0,
+        "y": 0.1,
+        "z": 6.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 62.0,
+        "y": 0.12,
+        "z": 0.12
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants. Moving: the start barrier arm stays raised at 6 m during play (decision 019, G1); it never blocks players.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_StartBarrier_Arm",
+      "staticOrMoving": "moving"
+    },
+    {
+      "id": "COLLISION_START_BARRIER_POST_E",
+      "objectName": "COLLISION_START_BARRIER_POST_E",
+      "position": {
+        "x": 31.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.5,
+        "y": 0.5,
+        "z": 6.2
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_StartBarrier_Post_E",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_START_BARRIER_POST_W",
+      "objectName": "COLLISION_START_BARRIER_POST_W",
+      "position": {
+        "x": -31.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.5,
+        "y": 0.5,
+        "z": 6.2
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_StartBarrier_Post_W",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "COLLISION_SWING_SET_A",
+      "objectName": "COLLISION_SWING_SET_A",
+      "position": {
+        "x": -42.0,
+        "y": -8.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 7.0,
+        "y": 3.0,
+        "z": 4.0
+      },
+      "notes": "Simplified box proxy fitted to the visual mesh bounds. Outside the playable yard: blocks spectators, walk-offs and the camera, never contestants.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_SwingSet_A",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "BOUNDARY_BACK",
+      "objectName": "BOUNDARY_BACK",
+      "position": {
+        "x": 0.0,
+        "y": -15.25,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 61.0,
+        "y": 0.5,
+        "z": 3.0
+      },
+      "notes": "Movement boundary wall (also listed in movementBoundaries). Greybox / runtime ID: COL_STG01_Wall_S.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_Fence_S",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "BOUNDARY_FINISH",
+      "objectName": "BOUNDARY_FINISH",
+      "position": {
+        "x": 0.0,
+        "y": 172.25,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 61.0,
+        "y": 0.5,
+        "z": 3.0
+      },
+      "notes": "Movement boundary wall (also listed in movementBoundaries). Greybox / runtime ID: COL_STG01_Wall_N.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_Fence_N",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "BOUNDARY_LEFT",
+      "objectName": "BOUNDARY_LEFT",
+      "position": {
+        "x": -30.25,
+        "y": 78.5,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.5,
+        "y": 187.0,
+        "z": 3.0
+      },
+      "notes": "Movement boundary wall (also listed in movementBoundaries). Greybox / runtime ID: COL_STG01_Wall_W.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_Fence_W",
+      "staticOrMoving": "static"
+    },
+    {
+      "id": "BOUNDARY_RIGHT",
+      "objectName": "BOUNDARY_RIGHT",
+      "position": {
+        "x": 30.25,
+        "y": 78.5,
+        "z": 0.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "dimensions": {
+        "x": 0.5,
+        "y": 187.0,
+        "z": 3.0
+      },
+      "notes": "Movement boundary wall (also listed in movementBoundaries). Greybox / runtime ID: COL_STG01_Wall_E.",
+      "colliderType": "box",
+      "isTrigger": false,
+      "sourceVisualObjectId": "PRP_STG01_Fence_E",
+      "staticOrMoving": "static"
+    }
+  ],
+  "spectatorLocations": [
+    {
+      "id": "SPECTATOR_01",
+      "objectName": "SPECTATOR_01",
+      "position": {
+        "x": 0.0,
+        "y": 200.0,
+        "z": 42.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "notes": "High viewpoint behind and above The Shepherd (spectator camera). Greybox / runtime ID: GMK_SPECTATOR_01.",
+      "viewTargetObjectId": "COURSE_CENTRE_ANCHOR"
+    },
+    {
+      "id": "SPECTATOR_BENCH_01",
+      "objectName": "SPECTATOR_BENCH_01",
+      "position": {
+        "x": 33.5,
+        "y": 10.0,
+        "z": 0.45
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -90.0
+      },
+      "notes": "Bench seat outside the east fence where spotted and waiting players sit (spec \u00a77). Greybox / runtime ID: GMK_BENCH_01.",
+      "viewTargetObjectId": "COURSE_CENTRE_ANCHOR"
+    },
+    {
+      "id": "SPECTATOR_BENCH_02",
+      "objectName": "SPECTATOR_BENCH_02",
+      "position": {
+        "x": 33.5,
+        "y": 20.0,
+        "z": 0.45
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -90.0
+      },
+      "notes": "Bench seat outside the east fence where spotted and waiting players sit (spec \u00a77). Greybox / runtime ID: GMK_BENCH_02.",
+      "viewTargetObjectId": "COURSE_CENTRE_ANCHOR"
+    },
+    {
+      "id": "SPECTATOR_BENCH_03",
+      "objectName": "SPECTATOR_BENCH_03",
+      "position": {
+        "x": 33.5,
+        "y": 30.0,
+        "z": 0.45
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -90.0
+      },
+      "notes": "Bench seat outside the east fence where spotted and waiting players sit (spec \u00a77). Greybox / runtime ID: GMK_BENCH_03.",
+      "viewTargetObjectId": "COURSE_CENTRE_ANCHOR"
+    },
+    {
+      "id": "SPECTATOR_BENCH_04",
+      "objectName": "SPECTATOR_BENCH_04",
+      "position": {
+        "x": 33.5,
+        "y": 40.0,
+        "z": 0.45
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -90.0
+      },
+      "notes": "Bench seat outside the east fence where spotted and waiting players sit (spec \u00a77). Greybox / runtime ID: GMK_BENCH_04.",
+      "viewTargetObjectId": "COURSE_CENTRE_ANCHOR"
+    },
+    {
+      "id": "SPECTATOR_BENCH_05",
+      "objectName": "SPECTATOR_BENCH_05",
+      "position": {
+        "x": 33.5,
+        "y": 50.0,
+        "z": 0.45
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -90.0
+      },
+      "notes": "Bench seat outside the east fence where spotted and waiting players sit (spec \u00a77). Greybox / runtime ID: GMK_BENCH_05.",
+      "viewTargetObjectId": "COURSE_CENTRE_ANCHOR"
+    },
+    {
+      "id": "SPECTATOR_BENCH_06",
+      "objectName": "SPECTATOR_BENCH_06",
+      "position": {
+        "x": 33.5,
+        "y": 60.0,
+        "z": 0.45
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -90.0
+      },
+      "notes": "Bench seat outside the east fence where spotted and waiting players sit (spec \u00a77). Greybox / runtime ID: GMK_BENCH_06.",
+      "viewTargetObjectId": "COURSE_CENTRE_ANCHOR"
+    },
+    {
+      "id": "SPECTATOR_BENCH_07",
+      "objectName": "SPECTATOR_BENCH_07",
+      "position": {
+        "x": 33.5,
+        "y": 70.0,
+        "z": 0.45
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -90.0
+      },
+      "notes": "Bench seat outside the east fence where spotted and waiting players sit (spec \u00a77). Greybox / runtime ID: GMK_BENCH_07.",
+      "viewTargetObjectId": "COURSE_CENTRE_ANCHOR"
+    },
+    {
+      "id": "SPECTATOR_BENCH_08",
+      "objectName": "SPECTATOR_BENCH_08",
+      "position": {
+        "x": 33.5,
+        "y": 80.0,
+        "z": 0.45
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -90.0
+      },
+      "notes": "Bench seat outside the east fence where spotted and waiting players sit (spec \u00a77). Greybox / runtime ID: GMK_BENCH_08.",
+      "viewTargetObjectId": "COURSE_CENTRE_ANCHOR"
+    },
+    {
+      "id": "SPECTATOR_BENCH_09",
+      "objectName": "SPECTATOR_BENCH_09",
+      "position": {
+        "x": 33.5,
+        "y": 90.0,
+        "z": 0.45
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -90.0
+      },
+      "notes": "Bench seat outside the east fence where spotted and waiting players sit (spec \u00a77). Greybox / runtime ID: GMK_BENCH_09.",
+      "viewTargetObjectId": "COURSE_CENTRE_ANCHOR"
+    },
+    {
+      "id": "SPECTATOR_BENCH_10",
+      "objectName": "SPECTATOR_BENCH_10",
+      "position": {
+        "x": 33.5,
+        "y": 100.0,
+        "z": 0.45
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -90.0
+      },
+      "notes": "Bench seat outside the east fence where spotted and waiting players sit (spec \u00a77). Greybox / runtime ID: GMK_BENCH_10.",
+      "viewTargetObjectId": "COURSE_CENTRE_ANCHOR"
+    },
+    {
+      "id": "SPECTATOR_BENCH_11",
+      "objectName": "SPECTATOR_BENCH_11",
+      "position": {
+        "x": 33.5,
+        "y": 110.0,
+        "z": 0.45
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -90.0
+      },
+      "notes": "Bench seat outside the east fence where spotted and waiting players sit (spec \u00a77). Greybox / runtime ID: GMK_BENCH_11.",
+      "viewTargetObjectId": "COURSE_CENTRE_ANCHOR"
+    },
+    {
+      "id": "SPECTATOR_BENCH_12",
+      "objectName": "SPECTATOR_BENCH_12",
+      "position": {
+        "x": 33.5,
+        "y": 120.0,
+        "z": 0.45
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -90.0
+      },
+      "notes": "Bench seat outside the east fence where spotted and waiting players sit (spec \u00a77). Greybox / runtime ID: GMK_BENCH_12.",
+      "viewTargetObjectId": "COURSE_CENTRE_ANCHOR"
+    },
+    {
+      "id": "SPECTATOR_BENCH_13",
+      "objectName": "SPECTATOR_BENCH_13",
+      "position": {
+        "x": 33.5,
+        "y": 130.0,
+        "z": 0.45
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -90.0
+      },
+      "notes": "Bench seat outside the east fence where spotted and waiting players sit (spec \u00a77). Greybox / runtime ID: GMK_BENCH_13.",
+      "viewTargetObjectId": "COURSE_CENTRE_ANCHOR"
+    },
+    {
+      "id": "SPECTATOR_BENCH_14",
+      "objectName": "SPECTATOR_BENCH_14",
+      "position": {
+        "x": 33.5,
+        "y": 140.0,
+        "z": 0.45
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -90.0
+      },
+      "notes": "Bench seat outside the east fence where spotted and waiting players sit (spec \u00a77). Greybox / runtime ID: GMK_BENCH_14.",
+      "viewTargetObjectId": "COURSE_CENTRE_ANCHOR"
+    },
+    {
+      "id": "SPECTATOR_BENCH_15",
+      "objectName": "SPECTATOR_BENCH_15",
+      "position": {
+        "x": 33.5,
+        "y": 150.0,
+        "z": 0.45
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -90.0
+      },
+      "notes": "Bench seat outside the east fence where spotted and waiting players sit (spec \u00a77). Greybox / runtime ID: GMK_BENCH_15.",
+      "viewTargetObjectId": "COURSE_CENTRE_ANCHOR"
+    },
+    {
+      "id": "SPECTATOR_GANTRY_01",
+      "objectName": "SPECTATOR_GANTRY_01",
+      "position": {
+        "x": 44.0,
+        "y": 40.0,
+        "z": 6.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -90.0
+      },
+      "notes": "Standing spot on the spectator gantry deck (X +44, 6 m up), outside the fence.",
+      "viewTargetObjectId": "COURSE_CENTRE_ANCHOR"
+    },
+    {
+      "id": "SPECTATOR_GANTRY_02",
+      "objectName": "SPECTATOR_GANTRY_02",
+      "position": {
+        "x": 44.0,
+        "y": 60.0,
+        "z": 6.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -90.0
+      },
+      "notes": "Standing spot on the spectator gantry deck (X +44, 6 m up), outside the fence.",
+      "viewTargetObjectId": "COURSE_CENTRE_ANCHOR"
+    },
+    {
+      "id": "SPECTATOR_GANTRY_03",
+      "objectName": "SPECTATOR_GANTRY_03",
+      "position": {
+        "x": 44.0,
+        "y": 80.0,
+        "z": 6.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -90.0
+      },
+      "notes": "Standing spot on the spectator gantry deck (X +44, 6 m up), outside the fence.",
+      "viewTargetObjectId": "COURSE_CENTRE_ANCHOR"
+    },
+    {
+      "id": "SPECTATOR_GANTRY_04",
+      "objectName": "SPECTATOR_GANTRY_04",
+      "position": {
+        "x": 44.0,
+        "y": 100.0,
+        "z": 6.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -90.0
+      },
+      "notes": "Standing spot on the spectator gantry deck (X +44, 6 m up), outside the fence.",
+      "viewTargetObjectId": "COURSE_CENTRE_ANCHOR"
+    },
+    {
+      "id": "SPECTATOR_GANTRY_05",
+      "objectName": "SPECTATOR_GANTRY_05",
+      "position": {
+        "x": 44.0,
+        "y": 120.0,
+        "z": 6.0
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -90.0
+      },
+      "notes": "Standing spot on the spectator gantry deck (X +44, 6 m up), outside the fence.",
+      "viewTargetObjectId": "COURSE_CENTRE_ANCHOR"
+    }
+  ],
+  "signalAnchors": [
+    {
+      "id": "SIGNAL_AUDIO_03",
+      "objectName": "SIGNAL_AUDIO_03",
+      "position": {
+        "x": -37.2,
+        "y": 40.0,
+        "z": 19.5
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 90.0
+      },
+      "notes": "Loudspeaker: source of the signal sounds (spatial audio). Source visual: PRP_KIT_Loudspeaker_03.",
+      "signalType": "shared"
+    },
+    {
+      "id": "SIGNAL_AUDIO_04",
+      "objectName": "SIGNAL_AUDIO_04",
+      "position": {
+        "x": 37.2,
+        "y": 40.0,
+        "z": 19.5
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -90.0
+      },
+      "notes": "Loudspeaker: source of the signal sounds (spatial audio). Source visual: PRP_KIT_Loudspeaker_04.",
+      "signalType": "shared"
+    },
+    {
+      "id": "SIGNAL_AUDIO_07",
+      "objectName": "SIGNAL_AUDIO_07",
+      "position": {
+        "x": -37.2,
+        "y": 140.0,
+        "z": 19.5
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 90.0
+      },
+      "notes": "Loudspeaker: source of the signal sounds (spatial audio). Source visual: PRP_KIT_Loudspeaker_07.",
+      "signalType": "shared"
+    },
+    {
+      "id": "SIGNAL_AUDIO_08",
+      "objectName": "SIGNAL_AUDIO_08",
+      "position": {
+        "x": 37.2,
+        "y": 140.0,
+        "z": 19.5
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -90.0
+      },
+      "notes": "Loudspeaker: source of the signal sounds (spatial audio). Source visual: PRP_KIT_Loudspeaker_08.",
+      "signalType": "shared"
+    },
+    {
+      "id": "SIGNAL_GREEN_ANCHOR",
+      "objectName": "SIGNAL_GREEN_ANCHOR",
+      "position": {
+        "x": 6.16,
+        "y": 183.5,
+        "z": 15.888
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "notes": "Lantern centre: attach the GREEN state visual (dim green lantern). Same point as SIGNAL_RED_ANCHOR because one lantern shows every colour (design spec \u00a76). Source visual: ENM_Shepherd_Placeholder_Lantern.",
+      "signalType": "green"
+    },
+    {
+      "id": "SIGNAL_LAMP_01",
+      "objectName": "SIGNAL_LAMP_01",
+      "position": {
+        "x": -38.0,
+        "y": -10.0,
+        "z": 21.2
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 90.0
+      },
+      "notes": "Tower signal lamp: repeats every signal colour along the yard. Source visual: PRP_KIT_SignalLamp_01.",
+      "signalType": "shared"
+    },
+    {
+      "id": "SIGNAL_LAMP_02",
+      "objectName": "SIGNAL_LAMP_02",
+      "position": {
+        "x": 38.0,
+        "y": -10.0,
+        "z": 21.2
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -90.0
+      },
+      "notes": "Tower signal lamp: repeats every signal colour along the yard. Source visual: PRP_KIT_SignalLamp_02.",
+      "signalType": "shared"
+    },
+    {
+      "id": "SIGNAL_LAMP_03",
+      "objectName": "SIGNAL_LAMP_03",
+      "position": {
+        "x": -38.0,
+        "y": 40.0,
+        "z": 21.2
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 90.0
+      },
+      "notes": "Tower signal lamp: repeats every signal colour along the yard. Source visual: PRP_KIT_SignalLamp_03.",
+      "signalType": "shared"
+    },
+    {
+      "id": "SIGNAL_LAMP_04",
+      "objectName": "SIGNAL_LAMP_04",
+      "position": {
+        "x": 38.0,
+        "y": 40.0,
+        "z": 21.2
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -90.0
+      },
+      "notes": "Tower signal lamp: repeats every signal colour along the yard. Source visual: PRP_KIT_SignalLamp_04.",
+      "signalType": "shared"
+    },
+    {
+      "id": "SIGNAL_LAMP_05",
+      "objectName": "SIGNAL_LAMP_05",
+      "position": {
+        "x": -38.0,
+        "y": 90.0,
+        "z": 21.2
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 90.0
+      },
+      "notes": "Tower signal lamp: repeats every signal colour along the yard. Source visual: PRP_KIT_SignalLamp_05.",
+      "signalType": "shared"
+    },
+    {
+      "id": "SIGNAL_LAMP_06",
+      "objectName": "SIGNAL_LAMP_06",
+      "position": {
+        "x": 38.0,
+        "y": 90.0,
+        "z": 21.2
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -90.0
+      },
+      "notes": "Tower signal lamp: repeats every signal colour along the yard. Source visual: PRP_KIT_SignalLamp_06.",
+      "signalType": "shared"
+    },
+    {
+      "id": "SIGNAL_LAMP_07",
+      "objectName": "SIGNAL_LAMP_07",
+      "position": {
+        "x": -38.0,
+        "y": 140.0,
+        "z": 21.2
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 90.0
+      },
+      "notes": "Tower signal lamp: repeats every signal colour along the yard. Source visual: PRP_KIT_SignalLamp_07.",
+      "signalType": "shared"
+    },
+    {
+      "id": "SIGNAL_LAMP_08",
+      "objectName": "SIGNAL_LAMP_08",
+      "position": {
+        "x": 38.0,
+        "y": 140.0,
+        "z": 21.2
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -90.0
+      },
+      "notes": "Tower signal lamp: repeats every signal colour along the yard. Source visual: PRP_KIT_SignalLamp_08.",
+      "signalType": "shared"
+    },
+    {
+      "id": "SIGNAL_LAMP_09",
+      "objectName": "SIGNAL_LAMP_09",
+      "position": {
+        "x": -38.0,
+        "y": 175.0,
+        "z": 21.2
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 90.0
+      },
+      "notes": "Tower signal lamp: repeats every signal colour along the yard. Source visual: PRP_KIT_SignalLamp_09.",
+      "signalType": "shared"
+    },
+    {
+      "id": "SIGNAL_LAMP_10",
+      "objectName": "SIGNAL_LAMP_10",
+      "position": {
+        "x": 38.0,
+        "y": 175.0,
+        "z": 21.2
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -90.0
+      },
+      "notes": "Tower signal lamp: repeats every signal colour along the yard. Source visual: PRP_KIT_SignalLamp_10.",
+      "signalType": "shared"
+    },
+    {
+      "id": "SIGNAL_RED_ANCHOR",
+      "objectName": "SIGNAL_RED_ANCHOR",
+      "position": {
+        "x": 6.16,
+        "y": 183.5,
+        "z": 15.888
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "notes": "Lantern centre: attach the RED state visual (red lantern, raised). Source visual: ENM_Shepherd_Placeholder_Lantern.",
+      "signalType": "red"
+    },
+    {
+      "id": "SIGNAL_SCAN_BEAM_ANCHOR",
+      "objectName": "SIGNAL_SCAN_BEAM_ANCHOR",
+      "position": {
+        "x": 0.0,
+        "y": 182.06,
+        "z": 28.08
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "notes": "Face centre: origin of the red scan beam (presentation only). Source visual: ENM_Shepherd_Placeholder_Face.",
+      "signalType": "red"
+    }
+  ],
+  "sceneObjects": [
+    {
+      "id": "BOUNDARY_BACK",
+      "objectName": "BOUNDARY_BACK",
+      "collection": "GAMEPLAY_BOUNDARIES",
+      "role": "boundary_wall"
+    },
+    {
+      "id": "BOUNDARY_FINISH",
+      "objectName": "BOUNDARY_FINISH",
+      "collection": "GAMEPLAY_BOUNDARIES",
+      "role": "boundary_wall"
+    },
+    {
+      "id": "BOUNDARY_LEFT",
+      "objectName": "BOUNDARY_LEFT",
+      "collection": "GAMEPLAY_BOUNDARIES",
+      "role": "boundary_wall"
+    },
+    {
+      "id": "BOUNDARY_PLAYABLE_AREA",
+      "objectName": "BOUNDARY_PLAYABLE_AREA",
+      "collection": "GAMEPLAY_BOUNDARIES",
+      "role": "boundary_playable_area"
+    },
+    {
+      "id": "BOUNDARY_RIGHT",
+      "objectName": "BOUNDARY_RIGHT",
+      "collection": "GAMEPLAY_BOUNDARIES",
+      "role": "boundary_wall"
+    },
+    {
+      "id": "CAM_STG01_Finish",
+      "objectName": "CAM_STG01_Finish",
+      "collection": "CAMERAS",
+      "role": "camera"
+    },
+    {
+      "id": "CAM_STG01_Gameplay",
+      "objectName": "CAM_STG01_Gameplay",
+      "collection": "CAMERAS",
+      "role": "camera"
+    },
+    {
+      "id": "CAM_STG01_Intro_A",
+      "objectName": "CAM_STG01_Intro_A",
+      "collection": "CAMERAS",
+      "role": "camera"
+    },
+    {
+      "id": "CAM_STG01_Intro_B",
+      "objectName": "CAM_STG01_Intro_B",
+      "collection": "CAMERAS",
+      "role": "camera"
+    },
+    {
+      "id": "CAM_STG01_Overview",
+      "objectName": "CAM_STG01_Overview",
+      "collection": "CAMERAS",
+      "role": "camera"
+    },
+    {
+      "id": "CAM_STG01_Perspective",
+      "objectName": "CAM_STG01_Perspective",
+      "collection": "CAMERAS",
+      "role": "camera"
+    },
+    {
+      "id": "CAM_STG01_Spectator_01",
+      "objectName": "CAM_STG01_Spectator_01",
+      "collection": "CAMERAS",
+      "role": "camera"
+    },
+    {
+      "id": "CAM_STG01_Spectator_02",
+      "objectName": "CAM_STG01_Spectator_02",
+      "collection": "CAMERAS",
+      "role": "camera"
+    },
+    {
+      "id": "CAM_STG01_TopDown",
+      "objectName": "CAM_STG01_TopDown",
+      "collection": "CAMERAS",
+      "role": "camera"
+    },
+    {
+      "id": "COLLISION_BENCH_01",
+      "objectName": "COLLISION_BENCH_01",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_BENCH_02",
+      "objectName": "COLLISION_BENCH_02",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_BENCH_03",
+      "objectName": "COLLISION_BENCH_03",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_BENCH_04",
+      "objectName": "COLLISION_BENCH_04",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_BENCH_05",
+      "objectName": "COLLISION_BENCH_05",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_BENCH_06",
+      "objectName": "COLLISION_BENCH_06",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_BENCH_07",
+      "objectName": "COLLISION_BENCH_07",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_BENCH_08",
+      "objectName": "COLLISION_BENCH_08",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_BENCH_09",
+      "objectName": "COLLISION_BENCH_09",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_BENCH_10",
+      "objectName": "COLLISION_BENCH_10",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_BENCH_11",
+      "objectName": "COLLISION_BENCH_11",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_BENCH_12",
+      "objectName": "COLLISION_BENCH_12",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_BENCH_13",
+      "objectName": "COLLISION_BENCH_13",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_BENCH_14",
+      "objectName": "COLLISION_BENCH_14",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_BENCH_15",
+      "objectName": "COLLISION_BENCH_15",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_CAMERA_FENCE_BACK",
+      "objectName": "COLLISION_CAMERA_FENCE_BACK",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_camera_only"
+    },
+    {
+      "id": "COLLISION_CAMERA_FENCE_LEFT",
+      "objectName": "COLLISION_CAMERA_FENCE_LEFT",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_camera_only"
+    },
+    {
+      "id": "COLLISION_CAMERA_FENCE_RIGHT",
+      "objectName": "COLLISION_CAMERA_FENCE_RIGHT",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_camera_only"
+    },
+    {
+      "id": "COLLISION_CONCRETE_BARRIER_E",
+      "objectName": "COLLISION_CONCRETE_BARRIER_E",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_CONCRETE_BARRIER_N",
+      "objectName": "COLLISION_CONCRETE_BARRIER_N",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_CONCRETE_BARRIER_S",
+      "objectName": "COLLISION_CONCRETE_BARRIER_S",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_CONCRETE_BARRIER_W",
+      "objectName": "COLLISION_CONCRETE_BARRIER_W",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_FINISH_GATE_BEAM",
+      "objectName": "COLLISION_FINISH_GATE_BEAM",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_FINISH_GATE_POST_E",
+      "objectName": "COLLISION_FINISH_GATE_POST_E",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_FINISH_GATE_POST_W",
+      "objectName": "COLLISION_FINISH_GATE_POST_W",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_FLOODLIGHT_TOWER_01",
+      "objectName": "COLLISION_FLOODLIGHT_TOWER_01",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_FLOODLIGHT_TOWER_02",
+      "objectName": "COLLISION_FLOODLIGHT_TOWER_02",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_FLOODLIGHT_TOWER_03",
+      "objectName": "COLLISION_FLOODLIGHT_TOWER_03",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_FLOODLIGHT_TOWER_04",
+      "objectName": "COLLISION_FLOODLIGHT_TOWER_04",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_FLOODLIGHT_TOWER_05",
+      "objectName": "COLLISION_FLOODLIGHT_TOWER_05",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_FLOODLIGHT_TOWER_06",
+      "objectName": "COLLISION_FLOODLIGHT_TOWER_06",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_FLOODLIGHT_TOWER_07",
+      "objectName": "COLLISION_FLOODLIGHT_TOWER_07",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_FLOODLIGHT_TOWER_08",
+      "objectName": "COLLISION_FLOODLIGHT_TOWER_08",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_FLOODLIGHT_TOWER_09",
+      "objectName": "COLLISION_FLOODLIGHT_TOWER_09",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_FLOODLIGHT_TOWER_10",
+      "objectName": "COLLISION_FLOODLIGHT_TOWER_10",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_GROUND_MAIN",
+      "objectName": "COLLISION_GROUND_MAIN",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_ground"
+    },
+    {
+      "id": "COLLISION_GROUND_OUTER",
+      "objectName": "COLLISION_GROUND_OUTER",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_JUDGES_BOOTH_CABIN",
+      "objectName": "COLLISION_JUDGES_BOOTH_CABIN",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_JUDGES_BOOTH_LEG_1",
+      "objectName": "COLLISION_JUDGES_BOOTH_LEG_1",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_JUDGES_BOOTH_LEG_2",
+      "objectName": "COLLISION_JUDGES_BOOTH_LEG_2",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_JUDGES_BOOTH_LEG_3",
+      "objectName": "COLLISION_JUDGES_BOOTH_LEG_3",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_JUDGES_BOOTH_LEG_4",
+      "objectName": "COLLISION_JUDGES_BOOTH_LEG_4",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_JUDGES_BOOTH_TIMER_BOARD",
+      "objectName": "COLLISION_JUDGES_BOOTH_TIMER_BOARD",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_ROCKET_FRAME_A",
+      "objectName": "COLLISION_ROCKET_FRAME_A",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_ROUNDABOUT_SPINNER_A",
+      "objectName": "COLLISION_ROUNDABOUT_SPINNER_A",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SEE_SAW_A",
+      "objectName": "COLLISION_SEE_SAW_A",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SHEPHERD_PLATFORM",
+      "objectName": "COLLISION_SHEPHERD_PLATFORM",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SLIDE_A",
+      "objectName": "COLLISION_SLIDE_A",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_DECK",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_DECK",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_01",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_01",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_02",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_02",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_03",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_03",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_04",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_04",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_05",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_05",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_06",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_06",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_07",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_07",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_08",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_08",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_09",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_09",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_10",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_10",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_11",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_11",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_12",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_12",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_13",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_13",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_14",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_14",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_15",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_15",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_16",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_16",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_17",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_17",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_18",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_18",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_19",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_19",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_20",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_20",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_21",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_21",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_LEG_22",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_LEG_22",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_RAIL",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_RAIL",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SPECTATOR_GANTRY_ROOF",
+      "objectName": "COLLISION_SPECTATOR_GANTRY_ROOF",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_START_BARRIER_ARM",
+      "objectName": "COLLISION_START_BARRIER_ARM",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_START_BARRIER_POST_E",
+      "objectName": "COLLISION_START_BARRIER_POST_E",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_START_BARRIER_POST_W",
+      "objectName": "COLLISION_START_BARRIER_POST_W",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COLLISION_SWING_SET_A",
+      "objectName": "COLLISION_SWING_SET_A",
+      "collection": "GAMEPLAY_COLLISION",
+      "role": "collision_solid"
+    },
+    {
+      "id": "COURSE_CENTRE_ANCHOR",
+      "objectName": "COURSE_CENTRE_ANCHOR",
+      "collection": "GAMEPLAY_MARKERS",
+      "role": "course_centre"
+    },
+    {
+      "id": "ENM_Shepherd_Envelope",
+      "objectName": "ENM_Shepherd_Envelope",
+      "collection": "REFERENCE",
+      "role": "review_reference"
+    },
+    {
+      "id": "ENM_Shepherd_Facing_Arrow",
+      "objectName": "ENM_Shepherd_Facing_Arrow",
+      "collection": "REFERENCE",
+      "role": "review_reference"
+    },
+    {
+      "id": "ENM_Shepherd_Placeholder_Body",
+      "objectName": "ENM_Shepherd_Placeholder_Body",
+      "collection": "VISUAL_WATCHER",
+      "role": "visual_watcher"
+    },
+    {
+      "id": "ENM_Shepherd_Placeholder_Crook",
+      "objectName": "ENM_Shepherd_Placeholder_Crook",
+      "collection": "VISUAL_WATCHER",
+      "role": "visual_watcher"
+    },
+    {
+      "id": "ENM_Shepherd_Placeholder_Face",
+      "objectName": "ENM_Shepherd_Placeholder_Face",
+      "collection": "VISUAL_WATCHER",
+      "role": "visual_watcher"
+    },
+    {
+      "id": "ENM_Shepherd_Placeholder_Head",
+      "objectName": "ENM_Shepherd_Placeholder_Head",
+      "collection": "VISUAL_WATCHER",
+      "role": "visual_watcher"
+    },
+    {
+      "id": "ENM_Shepherd_Placeholder_Lantern",
+      "objectName": "ENM_Shepherd_Placeholder_Lantern",
+      "collection": "VISUAL_WATCHER",
+      "role": "visual_watcher"
+    },
+    {
+      "id": "FINISH_LINE_ANCHOR",
+      "objectName": "FINISH_LINE_ANCHOR",
+      "collection": "GAMEPLAY_MARKERS",
+      "role": "finish_line"
+    },
+    {
+      "id": "LGT_STG01_Flood_01",
+      "objectName": "LGT_STG01_Flood_01",
+      "collection": "LIGHTING",
+      "role": "light"
+    },
+    {
+      "id": "LGT_STG01_Flood_02",
+      "objectName": "LGT_STG01_Flood_02",
+      "collection": "LIGHTING",
+      "role": "light"
+    },
+    {
+      "id": "LGT_STG01_Flood_03",
+      "objectName": "LGT_STG01_Flood_03",
+      "collection": "LIGHTING",
+      "role": "light"
+    },
+    {
+      "id": "LGT_STG01_Flood_04",
+      "objectName": "LGT_STG01_Flood_04",
+      "collection": "LIGHTING",
+      "role": "light"
+    },
+    {
+      "id": "LGT_STG01_Flood_05",
+      "objectName": "LGT_STG01_Flood_05",
+      "collection": "LIGHTING",
+      "role": "light"
+    },
+    {
+      "id": "LGT_STG01_Flood_06",
+      "objectName": "LGT_STG01_Flood_06",
+      "collection": "LIGHTING",
+      "role": "light"
+    },
+    {
+      "id": "LGT_STG01_Flood_07",
+      "objectName": "LGT_STG01_Flood_07",
+      "collection": "LIGHTING",
+      "role": "light"
+    },
+    {
+      "id": "LGT_STG01_Flood_08",
+      "objectName": "LGT_STG01_Flood_08",
+      "collection": "LIGHTING",
+      "role": "light"
+    },
+    {
+      "id": "LGT_STG01_Flood_09",
+      "objectName": "LGT_STG01_Flood_09",
+      "collection": "LIGHTING",
+      "role": "light"
+    },
+    {
+      "id": "LGT_STG01_Flood_10",
+      "objectName": "LGT_STG01_Flood_10",
+      "collection": "LIGHTING",
+      "role": "light"
+    },
+    {
+      "id": "LGT_STG01_Moon",
+      "objectName": "LGT_STG01_Moon",
+      "collection": "LIGHTING",
+      "role": "light"
+    },
+    {
+      "id": "PRP_KIT_Bench_01",
+      "objectName": "PRP_KIT_Bench_01",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_KIT_Bench_02",
+      "objectName": "PRP_KIT_Bench_02",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_KIT_Bench_03",
+      "objectName": "PRP_KIT_Bench_03",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_KIT_Bench_04",
+      "objectName": "PRP_KIT_Bench_04",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_KIT_Bench_05",
+      "objectName": "PRP_KIT_Bench_05",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_KIT_Bench_06",
+      "objectName": "PRP_KIT_Bench_06",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_KIT_Bench_07",
+      "objectName": "PRP_KIT_Bench_07",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_KIT_Bench_08",
+      "objectName": "PRP_KIT_Bench_08",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_KIT_Bench_09",
+      "objectName": "PRP_KIT_Bench_09",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_KIT_Bench_10",
+      "objectName": "PRP_KIT_Bench_10",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_KIT_Bench_11",
+      "objectName": "PRP_KIT_Bench_11",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_KIT_Bench_12",
+      "objectName": "PRP_KIT_Bench_12",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_KIT_Bench_13",
+      "objectName": "PRP_KIT_Bench_13",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_KIT_Bench_14",
+      "objectName": "PRP_KIT_Bench_14",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_KIT_Bench_15",
+      "objectName": "PRP_KIT_Bench_15",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_KIT_ConcreteBarrier_E",
+      "objectName": "PRP_KIT_ConcreteBarrier_E",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "PRP_KIT_ConcreteBarrier_N",
+      "objectName": "PRP_KIT_ConcreteBarrier_N",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "PRP_KIT_ConcreteBarrier_S",
+      "objectName": "PRP_KIT_ConcreteBarrier_S",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "PRP_KIT_ConcreteBarrier_W",
+      "objectName": "PRP_KIT_ConcreteBarrier_W",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_01",
+      "objectName": "PRP_KIT_FloodlightTower_01",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_02",
+      "objectName": "PRP_KIT_FloodlightTower_02",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_03",
+      "objectName": "PRP_KIT_FloodlightTower_03",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_04",
+      "objectName": "PRP_KIT_FloodlightTower_04",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_05",
+      "objectName": "PRP_KIT_FloodlightTower_05",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_06",
+      "objectName": "PRP_KIT_FloodlightTower_06",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_07",
+      "objectName": "PRP_KIT_FloodlightTower_07",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_08",
+      "objectName": "PRP_KIT_FloodlightTower_08",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_09",
+      "objectName": "PRP_KIT_FloodlightTower_09",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_10",
+      "objectName": "PRP_KIT_FloodlightTower_10",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_Head_01",
+      "objectName": "PRP_KIT_FloodlightTower_Head_01",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_Head_02",
+      "objectName": "PRP_KIT_FloodlightTower_Head_02",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_Head_03",
+      "objectName": "PRP_KIT_FloodlightTower_Head_03",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_Head_04",
+      "objectName": "PRP_KIT_FloodlightTower_Head_04",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_Head_05",
+      "objectName": "PRP_KIT_FloodlightTower_Head_05",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_Head_06",
+      "objectName": "PRP_KIT_FloodlightTower_Head_06",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_Head_07",
+      "objectName": "PRP_KIT_FloodlightTower_Head_07",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_Head_08",
+      "objectName": "PRP_KIT_FloodlightTower_Head_08",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_Head_09",
+      "objectName": "PRP_KIT_FloodlightTower_Head_09",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_FloodlightTower_Head_10",
+      "objectName": "PRP_KIT_FloodlightTower_Head_10",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_Loudspeaker_03",
+      "objectName": "PRP_KIT_Loudspeaker_03",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_Loudspeaker_04",
+      "objectName": "PRP_KIT_Loudspeaker_04",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_Loudspeaker_07",
+      "objectName": "PRP_KIT_Loudspeaker_07",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_Loudspeaker_08",
+      "objectName": "PRP_KIT_Loudspeaker_08",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_ServiceGate_01",
+      "objectName": "PRP_KIT_ServiceGate_01",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_KIT_ServiceGate_02",
+      "objectName": "PRP_KIT_ServiceGate_02",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_KIT_SignalLamp_01",
+      "objectName": "PRP_KIT_SignalLamp_01",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_SignalLamp_02",
+      "objectName": "PRP_KIT_SignalLamp_02",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_SignalLamp_03",
+      "objectName": "PRP_KIT_SignalLamp_03",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_SignalLamp_04",
+      "objectName": "PRP_KIT_SignalLamp_04",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_SignalLamp_05",
+      "objectName": "PRP_KIT_SignalLamp_05",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_SignalLamp_06",
+      "objectName": "PRP_KIT_SignalLamp_06",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_SignalLamp_07",
+      "objectName": "PRP_KIT_SignalLamp_07",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_SignalLamp_08",
+      "objectName": "PRP_KIT_SignalLamp_08",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_SignalLamp_09",
+      "objectName": "PRP_KIT_SignalLamp_09",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_KIT_SignalLamp_10",
+      "objectName": "PRP_KIT_SignalLamp_10",
+      "collection": "LIGHTING",
+      "role": "visual_lighting_prop"
+    },
+    {
+      "id": "PRP_STG01_Fence_E",
+      "objectName": "PRP_STG01_Fence_E",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_Fence_N",
+      "objectName": "PRP_STG01_Fence_N",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_Fence_S",
+      "objectName": "PRP_STG01_Fence_S",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_Fence_W",
+      "objectName": "PRP_STG01_Fence_W",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_FinishGate_Beam",
+      "objectName": "PRP_STG01_FinishGate_Beam",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_FinishGate_LightStrip",
+      "objectName": "PRP_STG01_FinishGate_LightStrip",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_FinishGate_Post_E",
+      "objectName": "PRP_STG01_FinishGate_Post_E",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_FinishGate_Post_W",
+      "objectName": "PRP_STG01_FinishGate_Post_W",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_JudgesBooth_Cabin",
+      "objectName": "PRP_STG01_JudgesBooth_Cabin",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_JudgesBooth_Leg_1",
+      "objectName": "PRP_STG01_JudgesBooth_Leg_1",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_JudgesBooth_Leg_2",
+      "objectName": "PRP_STG01_JudgesBooth_Leg_2",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_JudgesBooth_Leg_3",
+      "objectName": "PRP_STG01_JudgesBooth_Leg_3",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_JudgesBooth_Leg_4",
+      "objectName": "PRP_STG01_JudgesBooth_Leg_4",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_JudgesBooth_TimerBoard",
+      "objectName": "PRP_STG01_JudgesBooth_TimerBoard",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_RocketFrame_A",
+      "objectName": "PRP_STG01_RocketFrame_A",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "PRP_STG01_RoundaboutSpinner_A",
+      "objectName": "PRP_STG01_RoundaboutSpinner_A",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "PRP_STG01_SeeSaw_A",
+      "objectName": "PRP_STG01_SeeSaw_A",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "PRP_STG01_ShepherdPlatform",
+      "objectName": "PRP_STG01_ShepherdPlatform",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_Slide_A",
+      "objectName": "PRP_STG01_Slide_A",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Deck",
+      "objectName": "PRP_STG01_SpectatorGantry_Deck",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_01",
+      "objectName": "PRP_STG01_SpectatorGantry_Leg_01",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_02",
+      "objectName": "PRP_STG01_SpectatorGantry_Leg_02",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_03",
+      "objectName": "PRP_STG01_SpectatorGantry_Leg_03",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_04",
+      "objectName": "PRP_STG01_SpectatorGantry_Leg_04",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_05",
+      "objectName": "PRP_STG01_SpectatorGantry_Leg_05",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_06",
+      "objectName": "PRP_STG01_SpectatorGantry_Leg_06",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_07",
+      "objectName": "PRP_STG01_SpectatorGantry_Leg_07",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_08",
+      "objectName": "PRP_STG01_SpectatorGantry_Leg_08",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_09",
+      "objectName": "PRP_STG01_SpectatorGantry_Leg_09",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_10",
+      "objectName": "PRP_STG01_SpectatorGantry_Leg_10",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_11",
+      "objectName": "PRP_STG01_SpectatorGantry_Leg_11",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_12",
+      "objectName": "PRP_STG01_SpectatorGantry_Leg_12",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_13",
+      "objectName": "PRP_STG01_SpectatorGantry_Leg_13",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_14",
+      "objectName": "PRP_STG01_SpectatorGantry_Leg_14",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_15",
+      "objectName": "PRP_STG01_SpectatorGantry_Leg_15",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_16",
+      "objectName": "PRP_STG01_SpectatorGantry_Leg_16",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_17",
+      "objectName": "PRP_STG01_SpectatorGantry_Leg_17",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_18",
+      "objectName": "PRP_STG01_SpectatorGantry_Leg_18",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_19",
+      "objectName": "PRP_STG01_SpectatorGantry_Leg_19",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_20",
+      "objectName": "PRP_STG01_SpectatorGantry_Leg_20",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_21",
+      "objectName": "PRP_STG01_SpectatorGantry_Leg_21",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Leg_22",
+      "objectName": "PRP_STG01_SpectatorGantry_Leg_22",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Rail",
+      "objectName": "PRP_STG01_SpectatorGantry_Rail",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_SpectatorGantry_Roof",
+      "objectName": "PRP_STG01_SpectatorGantry_Roof",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_StartBarrier_Arm",
+      "objectName": "PRP_STG01_StartBarrier_Arm",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_StartBarrier_Post_E",
+      "objectName": "PRP_STG01_StartBarrier_Post_E",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_StartBarrier_Post_W",
+      "objectName": "PRP_STG01_StartBarrier_Post_W",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "PRP_STG01_SwingSet_A",
+      "objectName": "PRP_STG01_SwingSet_A",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "REF_STG01_NorthArrow",
+      "objectName": "REF_STG01_NorthArrow",
+      "collection": "REFERENCE",
+      "role": "review_reference"
+    },
+    {
+      "id": "REF_STG01_ScaleFigure_1_2m",
+      "objectName": "REF_STG01_ScaleFigure_1_2m",
+      "collection": "REFERENCE",
+      "role": "review_reference"
+    },
+    {
+      "id": "SIGNAL_AUDIO_03",
+      "objectName": "SIGNAL_AUDIO_03",
+      "collection": "SIGNAL_ANCHORS",
+      "role": "signal_audio_anchor"
+    },
+    {
+      "id": "SIGNAL_AUDIO_04",
+      "objectName": "SIGNAL_AUDIO_04",
+      "collection": "SIGNAL_ANCHORS",
+      "role": "signal_audio_anchor"
+    },
+    {
+      "id": "SIGNAL_AUDIO_07",
+      "objectName": "SIGNAL_AUDIO_07",
+      "collection": "SIGNAL_ANCHORS",
+      "role": "signal_audio_anchor"
+    },
+    {
+      "id": "SIGNAL_AUDIO_08",
+      "objectName": "SIGNAL_AUDIO_08",
+      "collection": "SIGNAL_ANCHORS",
+      "role": "signal_audio_anchor"
+    },
+    {
+      "id": "SIGNAL_GREEN_ANCHOR",
+      "objectName": "SIGNAL_GREEN_ANCHOR",
+      "collection": "SIGNAL_ANCHORS",
+      "role": "signal_anchor"
+    },
+    {
+      "id": "SIGNAL_LAMP_01",
+      "objectName": "SIGNAL_LAMP_01",
+      "collection": "SIGNAL_ANCHORS",
+      "role": "signal_anchor"
+    },
+    {
+      "id": "SIGNAL_LAMP_02",
+      "objectName": "SIGNAL_LAMP_02",
+      "collection": "SIGNAL_ANCHORS",
+      "role": "signal_anchor"
+    },
+    {
+      "id": "SIGNAL_LAMP_03",
+      "objectName": "SIGNAL_LAMP_03",
+      "collection": "SIGNAL_ANCHORS",
+      "role": "signal_anchor"
+    },
+    {
+      "id": "SIGNAL_LAMP_04",
+      "objectName": "SIGNAL_LAMP_04",
+      "collection": "SIGNAL_ANCHORS",
+      "role": "signal_anchor"
+    },
+    {
+      "id": "SIGNAL_LAMP_05",
+      "objectName": "SIGNAL_LAMP_05",
+      "collection": "SIGNAL_ANCHORS",
+      "role": "signal_anchor"
+    },
+    {
+      "id": "SIGNAL_LAMP_06",
+      "objectName": "SIGNAL_LAMP_06",
+      "collection": "SIGNAL_ANCHORS",
+      "role": "signal_anchor"
+    },
+    {
+      "id": "SIGNAL_LAMP_07",
+      "objectName": "SIGNAL_LAMP_07",
+      "collection": "SIGNAL_ANCHORS",
+      "role": "signal_anchor"
+    },
+    {
+      "id": "SIGNAL_LAMP_08",
+      "objectName": "SIGNAL_LAMP_08",
+      "collection": "SIGNAL_ANCHORS",
+      "role": "signal_anchor"
+    },
+    {
+      "id": "SIGNAL_LAMP_09",
+      "objectName": "SIGNAL_LAMP_09",
+      "collection": "SIGNAL_ANCHORS",
+      "role": "signal_anchor"
+    },
+    {
+      "id": "SIGNAL_LAMP_10",
+      "objectName": "SIGNAL_LAMP_10",
+      "collection": "SIGNAL_ANCHORS",
+      "role": "signal_anchor"
+    },
+    {
+      "id": "SIGNAL_RED_ANCHOR",
+      "objectName": "SIGNAL_RED_ANCHOR",
+      "collection": "SIGNAL_ANCHORS",
+      "role": "signal_anchor"
+    },
+    {
+      "id": "SIGNAL_SCAN_BEAM_ANCHOR",
+      "objectName": "SIGNAL_SCAN_BEAM_ANCHOR",
+      "collection": "SIGNAL_ANCHORS",
+      "role": "signal_anchor"
+    },
+    {
+      "id": "SPAWN_PLAYER_01",
+      "objectName": "SPAWN_PLAYER_01",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_01_CAPSULE",
+      "objectName": "SPAWN_PLAYER_01_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_02",
+      "objectName": "SPAWN_PLAYER_02",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_02_CAPSULE",
+      "objectName": "SPAWN_PLAYER_02_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_03",
+      "objectName": "SPAWN_PLAYER_03",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_03_CAPSULE",
+      "objectName": "SPAWN_PLAYER_03_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_04",
+      "objectName": "SPAWN_PLAYER_04",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_04_CAPSULE",
+      "objectName": "SPAWN_PLAYER_04_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_05",
+      "objectName": "SPAWN_PLAYER_05",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_05_CAPSULE",
+      "objectName": "SPAWN_PLAYER_05_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_06",
+      "objectName": "SPAWN_PLAYER_06",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_06_CAPSULE",
+      "objectName": "SPAWN_PLAYER_06_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_07",
+      "objectName": "SPAWN_PLAYER_07",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_07_CAPSULE",
+      "objectName": "SPAWN_PLAYER_07_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_08",
+      "objectName": "SPAWN_PLAYER_08",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_08_CAPSULE",
+      "objectName": "SPAWN_PLAYER_08_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_09",
+      "objectName": "SPAWN_PLAYER_09",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_09_CAPSULE",
+      "objectName": "SPAWN_PLAYER_09_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_10",
+      "objectName": "SPAWN_PLAYER_10",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_10_CAPSULE",
+      "objectName": "SPAWN_PLAYER_10_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_11",
+      "objectName": "SPAWN_PLAYER_11",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_11_CAPSULE",
+      "objectName": "SPAWN_PLAYER_11_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_12",
+      "objectName": "SPAWN_PLAYER_12",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_12_CAPSULE",
+      "objectName": "SPAWN_PLAYER_12_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_13",
+      "objectName": "SPAWN_PLAYER_13",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_13_CAPSULE",
+      "objectName": "SPAWN_PLAYER_13_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_14",
+      "objectName": "SPAWN_PLAYER_14",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_14_CAPSULE",
+      "objectName": "SPAWN_PLAYER_14_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_15",
+      "objectName": "SPAWN_PLAYER_15",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_15_CAPSULE",
+      "objectName": "SPAWN_PLAYER_15_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_16",
+      "objectName": "SPAWN_PLAYER_16",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_16_CAPSULE",
+      "objectName": "SPAWN_PLAYER_16_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_17",
+      "objectName": "SPAWN_PLAYER_17",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_17_CAPSULE",
+      "objectName": "SPAWN_PLAYER_17_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_18",
+      "objectName": "SPAWN_PLAYER_18",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_18_CAPSULE",
+      "objectName": "SPAWN_PLAYER_18_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_19",
+      "objectName": "SPAWN_PLAYER_19",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_19_CAPSULE",
+      "objectName": "SPAWN_PLAYER_19_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_20",
+      "objectName": "SPAWN_PLAYER_20",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_20_CAPSULE",
+      "objectName": "SPAWN_PLAYER_20_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_21",
+      "objectName": "SPAWN_PLAYER_21",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_21_CAPSULE",
+      "objectName": "SPAWN_PLAYER_21_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_22",
+      "objectName": "SPAWN_PLAYER_22",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_22_CAPSULE",
+      "objectName": "SPAWN_PLAYER_22_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_23",
+      "objectName": "SPAWN_PLAYER_23",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_23_CAPSULE",
+      "objectName": "SPAWN_PLAYER_23_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_24",
+      "objectName": "SPAWN_PLAYER_24",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_24_CAPSULE",
+      "objectName": "SPAWN_PLAYER_24_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_25",
+      "objectName": "SPAWN_PLAYER_25",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_25_CAPSULE",
+      "objectName": "SPAWN_PLAYER_25_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_26",
+      "objectName": "SPAWN_PLAYER_26",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_26_CAPSULE",
+      "objectName": "SPAWN_PLAYER_26_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_27",
+      "objectName": "SPAWN_PLAYER_27",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_27_CAPSULE",
+      "objectName": "SPAWN_PLAYER_27_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_28",
+      "objectName": "SPAWN_PLAYER_28",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_28_CAPSULE",
+      "objectName": "SPAWN_PLAYER_28_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_29",
+      "objectName": "SPAWN_PLAYER_29",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_29_CAPSULE",
+      "objectName": "SPAWN_PLAYER_29_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPAWN_PLAYER_30",
+      "objectName": "SPAWN_PLAYER_30",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn"
+    },
+    {
+      "id": "SPAWN_PLAYER_30_CAPSULE",
+      "objectName": "SPAWN_PLAYER_30_CAPSULE",
+      "collection": "PLAYER_SPAWNS",
+      "role": "spawn_capsule_reference"
+    },
+    {
+      "id": "SPECTATOR_01",
+      "objectName": "SPECTATOR_01",
+      "collection": "SPECTATOR_LOCATIONS",
+      "role": "spectator_viewpoint"
+    },
+    {
+      "id": "SPECTATOR_BENCH_01",
+      "objectName": "SPECTATOR_BENCH_01",
+      "collection": "SPECTATOR_LOCATIONS",
+      "role": "spectator_bench_seat"
+    },
+    {
+      "id": "SPECTATOR_BENCH_02",
+      "objectName": "SPECTATOR_BENCH_02",
+      "collection": "SPECTATOR_LOCATIONS",
+      "role": "spectator_bench_seat"
+    },
+    {
+      "id": "SPECTATOR_BENCH_03",
+      "objectName": "SPECTATOR_BENCH_03",
+      "collection": "SPECTATOR_LOCATIONS",
+      "role": "spectator_bench_seat"
+    },
+    {
+      "id": "SPECTATOR_BENCH_04",
+      "objectName": "SPECTATOR_BENCH_04",
+      "collection": "SPECTATOR_LOCATIONS",
+      "role": "spectator_bench_seat"
+    },
+    {
+      "id": "SPECTATOR_BENCH_05",
+      "objectName": "SPECTATOR_BENCH_05",
+      "collection": "SPECTATOR_LOCATIONS",
+      "role": "spectator_bench_seat"
+    },
+    {
+      "id": "SPECTATOR_BENCH_06",
+      "objectName": "SPECTATOR_BENCH_06",
+      "collection": "SPECTATOR_LOCATIONS",
+      "role": "spectator_bench_seat"
+    },
+    {
+      "id": "SPECTATOR_BENCH_07",
+      "objectName": "SPECTATOR_BENCH_07",
+      "collection": "SPECTATOR_LOCATIONS",
+      "role": "spectator_bench_seat"
+    },
+    {
+      "id": "SPECTATOR_BENCH_08",
+      "objectName": "SPECTATOR_BENCH_08",
+      "collection": "SPECTATOR_LOCATIONS",
+      "role": "spectator_bench_seat"
+    },
+    {
+      "id": "SPECTATOR_BENCH_09",
+      "objectName": "SPECTATOR_BENCH_09",
+      "collection": "SPECTATOR_LOCATIONS",
+      "role": "spectator_bench_seat"
+    },
+    {
+      "id": "SPECTATOR_BENCH_10",
+      "objectName": "SPECTATOR_BENCH_10",
+      "collection": "SPECTATOR_LOCATIONS",
+      "role": "spectator_bench_seat"
+    },
+    {
+      "id": "SPECTATOR_BENCH_11",
+      "objectName": "SPECTATOR_BENCH_11",
+      "collection": "SPECTATOR_LOCATIONS",
+      "role": "spectator_bench_seat"
+    },
+    {
+      "id": "SPECTATOR_BENCH_12",
+      "objectName": "SPECTATOR_BENCH_12",
+      "collection": "SPECTATOR_LOCATIONS",
+      "role": "spectator_bench_seat"
+    },
+    {
+      "id": "SPECTATOR_BENCH_13",
+      "objectName": "SPECTATOR_BENCH_13",
+      "collection": "SPECTATOR_LOCATIONS",
+      "role": "spectator_bench_seat"
+    },
+    {
+      "id": "SPECTATOR_BENCH_14",
+      "objectName": "SPECTATOR_BENCH_14",
+      "collection": "SPECTATOR_LOCATIONS",
+      "role": "spectator_bench_seat"
+    },
+    {
+      "id": "SPECTATOR_BENCH_15",
+      "objectName": "SPECTATOR_BENCH_15",
+      "collection": "SPECTATOR_LOCATIONS",
+      "role": "spectator_bench_seat"
+    },
+    {
+      "id": "SPECTATOR_GANTRY_01",
+      "objectName": "SPECTATOR_GANTRY_01",
+      "collection": "SPECTATOR_LOCATIONS",
+      "role": "spectator_gantry_spot"
+    },
+    {
+      "id": "SPECTATOR_GANTRY_02",
+      "objectName": "SPECTATOR_GANTRY_02",
+      "collection": "SPECTATOR_LOCATIONS",
+      "role": "spectator_gantry_spot"
+    },
+    {
+      "id": "SPECTATOR_GANTRY_03",
+      "objectName": "SPECTATOR_GANTRY_03",
+      "collection": "SPECTATOR_LOCATIONS",
+      "role": "spectator_gantry_spot"
+    },
+    {
+      "id": "SPECTATOR_GANTRY_04",
+      "objectName": "SPECTATOR_GANTRY_04",
+      "collection": "SPECTATOR_LOCATIONS",
+      "role": "spectator_gantry_spot"
+    },
+    {
+      "id": "SPECTATOR_GANTRY_05",
+      "objectName": "SPECTATOR_GANTRY_05",
+      "collection": "SPECTATOR_LOCATIONS",
+      "role": "spectator_gantry_spot"
+    },
+    {
+      "id": "START_LINE_ANCHOR",
+      "objectName": "START_LINE_ANCHOR",
+      "collection": "GAMEPLAY_MARKERS",
+      "role": "start_line"
+    },
+    {
+      "id": "STG01_BG_OverpassPier_01",
+      "objectName": "STG01_BG_OverpassPier_01",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_OverpassPier_02",
+      "objectName": "STG01_BG_OverpassPier_02",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_OverpassPier_03",
+      "objectName": "STG01_BG_OverpassPier_03",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_OverpassPier_04",
+      "objectName": "STG01_BG_OverpassPier_04",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_OverpassPier_05",
+      "objectName": "STG01_BG_OverpassPier_05",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_OverpassPier_06",
+      "objectName": "STG01_BG_OverpassPier_06",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_OverpassPier_07",
+      "objectName": "STG01_BG_OverpassPier_07",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_OverpassPier_08",
+      "objectName": "STG01_BG_OverpassPier_08",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_OverpassPier_09",
+      "objectName": "STG01_BG_OverpassPier_09",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_OverpassPier_10",
+      "objectName": "STG01_BG_OverpassPier_10",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_OverpassPier_11",
+      "objectName": "STG01_BG_OverpassPier_11",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_OverpassPier_12",
+      "objectName": "STG01_BG_OverpassPier_12",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_OverpassPier_13",
+      "objectName": "STG01_BG_OverpassPier_13",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Overpass_Deck",
+      "objectName": "STG01_BG_Overpass_Deck",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Overpass_Rail",
+      "objectName": "STG01_BG_Overpass_Rail",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Silhouette_01",
+      "objectName": "STG01_BG_Silhouette_01",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Silhouette_02",
+      "objectName": "STG01_BG_Silhouette_02",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Silhouette_03",
+      "objectName": "STG01_BG_Silhouette_03",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Silhouette_04",
+      "objectName": "STG01_BG_Silhouette_04",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_01",
+      "objectName": "STG01_BG_Tree_01",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_02",
+      "objectName": "STG01_BG_Tree_02",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_03",
+      "objectName": "STG01_BG_Tree_03",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_04",
+      "objectName": "STG01_BG_Tree_04",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_05",
+      "objectName": "STG01_BG_Tree_05",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_06",
+      "objectName": "STG01_BG_Tree_06",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_07",
+      "objectName": "STG01_BG_Tree_07",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_08",
+      "objectName": "STG01_BG_Tree_08",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_09",
+      "objectName": "STG01_BG_Tree_09",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_10",
+      "objectName": "STG01_BG_Tree_10",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_11",
+      "objectName": "STG01_BG_Tree_11",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_12",
+      "objectName": "STG01_BG_Tree_12",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_13",
+      "objectName": "STG01_BG_Tree_13",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_14",
+      "objectName": "STG01_BG_Tree_14",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_15",
+      "objectName": "STG01_BG_Tree_15",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_16",
+      "objectName": "STG01_BG_Tree_16",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_17",
+      "objectName": "STG01_BG_Tree_17",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_18",
+      "objectName": "STG01_BG_Tree_18",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_19",
+      "objectName": "STG01_BG_Tree_19",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_20",
+      "objectName": "STG01_BG_Tree_20",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_21",
+      "objectName": "STG01_BG_Tree_21",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_22",
+      "objectName": "STG01_BG_Tree_22",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_23",
+      "objectName": "STG01_BG_Tree_23",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_24",
+      "objectName": "STG01_BG_Tree_24",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_25",
+      "objectName": "STG01_BG_Tree_25",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_26",
+      "objectName": "STG01_BG_Tree_26",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_27",
+      "objectName": "STG01_BG_Tree_27",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_28",
+      "objectName": "STG01_BG_Tree_28",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_29",
+      "objectName": "STG01_BG_Tree_29",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_30",
+      "objectName": "STG01_BG_Tree_30",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_31",
+      "objectName": "STG01_BG_Tree_31",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_32",
+      "objectName": "STG01_BG_Tree_32",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_33",
+      "objectName": "STG01_BG_Tree_33",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_34",
+      "objectName": "STG01_BG_Tree_34",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_35",
+      "objectName": "STG01_BG_Tree_35",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_36",
+      "objectName": "STG01_BG_Tree_36",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_37",
+      "objectName": "STG01_BG_Tree_37",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_38",
+      "objectName": "STG01_BG_Tree_38",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_39",
+      "objectName": "STG01_BG_Tree_39",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_40",
+      "objectName": "STG01_BG_Tree_40",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_41",
+      "objectName": "STG01_BG_Tree_41",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_42",
+      "objectName": "STG01_BG_Tree_42",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_43",
+      "objectName": "STG01_BG_Tree_43",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_44",
+      "objectName": "STG01_BG_Tree_44",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_45",
+      "objectName": "STG01_BG_Tree_45",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_46",
+      "objectName": "STG01_BG_Tree_46",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_47",
+      "objectName": "STG01_BG_Tree_47",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_48",
+      "objectName": "STG01_BG_Tree_48",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_Tree_49",
+      "objectName": "STG01_BG_Tree_49",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_WaterTower_Stem",
+      "objectName": "STG01_BG_WaterTower_Stem",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_BG_WaterTower_Tank",
+      "objectName": "STG01_BG_WaterTower_Tank",
+      "collection": "VISUAL_PROPS",
+      "role": "visual_prop"
+    },
+    {
+      "id": "STG01_FinishBand",
+      "objectName": "STG01_FinishBand",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "STG01_Ground_Outer",
+      "objectName": "STG01_Ground_Outer",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "STG01_Ground_Yard",
+      "objectName": "STG01_Ground_Yard",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "STG01_LaneLine_01",
+      "objectName": "STG01_LaneLine_01",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "STG01_LaneLine_02",
+      "objectName": "STG01_LaneLine_02",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "STG01_LaneLine_03",
+      "objectName": "STG01_LaneLine_03",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "STG01_LaneLine_04",
+      "objectName": "STG01_LaneLine_04",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "STG01_LaneLine_05",
+      "objectName": "STG01_LaneLine_05",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "STG01_LaneLine_06",
+      "objectName": "STG01_LaneLine_06",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "STG01_LaneLine_07",
+      "objectName": "STG01_LaneLine_07",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "STG01_LaneLine_08",
+      "objectName": "STG01_LaneLine_08",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "STG01_LaneLine_09",
+      "objectName": "STG01_LaneLine_09",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "STG01_StartBand",
+      "objectName": "STG01_StartBand",
+      "collection": "VISUAL_ARCHITECTURE",
+      "role": "visual_architecture"
+    },
+    {
+      "id": "TRIGGER_FINISH_LINE",
+      "objectName": "TRIGGER_FINISH_LINE",
+      "collection": "GAMEPLAY_TRIGGERS",
+      "role": "trigger_finish"
+    },
+    {
+      "id": "TRIGGER_SAFE_ZONE",
+      "objectName": "TRIGGER_SAFE_ZONE",
+      "collection": "GAMEPLAY_TRIGGERS",
+      "role": "trigger_safe"
+    },
+    {
+      "id": "TRIGGER_START_LINE",
+      "objectName": "TRIGGER_START_LINE",
+      "collection": "GAMEPLAY_TRIGGERS",
+      "role": "trigger_start"
+    },
+    {
+      "id": "WATCHER_DETECTION_REFERENCE",
+      "objectName": "WATCHER_DETECTION_REFERENCE",
+      "collection": "WATCHER_REFERENCE",
+      "role": "watcher_detection_reference"
+    },
+    {
+      "id": "WATCHER_HEAD_ANCHOR",
+      "objectName": "WATCHER_HEAD_ANCHOR",
+      "collection": "WATCHER_REFERENCE",
+      "role": "watcher_head"
+    },
+    {
+      "id": "WATCHER_ROOT_ANCHOR",
+      "objectName": "WATCHER_ROOT_ANCHOR",
+      "collection": "WATCHER_REFERENCE",
+      "role": "watcher_root"
+    },
+    {
+      "id": "ZONE_STG01_Course",
+      "objectName": "ZONE_STG01_Course",
+      "collection": "REFERENCE",
+      "role": "review_reference"
+    }
+  ],
+  "validation": {
+    "spawnPointCount": 30,
+    "allObjectIdsResolve": true,
+    "metadataMatchesScene": true,
+    "notes": [
+      "All IDs equal Blender object names. Positions are world-space object origins in metres; box volumes have their origin at the bottom centre. Rotations are Euler XYZ in degrees.",
+      "The runtime still loads blender/exports/STG01/STG01_collision.json and STG01_markers.json (built from STAGE_01_GREYBOX.blend); check runtime_consistency proves those agree with this metadata.",
+      "TRIGGER_START_LINE is new: the approved start zone volume (spec L2). Crossing its +Y face is the start line.",
+      "TRIGGER_SAFE_ZONE uses role 'finish' (the schema allows only start and finish); it counts as finished (spec D5).",
+      "SIGNAL_RED_ANCHOR and SIGNAL_GREEN_ANCHOR share the lantern centre because one lantern shows every colour.",
+      "WATCHER_DETECTION_REFERENCE is the \u00b155\u00b0 presentation sector; server detection is not line-of-sight (E9).",
+      "Outside-yard proxies (towers, benches, gantry, booth, relics, outer barrier) never meet contestants; they are for walk-offs, spectators and the camera."
+    ]
+  }
+}

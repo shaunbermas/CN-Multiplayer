@@ -29,3 +29,9 @@ NODE_PATH="$(npm root -g)" node tools/asset-check/check-glb.mjs "$STAGE"
 if [[ -f blender/scripts/report_greybox.py && "$STAGE" == "STG01" ]]; then
   echo "== report"; python3 blender/scripts/report_greybox.py
 fi
+if [[ "$STAGE" == "STG01" ]]; then
+  echo "== collision-ready scene and metadata (Prompt 04)"
+  python3 -c "import jsonschema" 2>/dev/null || pip install --quiet jsonschema==4.26.0
+  if [[ $RENDER == 1 ]]; then SHOTS=--screenshots; else SHOTS=; fi
+  python3 blender/scripts/stage_01_collision_setup.py $SHOTS | grep -E '^(PASS|FAIL|RESULT|Rendered)'
+fi

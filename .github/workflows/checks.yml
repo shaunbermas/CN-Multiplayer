@@ -6,6 +6,8 @@
 #    budgets, Shepherd sightline from every spawn)
 #  - collision and marker JSON rebuild exactly from the spec (nobody forgot to re-export)
 #  - the GLB passes the Khronos glTF Validator and loads in headless Chromium with Three.js
+#  - STAGE_01_COLLISION_READY.blend matches STAGE_01_METADATA.json (schema, IDs, transforms, runtime
+#    exports) and the metadata rebuilds exactly from the approved greybox
 name: Checks
 
 on:
@@ -48,6 +50,16 @@ jobs:
       - name: Validate committed Stage 01 scene
         run: python blender/scripts/validate_asset.py --blend blender/scenes/STAGE_01_GREYBOX.blend --spec blender/scripts/specs/stg01_greybox.json --stage STG01 --report "$RUNNER_TEMP/STG01_validation.json"
 
+      - name: Stage 01 collision-ready scene matches its metadata (Prompt 04)
+        run: |
+          pip install jsonschema==4.26.0
+          python blender/scripts/validate_stage_01_metadata.py --report "$RUNNER_TEMP/STAGE_01_METADATA_VALIDATION.json"
+
+      - name: Collision-ready metadata rebuilds exactly from the approved greybox
+        run: |
+          python blender/scripts/stage_01_collision_setup.py
+          git diff --exit-code blender/exports/STAGE_01_METADATA.json blender/exports/STAGE_01_METADATA_VALIDATION.json
+
       - name: Exports are up to date with the spec
         run: |
           python blender/scripts/generate_stage_01_greybox.py --out "$RUNNER_TEMP/rebuild/STAGE_01_GREYBOX.blend"
@@ -66,6 +78,7 @@ jobs:
           path: |
             blender/exports/STG01/browser
             ${{ runner.temp }}/STG01_validation.json
+            ${{ runner.temp }}/STAGE_01_METADATA_VALIDATION.json
           retention-days: 7
 
   app:

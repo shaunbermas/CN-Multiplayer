@@ -1,0 +1,160 @@
+{
+  "result": "PASS",
+  "blend": "blender/scenes/STAGE_01_COLLISION_READY.blend",
+  "metadata": "blender/exports/STAGE_01_METADATA.json",
+  "blender": "5.3.0",
+  "checks": {
+    "schema": {
+      "pass": true,
+      "problems": [],
+      "schema": "blender/schemas/STAGE_01_METADATA.schema.json",
+      "rejects_unknown_fields": true,
+      "pack_original_schema_errors": 127,
+      "pack_original_note": "the unpatched pack schema rejects every extended entry (decision 021)"
+    },
+    "ids_resolve": {
+      "pass": true,
+      "problems": [],
+      "entries": 158,
+      "references": 103,
+      "scene_objects": 405
+    },
+    "transforms_match": {
+      "pass": true,
+      "problems": [],
+      "compared": 158,
+      "tolerance": {
+        "position_m": 0.001,
+        "rotation_deg": 0.01,
+        "dimensions_m": 0.001
+      }
+    },
+    "spawns": {
+      "pass": true,
+      "problems": [],
+      "count": 30,
+      "unique": 30,
+      "closest_centres_m": 2.5,
+      "clear_gap_m": 1.9,
+      "capsule": {
+        "height": 1.2,
+        "radius": 0.3
+      }
+    },
+    "triggers": {
+      "pass": true,
+      "problems": [],
+      "triggers": {
+        "TRIGGER_FINISH_LINE": "finish",
+        "TRIGGER_SAFE_ZONE": "finish",
+        "TRIGGER_START_LINE": "start"
+      }
+    },
+    "boundaries": {
+      "pass": true,
+      "problems": [],
+      "playable_area_m": {
+        "x": [
+          -30.0,
+          30.0
+        ],
+        "y": [
+          -15.0,
+          172.0
+        ]
+      }
+    },
+    "collision_separation": {
+      "pass": true,
+      "problems": [],
+      "collision_objects": 81,
+      "physical_visuals": 73,
+      "covered_by_existing_gameplay_objects": {
+        "STG01_Ground_Yard": "COLLISION_GROUND_MAIN",
+        "PRP_STG01_Fence_W": "BOUNDARY_LEFT",
+        "PRP_STG01_Fence_E": "BOUNDARY_RIGHT",
+        "PRP_STG01_Fence_S": "BOUNDARY_BACK",
+        "PRP_STG01_Fence_N": "BOUNDARY_FINISH",
+        "PRP_KIT_ServiceGate_01": "BOUNDARY_RIGHT",
+        "PRP_KIT_ServiceGate_02": "BOUNDARY_RIGHT"
+      },
+      "non_colliding_decorative_meshes": {
+        "VISUAL_ARCHITECTURE": 12,
+        "VISUAL_PROPS": 70,
+        "VISUAL_WATCHER": 5,
+        "LIGHTING": 24
+      }
+    },
+    "watcher_reference": {
+      "pass": true,
+      "problems": [],
+      "root": {
+        "x": 0.0,
+        "y": 185.0,
+        "z": 4.0
+      },
+      "half_angle_deg": 55.0,
+      "reach_m": 203.0,
+      "finish_corner_angle_deg": 50.2
+    },
+    "spectators": {
+      "pass": true,
+      "problems": [],
+      "count": 21
+    },
+    "signal_anchors": {
+      "pass": true,
+      "problems": [],
+      "anchors": {
+        "SIGNAL_AUDIO_03": "shared",
+        "SIGNAL_AUDIO_04": "shared",
+        "SIGNAL_AUDIO_07": "shared",
+        "SIGNAL_AUDIO_08": "shared",
+        "SIGNAL_GREEN_ANCHOR": "green",
+        "SIGNAL_LAMP_01": "shared",
+        "SIGNAL_LAMP_02": "shared",
+        "SIGNAL_LAMP_03": "shared",
+        "SIGNAL_LAMP_04": "shared",
+        "SIGNAL_LAMP_05": "shared",
+        "SIGNAL_LAMP_06": "shared",
+        "SIGNAL_LAMP_07": "shared",
+        "SIGNAL_LAMP_08": "shared",
+        "SIGNAL_LAMP_09": "shared",
+        "SIGNAL_LAMP_10": "shared",
+        "SIGNAL_RED_ANCHOR": "red",
+        "SIGNAL_SCAN_BEAM_ANCHOR": "red"
+      }
+    },
+    "runtime_consistency": {
+      "pass": true,
+      "problems": [],
+      "compared": 60,
+      "expected": 60,
+      "files": [
+        "blender/exports/STG01/STG01_collision.json",
+        "blender/exports/STG01/STG01_markers.json"
+      ]
+    },
+    "conventions": {
+      "pass": true,
+      "problems": [],
+      "units": "metric, scale 1.0, metres",
+      "blender": "5.3.0"
+    },
+    "no_game_logic": {
+      "pass": true,
+      "problems": [],
+      "text_blocks": 0,
+      "node_groups": 0
+    }
+  },
+  "notes": [
+    "All IDs equal Blender object names. Positions are world-space object origins in metres; box volumes have their origin at the bottom centre. Rotations are Euler XYZ in degrees.",
+    "The runtime still loads blender/exports/STG01/STG01_collision.json and STG01_markers.json (built from STAGE_01_GREYBOX.blend); check runtime_consistency proves those agree with this metadata.",
+    "TRIGGER_START_LINE is new: the approved start zone volume (spec L2). Crossing its +Y face is the start line.",
+    "TRIGGER_SAFE_ZONE uses role 'finish' (the schema allows only start and finish); it counts as finished (spec D5).",
+    "SIGNAL_RED_ANCHOR and SIGNAL_GREEN_ANCHOR share the lantern centre because one lantern shows every colour.",
+    "WATCHER_DETECTION_REFERENCE is the \u00b155\u00b0 presentation sector; server detection is not line-of-sight (E9).",
+    "Outside-yard proxies (towers, benches, gantry, booth, relics, outer barrier) never meet contestants; they are for walk-offs, spectators and the camera."
+  ]
+}
