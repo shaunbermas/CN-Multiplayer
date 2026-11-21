@@ -1,0 +1,17 @@
+{
+  "name": "@cn-trials/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@cn-trials/shared": "*",
+    "@colyseus/core": "0.16.26",
+    "@colyseus/schema": "3.0.76",
+    "@colyseus/ws-transport": "0.16.5"
+  }
+}
