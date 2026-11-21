@@ -280,6 +280,7 @@ function Watcher({ room, search }: { room: TrialRoom; search: boolean }) {
   const current = useRef<WatcherChoice | null>(null);
   const resultsAt = useRef<number | null>(null);
   const segSeen = useRef<{ key: string; at: number }>({ key: '', at: 0 });
+  const spotSeen = useRef<{ key: string; at: number }>({ key: '', at: 0 });
   const w = stageGeo.watcher!;
 
   useEffect(() => {
@@ -327,9 +328,16 @@ function Watcher({ room, search }: { room: TrialRoom; search: boolean }) {
     // A segment is identified by phase, signal and start time (the countdown and the first green both start at 0).
     const segKey = `${phase}:${v.signal}:${v.segStart}`;
     if (segSeen.current.key !== segKey) segSeen.current = { key: segKey, at: Date.now() };
+    // Each server spot plays Watcher_Detect in full from the first frame that draws it, so a slow client whose
+    // next frame comes late still shows The Watcher reacting (same rule as the segment opening clips).
+    // Only spots from this round count (events from earlier rounds stay in the client's list).
+    const goLocal = Date.now() - v.elapsed * 1000;
+    const thisRoundSpot = spotted && phase === 'active' && spotted.at >= goLocal - 1000 ? spotted : undefined;
+    const spotKey = thisRoundSpot ? `${thisRoundSpot.id}@${thisRoundSpot.at}` : '';
+    if (spotSeen.current.key !== spotKey) spotSeen.current = { key: spotKey, at: Date.now() };
     const choice = chooseWatcherClip({
       phase, signal: v.signal, into: v.into, sinceSegmentSeen: (Date.now() - segSeen.current.at) / 1000, segmentLength: v.segLength, segmentStart: v.segStart, redIndex: v.redIndex,
-      sinceSpotted: spotted && phase === 'active' ? (Date.now() - spotted.at) / 1000 : Infinity,
+      sinceSpotted: thisRoundSpot ? (Date.now() - spotSeen.current.at) / 1000 : Infinity,
       sinceResults: resultsAt.current === null ? Infinity : (Date.now() - resultsAt.current) / 1000,
     });
     if (current.current?.key === choice.key) return;
