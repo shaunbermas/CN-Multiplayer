@@ -370,6 +370,12 @@ def main() -> None:
     cb.write_json(OUT_META, meta)
     print("Wrote", OUT_META.relative_to(ROOT))
     report = v.run_checks(meta)  # again with the validation block in place (schema check covers it)
+    # Same final check as the standalone validator, so both write an identical report.
+    fresh = v.build_metadata()
+    stale = [k for k in fresh if fresh[k] != meta.get(k)]
+    report["checks"]["metadata_up_to_date"] = {"pass": not stale, "problems": [f"section {k} differs from the scene" for k in stale]}
+    if stale:
+        report["result"] = "FAIL"
     v.write_report(report)
     if args.screenshots:
         import stage_01_collision_screens as screens  # noqa: E402
