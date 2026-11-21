@@ -73,7 +73,8 @@ try {
     if (a.problems.length) errors.push(`${q}: asset problems ${a.problems.join('; ')}`);
     const fps = await fpsOver(page, 3000);
     const info = await page.evaluate(() => window.__cn.renderInfo());
-    await page.screenshot({ path: `${shots}/quality_${q}.png` });
+    // A software-rendered High frame can take many seconds on a 2-core CI runner; a screenshot waits for one.
+    await page.screenshot({ path: `${shots}/quality_${q}.png`, timeout: 120_000 });
     tiers[q] = { lights: got.length, shadows: a.effects.shadows, dust: a.effects.dust, haze: a.effects.haze, draw_calls: info.calls, triangles: info.triangles, shader_programs: info.programs, software_fps: +fps.toFixed(1) };
     errors.push(...consoleErrors);
     await ctx.close();
