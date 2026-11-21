@@ -17,6 +17,7 @@
 | Distant trees: billboards in one instanced call; midground impostors instanced per shape (Prompts 02–03) | 49 cone trees, 3,088 triangles | 1,100 billboards + 49 impostors, 5 calls, fewer triangles |
 | Matte layers replace distant geometry: 3 painted cylinders (Prompt 02) | Empty horizon | 3 draw calls, 185 KB of textures |
 | Quality tiers and the adaptive fallback (decision 026) | — | High → Medium → Low as needed; `?quality=` pins a tier |
+| Low tier without the environment map (found by CI: a 6× throttled page on a 2-core runner dropped under 1 fps and walked 7.76 m in 4 s) | Low 1.49 fps (6× throttle, software) | **2.53 fps**; the throttled player walks 11.9 m in 4 s on 2 cores (test needs > 8 m) |
 
 Stage download now: models 3.89 MB + matte and tree textures 0.41 MB + game chunk 0.43 MB gzipped.
 

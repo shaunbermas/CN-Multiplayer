@@ -7,7 +7,7 @@ Status: **PASS**. Gameplay geometry, collision, triggers, spawns and the approve
 | Area | Before | After | Where |
 |------|--------|-------|-------|
 | Puddles | `MAT_Puddle` is a near-black mirror (roughness 0.04) with no environment, so it rendered as black holes | Reflects a prefiltered night-sky environment map (moon, horizon glow, warm floodlight banks); roughness 0.12 spreads highlights | `skyModel.ts`, `Stage01Scene.tsx` (Environment) |
-| Steel, wet asphalt, chain-link, concrete | No environment light; metal read flat black | The scene environment map (strength Low 0.35, Medium 0.5, High 0.6) gives metal and wet surfaces sky reflections | `Stage01Scene.tsx` (Lighting) |
+| Steel, wet asphalt, chain-link, concrete | No environment light; metal read flat black | The scene environment map (Medium 0.5, High 0.6; off on Low since Prompt 08, see the P04 report) gives metal and wet surfaces sky reflections | `Stage01Scene.tsx` (Lighting) |
 | Midground trees (49, at the approved `STG01_BG_Tree_*` positions) | Stacked cones (3,088-triangle foliage node) | Lit crossed-plane impostors from the Prompt 02 atlas: 6 triangles each, one instanced draw call per shape (4 shapes), alpha clip, shadows on High, deterministic size and rotation per tree id | `MidgroundTrees.tsx` |
 | Grass tufts | Merged with the cone trees | Kept: the cone triangles above 1 m and the trunks are stripped from `ENV_VISUAL_FOLIAGE` at load (the GLB file is unchanged) | `stripConeTrees()` |
 

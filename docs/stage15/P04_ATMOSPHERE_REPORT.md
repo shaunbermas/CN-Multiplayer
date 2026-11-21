@@ -11,7 +11,7 @@ Status: **PASS**. The final colour-grade lock is for the owner at sign-off.
 | Volumetric light | Additive soft cones under the 10 floodlights (fresnel edge, length falloff), one material | — | 10 cones | 10 cones |
 | Ground mist | Animated noise sheets at knee height along both fences and behind start and finish, never over the lanes | — | 2 sheets | 4 sheets |
 | Signal presentation | `LGT_STG15_SignalWash`: point light at the far end, colour follows the client's view of the server signal (green / amber / red). Pairs with the tower lamps, The Watcher's lens, and the HUD label and icon (not colour alone) | — | Yes | Yes |
-| Reflections | Night-sky environment map (Prompt 03) | 0.35 | 0.5 | 0.6 |
+| Reflections | Night-sky environment map (Prompt 03) | Off: measured as the largest Low-tier cost (6× CPU-throttled software WebGL: 1.49 → 2.53 fps without it); puddles get a dull glossy water colour instead | 0.5 | 0.6 |
 | Post-processing | Half-resolution bloom (strength 0.42, threshold 0.93: only lamps, signals and the moon bloom), colour grade (teal shadow lift, warm gain, 0.92 saturation), vignette. Three.js built-in passes, no new dependency | — | — | Yes |
 | Retired light | `LGT_STG01_Lantern` followed the retired Shepherd placeholder; it is no longer used (it blew out The Watcher's porcelain under bloom). Rule: lights whose `follows` names the placeholder are skipped | — | — | — |
 

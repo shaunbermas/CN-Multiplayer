@@ -85,7 +85,7 @@ try {
     if (a.surroundings.layers !== matte.layers.length || a.surroundings.cutouts !== wantCutouts || a.surroundings.problems.length)
       errors.push(`${q}: surroundings ${JSON.stringify(a.surroundings)}; expected ${matte.layers.length} layers, ${wantCutouts} cutouts`);
     if (a.midground.trees !== 49) errors.push(`${q}: midground trees ${a.midground.trees}; expected 49`);
-    if (!a.environmentMap) errors.push(`${q}: sky environment map not set`);
+    if (a.environmentMap !== (q !== 'low')) errors.push(`${q}: sky environment map ${a.environmentMap}; expected ${q !== 'low'} (off on Low)`);
     if (!(a.foliageTrianglesRemoved > 0)) errors.push(`${q}: cone trees were not stripped`);
     const fps = await fpsOver(page, 3000);
     const info = await page.evaluate(() => window.__cn.renderInfo());

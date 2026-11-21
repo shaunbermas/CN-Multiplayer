@@ -56,7 +56,7 @@ export const stage01Assets = {
 };
 
 /** Environment-map strength per tier: reflections in puddles, wet asphalt and steel (Prompt 03). */
-const ENV_INTENSITY: Record<Quality, number> = { low: 0.35, medium: 0.5, high: 0.6 };
+const ENV_INTENSITY: Record<Quality, number> = { low: 0, medium: 0.5, high: 0.6 };
 
 type Tier = { dynamicLights: string[] | string; dust?: number; hazeCards?: boolean; shadows?: string[] | boolean };
 const tierOf = (q: Quality) => lighting.qualityTiers[q] as Tier;
@@ -159,11 +159,14 @@ function Lighting({ quality }: { quality: Quality }) {
   }, [quality, L]);
   const gl = useThree((st) => st.gl);
   useEffect(() => {
+    // Low tier: no environment map. Measured as the biggest Low-tier cost (6x CPU-throttled software WebGL:
+    // 1.49 fps with it, 2.48 without), and Low exists for weak machines (Prompt 08).
+    if (quality === 'low') { scene.environment = null; stage01Assets.environmentMap = false; return; }
     const rt = buildSkyEnvironment(gl);
     scene.environment = rt.texture;
     stage01Assets.environmentMap = true;
     return () => { scene.environment = null; stage01Assets.environmentMap = false; rt.dispose(); };
-  }, [gl, scene]);
+  }, [gl, scene, quality]);
   useEffect(() => { scene.environmentIntensity = ENV_INTENSITY[quality]; }, [scene, quality]);
   useEffect(() => {
     // The Stage 1.5 sky dome draws the sky; this colour only shows for a frame before it mounts.
@@ -246,12 +249,20 @@ function Environment({ room, quality }: { room: TrialRoom; quality: Quality }) {
   useFrame(() => {
     // Puddles (Stage 1.5): give the near-black mirror the sky environment map directly, so its own reflection
     // strength applies (scene.environment ignores per-material intensity), and spread highlights a little.
-    if (scene.environment) {
-      for (const m of puddles) {
+    for (const m of puddles) {
+      if (scene.environment) {
         if (m.envMap === scene.environment) continue;
         m.envMap = scene.environment;
         m.envMapIntensity = 1.4;
         m.roughness = 0.12;
+        m.color.set(0.01, 0.013, 0.016);
+        m.needsUpdate = true;
+      } else if (m.envMap !== null || m.userData.lowLook !== true) {
+        // Low tier (no reflections): dull, slightly glossy dark water instead of a black mirror.
+        m.envMap = null;
+        m.roughness = 0.3;
+        m.color.set(0.035, 0.05, 0.058);
+        m.userData.lowLook = true;
         m.needsUpdate = true;
       }
     }
