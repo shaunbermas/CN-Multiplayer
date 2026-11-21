@@ -1,0 +1,415 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://the-last-trial.local/schemas/stage-01-metadata.schema.json",
+  "$comment": "CN Trials patch of the Prompt 04 pack schema 1.0.0 (docs/DECISIONS.md 021). The pack put additionalProperties:false on $defs.transformObject, which every extended entry inherits through allOf, so a trigger with 'role', a collider with 'colliderType' or a spectator with 'viewTargetObjectId' could never validate (the pack template passes only because its arrays are empty). The patch moves the strictness to each array item as unevaluatedProperties:false. Every required field, type and enum is unchanged. Original: STAGE_01_METADATA.pack-original.schema.json.",
+  "title": "THE LAST TRIAL \u2014 Stage 01 Metadata",
+  "description": "Machine-readable scene metadata for Red Light, Green Light. All transforms must be copied from the approved Blender scene using the project's documented coordinate convention.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "stageId",
+    "stageName",
+    "sourceFiles",
+    "coordinateSystem",
+    "spawnPoints",
+    "triggerZones",
+    "movementBoundaries",
+    "watcherDetectionReference",
+    "collisionObjects",
+    "spectatorLocations",
+    "signalAnchors",
+    "sceneObjects"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "stageId": {
+      "type": "string",
+      "const": "STAGE_01_RED_LIGHT"
+    },
+    "stageName": {
+      "type": "string",
+      "const": "Red Light, Green Light"
+    },
+    "sourceFiles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "designSpec",
+        "greyboxBlend"
+      ],
+      "properties": {
+        "designSpec": {
+          "type": "string",
+          "minLength": 1
+        },
+        "greyboxBlend": {
+          "type": "string",
+          "minLength": 1
+        },
+        "prompt03ValidationReport": {
+          "type": "string"
+        }
+      }
+    },
+    "coordinateSystem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "units",
+        "positionSpace",
+        "rotationUnit",
+        "originDescription",
+        "upAxis",
+        "forwardAxis"
+      ],
+      "properties": {
+        "units": {
+          "type": "string",
+          "enum": [
+            "meters"
+          ]
+        },
+        "positionSpace": {
+          "type": "string",
+          "enum": [
+            "world"
+          ]
+        },
+        "rotationUnit": {
+          "type": "string",
+          "enum": [
+            "degrees",
+            "radians"
+          ]
+        },
+        "originDescription": {
+          "type": "string",
+          "minLength": 1
+        },
+        "upAxis": {
+          "type": "string",
+          "minLength": 1
+        },
+        "forwardAxis": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "spawnPoints": {
+      "type": "array",
+      "minItems": 30,
+      "maxItems": 30,
+      "items": {
+        "$ref": "#/$defs/transformObject",
+        "unevaluatedProperties": false
+      }
+    },
+    "triggerZones": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/dimensionedObject"
+          },
+          {
+            "type": "object",
+            "required": [
+              "role",
+              "isTrigger"
+            ],
+            "properties": {
+              "role": {
+                "type": "string",
+                "enum": [
+                  "start",
+                  "finish"
+                ]
+              },
+              "isTrigger": {
+                "const": true
+              }
+            }
+          }
+        ],
+        "unevaluatedProperties": false
+      }
+    },
+    "movementBoundaries": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/dimensionedObject",
+        "unevaluatedProperties": false
+      }
+    },
+    "watcherDetectionReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "anchorObjectId",
+        "position",
+        "rotation",
+        "coverageShape",
+        "notes"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "anchorObjectId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "position": {
+          "$ref": "#/$defs/vector3"
+        },
+        "rotation": {
+          "$ref": "#/$defs/vector3"
+        },
+        "coverageShape": {
+          "type": "string",
+          "enum": [
+            "box",
+            "cone",
+            "sector",
+            "other",
+            "not-defined"
+          ]
+        },
+        "coverageDimensions": {
+          "$ref": "#/$defs/vector3"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "collisionObjects": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/dimensionedObject"
+          },
+          {
+            "type": "object",
+            "required": [
+              "colliderType",
+              "isTrigger",
+              "sourceVisualObjectId"
+            ],
+            "properties": {
+              "colliderType": {
+                "type": "string",
+                "enum": [
+                  "box",
+                  "sphere",
+                  "capsule",
+                  "cylinder",
+                  "convex-hull",
+                  "triangle-mesh",
+                  "compound",
+                  "other"
+                ]
+              },
+              "isTrigger": {
+                "type": "boolean"
+              },
+              "sourceVisualObjectId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "staticOrMoving": {
+                "type": "string",
+                "enum": [
+                  "static",
+                  "moving",
+                  "unknown"
+                ]
+              }
+            }
+          }
+        ],
+        "unevaluatedProperties": false
+      }
+    },
+    "spectatorLocations": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/transformObject"
+          },
+          {
+            "type": "object",
+            "required": [
+              "viewTargetObjectId"
+            ],
+            "properties": {
+              "viewTargetObjectId": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "unevaluatedProperties": false
+      }
+    },
+    "signalAnchors": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/transformObject"
+          },
+          {
+            "type": "object",
+            "required": [
+              "signalType"
+            ],
+            "properties": {
+              "signalType": {
+                "type": "string",
+                "enum": [
+                  "red",
+                  "green",
+                  "shared"
+                ]
+              }
+            }
+          }
+        ],
+        "unevaluatedProperties": false
+      }
+    },
+    "sceneObjects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "objectName",
+          "collection",
+          "role"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "objectName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "collection": {
+            "type": "string",
+            "minLength": 1
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "spawnPointCount": {
+          "type": "integer",
+          "const": 30
+        },
+        "allObjectIdsResolve": {
+          "type": "boolean"
+        },
+        "metadataMatchesScene": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "vector3": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
+      }
+    },
+    "transformObject": {
+      "type": "object",
+      "required": [
+        "id",
+        "objectName",
+        "position",
+        "rotation"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "objectName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "position": {
+          "$ref": "#/$defs/vector3"
+        },
+        "rotation": {
+          "$ref": "#/$defs/vector3"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "dimensionedObject": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/transformObject"
+        },
+        {
+          "type": "object",
+          "required": [
+            "dimensions"
+          ],
+          "properties": {
+            "dimensions": {
+              "$ref": "#/$defs/vector3"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
