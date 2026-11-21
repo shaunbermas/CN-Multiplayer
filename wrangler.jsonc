@@ -1,0 +1,20 @@
+// Cloudflare deploy config for CN Trials (ADR 0002: Cloudflare + GitHub only).
+// - The built web client (apps/web/dist) is served as static assets.
+// - /api/* runs the Worker first; each room is a Durable Object (SQLite-backed, works on the Free plan).
+// Deployed by .github/workflows/deploy.yml when main changes.
+{
+  "name": "cn-trials",
+  "main": "apps/server/src/worker.ts",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./apps/web/dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "ROOMS", "class_name": "TrialRoom" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["TrialRoom"] }],
+  "observability": { "enabled": true }
+}

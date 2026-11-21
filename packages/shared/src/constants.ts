@@ -3,7 +3,7 @@
 export const MAX_PLAYERS = 30; // GDD §1.2
 export const SIM_HZ = 30; // GDD §7.3 proposed server simulation rate
 export const SIM_DT = 1 / SIM_HZ;
-export const PATCH_MS = 50; // Colyseus default patch interval (20 Hz)
+
 
 /** Contestant movement (spec §2, M1–M4). Identical for every character preset. */
 export const MOVEMENT = {
@@ -22,5 +22,5 @@ export const INPUT_BURST = 4;
 export const INPUT_QUEUE_MAX = 60;
 
 export const NAME_MAX = 16;
-export const ROOM_NAME = 'trial';
-export const DEFAULT_PORT = 2567;
+export const DEFAULT_ROOM = 'default';
+export const DEV_WORKER_PORT = 8787;

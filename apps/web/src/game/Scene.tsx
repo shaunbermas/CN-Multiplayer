@@ -1,6 +1,6 @@
 import { Html, useGLTF } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { inputFromKeys, MOVEMENT, MSG, progress, SIM_DT } from '@cn-trials/shared';
+import { inputFromKeys, MOVEMENT, progress, SIM_DT } from '@cn-trials/shared';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import type { PlayerView, TrialRoom } from '../net.ts';
@@ -26,11 +26,11 @@ function StageModel() {
 
 function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoom; local: boolean; predictor?: React.RefObject<Predictor | null> }) {
   const group = useRef<THREE.Group>(null);
-  const p0 = room.state.players.get(id);
+  const p0 = room.players.get(id);
   const material = useMemo(() => new THREE.MeshStandardMaterial({ color: colorFor(p0?.spawn ?? 1), roughness: 0.6 }), [p0?.spawn]);
   useFrame((_, dt) => {
     const g = group.current;
-    const p = room.state.players.get(id);
+    const p = room.players.get(id);
     if (!g || !p) return;
     if (local && predictor?.current) {
       const s = predictor.current.state;
@@ -68,13 +68,13 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
 
   useFrame((_, dtRaw) => {
     const pr = predictor.current;
-    const me = room.state.players.get(room.sessionId);
+    const me = room.players.get(room.id);
     if (!pr || !me) return;
     const dt = Math.min(dtRaw, 0.25);
     clock.current += dt;
     if (input.respawn) {
       input.respawn = false;
-      room.send(MSG.respawn);
+      room.send({ t: 'respawn' });
       const sp = stageGeo.spawns.find((s) => s.index === me.spawn)!;
       pr.reset({ x: sp.x, z: sp.z, vx: 0, vz: 0 });
       firstMove.current = null;
@@ -87,7 +87,7 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
       const mv = inputFromKeys(input.forward, input.right, input.yaw);
       if (firstMove.current === null && (mv.mx || mv.mz)) firstMove.current = clock.current;
       const seq = pr.apply(mv);
-      room.send(MSG.input, { seq, mx: mv.mx, mz: mv.mz, yaw: input.yaw });
+      room.send({ t: 'input', seq, mx: mv.mx, mz: mv.mz, yaw: input.yaw });
     }
     // Third-person follow camera: behind and above, looking past the player.
     const s = pr.state;
@@ -113,11 +113,11 @@ function Players({ room, predictor }: { room: TrialRoom; predictor: React.RefObj
   const [, force] = useForceUpdate();
   useFrame(() => {
     const now: string[] = [];
-    room.state.players.forEach((_p: PlayerView, id: string) => now.push(id));
+    room.players.forEach((_p: PlayerView, id: string) => { now.push(id); });
     hud.players = now.length;
     if (now.join() !== ids.current.join()) { ids.current = now; force(); }
   });
-  return <>{ids.current.map((id) => <Contestant key={id} id={id} room={room} local={id === room.sessionId} predictor={predictor} />)}</>;
+  return <>{ids.current.map((id) => <Contestant key={id} id={id} room={room} local={id === room.id} predictor={predictor} />)}</>;
 }
 
 function useForceUpdate(): [number, () => void] {
@@ -128,15 +128,15 @@ function useForceUpdate(): [number, () => void] {
 export function Scene({ room }: { room: TrialRoom }) {
   const predictor = useRef<Predictor | null>(null);
   if (!predictor.current) {
-    const me = room.state.players.get(room.sessionId);
+    const me = room.players.get(room.id);
     const sp = stageGeo.spawns.find((s) => s.index === me?.spawn) ?? stageGeo.spawns[0];
     predictor.current = new Predictor({ x: me?.x ?? sp.x, z: me?.z ?? sp.z, vx: 0, vz: 0 }, stageGeo.walls);
   }
   useEffect(() => {
     (window as unknown as { __cn: unknown }).__cn = {
-      roomId: room.roomId,
-      sessionId: room.sessionId,
-      players: () => { const out: unknown[] = []; room.state.players.forEach((p, id) => out.push({ id, name: p.name, x: p.x, z: p.z, status: p.status, finishTime: p.finishTime })); return out; },
+      roomId: room.room,
+      sessionId: room.id,
+      players: () => { const out: unknown[] = []; room.players.forEach((p, id) => out.push({ id, name: p.name, x: p.x, z: p.z, status: p.status, finishTime: p.finishTime })); return out; },
       self: () => predictor.current?.state,
       shepherd: stageGeo.shepherd,
     };

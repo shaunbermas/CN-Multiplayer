@@ -13,11 +13,11 @@ INITIAL PRE-PRODUCTION SPECIFICATION
 | DOCUMENT CONTROL | VALUE |
 | --- | --- |
 | Project title | CN TRIALS (CN = Creative Nomads). Formerly THE LAST TRIAL |
-| Document version | 0.3 - Playful tone; Stage 01 night yard |
+| Document version | 0.4 - Game server on Cloudflare Durable Objects |
 | Prepared | 21 November 2026 (v0.1); updated 21 November 2026 (v0.2) |
 | Owner and purpose | Creative Nomads, internal. A team icebreaker for standups, with a longer tournament for team events |
 | Status | Working baseline. Gameplay, technical and production assumptions require validation. |
-| Primary implementation | Claude Code + React / Three.js + Colyseus |
+| Primary implementation | Claude Code + React / Three.js + Cloudflare Workers and Durable Objects (v0.4; was Colyseus) |
 | 3D production | Blender, with web-ready GLB / glTF exports |
 
 > **SCOPE NOTE** This document defines the first production baseline. It is not a claim that all systems, stage counts, player counts or performance targets have already been proven in a playable build.
@@ -29,6 +29,7 @@ INITIAL PRE-PRODUCTION SPECIFICATION
 | 0.1 | 21 Nov 2026 | Initial direction and pre-production baseline as THE LAST TRIAL. | Project owner |
 | 0.2 | 21 Nov 2026 | Renamed to CN TRIALS. Purpose set: Creative Nomads team standup icebreaker. The Stage 01 figure becomes The Shepherd, an original design replacing the earlier doll concept. Added Standup mode (§2.3.1) alongside the full tournament. "Monetization: private" confirmed as internal use with no monetization. | Project owner (APPROVED). Standup mode details are PROPOSED |
 | 0.3 | 21 Nov 2026 | Tone set to playful (§1.3). Stage 01 setting: night floodlit yard. Git LFS adopted for assets. | Project owner (APPROVED) |
+| 0.4 | 21 Nov 2026 | Hosting limited to Cloudflare and GitHub. The game server moves from Colyseus on Node.js to a Cloudflare Worker with one Durable Object per room (§7.1, §7.3, §7.8; ADR 0002). The rules in this document are unchanged. | Project owner (APPROVED) |
 
 ## Document guide
 
@@ -521,11 +522,11 @@ The recommended implementation is a browser client plus a Node.js authoritative 
 | --- | --- | --- |
 | Web application | React + TypeScript + Vite | Landing page, guest flow, lobby, menus and game shell. |
 | 3D renderer | Three.js + React Three Fiber + Drei | Scene rendering, camera, character models, animation and visual effects. |
-| Game server | Node.js + TypeScript + Colyseus | Room lifecycle, invitations, synchronized state, match state and authoritative rules. |
+| Game server | Cloudflare Worker + Durable Objects (TypeScript), one Durable Object per room (v0.4) | Room lifecycle, invitations, synchronized state, match state and authoritative rules. |
 | Shared code | TypeScript package | Shared types, constants, movement input contracts and stage definitions. |
 | 3D assets | Blender, export to GLB / glTF | Characters, enemies, stages, animation clips, props and collision proxies. |
 | Persistence | No database required for the first guest-only prototype | Add a database only when persistent accounts, history or settings are approved. |
-| Hosting | Static web hosting / CDN plus WebSocket-capable Node server | Serve client assets and host live game rooms. |
+| Hosting | Cloudflare only: the same Worker serves the client assets and the rooms; deployed by GitHub Actions (v0.4) | Serve client assets and host live game rooms. |
 
 ### 7.2 Rendering decision
 
@@ -536,14 +537,14 @@ Use Three.js with React Three Fiber for the first implementation. React Three Fi
 - Use cached loading, shared geometries and materials, instancing for repeated objects, and frame-loop mutation for high-frequency animation. Avoid unnecessary React state updates inside the render loop. [4]
 ### 7.3 Multiplayer model
 
-Use Colyseus rooms as isolated match instances. Each room holds its own player roster, stage state, tournament progression and messages. The framework supports private room visibility, client limits, room lifecycle hooks, server-owned schema state and client reconnection flows. [5][6][7][8]
+v0.4: each room is a Cloudflare Durable Object, an isolated match instance holding its own player roster, stage state, tournament progression, WebSockets and game loop. Client limits, snapshots, input acknowledgement and reconnection are implemented in the project's own small protocol (`packages/shared/src/protocol.ts`). The original Colyseus references [5]–[8] are kept for history.
 
 | NETWORK CONCERN | PROPOSED DESIGN |
 | --- | --- |
 | Authority | Server validates movement, collision events, stage rules, qualification, elimination and winner declaration. |
 | Client input | Client sends sequenced input state or input events. It does not send “I won”, “I crossed safely” or “I eliminated player X”. |
 | Simulation | Begin testing with a fixed server simulation step. A 30 Hz simulation is a proposed starting point, not a final commitment. |
-| State updates | Start with Colyseus default patch interval or a measured 20 Hz state update baseline, then profile. Colyseus documentation lists a 50 ms default patch rate. [5] |
+| State updates | 20 Hz snapshots (50 ms) as the baseline, then profile. |
 | Local responsiveness | Use local prediction for the owning player only where it can be reconciled safely. Render remote players with interpolation. |
 | Room isolation | One room equals one tournament. Players in one room do not see or affect another room. |
 | Capacity | Set maximum clients to 30. Reject additional join requests before they can enter a running room. |
@@ -554,7 +555,7 @@ Use Colyseus rooms as isolated match instances. Each room holds its own player r
 
 1.  Host requests a room from the application server.
 
-2.  Server creates a Colyseus room with a maximum of 30 clients and marks it private / unlisted according to the selected discovery behavior.
+2.  Server creates a room (Durable Object) with a maximum of 30 clients and marks it private / unlisted according to the selected discovery behavior.
 
 3.  Application server issues a cryptographically random invitation token that resolves to the room. The raw internal room identifier should not be treated as a secret by itself.
 
@@ -604,7 +605,7 @@ Do not allow the browser to be the sole authority for collisions. The first tech
 ### 7.8 Hosting and operations
 
 - Serve the frontend over HTTPS from a CDN or static host.
-- Host the Colyseus server on infrastructure that supports persistent WebSocket connections and appropriate session routing.
+- Host the rooms on Cloudflare Durable Objects, which keep every player of a room on one instance (v0.4).
 - Choose the initial server region based on where the first real player groups are located and measured latency, not assumption.
 - Log room lifecycle, match results, disconnections, stage transitions and server errors. Avoid logging unnecessary guest data.
 - Add health checks, room metrics, crash reporting and an admin-only way to inspect or close stuck rooms before a larger test.
@@ -861,7 +862,7 @@ The following topics are not blockers for drafting the first prototype, but they
 CN-Multiplayer/   (repository; formerly THE-LAST-TRIAL/)
   apps/
     web/                  # React UI, Three.js scene, camera, input, HUD
-    server/               # Colyseus rooms, simulation, stages, match rules
+    server/               # Cloudflare Worker + Durable Object rooms, simulation, stages, match rules
   packages/
     shared/               # Types, constants, messages, stage contracts
     game-rules/           # Pure functions for qualification and scoring

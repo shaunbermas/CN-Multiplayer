@@ -1,6 +1,6 @@
 # M0 technical spike and Stage 01 walk test (S1-3)
 
-Date: 21 November 2026. Build: `m0/spike-walk-test`. Everything below was run in a Claude cloud
+Date: 21 November 2026. Build: `m0/spike-walk-test`, re-run on the Durable Objects server (`server/durable-objects`): 30 clients PASS, 31st rejected ("Room load-test is full"), walk 40.5 s, two browsers PASS. Everything below was run in a Claude cloud
 session (Linux, 4 CPU cores, no GPU; browsers use software WebGL) and is re-run by CI on every pull
 request.
 
@@ -52,7 +52,7 @@ screen height (was about 1/10) and stands above the yard and the buildings behin
 
 | Risk | Status |
 |------|--------|
-| Hosting | Constraint set (Cloudflare + GitHub only); option to confirm in `docs/adr/0002-hosting.md` |
+| Hosting | Decided and implemented: Cloudflare Worker + Durable Objects (ADR 0002) |
 | Red-light latency fairness | Not yet tested; server timestamps and grace window come with S1-4 |
 | 30 characters rendering on weaker laptops | Not tested (needs character art and reference hardware, M4) |
 | Client bundle 1.36 MB (383 KB gzipped) | Acceptable for now; split three/drei chunks before release |

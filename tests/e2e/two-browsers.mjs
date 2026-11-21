@@ -1,24 +1,23 @@
-// Two real browsers in one room (GDD M0 / §11.2) plus the S1-3 viewpoint screenshots.
+// Two real browsers in one room (GDD M0 / §11.2) plus the S1-3 viewpoint screenshots, against the
+// Cloudflare Worker (page + Durable Object room) running under `wrangler dev`.
 //  - two Chromium contexts join through the web app and each sees both players
 //  - player A walks forward with the W key; player B sees A move; A's prediction matches the server
 //  - screenshots: A's third-person view at spawn (Shepherd readability), A after walking, B's view
-// Builds the web app first. Usage: node tests/e2e/two-browsers.mjs
+// Builds the web app first. Usage: npm run test:e2e
 import { execSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { mkdirSync } from 'node:fs';
-import { root, sleep, startPreview, startServer, writeReport } from '../lib.mjs';
+import { root, sleep, startWorker, writeReport } from '../lib.mjs';
 
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 
-const SERVER_PORT = Number(process.env.E2E_SERVER_PORT ?? 2597);
-const WEB_PORT = Number(process.env.E2E_WEB_PORT ?? 4197);
+const PORT = Number(process.env.E2E_PORT ?? 8797);
 const shots = `${root}tests/reports/screenshots`;
 mkdirSync(shots, { recursive: true });
-execSync('npm run build', { cwd: root, stdio: 'ignore' });
+if (process.env.SKIP_BUILD !== '1') execSync('npm run build', { cwd: root, stdio: 'ignore' });
 const errors = [];
-const server = startServer(SERVER_PORT);
-const web = startPreview(WEB_PORT);
+const worker = startWorker(PORT);
 let browser;
 
 const players = (page) => page.evaluate(() => window.__cn.players());
@@ -29,9 +28,9 @@ const waitFor = async (fn, label, ms = 30_000) => {
 };
 
 try {
-  await Promise.all([server.ready, web.ready]);
+  await worker.ready;
   browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
-  const url = (name) => `http://127.0.0.1:${WEB_PORT}/?name=${name}&autojoin=1&server=ws://127.0.0.1:${SERVER_PORT}`;
+  const url = (name) => `http://127.0.0.1:${PORT}/?name=${name}&autojoin=1`;
   const ctxA = await browser.newContext({ viewport: { width: 1280, height: 720 } });
   const ctxB = await browser.newContext({ viewport: { width: 1280, height: 720 } });
   const pageA = await ctxA.newPage();
@@ -86,7 +85,6 @@ try {
   console.error(e);
 } finally {
   await browser?.close();
-  server.stop();
-  web.stop();
+  worker.stop();
 }
 process.exit(errors.length ? 1 : 0);

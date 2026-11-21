@@ -23,7 +23,7 @@ function Hud({ room }: { room: TrialRoom }) {
       <div className="hud-bottom">
         <span>{hud.distance.toFixed(0)} m to go</span>
         <span>WASD move · click to look · R respawn</span>
-        <span className="muted">room {room.roomId}</span>
+        <span className="muted">room {room.room}</span>
       </div>
     </div>
   );
@@ -40,9 +40,8 @@ export function App() {
     setBusy(true); setError('');
     try {
       const r = await joinTrial(n);
-      await new Promise<void>((res) => { if (r.state.players?.get(r.sessionId)) res(); else r.onStateChange.once(() => res()); });
       hud.connected = true; hud.name = n;
-      r.onLeave(() => { hud.connected = false; setRoom(null); setError('Disconnected from the server.'); });
+      r.onClose(() => { hud.connected = false; setRoom(null); setError('Disconnected from the server.'); });
       setRoom(r);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not join');

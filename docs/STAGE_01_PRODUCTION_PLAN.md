@@ -24,7 +24,7 @@ Stage 01 cannot be finished in isolation. The GDD milestone order applies (§10,
 
 | Milestone | Needed for Stage 01 because |
 |-----------|-----------------------------|
-| M0 Technical spike | Repo structure, pinned versions, one Blender GLB rendered in the browser, two clients in one Colyseus room, 30 simulated clients, physics choice (Rapier vs kinematic), **hosting decision** |
+| M0 Technical spike | Repo structure, pinned versions, one Blender GLB rendered in the browser, two clients in one room, 30 simulated clients, physics choice (Rapier vs kinematic), **hosting decision** |
 | M1 Graybox core | Third-person controller, camera, collision, one greybox arena; Stage 01's greybox can be that arena |
 | M2 Private room | Room, invite link, guest join, presets, ready, host, capacity 30 |
 | M3 First playable stage | This plan's gameplay phases |
@@ -140,7 +140,7 @@ first everyday deliverable. It adds these requirements to the phases above:
 
 | Risk | Impact | Response |
 |------|--------|----------|
-| **Hosting.** The repo's deploy pipeline targets Cloudflare Workers, but Colyseus needs a long-running Node.js WebSocket server, which a Worker cannot run | M0 cannot finish without a decision | Decide in M0. Options: (a) static client on Cloudflare, Colyseus on Cloudflare Containers; (b) static client on Cloudflare, Colyseus on a separate Node host; (c) replace Colyseus with Cloudflare Durable Objects. Option (c) changes the GDD's technology and needs the owner's approval |
+| **Hosting** (RESOLVED) | Was: Colyseus needed a Node host outside Cloudflare | Rooms now run on Cloudflare Durable Objects and deploy from GitHub (decision 016) |
 | **Shepherd design drifting back toward the old doll** | Originality and legal review failure | Approve an original Shepherd concept before S1-5; never use the G1/G2 doll as a modelling reference |
 | False eliminations from latency | Players feel cheated; core pillar fails | Grace window, server timestamps, latency tests (§7) |
 | 30-player GPU cost on a large open field | Below 30 FPS on weaker desktops | Budgets in `BLENDER_PIPELINE.md` §9; instancing; profile in S1-7 |
@@ -156,7 +156,7 @@ first everyday deliverable. It adds these requirements to the phases above:
    `blender/scripts/build_stg01_greybox.py`, `export_stage.py` and `validate_asset.py`; run them; commit
    the greybox `.blend`, GLB, JSON and validation report (S1-2).
 4. In parallel, M0: scaffold `apps/web`, `apps/server`, `packages/shared` with pinned versions; connect
-   two browser clients to one Colyseus room locally; load the greybox GLB in the browser.
+   two browser clients to one room locally; load the greybox GLB in the browser.
 
 ## 10. Decisions needed from the owner
 
@@ -168,5 +168,5 @@ first everyday deliverable. It adds these requirements to the phases above:
 | D4 | Approve G1 and G2 as mood-only global references | Yes, mood only |
 | D5 | Who supplies the missing Stage 01 references (artist, AI concept tool, or Claude-written spec instead of a layout image) | Layout from the written spec; images for environment and observer |
 | D6 | Blender version | Decided: 5.3.0 (owner's desktop) |
-| D7 | Hosting approach for the game server | **Constraint decided: Cloudflare + GitHub only.** Option to confirm: Durable Objects (recommended) or Containers (`docs/adr/0002-hosting.md`) |
+| D7 | Hosting approach for the game server | **Decided: Cloudflare Durable Objects**, deployed from GitHub (decisions 015, 016) |
 | D8 | Git LFS for `.blend`, `.glb` and textures | **Decided: yes** (set up in `.gitattributes`) |

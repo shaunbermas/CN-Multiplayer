@@ -1,11 +1,11 @@
 {
   "result": "PASS",
   "errors": [],
-  "date": "2026-11-21T08:59:08.370Z",
+  "date": "2026-11-21T09:06:23.624Z",
   "same_room": true,
   "both_see_players": 2,
   "walk_4s": {
-    "moved_m_seen_by_other_browser": 16.21,
+    "moved_m_seen_by_other_browser": 16.34,
     "prediction_error_m": 0
   },
   "screenshots": [

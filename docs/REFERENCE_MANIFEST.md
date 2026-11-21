@@ -115,6 +115,6 @@ I do not invent the values; `STAGE_01_PRODUCTION_PLAN.md` proposes test ranges l
 | Visual | Contestant base-body proportions and 3 preset variations (GDD §9.5 item 1) | Character pipeline |
 | Visual | Final palette tokens (GDD §5.2: "not locked") | Materials, lighting |
 | Audio | Signal cues (green, warning, red, scan), crowd/ambient, elimination cue | Audio pass |
-| Tech | Hosting for the Colyseus server (see `STAGE_01_PRODUCTION_PLAN.md` risks) | M0 spike |
+| Tech | Hosting: RESOLVED, Cloudflare Durable Objects (decision 016) | M0 spike |
 | Tech | Reference and minimum desktop hardware (GDD §14) | Performance budgets |
 | Tech | Pinned Blender version for the owner's desktop and for scripted runs | Pipeline |

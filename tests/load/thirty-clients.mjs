@@ -1,91 +1,91 @@
-// 30-client load test (GDD M0 / §11.2) plus the S1-3 straight-line walk timing.
-//  - 30 Node clients join one room; each sees all 30 players
-//  - a 31st client joining that room by id is rejected (capacity 30)
-//  - all 30 send inputs at 30 Hz; the server simulation tick stays well inside its 33 ms budget
+// 30-client load test (GDD M0 / §11.2) plus the S1-3 straight-line walk timing, against the
+// Cloudflare Worker + Durable Object room running under `wrangler dev`.
+//  - 30 clients join one room; each sees all 30 players
+//  - a 31st client is rejected (capacity 30)
+//  - all 30 send inputs at 30 Hz; the room's simulation tick stays well inside its 33 ms budget
 //  - one client walks straight from spawn 1 to the finish; the server-recorded time is reported
-// Usage: node tests/load/thirty-clients.mjs
-import { createRequire } from 'node:module';
-import { sleep, startServer, writeReport } from '../lib.mjs';
+// Usage: npm run test:load   (runs with tsx so it can import the shared TypeScript client)
+import { execSync } from 'node:child_process';
+import { RoomClient } from '../../packages/shared/src/index.ts';
+import { root, sleep, startWorker, writeReport } from '../lib.mjs';
 
-const require = createRequire(import.meta.url);
-const { Client } = require('colyseus.js');
-
-const PORT = Number(process.env.LOAD_PORT ?? 2598);
+const PORT = Number(process.env.LOAD_PORT ?? 8798);
 const N = 30;
+const ROOM = 'load-test';
 const errors = [];
-const server = startServer(PORT);
+if (process.env.SKIP_BUILD !== '1') execSync('npm run build', { cwd: root, stdio: 'ignore' });
+const worker = startWorker(PORT);
 
 try {
-  await server.ready;
-  const endpoint = `ws://127.0.0.1:${PORT}`;
+  await worker.ready;
+  const base = `http://127.0.0.1:${PORT}/api/room/${ROOM}`;
+  const wsUrl = `ws://127.0.0.1:${PORT}/api/room/${ROOM}/ws`;
 
   // ---- join 30
-  const rooms = [];
+  const clients = [];
   const joinMs = [];
-  const first = await new Client(endpoint).joinOrCreate('trial', { name: 'Walker' });
-  rooms.push(first);
-  for (let i = 1; i < N; i++) {
+  for (let i = 0; i < N; i++) {
     const t = performance.now();
-    rooms.push(await new Client(endpoint).joinById(first.roomId, { name: `Bot ${i + 1}` }));
+    clients.push(await RoomClient.connect(wsUrl, i === 0 ? 'Walker' : `Bot ${i + 1}`));
     joinMs.push(performance.now() - t);
   }
   await sleep(500);
-  const seen = rooms.map((r) => r.state.players.size);
+  const seen = clients.map((c) => c.players.size);
   if (!seen.every((n) => n === N)) errors.push(`Not every client sees ${N} players: ${seen.join(',')}`);
 
   // ---- 31st must be rejected
   let rejected = false;
   let rejectMessage = '';
   try {
-    const extra = await new Client(endpoint).joinById(first.roomId, { name: 'Extra' });
-    await extra.leave();
+    const extra = await RoomClient.connect(wsUrl, 'Extra');
+    extra.leave();
   } catch (e) {
-    rejected = true;
+    rejected = e?.code === 'full';
     rejectMessage = String(e?.message ?? e);
   }
-  if (!rejected) errors.push('A 31st client was allowed into a full room');
+  if (!rejected) errors.push(`A 31st client was not rejected as full (${rejectMessage || 'it joined'})`);
 
   // ---- load: everyone sends 30 Hz input; client 0 walks straight to the finish
-  await fetch(`http://127.0.0.1:${PORT}/metrics/reset`, { method: 'POST' });
-  const patches = new Array(N).fill(0);
-  rooms.forEach((r, i) => r.onStateChange(() => { patches[i]++; }));
+  await fetch(`${base}/metrics/reset`, { method: 'POST' });
+  const startSnaps = clients.map((c) => c.snapshots);
   const seqs = new Array(N).fill(0);
   const t0 = Date.now();
   const timer = setInterval(() => {
     const t = (Date.now() - t0) / 1000;
-    rooms.forEach((r, i) => {
+    clients.forEach((c, i) => {
       let mx = 0, mz = 0;
       if (i === 0) mz = -1;                                                  // the walker: straight to the finish
       else { const a = t * 0.7 + i; mx = Math.cos(a) * 0.8; mz = Math.sin(a) * 0.8; } // bots wander in place
-      r.send('input', { seq: ++seqs[i], mx, mz, yaw: 0 });
+      c.send({ t: 'input', seq: ++seqs[i], mx, mz, yaw: 0 });
     });
   }, 1000 / 30);
 
-  const walker = () => first.state.players.get(first.sessionId);
-  while (walker()?.status !== 'finished' && Date.now() - t0 < 70_000) await sleep(250);
+  const walker = clients[0];
+  while (walker.self?.status !== 'finished' && Date.now() - t0 < 70_000) await sleep(250);
   clearInterval(timer);
   const loadSeconds = (Date.now() - t0) / 1000;
-  const health = await (await fetch(`http://127.0.0.1:${PORT}/health`)).json();
-  const finishTime = walker()?.finishTime ?? -1;
-  if (walker()?.status !== 'finished') errors.push('The walker did not reach the finish within 70 s');
-  if (health.tickMs.p95 > 10) errors.push(`Server tick p95 ${health.tickMs.p95} ms is above 10 ms`);
-  const patchRates = patches.map((n) => n / loadSeconds);
-  const minRate = Math.min(...patchRates);
-  if (minRate < 12) errors.push(`A client received only ${minRate.toFixed(1)} state updates per second`);
+  const health = await (await fetch(`${base}/health`)).json();
+  const finishTime = walker.self?.finishTime ?? -1;
+  if (walker.self?.status !== 'finished') errors.push('The walker did not reach the finish within 70 s');
+  if (health.tickMs.p95 > 10) errors.push(`Room tick p95 ${health.tickMs.p95} ms is above 10 ms`);
+  const rates = clients.map((c, i) => (c.snapshots - startSnaps[i]) / loadSeconds);
+  const minRate = Math.min(...rates);
+  if (minRate < 12) errors.push(`A client received only ${minRate.toFixed(1)} snapshots per second`);
 
-  // Moving fraction with signals (spec §1): green 3-6 s + warning 0.8 s vs red 3-5 s.
+  // Moving fraction with signals (spec §3): green 3-6 s + warning 0.8 s vs red 3-5 s.
   const movingFraction = (4.5 + 0.8) / (4.5 + 0.8 + 4.0);
   const report = {
     result: errors.length ? 'FAIL' : 'PASS',
     errors,
     date: new Date().toISOString(),
+    server: 'Cloudflare Worker + Durable Object (wrangler dev, local)',
     clients: N,
-    join_ms: { avg: +(joinMs.reduce((a, b) => a + b, 0) / joinMs.length).toFixed(1), max: +Math.max(...joinMs).toFixed(1) },
+    join_ms: { avg: +(joinMs.reduce((a, b) => a + b, 0) / N).toFixed(1), max: +Math.max(...joinMs).toFixed(1) },
     every_client_sees: seen[0],
     client_31: { rejected, message: rejectMessage },
     load_seconds: +loadSeconds.toFixed(1),
-    server: health,
-    state_updates_per_client_per_s: { min: +minRate.toFixed(1), avg: +(patchRates.reduce((a, b) => a + b, 0) / N).toFixed(1) },
+    room: health,
+    snapshots_per_client_per_s: { min: +minRate.toFixed(1), avg: +(rates.reduce((a, b) => a + b, 0) / N).toFixed(1) },
     walk_test: {
       from: 'spawn 1 (front row, centre)',
       distance_m: 162,
@@ -96,11 +96,11 @@ try {
   };
   writeReport('load-30-clients.json', report);
   console.log(JSON.stringify(report, null, 2));
-  await Promise.all(rooms.map((r) => r.leave().catch(() => {})));
+  clients.forEach((c) => c.leave());
 } catch (e) {
   errors.push(String(e?.stack ?? e));
   console.error(e);
 } finally {
-  server.stop();
+  worker.stop();
 }
 process.exit(errors.length ? 1 : 0);
