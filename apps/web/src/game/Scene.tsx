@@ -188,9 +188,10 @@ export function Scene({ room, onStageError }: { room: TrialRoom; onStageError: (
       round: () => ({ ...room.round }),
       results: () => room.results,
       resultsMeta: () => room.resultsMeta,
+      events: () => room.events.map((e) => ({ ...e })),
       watcher: stageGeo.watcher,
       spawns: stageGeo.spawns,
-      assets: () => ({ ...stageModule.assets, problems: [...stageModule.assets.problems] }),
+      assets: () => JSON.parse(JSON.stringify(stageModule.assets)),
     };
   }, [room, stageModule]);
   const StageScene = stageModule.Scene;

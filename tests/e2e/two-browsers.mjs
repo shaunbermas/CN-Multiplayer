@@ -11,6 +11,7 @@ import { execSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { mkdirSync } from 'node:fs';
 import { root, sleep, startWorker, writeReport } from '../lib.mjs';
+import { buildSchedule, segmentAt } from '../../packages/shared/src/index.ts';
 
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
@@ -20,7 +21,7 @@ const shots = `${root}tests/reports/screenshots`;
 mkdirSync(shots, { recursive: true });
 if (process.env.SKIP_BUILD !== '1') execSync('npm run build', { cwd: root, stdio: 'ignore' });
 const errors = [];
-let greenClip = '', redClip = '', assetA = { watcherHeight: 0, watcherClips: [], quality: '', problems: [] };
+let greenClip = '', redClip = '', sigAtSpot = '', assetA = { watcherHeight: 0, watcherClips: [], quality: '', problems: [] };
 const worker = startWorker(PORT);
 let browser;
 
@@ -49,7 +50,7 @@ try {
     p.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(`${tag}: ${m.text()}`); });
   }
   // Alpha joins first, so Alpha is the host; the test seed makes the round deterministic (test mode only).
-  await pageA.goto(url('Alpha', '&testSeed=12345&testRound=20&testBriefing=1'));
+  await pageA.goto(url('Alpha', '&testSeed=12345&testRound=30&testBriefing=1'));
   await waitFor(async () => pageA.evaluate(() => !!window.__cn), 'Alpha joined first (host)');
   await pageB.goto(url('Beta'));
   await waitFor(async () => (await pageA.evaluate(() => !!window.__cn)) && (await pageB.evaluate(() => !!window.__cn)), 'both pages joined');
@@ -98,19 +99,31 @@ try {
   await waitFor(async () => (await round(pageA)).phase === 'active', 'round active', 15_000);
   // Round screenshots and clip checks come from Beta (not CPU-throttled), so they fit inside the signal windows.
   await pageB.bringToFront();
-  await waitFor(async () => (await round(pageB)).signal === 'green', 'green signal', 10_000);
-  await sleep(2000); // past the turn-away clip
-  greenClip = (await assets(pageB)).watcherClip;
-  if (!['Watcher_GreenSignal', 'Watcher_TurnAway'].includes(greenClip)) errors.push(`Watcher shows ${greenClip} on GREEN`);
+  // GREEN: The Watcher turns away, then loops its green clip (clip history, so slow polling cannot miss it).
+  await waitFor(async () => (await assets(pageB)).clipHistory.some(([c]) => c === 'Watcher_GreenSignal'), 'Watcher_GreenSignal on GREEN', 20_000)
+    .catch(() => errors.push('Watcher_GreenSignal never played on GREEN'));
+  const histG = (await assets(pageB)).clipHistory.map(([c]) => c);
+  greenClip = histG.includes('Watcher_GreenSignal') ? 'Watcher_GreenSignal' : histG.at(-1);
+  if (!histG.includes('Watcher_TurnAway')) errors.push(`Watcher_TurnAway never played at GREEN (clips: ${histG.join(', ')})`);
   await pageB.screenshot({ path: `${shots}/s1-4_green_view.png` });
   await pageB.keyboard.down('KeyW');
-  await waitFor(async () => (await round(pageB)).signal === 'red', 'red light', 15_000);
-  await sleep(700);
-  redClip = (await assets(pageB)).watcherClip;
-  if (!['Watcher_FocusLock', 'Watcher_RedSignal', 'Watcher_ScanSweep', 'Watcher_Detect'].includes(redClip)) errors.push(`Watcher shows ${redClip} on RED`);
-  await pageB.screenshot({ path: `${shots}/s1-4_red_view.png` });
+  // Wait for the server's decision rather than polling for the short red window (slow software WebGL in CI
+  // can miss it): Beta keeps walking, so the server spots Beta just after the first red's grace window.
   const idB = await pageB.evaluate(() => window.__cn.sessionId);
-  await waitFor(async () => (await players(pageA)).find((p) => p.id === idB)?.status === 'spotted', 'Beta spotted', 5000);
+  await waitFor(async () => (await players(pageB)).find((p) => p.id === idB)?.status === 'spotted', 'Beta spotted by the server', 40_000);
+  // The server stamps each spotting with its round time; the seeded schedule says which signal that was.
+  const spotEv = (await pageB.evaluate(() => window.__cn.events())).find((e) => e.kind === 'spotted' && e.id === idB);
+  sigAtSpot = segmentAt(buildSchedule(12345, 30), spotEv?.roundT ?? -1)?.signal ?? 'none';
+  if (sigAtSpot !== 'red') errors.push(`Beta was spotted at ${spotEv?.roundT} s during ${sigAtSpot}, expected red`);
+  // The Watcher reacts to the server's event: Watcher_Detect plays after the spot (clip history, so slow
+  // polling cannot miss it).
+  const spottedAtLocal = spotEv?.at ?? 0;
+  await waitFor(async () => (await assets(pageB)).clipHistory.some(([c, t]) => c === 'Watcher_Detect' && t >= spottedAtLocal - 50), 'Watcher_Detect after the spot', 8000)
+    .catch(() => errors.push('Watcher_Detect did not play after the server spotted Beta'));
+  const hist = (await assets(pageB)).clipHistory.map(([c]) => c);
+  redClip = hist.includes('Watcher_Detect') ? 'Watcher_Detect' : hist.at(-1);
+  if (!hist.includes('Watcher_FocusLock')) errors.push(`Watcher_FocusLock never played at red (clips: ${hist.join(', ')})`);
+  await pageB.screenshot({ path: `${shots}/s1-4_red_view.png` });
   await sleep(2600); // past the SPOTTED! stamp
   if (!(await pageB.locator('[data-testid=spectating]').count())) errors.push('Spotted player does not see the spectator status');
   await pageB.screenshot({ path: `${shots}/s1-4_spotted_view.png` });
@@ -135,7 +148,7 @@ try {
     same_room: roomA === roomB,
     both_see_players: 2,
     walk_4s: { moved_m_seen_by_other_browser: +moved.toFixed(2), prediction_error_m: +predictionError.toFixed(3) },
-    round: { results: 'Alpha (stood still) 1st, Beta (walked into red) spotted', watcher_clips: { green: greenClip, red: redClip } },
+    round: { results: 'Alpha (stood still) 1st, Beta (walked into red) spotted', watcher_clips: { green: greenClip, red: redClip }, beta_spotted_during: sigAtSpot },
     assets: { watcher_height_m: assetA.watcherHeight, clips: assetA.watcherClips.length, quality: assetA.quality, problems: assetA.problems },
     screenshots: ['s1-3_start_view.png', 's1-3_after_walk.png', 's1-3_other_player_view.png', 's1-4_green_view.png', 's1-4_red_view.png', 's1-4_spotted_view.png', 's1-4_results_view.png'].map((f) => `tests/reports/screenshots/${f}`),
     renderer: 'headless Chromium, software WebGL (SwiftShader)',

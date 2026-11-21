@@ -31,6 +31,8 @@ export const stage01Assets = {
   watcherHeight: 0,
   watcherClips: [] as string[],
   watcherClip: '',
+  /** Recent clip changes (newest last), for tests: [clip, local time ms]. */
+  clipHistory: [] as [string, number][],
   quality: 'medium' as Quality,
 };
 
@@ -168,6 +170,8 @@ function Watcher({ room }: { room: TrialRoom }) {
     if (prev && prev !== next) next.crossFadeFrom(prev, 0.2, false);
     current.current = choice;
     stage01Assets.watcherClip = choice.clip;
+    stage01Assets.clipHistory.push([choice.clip, Date.now()]);
+    if (stage01Assets.clipHistory.length > 60) stage01Assets.clipHistory.shift();
   });
 
   // The GLB faces +Z (game yaw PI); rotate by the stage's facing relative to that.
