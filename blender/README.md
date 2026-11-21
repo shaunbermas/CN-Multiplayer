@@ -31,6 +31,10 @@ needed; it runs the same in a Claude cloud session, in CI and on a desktop.
 | `scripts/validate_stage_01_environment.py` | Gameplay unchanged, metadata still valid, yard clear, sightlines, materials, budgets |
 | `scripts/stage_01_environment_render.py` | Wide, third-person, front, side and top renders into `renders/` |
 | `../tools/asset-check/check-environment.mjs` | glTF Validator + Three.js check of the environment GLB (scale, orientation, materials) |
+| `scripts/watcher_textures.py`, `scripts/watcher_build.py` | Prompt 06: THE WATCHER textures, then `scenes/THE_WATCHER.blend` (mesh, rig, lens states, clips, anchors, LOD1) |
+| `scripts/watcher_export.py`, `scripts/validate_watcher.py` | `exports/THE_WATCHER.glb`, validation report and asset manifest |
+| `scripts/watcher_render.py` | Turnaround, close-ups, components, materials, poses, in-stage view and animation preview into `renders/watcher/` |
+| `../tools/asset-check/check-watcher.mjs` | glTF Validator + Three.js check of the Watcher GLB (scale, rig, clips, lens states) |
 | `scripts/cn_blender.py` | Shared helpers |
 
 ## Editing by hand

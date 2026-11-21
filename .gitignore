@@ -21,3 +21,6 @@ Thumbs.db
 .env
 .env.*
 .dev.vars
+
+# Intermediate render frames (sheets and GIFs are committed)
+renders/watcher/_parts/
