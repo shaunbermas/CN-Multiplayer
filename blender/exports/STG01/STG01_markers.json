@@ -1,0 +1,543 @@
+{
+  "stage": "STG01",
+  "source": "blender/scenes/STG01_RedLightGreenLight.blend",
+  "spec_hash": "ba0772b955cc3cc1",
+  "blender": "5.3.0",
+  "units": "m",
+  "coordinates": "game / glTF: Y up, right-handed; Blender +Y (course direction) = game -Z",
+  "markers": [
+    {
+      "id": "GMK_BOUNDS",
+      "position": [
+        0.0,
+        0.0,
+        -80.0
+      ],
+      "forward": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "kind": "bounds",
+      "min_x": -30.0,
+      "max_x": 30.0,
+      "min_y": -12.0,
+      "max_y": 172.0
+    },
+    {
+      "id": "GMK_FINISH",
+      "position": [
+        0.0,
+        0.0,
+        -160.0
+      ],
+      "forward": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "kind": "finish_line",
+      "width": 60.0
+    },
+    {
+      "id": "GMK_SHEPHERD",
+      "position": [
+        0.0,
+        4.0,
+        -185.0
+      ],
+      "forward": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "kind": "shepherd",
+      "height": 18.0,
+      "head_z": 19.48
+    },
+    {
+      "id": "GMK_SPAWN_01",
+      "position": [
+        -1.5,
+        0.0,
+        2.0
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 1
+    },
+    {
+      "id": "GMK_SPAWN_02",
+      "position": [
+        1.5,
+        0.0,
+        2.0
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 2
+    },
+    {
+      "id": "GMK_SPAWN_03",
+      "position": [
+        -4.5,
+        0.0,
+        2.0
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 3
+    },
+    {
+      "id": "GMK_SPAWN_04",
+      "position": [
+        4.5,
+        0.0,
+        2.0
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 4
+    },
+    {
+      "id": "GMK_SPAWN_05",
+      "position": [
+        -7.5,
+        0.0,
+        2.0
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 5
+    },
+    {
+      "id": "GMK_SPAWN_06",
+      "position": [
+        7.5,
+        0.0,
+        2.0
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 6
+    },
+    {
+      "id": "GMK_SPAWN_07",
+      "position": [
+        -10.5,
+        0.0,
+        2.0
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 7
+    },
+    {
+      "id": "GMK_SPAWN_08",
+      "position": [
+        10.5,
+        0.0,
+        2.0
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 8
+    },
+    {
+      "id": "GMK_SPAWN_09",
+      "position": [
+        -13.5,
+        0.0,
+        2.0
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 9
+    },
+    {
+      "id": "GMK_SPAWN_10",
+      "position": [
+        13.5,
+        0.0,
+        2.0
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 10
+    },
+    {
+      "id": "GMK_SPAWN_11",
+      "position": [
+        -1.5,
+        0.0,
+        4.5
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 11
+    },
+    {
+      "id": "GMK_SPAWN_12",
+      "position": [
+        1.5,
+        0.0,
+        4.5
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 12
+    },
+    {
+      "id": "GMK_SPAWN_13",
+      "position": [
+        -4.5,
+        0.0,
+        4.5
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 13
+    },
+    {
+      "id": "GMK_SPAWN_14",
+      "position": [
+        4.5,
+        0.0,
+        4.5
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 14
+    },
+    {
+      "id": "GMK_SPAWN_15",
+      "position": [
+        -7.5,
+        0.0,
+        4.5
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 15
+    },
+    {
+      "id": "GMK_SPAWN_16",
+      "position": [
+        7.5,
+        0.0,
+        4.5
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 16
+    },
+    {
+      "id": "GMK_SPAWN_17",
+      "position": [
+        -10.5,
+        0.0,
+        4.5
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 17
+    },
+    {
+      "id": "GMK_SPAWN_18",
+      "position": [
+        10.5,
+        0.0,
+        4.5
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 18
+    },
+    {
+      "id": "GMK_SPAWN_19",
+      "position": [
+        -13.5,
+        0.0,
+        4.5
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 19
+    },
+    {
+      "id": "GMK_SPAWN_20",
+      "position": [
+        13.5,
+        0.0,
+        4.5
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 20
+    },
+    {
+      "id": "GMK_SPAWN_21",
+      "position": [
+        -1.5,
+        0.0,
+        7.0
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 21
+    },
+    {
+      "id": "GMK_SPAWN_22",
+      "position": [
+        1.5,
+        0.0,
+        7.0
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 22
+    },
+    {
+      "id": "GMK_SPAWN_23",
+      "position": [
+        -4.5,
+        0.0,
+        7.0
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 23
+    },
+    {
+      "id": "GMK_SPAWN_24",
+      "position": [
+        4.5,
+        0.0,
+        7.0
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 24
+    },
+    {
+      "id": "GMK_SPAWN_25",
+      "position": [
+        -7.5,
+        0.0,
+        7.0
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 25
+    },
+    {
+      "id": "GMK_SPAWN_26",
+      "position": [
+        7.5,
+        0.0,
+        7.0
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 26
+    },
+    {
+      "id": "GMK_SPAWN_27",
+      "position": [
+        -10.5,
+        0.0,
+        7.0
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 27
+    },
+    {
+      "id": "GMK_SPAWN_28",
+      "position": [
+        10.5,
+        0.0,
+        7.0
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 28
+    },
+    {
+      "id": "GMK_SPAWN_29",
+      "position": [
+        -13.5,
+        0.0,
+        7.0
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 29
+    },
+    {
+      "id": "GMK_SPAWN_30",
+      "position": [
+        13.5,
+        0.0,
+        7.0
+      ],
+      "forward": [
+        -0.0,
+        0.0,
+        -1.0
+      ],
+      "kind": "spawn",
+      "index": 30
+    },
+    {
+      "id": "GMK_SPECTATOR_01",
+      "position": [
+        0.0,
+        32.0,
+        -200.0
+      ],
+      "forward": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "kind": "spectator_camera",
+      "look_at": [
+        0.0,
+        80.0,
+        0.0
+      ]
+    },
+    {
+      "id": "GMK_START",
+      "position": [
+        0.0,
+        0.0,
+        -0.0
+      ],
+      "forward": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "kind": "start_line",
+      "width": 60.0
+    }
+  ]
+}

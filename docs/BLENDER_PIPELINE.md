@@ -158,14 +158,16 @@ both). The output goes to the web app's assets folder. The raw export stays in `
   with dimensions from the approved Stage 01 spec). No magic numbers inside scripts.
 - Scripts never delete or overwrite hand-made objects outside the collection they own.
 
-Planned scripts (none are written yet; they come after approval):
+Scripts (written and run for Stage 01 on 21 November 2026; see `blender/README.md`):
 
 | Script | Job |
 |--------|-----|
 | `build_stg01_greybox.py` | Build the greybox from the spec: ground, start zone, finish gate, Shepherd platform and placeholder, boundaries, `COL_` proxies, `GMK_` markers |
 | `export_stage.py` | Export the runtime GLB and the collision and marker JSON for a stage |
 | `validate_asset.py` | Check a `.blend` or `.glb` against §4, §5, §7 and the budgets; write a JSON report |
-| `render_preview.py` | CPU Cycles or Workbench preview renders from `CAM_` objects for review |
+| `render_preview.py` | CPU Cycles preview renders from `CAM_` objects for review |
+| `run_stage.sh` | Runs all of the above plus the browser check in one command; installs `bpy` if missing |
+| `../tools/asset-check/check-glb.mjs` | Khronos glTF Validator and Three.js load in headless Chromium |
 
 ### Running
 

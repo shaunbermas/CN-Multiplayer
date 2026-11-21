@@ -5,6 +5,8 @@ still PROPOSED or TBD in the GDD and plans.
 
 | # | Date | Decision | Status | Where it applies |
 |---|------|----------|--------|------------------|
+| 011 | 21 Nov 2026 | Blender work runs **headless in Claude cloud sessions** by default (`bash blender/scripts/run_stage.sh`), so the owner needs no setup. The owner's desktop Blender + MCP stays optional for hand edits | AGREED | `blender/README.md` |
+| 010 | 21 Nov 2026 | Stage 01 spec v0.1 values adopted as starting values (owner asked Claude to proceed) | APPROVED | `STAGE_01_SPEC.md` |
 | 009 | 21 Nov 2026 | **Git LFS** for Blender files, GLB/glTF binaries, textures and audio (`.gitattributes`) | APPROVED | `BLENDER_PIPELINE.md` §6 |
 | 008 | 21 Nov 2026 | **Playful tone**: light suspense and comedy, no horror imagery; horror-themed stages reworked before production | APPROVED | GDD §1.3, §14 |
 | 007 | 21 Nov 2026 | Stage 01 setting: **night floodlit yard** (concept board G1) | APPROVED | GDD §3; manifest C2 |
@@ -22,4 +24,4 @@ still PROPOSED or TBD in the GDD and plans.
 | Tagline | Keep "Thirty enter. Only one survives." for now; candidates: "Move with intent.", "We guide. You go." | GDD §14 |
 | Theme names (stage names, Basecamp, Nomads, Trailblazer) | Proposed in chat on 21 Nov 2026; not adopted | — |
 | Colyseus hosting | Compare options in M0 | Plan §8, D7 |
-| Stage 01 spec values | Draft in `docs/STAGE_01_SPEC.md` | Spec §10 |
+| Shepherd size on screen | From the start line the 18 m Shepherd is about 1/12 of the screen height. Test in S1-3; options: taller (about 25 m) or a closer platform | `STAGE_01_SPEC.md` L8–L9 |
