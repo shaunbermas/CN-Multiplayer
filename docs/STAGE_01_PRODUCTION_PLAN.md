@@ -168,5 +168,5 @@ first everyday deliverable. It adds these requirements to the phases above:
 | D4 | Approve G1 and G2 as mood-only global references | Yes, mood only |
 | D5 | Who supplies the missing Stage 01 references (artist, AI concept tool, or Claude-written spec instead of a layout image) | Layout from the written spec; images for environment and observer |
 | D6 | Blender version | Decided: 5.3.0 (owner's desktop) |
-| D7 | Hosting approach for the Colyseus server | Decide in M0 after a short comparison |
+| D7 | Hosting approach for the game server | **Constraint decided: Cloudflare + GitHub only.** Option to confirm: Durable Objects (recommended) or Containers (`docs/adr/0002-hosting.md`) |
 | D8 | Git LFS for `.blend`, `.glb` and textures | **Decided: yes** (set up in `.gitattributes`) |

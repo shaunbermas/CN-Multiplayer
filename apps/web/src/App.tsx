@@ -15,8 +15,11 @@ function Hud({ room }: { room: TrialRoom }) {
         <div className="timer" data-testid="timer">{hud.walkTime.toFixed(1)} s</div>
         <div className="pill" data-testid="players">{hud.players} / {MAX_PLAYERS}</div>
       </div>
-      <div className="objective">{finished ? `Finished in ${hud.finishTime.toFixed(2)} s` : 'Walk to the finish line'}</div>
-      <div className="progress"><div style={{ width: `${(hud.progress * 100).toFixed(1)}%` }} /></div>
+      {/* Objective and progress sit at the bottom so nothing covers The Shepherd (the signal) at the top centre. */}
+      <div className="hud-lower">
+        <div className="objective">{finished ? `Finished in ${hud.finishTime.toFixed(2)} s` : 'Walk to the finish line'}</div>
+        <div className="progress"><div style={{ width: `${(hud.progress * 100).toFixed(1)}%` }} /></div>
+      </div>
       <div className="hud-bottom">
         <span>{hud.distance.toFixed(0)} m to go</span>
         <span>WASD move · click to look · R respawn</span>

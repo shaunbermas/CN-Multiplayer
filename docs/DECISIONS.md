@@ -5,6 +5,8 @@ still PROPOSED or TBD in the GDD and plans.
 
 | # | Date | Decision | Status | Where it applies |
 |---|------|----------|--------|------------------|
+| 015 | 21 Nov 2026 | Hosting: **Cloudflare and GitHub only**, managed in the browser and deployed by GitHub Actions. Option still to confirm: Durable Objects (recommended) or Containers | APPROVED (constraint) | `docs/adr/0002-hosting.md` |
+| 014 | 21 Nov 2026 | **The Shepherd is 28 m tall** (was 18 m) after the S1-3 walk test; HUD objective moved to the bottom so nothing covers it | APPROVED | `STAGE_01_SPEC.md` L9 |
 | 013 | 21 Nov 2026 | Pinned stack for M0: Colyseus 0.16, React 19.2, R3F 9, three 0.187, Vite 7, TypeScript 5.9 | ACCEPTED | `docs/adr/0003-stack-versions.md` |
 | 012 | 21 Nov 2026 | Kinematic shared movement on the server; Rapier deferred to the first stage with moving platforms | ACCEPTED | `docs/adr/0001-physics-and-movement.md` |
 | 011 | 21 Nov 2026 | Blender work runs **headless in Claude cloud sessions** by default (`bash blender/scripts/run_stage.sh`), so the owner needs no setup. The owner's desktop Blender + MCP stays optional for hand edits | AGREED | `blender/README.md` |
@@ -25,5 +27,4 @@ still PROPOSED or TBD in the GDD and plans.
 |------|------------------|--------|
 | Tagline | Keep "Thirty enter. Only one survives." for now; candidates: "Move with intent.", "We guide. You go." | GDD §14 |
 | Theme names (stage names, Basecamp, Nomads, Trailblazer) | Proposed in chat on 21 Nov 2026; not adopted | — |
-| Colyseus hosting | Spike Cloudflare Containers, fall back to a single Node host | `docs/adr/0002-hosting.md`, plan D7 |
-| Shepherd size on screen | Confirmed weak in S1-3 (about 1/10 of screen height). Proposal: 28 m tall and/or platform at Y 172 | `docs/reports/M0_S1-3_REPORT.md`, spec L8–L9 |
+| Hosting option within Cloudflare | Durable Objects (recommended; replaces Colyseus) or Containers (keeps Colyseus, Paid plan) | `docs/adr/0002-hosting.md`, plan D7 |

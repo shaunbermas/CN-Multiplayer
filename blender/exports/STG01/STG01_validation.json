@@ -1,7 +1,7 @@
 {
   "stage": "STG01",
   "blend": "blender/scenes/STG01_RedLightGreenLight.blend",
-  "spec_hash": "ba0772b955cc3cc1",
+  "spec_hash": "11de4837539b447f",
   "blender": "5.3.0",
   "result": "PASS",
   "errors": [],
@@ -23,7 +23,7 @@
       "MAT_Greybox_Yard"
     ],
     "export_files_bytes": {
-      "STG01_RedLightGreenLight.glb": 54996,
+      "STG01_RedLightGreenLight.glb": 54984,
       "STG01_collision.json": 2452,
       "STG01_markers.json": 8054
     }

@@ -16,7 +16,7 @@ Standup mode (006).
 
 ```
             Y (m)
-   +195 ┬                    ▲ The Shepherd (≈18 m tall) on a 4 m platform, X = 0, Y = 185
+   +195 ┬                    ▲ The Shepherd (≈28 m tall) on a 4 m platform, X = 0, Y = 185
         │                  [ ■ ]
    +172 ┼────────────────────────────────────────────  back wall
         │        SAFE ZONE (qualified players wait)
@@ -45,7 +45,7 @@ Standup mode (006).
 | L6 | Boundary | Fence-height colliders 3 m tall at X = ±30 (Y −12 to 172), start wall at Y −12, back wall at Y 172 |
 | L7 | Spawn grid | 30 points: 10 columns × 3 rows; X = −13.5 to +13.5 every 3.0 m; rows at Y −2.0, −4.5, −7.0. Fewer players fill from the centre of the front row outward |
 | L8 | Shepherd platform | Centre X 0, Y 185; 12 × 12 m; 4 m high; outside the playable area |
-| L9 | Shepherd height | About 18 m (15 × contestant height). Visible from every spawn (to verify in S1-3) |
+| L9 | Shepherd height | **28 m** (about 23 × contestant height). Raised from 18 m after the S1-3 walk test showed it read too small from the start line (owner approved, 21 Nov 2026). Visible from every spawn |
 | L10 | Ground markings | Lane lines every 6 m and start/finish bands; visual only, no collision |
 | L11 | Dressing | Floodlight masts at X = ±36 every 40 m, banners, perimeter fence visuals, distant industrial silhouettes. No collision inside the playable area |
 
@@ -153,7 +153,7 @@ Captions for gameplay-critical cues ("GO", "FREEZE", "SPOTTED").
   "wall_height": 3.0,
   "spawns": { "columns": 10, "rows": 3, "spacing_x": 3.0, "row_y": [-2.0, -4.5, -7.0] },
   "lane_spacing": 6.0,
-  "shepherd": { "x": 0.0, "y": 185.0, "platform_size": 12.0, "platform_height": 4.0, "height": 18.0 },
+  "shepherd": { "x": 0.0, "y": 185.0, "platform_size": 12.0, "platform_height": 4.0, "height": 28.0 },
   "floodlights": { "x": 36.0, "spacing_y": 40.0 },
   "capsule": { "height": 1.2, "radius": 0.3 }
 }
@@ -165,7 +165,7 @@ Approve the spec as a whole, or name the IDs to change.
 
 | Group | IDs | Key values |
 |-------|-----|-----------|
-| Layout | L1–L11 | 60 m wide, 160 m course, Shepherd 18 m tall at Y 185 |
+| Layout | L1–L11 | 60 m wide, 160 m course, Shepherd 28 m tall at Y 185 |
 | Movement | M1–M7 | 4.0 m/s, no sprint, no jump |
 | Signals | S1–S6 | Green 3–6 s, warning 0.8 s, red 3–5 s |
 | Detection | D1–D6 | Grace 0.3 s + latency (max 0.5 s); 0.3 m/s or 0.15 m |
