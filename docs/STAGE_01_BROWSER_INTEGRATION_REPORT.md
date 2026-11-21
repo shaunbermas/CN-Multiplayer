@@ -60,8 +60,9 @@ The points in §8 are approved (decision 025).
   Any problem shows in `window.__cn.assets().problems`. A load failure shows a readable error instead of a fake stage.
 - **Placeholder hidden:** the environment GLB still contains the retired Shepherd placeholder nodes;
   the scene hides them (decision 023). They can be removed in a later environment re-export.
-- **Lighting:** read from `STAGE_01_LIGHTING.json`. `?quality=low|medium|high` sets the tier (default
-  medium); `low` uses linear fog and no spotlights.
+- **Lighting:** read from `STAGE_01_LIGHTING.json`. The default is **High** with every effect on, protected
+  by an adaptive fallback (decision 026, §9). `?quality=low|medium|high` pins a tier; `low` uses linear fog
+  and no spotlights.
 - **Memory:** leaving the stage disposes geometry, materials and textures and clears the GLTF cache.
 - **Collision:** the server still uses the box walls; render meshes are never used as colliders.
 
@@ -111,7 +112,7 @@ Screenshots (`tests/reports/screenshots/`):
 
 - 30 real browsers rendering at once; the 30-client test uses headless bots.
 - Real GPUs and frame rates; all browser tests use software WebGL.
-- The medium and high lighting tiers in CI.
+- Frame rates on real GPUs; CI checks each tier's effects and the fallback with software WebGL.
 - A multi-stage tournament; only Stage 01 exists, so the advance path is unit-tested only.
 
 ## 7. Known limits
@@ -133,4 +134,34 @@ Screenshots (`tests/reports/screenshots/`):
    - **Also proposed:** add a `WATCHER_ROOT_ANCHOR` transform entry.
 2. **Mode choice.** The host picks Standup (default) or full tournament rules with a checkbox in the
    lobby. A tournament with more stages advances through `TOURNAMENT_ORDER` once those stages exist.
-3. **Default lighting tier.** The default is medium; low is used for tests and as a fallback.
+3. **Default lighting tier.** The default is medium; low is used for tests and as a fallback. *(Superseded by decision 026: High by default with an adaptive fallback.)*
+
+## 9. High quality by default (decision 026, owner request)
+
+The owner asked for the lighting and all effects on High, running smoothly in the browser.
+
+| Tier | Dynamic lights | Moon shadow | Dust motes | Haze cards |
+|------|----------------|-------------|------------|------------|
+| High (default) | All 15: moon, 10 floodlights, finish-gate strip (area light), booth, lantern, rim | Yes (2048 map fitted to the course; The Watcher, players and the environment cast) | 400 | Yes |
+| Medium | Moon, 10 floodlights, rim | No | 150 | No |
+| Low | Moon | No | 0 | No |
+
+**Keeping it smooth** (`apps/web/src/game/quality.ts`):
+
+- **Resolution:** render resolution capped at 1.5× on high-DPI screens, which looks sharp at much less cost than 2×.
+- **Adaptive fallback:** after a 2.5 s warm-up, the game averages the frame rate every 2 s. Below 45 fps it first drops the resolution to 1×, then steps the tier down (High → Medium → Low). It never steps back up in a session, so the picture does not flicker. A hidden tab is ignored.
+- **Pinning a tier:** `?quality=` pins a tier and turns the fallback off.
+- **Cheap effects:**
+  - The dust is one draw call, animated on the GPU.
+  - The canvas no longer keeps its drawing buffer (`preserveDrawingBuffer` off), which saves a copy every frame.
+  - The renderer asks for the high-performance GPU.
+
+**Check:** `npm run test:quality` (in CI) opens each pinned tier and checks that exactly the effects above are on, with no asset problems or console errors. With no `?quality`, it checks that the game starts on High and that the fallback steps down to Low on software WebGL and keeps rendering. Screenshots: `tests/reports/screenshots/quality_{low,medium,high}.png`.
+
+| Tier | Draw calls | Triangles | Shader programs |
+|------|------------|-----------|-----------------|
+| Low | 59 | 68,196 | 9 |
+| Medium | 60 | 68,196 | 9 |
+| High | 119 (shadow pass included) | 136,292 | 17 |
+
+These are well inside a desktop browser budget. Software WebGL frame rates only compare tiers, and real frame rates depend on the GPU, so they were not measured here.

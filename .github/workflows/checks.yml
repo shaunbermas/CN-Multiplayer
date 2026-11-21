@@ -1,6 +1,6 @@
 # Runs on every pull request.
 # Job "app": typecheck, unit tests, a wrangler deploy dry run, and the 30-client load test and two-browser
-# test against the Worker + Durable Objects running under `wrangler dev`.
+# test and the graphics quality check against the Worker + Durable Objects running under `wrangler dev`.
 # Job "test": asset pipeline checks for the Blender stages:
 #  - committed .blend passes validate_asset.py (pinned Blender 5.3.0, naming, spec measurements,
 #    budgets, Shepherd sightline from every spawn)
@@ -148,6 +148,12 @@ jobs:
 
       - name: Two browsers in one room
         run: npm run test:e2e
+        env:
+          SKIP_BUILD: "1"
+          WRANGLER_SEND_METRICS: "false"
+
+      - name: Graphics quality tiers and the adaptive fallback
+        run: npm run test:quality
         env:
           SKIP_BUILD: "1"
           WRANGLER_SEND_METRICS: "false"

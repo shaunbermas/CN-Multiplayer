@@ -6,22 +6,18 @@ import { useAnimations, useGLTF } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
+import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib.js';
 import envUrl from '../../../../../blender/exports/STAGE_01_ENVIRONMENT.glb?url';
 import watcherUrl from '../../../../../blender/exports/THE_WATCHER.glb?url';
 import lighting from '../../../../../blender/exports/STAGE_01_LIGHTING.json';
 import type { TrialRoom } from '../../net.ts';
+import { useQuality, type Quality } from '../../game/quality.ts';
 import { signalView } from '../../game/roundClock.ts';
 import { stageGeo } from '../../game/stage.ts';
 import { CLIP_SECONDS, MISSING_FROM_MANIFEST, WATCHER_CLIPS, chooseWatcherClip, type WatcherChoice } from './watcherAnimation.ts';
 
 export const ENV_URL = envUrl;
 export const WATCHER_URL = watcherUrl;
-
-export type Quality = 'low' | 'medium' | 'high';
-export function qualityFromUrl(): Quality {
-  const q = new URLSearchParams(location.search).get('quality');
-  return q === 'low' || q === 'high' ? q : 'medium';
-}
 
 /** Load status, exposed to tests through window.__cn.assets. */
 export const stage01Assets = {
@@ -33,8 +29,43 @@ export const stage01Assets = {
   watcherClip: '',
   /** Recent clip changes (newest last), for tests: [clip, local time ms]. */
   clipHistory: [] as [string, number][],
-  quality: 'medium' as Quality,
+  quality: 'high' as Quality,
+  /** What the current tier turned on, for tests: light ids, shadow casters, dust count, haze. */
+  effects: { lights: [] as string[], shadows: [] as string[], dust: 0, haze: false },
 };
+
+type Tier = { dynamicLights: string[] | string; dust?: number; hazeCards?: boolean; shadows?: string[] | boolean };
+const tierOf = (q: Quality) => lighting.qualityTiers[q] as Tier;
+const shadowLights = (q: Quality) => { const s = tierOf(q).shadows; return Array.isArray(s) ? s : []; };
+
+// Course volume the moon's shadow camera must cover (game metres): the fenced field, the towers and The Watcher.
+const SHADOW_VOLUME = new THREE.Box3(new THREE.Vector3(-48, 0, -200), new THREE.Vector3(48, 34, 25));
+
+/** Fits a directional light's orthographic shadow camera tightly around SHADOW_VOLUME. */
+function fitShadow(light: THREE.DirectionalLight, dir: THREE.Vector3) {
+  const centre = SHADOW_VOLUME.getCenter(new THREE.Vector3());
+  light.target.position.copy(centre);
+  light.position.copy(centre).addScaledVector(dir, -200);
+  light.updateMatrixWorld();
+  light.target.updateMatrixWorld();
+  const view = new THREE.Matrix4().lookAt(light.position, light.target.position, new THREE.Vector3(0, 1, 0));
+  const inv = view.clone().invert();
+  const b = new THREE.Box3();
+  const { min, max } = SHADOW_VOLUME;
+  for (const x of [min.x, max.x]) for (const y of [min.y, max.y]) for (const z of [min.z, max.z]) {
+    b.expandByPoint(new THREE.Vector3(x, y, z).sub(light.position).applyMatrix4(inv));
+  }
+  const cam = light.shadow.camera;
+  cam.left = b.min.x - 1; cam.right = b.max.x + 1; cam.bottom = b.min.y - 1; cam.top = b.max.y + 1;
+  cam.near = Math.max(0.5, -b.max.z - 5); cam.far = -b.min.z + 5;
+  cam.updateProjectionMatrix();
+  light.shadow.mapSize.set(2048, 2048);
+  light.shadow.bias = -0.0004;
+  light.shadow.normalBias = 0.04;
+  light.castShadow = true;
+}
+
+let rectLibReady = false;
 
 function dispose(root: THREE.Object3D) {
   root.traverse((o) => {
@@ -58,7 +89,8 @@ function Lighting({ quality }: { quality: Quality }) {
     const hemi = new THREE.HemisphereLight(new THREE.Color(...(amb.sky as [number, number, number])), new THREE.Color(...(amb.ground as [number, number, number])),
       amb.intensity * (quality === 'low' ? 1.9 : 1.4));
     out.push(hemi);
-    const tier = L.qualityTiers[quality] as { dynamicLights: string[] | string };
+    const tier = tierOf(quality);
+    const casters = shadowLights(quality);
     const wanted = (id: string) => tier.dynamicLights === 'all' || (tier.dynamicLights as string[]).some((p) => (p.endsWith('*') ? id.startsWith(p.slice(0, -1)) : id === p));
     for (const l of L.lights) {
       if (!wanted(l.id)) continue;
@@ -67,9 +99,25 @@ function Lighting({ quality }: { quality: Quality }) {
       if (l.type === 'directional') o = new THREE.DirectionalLight(col, 0.6);
       else if (l.type === 'spot') o = new THREE.SpotLight(col, l.id.includes('Rim') ? 2600 : 1700, 110, THREE.MathUtils.degToRad(l.angleDeg ?? 40), l.penumbra ?? 0.5, 1.5);
       else if (l.type === 'point') o = new THREE.PointLight(col, 260, (l.range ?? 25) * 1.4, 1.5);
+      else if (l.type === 'rect_area') {
+        // The finish gate's lamp strip: a wide, thin area light shining down (MeshStandard materials only).
+        if (!rectLibReady) { RectAreaLightUniformsLib.init(); rectLibReady = true; }
+        const r = new THREE.RectAreaLight(col, 9, l.width ?? 10, l.height ?? 1);
+        r.name = l.id;
+        r.position.set(...(l.position as [number, number, number]));
+        const [dx, dy, dz] = l.direction as [number, number, number];
+        r.lookAt(l.position[0] + dx, l.position[1] + dy, l.position[2] + dz);
+        out.push(r);
+        continue;
+      }
       if (!o) continue;
       o.name = l.id;
       o.position.set(...(l.position as [number, number, number]));
+      if (o instanceof THREE.DirectionalLight && casters.includes(l.id)) {
+        fitShadow(o, new THREE.Vector3(...(l.direction as [number, number, number])).normalize());
+        out.push(o.target, o);
+        continue;
+      }
       const t = (o as THREE.SpotLight | THREE.DirectionalLight).target;
       if (t) {
         const [dx, dy, dz] = l.direction as [number, number, number];
@@ -78,6 +126,8 @@ function Lighting({ quality }: { quality: Quality }) {
       }
       out.push(o);
     }
+    stage01Assets.effects.lights = out.filter((o) => (o as THREE.Light).isLight).map((o) => o.name).filter(Boolean);
+    stage01Assets.effects.shadows = out.filter((o) => (o as THREE.Light).castShadow).map((o) => o.name);
     return out;
   }, [quality, L]);
   useEffect(() => {
@@ -100,13 +150,26 @@ function Environment({ room, quality }: { room: TrialRoom; quality: Quality }) {
     gltf.scene.traverse((o) => {
       // The Prompt 05 environment still carries the retired Shepherd placeholder; The Watcher replaces it (decision 023).
       if (o.name.startsWith('ENM_Shepherd_Placeholder')) o.visible = false;
-      if (o.name === 'VFX_GroundHaze') o.visible = quality === 'high';
       const m = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined;
       if (m && m.name?.startsWith('MAT_Signal_')) mats.set(m.name, m);
     });
     for (const n of Object.values(LAMP)) if (!mats.has(n)) stage01Assets.problems.push(`environment: material ${n} missing`);
     stage01Assets.environment = 'ready';
     return mats;
+  }, [gltf]);
+  useEffect(() => {
+    const haze = !!tierOf(quality).hazeCards;
+    const shadows = shadowLights(quality).length > 0;
+    gltf.scene.traverse((o) => {
+      if (o.name === 'VFX_GroundHaze') o.visible = haze;
+      const mesh = o as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      const mats = ([] as THREE.Material[]).concat(mesh.material);
+      const solid = mats.every((m) => !m.transparent && !m.name.startsWith('MAT_VFX'));
+      mesh.castShadow = shadows && solid;
+      mesh.receiveShadow = shadows && solid;
+    });
+    stage01Assets.effects.haze = haze;
   }, [gltf, quality]);
   useEffect(() => () => { dispose(gltf.scene); useGLTF.clear(ENV_URL); stage01Assets.environment = 'loading'; }, [gltf]);
   useFrame(() => {
@@ -138,7 +201,8 @@ function Watcher({ room }: { room: TrialRoom }) {
     for (const a of ['Watcher_Root', 'Watcher_OpticalOrigin', 'Watcher_DetectionForward']) {
       if (!gltf.scene.getObjectByName(a)) stage01Assets.problems.push(`watcher: anchor ${a} missing`);
     }
-    gltf.scene.traverse((o) => { if ((o as THREE.Mesh).isMesh) o.frustumCulled = false; }); // skinned bounds move with the clips
+    // Skinned bounds move with the clips, so never frustum-cull; The Watcher casts the moon's shadow on High.
+    gltf.scene.traverse((o) => { if ((o as THREE.Mesh).isMesh) { o.frustumCulled = false; o.castShadow = true; } });
     // Measure in the asset's own frame: by now the scene may already sit under the plinth-height group,
     // so detach it for the measurement (skinned bounds use the bones' world matrices).
     const parent = gltf.scene.parent;
@@ -189,14 +253,76 @@ function Watcher({ room }: { room: TrialRoom }) {
   );
 }
 
+// ------------------------------------------------------------------------------------------ dust
+const DUST_BOX = new THREE.Vector3(40, 16, 40);
+const dustVertex = /* glsl */ `
+uniform float uTime; uniform vec3 uCam; uniform vec3 uBox; uniform float uSize; uniform float uScale;
+attribute float aSeed;
+varying float vAlpha;
+void main() {
+  vec3 p = position + vec3(uTime * 0.15 + sin(uTime * 0.13 + aSeed * 6.283) * 0.6,
+                           uTime * 0.05 * (0.4 + aSeed) + sin(uTime * 0.2 + aSeed * 9.0) * 0.3,
+                           cos(uTime * 0.11 + aSeed * 3.14) * 0.6);
+  p = mod(p - uCam + uBox * 0.5, uBox) + uCam - uBox * 0.5;   // wrap in a box that follows the camera
+  vec4 mv = modelViewMatrix * vec4(p, 1.0);
+  gl_Position = projectionMatrix * mv;
+  float d = max(-mv.z, 0.1);
+  gl_PointSize = uSize * uScale / d;
+  vAlpha = smoothstep(19.0, 8.0, d) * smoothstep(0.8, 2.5, d);
+}`;
+const dustFragment = /* glsl */ `
+uniform vec3 uColor;
+varying float vAlpha;
+void main() {
+  float r = length(gl_PointCoord - 0.5);
+  gl_FragColor = vec4(uColor, smoothstep(0.5, 0.0, r) * vAlpha * 0.55);
+}`;
+
+/** Drifting dust motes around the camera (tier dust count; one draw call, animated on the GPU). */
+function Dust({ count }: { count: number }) {
+  const { camera, size, viewport } = useThree();
+  const points = useMemo(() => {
+    const pos = new Float32Array(count * 3);
+    const seed = new Float32Array(count);
+    for (let i = 0; i < count; i++) {
+      pos[i * 3] = Math.random() * DUST_BOX.x; pos[i * 3 + 1] = Math.random() * DUST_BOX.y; pos[i * 3 + 2] = Math.random() * DUST_BOX.z;
+      seed[i] = Math.random();
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
+    const c = lighting.particles.dust.color as [number, number, number];
+    const mat = new THREE.ShaderMaterial({
+      vertexShader: dustVertex, fragmentShader: dustFragment, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+      uniforms: { uTime: { value: 0 }, uCam: { value: new THREE.Vector3() }, uBox: { value: DUST_BOX }, uSize: { value: 0.06 }, uScale: { value: 1 }, uColor: { value: new THREE.Color(...c) } },
+    });
+    const p = new THREE.Points(geo, mat);
+    p.frustumCulled = false;
+    p.name = 'VFX_Dust';
+    return p;
+  }, [count]);
+  useEffect(() => () => { points.geometry.dispose(); (points.material as THREE.Material).dispose(); }, [points]);
+  useFrame((state) => {
+    const u = (points.material as THREE.ShaderMaterial).uniforms;
+    u.uTime.value = state.clock.elapsedTime;
+    u.uCam.value.copy(camera.position);
+    // Pixels per metre at 1 m for the current resolution and field of view.
+    u.uScale.value = (size.height * viewport.dpr) / (2 * Math.tan(THREE.MathUtils.degToRad((camera as THREE.PerspectiveCamera).fov / 2)));
+  });
+  return <primitive object={points} />;
+}
+
 export function Stage01Scene({ room }: { room: TrialRoom }) {
-  const quality = useMemo(qualityFromUrl, []);
+  const quality = useQuality();
   stage01Assets.quality = quality;
+  const dust = tierOf(quality).dust ?? 0;
+  stage01Assets.effects.dust = dust;
   return (
     <>
       <Lighting quality={quality} />
       <Environment room={room} quality={quality} />
       <Watcher room={room} />
+      {dust > 0 && <Dust count={dust} />}
     </>
   );
 }
