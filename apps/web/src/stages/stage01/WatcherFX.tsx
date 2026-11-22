@@ -11,12 +11,22 @@ import * as THREE from 'three';
 import type { TrialRoom } from '../../net.ts';
 import { signalView } from '../../game/roundClock.ts';
 
-export const watcherFxStatus = { anchor: false, search: false, spotBeams: 0, lastSpotId: '' };
+export const watcherFxStatus = { anchor: false, search: false, spotBeams: 0, lastSpotId: '', eye: 'off' as 'off' | 'dim' | 'red' | 'flare', eyeLight: false };
+
+/** Soft radial glow texture for the eye glare (generated once). */
+function glowTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d')!;
+  const grad = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  grad.addColorStop(0, 'rgba(255,255,255,1)'); grad.addColorStop(0.18, 'rgba(255,220,220,0.9)'); grad.addColorStop(0.45, 'rgba(255,60,40,0.35)'); grad.addColorStop(1, 'rgba(255,0,0,0)');
+  g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
 
 const SPOT_S = 1.6;
 const beamMat = () => new THREE.MeshBasicMaterial({ color: new THREE.Color('#ff2a1a').multiplyScalar(3), transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, toneMapped: false });
 
-export function WatcherFX({ room, root, search }: { room: TrialRoom; root: THREE.Object3D | null; search: boolean }) {
+export function WatcherFX({ room, root, search, eyeLight }: { room: TrialRoom; root: THREE.Object3D | null; search: boolean; eyeLight: boolean }) {
   const fx = useMemo(() => {
     const g = new THREE.Group();
     g.name = 'STG01_WatcherFX';
@@ -33,14 +43,41 @@ export function WatcherFX({ room, root, search }: { room: TrialRoom; root: THREE
     const coneGeo = new THREE.ConeGeometry(1, 1, 32, 1, true);
     coneGeo.translate(0, -0.5, 0);
     coneGeo.rotateX(Math.PI); // apex at the origin, opening toward +Y
-    const coneMat = new THREE.MeshBasicMaterial({ color: new THREE.Color('#ff3020'), transparent: true, opacity: 0.06, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false });
+    // Soft volumetric-looking beam: brightest near the lens, fading along its length and toward its edges.
+    const coneMat = new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false,
+      uniforms: { uColor: { value: new THREE.Color('#ff2a18') }, uStrength: { value: 0.32 } },
+      vertexShader: `varying float vAlong; varying vec3 vN; varying vec3 vView;
+        void main() { vAlong = position.y; vec4 wp = modelMatrix * vec4(position, 1.0); vN = normalize(mat3(modelMatrix) * normal);
+          vView = normalize(cameraPosition - wp.xyz); gl_Position = projectionMatrix * viewMatrix * wp; }`,
+      fragmentShader: `uniform vec3 uColor; uniform float uStrength; varying float vAlong; varying vec3 vN; varying vec3 vView;
+        void main() { float edge = pow(abs(dot(normalize(vN), normalize(vView))), 2.2);
+          float fall = (1.0 - vAlong) * (1.0 - vAlong) * 0.85 + 0.15;
+          gl_FragColor = vec4(uColor * edge * fall * uStrength, 1.0);
+          #include <colorspace_fragment>
+        }`,
+    });
     const cone = new THREE.Mesh(coneGeo, coneMat);
     cone.visible = false;
     cone.frustumCulled = false;
-    g.add(beam, ring, cone);
-    return { g, beam, ring, cone };
+    // Ground hotspot where the searchlight lands.
+    const spot = new THREE.Mesh(new THREE.CircleGeometry(1, 40), new THREE.MeshBasicMaterial({ color: new THREE.Color('#ff2a18').multiplyScalar(1.4), transparent: true, opacity: 0.32, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, toneMapped: false }));
+    spot.rotation.x = -Math.PI / 2;
+    spot.visible = false;
+    // Eye glare: an additive glow on the lens (depth-tested, so the head hides it when The Watcher turns away).
+    const glare = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), color: new THREE.Color('#ff2a1a'), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, toneMapped: false }));
+    glare.visible = false;
+    // Red light on The Watcher's face and the plinth while the eye burns (Medium / High).
+    const light = new THREE.PointLight(new THREE.Color('#ff2414'), 0, 40, 1.6);
+    light.name = 'LGT_STG15_WatcherEye';
+    g.add(beam, ring, cone, spot, glare);
+    if (eyeLight) g.add(light);
+    return { g, beam, ring, cone, spot, glare, light };
   }, []);
-  useEffect(() => () => { fx.g.traverse((o) => { const m = o as THREE.Mesh; if (m.isMesh) { m.geometry.dispose(); (m.material as THREE.Material).dispose(); } }); }, [fx]);
+  useEffect(() => () => {
+    fx.g.traverse((o) => { const m = o as THREE.Mesh; if (m.isMesh) { m.geometry.dispose(); (m.material as THREE.Material).dispose(); } });
+    fx.glare.material.map?.dispose(); fx.glare.material.dispose();
+  }, [fx]);
 
   const tmp = useMemo(() => ({ a: new THREE.Vector3(), b: new THREE.Vector3(), d: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0) }), []);
   const seen = useMemo(() => ({ key: '', at: 0 }), []);
@@ -74,9 +111,23 @@ export function WatcherFX({ room, root, search }: { room: TrialRoom; root: THREE
       if (watcherFxStatus.lastSpotId !== `${ev!.id}@${ev!.at}`) { watcherFxStatus.lastSpotId = `${ev!.id}@${ev!.at}`; watcherFxStatus.spotBeams++; }
     }
     fx.beam.visible = fx.ring.visible = !!p;
+    // Eye: dim ember in the lobby and on green, burning red on warning and red, flaring when the server spots.
+    const t = state.clock.elapsedTime;
+    const eye = p ? 'flare' : phase === 'active' && (sig === 'red' || sig === 'warning') ? 'red' : 'dim';
+    watcherFxStatus.eye = eye;
+    fx.glare.visible = true;
+    fx.glare.position.copy(tmp.a);
+    const pulse = 0.85 + 0.15 * Math.sin(t * (eye === 'red' ? 6 : 2));
+    const size = eye === 'flare' ? 11 + Math.sin(t * 30) * 1.5 : eye === 'red' ? 6.5 * pulse : 2.2 * pulse;
+    fx.glare.scale.set(size, size, 1);
+    fx.glare.material.opacity = eye === 'dim' ? 0.45 : 1;
+    fx.light.intensity = THREE.MathUtils.lerp(fx.light.intensity, eye === 'flare' ? 900 : eye === 'red' ? 420 * pulse : 0, 0.2);
+    fx.light.position.copy(tmp.a).add(new THREE.Vector3(0, -1.5, 3));
+    watcherFxStatus.eyeLight = eyeLight && fx.light.intensity > 1;
     // Searchlight sweep during red (presentation only; detection is not line-of-sight, decision E9).
     const sweeping = search && phase === 'active' && sig === 'red' && !p;
     fx.cone.visible = sweeping;
+    fx.spot.visible = sweeping;
     watcherFxStatus.search = sweeping;
     if (sweeping) {
       const t = state.clock.elapsedTime;
@@ -85,7 +136,9 @@ export function WatcherFX({ room, root, search }: { room: TrialRoom; root: THREE
       const len = tmp.d.length();
       fx.cone.position.copy(tmp.a);
       fx.cone.quaternion.setFromUnitVectors(tmp.up, tmp.d.normalize());
-      fx.cone.scale.set(len * 0.09, len, len * 0.09);
+      fx.cone.scale.set(len * 0.06, len, len * 0.06);
+      fx.spot.position.set(tmp.b.x, 0.05, tmp.b.z);
+      fx.spot.scale.setScalar(len * 0.06 * 1.2);
     }
   });
   return <primitive object={fx.g} />;

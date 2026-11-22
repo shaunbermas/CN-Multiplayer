@@ -33,8 +33,9 @@ const waitFor = async (fn, label, ms = 60_000) => {
 const expectedLights = (q) => {
   const want = lighting.qualityTiers[q].dynamicLights;
   // Lights that followed the retired Shepherd placeholder are not used with The Watcher (decision 023).
-  return lighting.lights.filter((l) => !l.follows?.startsWith('ENM_Shepherd_Placeholder')).map((l) => l.id)
-    .filter((id) => want === 'all' || want.some((p) => (p.endsWith('*') ? id.startsWith(p.slice(0, -1)) : id === p)));
+  // The spec's ambient block is a hemisphere light on every tier, named so the red-light dimming can find it.
+  return ['LGT_STG01_Ambient', ...lighting.lights.filter((l) => !l.follows?.startsWith('ENM_Shepherd_Placeholder')).map((l) => l.id)
+    .filter((id) => want === 'all' || want.some((p) => (p.endsWith('*') ? id.startsWith(p.slice(0, -1)) : id === p)))];
 };
 const fpsOver = (page, ms) => page.evaluate((ms) => new Promise((done) => {
   let n = 0; const t0 = performance.now();
@@ -75,9 +76,9 @@ try {
     if (a.problems.length) errors.push(`${q}: asset problems ${a.problems.join('; ')}`);
     // Stage 1.5: atmosphere, painted surroundings, midground trees and the sky environment map per tier.
     const want15 = {
-      low: { sky: 'gradient+moon', cones: 0, mist: 0, post: 'none', wash: false },
-      medium: { sky: 'gradient+moon+stars+clouds', cones: 10, mist: 2, post: 'none', wash: true },
-      high: { sky: 'gradient+moon+stars+clouds', cones: 10, mist: 4, post: 'bloom+grade', wash: true },
+      low: { sky: 'gradient+moon', cones: 10, mist: 0, post: 'none', wash: false, shroud: true },
+      medium: { sky: 'gradient+moon+stars+clouds', cones: 10, mist: 2, post: 'none', wash: true, shroud: true },
+      high: { sky: 'gradient+moon+stars+clouds', cones: 10, mist: 4, post: 'bloom+grade', wash: true, shroud: true },
     }[q];
     for (const [k, v] of Object.entries(want15)) if (a.atmosphere[k] !== v) errors.push(`${q}: atmosphere.${k} ${a.atmosphere[k]}; expected ${v}`);
     const matte = JSON.parse(readFileSync(`${root}blender/exports/stage15/STAGE_01_MATTE_PAINTING_MANIFEST.json`, 'utf8'));

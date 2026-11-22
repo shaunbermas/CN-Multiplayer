@@ -27,18 +27,22 @@ function loadTexture(url: string, onError: (e: unknown) => void) {
 
 /** Open cylinder facing inward, u = 0 toward +Z, increasing toward +X (the manifest's convention). */
 function layerGeometry(radius: number, height: number, bottom: number, uOffset: number, segments = 128) {
-  const pos: number[] = [], uv: number[] = [], idx: number[] = [];
+  const pos: number[] = [], uv: number[] = [], idx: number[] = [], col: number[] = [];
   for (let i = 0; i <= segments; i++) {
     const u = i / segments;
     const a = u * Math.PI * 2;
     const x = Math.sin(a) * radius, z = Math.cos(a) * radius;
     pos.push(x, bottom, z, x, bottom + height, z);
+    // Darker toward The Watcher (u = 0.5 faces -Z): the painted world falls into gloom behind the doll.
+    const k = 1 - 0.7 * Math.exp(-(((u - 0.5) / 0.09) ** 2));
+    col.push(k, k, k, k, k, k);
     uv.push(u + uOffset, 0, u + uOffset, 1);
     if (i < segments) { const k = i * 2; idx.push(k, k + 2, k + 1, k + 1, k + 2, k + 3); }
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
   g.setIndex(idx);
   return g;
 }
@@ -51,7 +55,7 @@ function MatteLayers() {
     for (const l of manifest.layers) {
       const tex = loadTexture(LAYER_URL[l.id], () => surroundingsStatus.problems.push(`matte layer ${l.id} failed to load`));
       tex.wrapS = THREE.RepeatWrapping;
-      const mat = new THREE.MeshBasicMaterial({ map: tex, color: new THREE.Color().setScalar(l.brightness ?? 1), transparent: true, depthWrite: false, side: THREE.DoubleSide, fog: false, toneMapped: false });
+      const mat = new THREE.MeshBasicMaterial({ map: tex, color: new THREE.Color().setScalar(l.brightness ?? 1), vertexColors: true, transparent: true, depthWrite: false, side: THREE.DoubleSide, fog: false, toneMapped: false });
       const mesh = new THREE.Mesh(layerGeometry(l.radius, l.height, l.bottom, l.uOffset), mat);
       mesh.name = l.id;
       mesh.renderOrder = -10 + l.order; // far layers first; they never write depth

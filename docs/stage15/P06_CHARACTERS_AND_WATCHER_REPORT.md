@@ -40,3 +40,9 @@ The approved model, rig, bones, clips, textures and proportions are unchanged; `
 | `npm run test:e2e`: the beam fires from `Watcher_OpticalOrigin` after the server spots Beta | PASS |
 | Asset checks on load: 9 clips with manifest lengths, anchors, height 28.0 m, feet at the root | PASS, no problems |
 | Signal states on High (`docs/stage15/screenshots/p04_atmosphere/signal_{green,warning,red}.png`): green lens and wash, turned back on warning, red lens and wash on red | Visually verified |
+
+## Update, 22 Nov 2026 (decision 029)
+
+The contestant roster is no longer blocked: the owner chose **randomised characters**, never duplicated in a room.
+30 original characters are built in code and dealt by the server. See `docs/stage15/FEEDBACK_22NOV.md`.
+The Watcher also gained a red eye glare, a red searchlight and a darker backdrop.

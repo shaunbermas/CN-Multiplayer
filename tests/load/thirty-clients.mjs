@@ -33,6 +33,10 @@ try {
   await sleep(500);
   const seen = clients.map((c) => c.players.size);
   if (!seen.every((n) => n === N)) errors.push(`Not every client sees ${N} players: ${seen.join(',')}`);
+  // Randomised contestants: the server deals every player a different character (owner decision, 22 Nov 2026).
+  const characters = [...clients[0].players.values()].map((p) => p.character);
+  const uniqueCharacters = new Set(characters).size;
+  if (uniqueCharacters !== N || characters.some((c) => !/^CHR_\d{2}$/.test(c ?? ''))) errors.push(`Characters not unique: ${uniqueCharacters} distinct for ${N} players`);
 
   // ---- 31st must be rejected
   let rejected = false;
@@ -87,6 +91,7 @@ try {
     clients: N,
     join_ms: { avg: +(joinMs.reduce((a, b) => a + b, 0) / N).toFixed(1), max: +Math.max(...joinMs).toFixed(1) },
     every_client_sees: seen[0],
+    unique_characters: uniqueCharacters,
     client_31: { rejected, message: rejectMessage },
     load_seconds: +loadSeconds.toFixed(1),
     rtt_ms: rtts.length ? { median: rtts[Math.floor(rtts.length / 2)], p95: rtts[Math.floor(rtts.length * 0.95)], max: rtts[rtts.length - 1] } : null,

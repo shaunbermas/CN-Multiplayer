@@ -1,74 +1,83 @@
 {
   "result": "PASS",
   "errors": [],
-  "date": "2026-11-21T22:00:52.790Z",
+  "date": "2026-11-22T01:38:07.850Z",
   "renderer": "headless Chromium, software WebGL (SwiftShader); frame rates compare tiers only",
   "tiers": {
     "low": {
       "atmosphere": {
         "sky": "gradient+moon",
-        "cones": 0,
+        "cones": 10,
+        "glares": 10,
         "mist": 0,
         "wash": false,
-        "post": "none"
+        "post": "none",
+        "shroud": true,
+        "redDim": 1
       },
       "cutouts": 457,
-      "lights": 1,
+      "lights": 2,
       "shadows": [],
       "dust": 0,
       "haze": false,
-      "draw_calls": 69,
-      "triangles": 72364,
-      "shader_programs": 13,
-      "software_fps": 2
+      "draw_calls": 79,
+      "triangles": 71304,
+      "shader_programs": 17,
+      "software_fps": 3.4
     },
     "medium": {
       "atmosphere": {
         "sky": "gradient+moon+stars+clouds",
         "cones": 10,
+        "glares": 10,
         "mist": 2,
         "wash": true,
-        "post": "none"
+        "post": "none",
+        "shroud": true,
+        "redDim": 1
       },
       "cutouts": 760,
-      "lights": 12,
+      "lights": 13,
       "shadows": [],
       "dust": 150,
       "haze": false,
-      "draw_calls": 80,
-      "triangles": 73166,
-      "shader_programs": 16,
-      "software_fps": 1.1
+      "draw_calls": 82,
+      "triangles": 71892,
+      "shader_programs": 19,
+      "software_fps": 1.2
     },
     "high": {
       "atmosphere": {
         "sky": "gradient+moon+stars+clouds",
         "cones": 10,
+        "glares": 10,
         "mist": 4,
         "wash": true,
-        "post": "bloom+grade"
+        "post": "bloom+grade",
+        "shroud": true,
+        "redDim": 1
       },
       "cutouts": 1099,
-      "lights": 14,
+      "lights": 15,
       "shadows": [
         "LGT_STG01_Moon"
       ],
       "dust": 400,
       "haze": true,
-      "draw_calls": 158,
-      "triangles": 141469,
-      "shader_programs": 35,
-      "software_fps": 1.1
+      "draw_calls": 155,
+      "triangles": 138939,
+      "shader_programs": 38,
+      "software_fps": 1.2
     }
   },
   "adaptive_default": {
     "started_on": "high",
     "changes": [
-      "high@1x -> medium@1x at 1 fps",
-      "medium@1x -> low@1x at 1 fps"
+      "high@1x -> medium@1x at 0 fps",
+      "medium@1x -> low@1x at 0 fps"
     ],
     "final_tier": "low",
-    "software_fps_after": 2.2
+    "software_fps_after": 3.5
   },
   "screenshots": [
     "tests/reports/screenshots/quality_low.png",

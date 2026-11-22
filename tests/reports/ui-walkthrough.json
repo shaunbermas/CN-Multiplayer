@@ -1,7 +1,7 @@
 {
   "result": "PASS",
   "errors": [],
-  "date": "2026-11-21T22:02:49.641Z",
+  "date": "2026-11-22T01:34:34.092Z",
   "screens": [
     "01_menu",
     "01b_menu_keyboard_focus",
@@ -10,7 +10,7 @@
     "04_join_with_code",
     "05_invite_link",
     "06_lobby_30_slots",
-    "07_character_select_pending",
+    "07_dealt_contestant",
     "08_briefing",
     "09_countdown",
     "10_hud_green",
@@ -22,5 +22,6 @@
     "16_room_full",
     "17_connection_lost"
   ],
+  "screenshot_after_screen_closed": [],
   "renderer": "headless Chromium, SwiftShader, low tier"
 }

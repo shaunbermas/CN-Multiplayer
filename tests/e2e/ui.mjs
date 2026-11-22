@@ -77,9 +77,11 @@ try {
     const codeShown = await page.textContent('[data-testid=room-code-display]');
     if (codeShown?.trim() !== code.toUpperCase()) throw new Error(`room code shows ${codeShown}`);
   });
-  await page.click('[data-testid=open-characters]');
-  await step(page, '07_character_select_pending', async () => { await waitFor(() => visible(page, '[data-testid=roster-pending]'), 'roster pending notice'); });
-  await page.getByRole('button', { name: 'Close' }).click();
+  await step(page, '07_dealt_contestant', async () => {
+    await waitFor(() => visible(page, '[data-testid=my-contestant]'), 'dealt contestant label');
+    const chars = await page.evaluate(() => window.__cn.players().length);
+    if (chars !== 5) throw new Error(`expected 5 players, saw ${chars}`);
+  });
 
   // Transient screens (countdown, stamp…) can come and go faster than a software-rendered screenshot on a slow
   // CI runner, so an in-page observer records when each one actually appeared; the test asserts on that and
