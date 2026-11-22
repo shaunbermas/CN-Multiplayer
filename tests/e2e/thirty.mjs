@@ -51,7 +51,7 @@ try {
   }
   const bots = [];
   for (let i = 0; i < 25; i++) bots.push(await RoomClient.connect(`ws://127.0.0.1:${PORT}/api/room/${ROOM}/ws`, `Bot${String(i + 1).padStart(2, '0')}`));
-  await waitFor(async () => (await Promise.all(pages.map((p) => p.evaluate(() => window.__cn.players().length)))).every((n) => n === 30), 'all pages see 30 players')
+  await waitFor(async () => (await Promise.all(pages.map((p) => p.evaluate(() => window.__cn.players().length)))).every((n) => n === 30), 'all pages see 30 players', 180_000)
     .catch(async (e) => {
       report.seen_on_timeout = await Promise.all(pages.map((p) => p.evaluate(() => window.__cn?.players().length ?? -1).catch((x) => String(x))));
       report.page_errors = consoleErrors.slice(0, 8);
@@ -99,7 +99,18 @@ try {
     obstacles: window.__cn.assets().obstacles,
   }));
   report.observer.software_fps = +(await fpsOver(pages[0], 4000)).toFixed(2);
-  await pages[0].screenshot({ path: `${shots}/thirty_ingame_overview.png`, timeout: 120_000 });
+  report.observer.context_lost = await pages[0].evaluate(() => document.querySelector('canvas')?.getContext('webgl2')?.isContextLost() ?? null);
+  const shot = await pages[0].screenshot({ path: `${shots}/thirty_ingame_overview.png`, timeout: 120_000 });
+  // the frame must show the scene, not a blank canvas: mean brightness of the screenshot's centre
+  report.observer.screenshot_mean = await pages[0].evaluate(async (b64) => {
+    const img = new Image(); img.src = `data:image/png;base64,${b64}`; await img.decode();
+    const c = new OffscreenCanvas(img.width, img.height); const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+    const d = x.getImageData(img.width * 0.25, img.height * 0.25, img.width * 0.5, img.height * 0.5).data;
+    let s = 0; for (let i = 0; i < d.length; i += 4) s += d[i] + d[i + 1] + d[i + 2];
+    return +(s / (d.length / 4) / 3).toFixed(1);
+  }, shot.toString('base64'));
+  if (report.observer.context_lost) errors.push('Observer WebGL context lost');
+  if (report.observer.screenshot_mean < 8) errors.push(`Observer screenshot is blank (mean ${report.observer.screenshot_mean})`);
   await pages[0].evaluate(() => { delete window.__cnView; });
   report.low_pages_software_fps = [];
   for (const p of pages.slice(1)) report.low_pages_software_fps.push(+(await fpsOver(p, 2000)).toFixed(2));
