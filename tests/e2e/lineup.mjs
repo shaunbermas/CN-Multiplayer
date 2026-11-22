@@ -22,10 +22,10 @@ try {
   await page.waitForFunction(() => !!window.__cn, null, { timeout: 90_000 });
   const bots = [];
   for (let i = 0; i < 29; i++) bots.push(await RoomClient.connect(`ws://127.0.0.1:${PORT}/api/room/lineup/ws`, `Bot${i + 1}`));
-  await page.waitForFunction(() => window.__cn.players().length === 30 && window.__cn.assets().environment === 'ready', null, { timeout: 180_000 });
+  await page.waitForFunction(() => window.__cn.players().length === 30 && window.__cn.assets().environment === 'ready' && window.__cn.contestants()?.ready, null, { timeout: 180_000 });
   await sleep(3000);
   const players = await page.evaluate(() => window.__cn.players());
-  console.log('distinct characters:', new Set(players.map((p) => p.character)).size);
+  console.log('distinct characters:', new Set(players.map((p) => p.colorway)).size);
   const sorted = [...players].sort((a, b) => a.x - b.x || a.z - b.z);
   for (const [k, group] of [[0, sorted.slice(0, 10)], [1, sorted.slice(10, 20)], [2, sorted.slice(20, 30)]]) {
     const cx = group.reduce((s, p) => s + p.x, 0) / group.length, cz = group.reduce((s, p) => s + p.z, 0) / group.length;

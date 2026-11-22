@@ -38,7 +38,7 @@ try {
   browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-precise-memory-info'] });
   const page = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   page.on('pageerror', (e) => errors.push(String(e)));
-  await page.goto(`http://127.0.0.1:${PORT}/?name=Perf&autojoin=1&room=perf&quality=${Q}`);
+  await page.goto(`http://127.0.0.1:${PORT}/?name=Perf&autojoin=1&room=perf&quality=${Q}${process.env.PERF_QUERY ?? ''}`);
   await page.waitForFunction(() => !!window.__cn && window.__cn.assets().environment === 'ready' && window.__cn.assets().watcher === 'ready', null, { timeout: 180_000 });
   const spawns = await page.evaluate(() => window.__cn.spawns);
   const cx = spawns.reduce((s, p) => s + p.x, 0) / spawns.length, cz = spawns.reduce((s, p) => s + p.z, 0) / spawns.length;
@@ -52,7 +52,7 @@ try {
   report.thirty_ready_after_join_ms = Date.now() - tJoin;
   report.thirty_players = await sample(page);
   report.contestant_downloads = await page.evaluate(() => performance.getEntriesByType('resource')
-    .filter((r) => /CNTRIAL_CONTESTANT|contestant/i.test(r.name))
+    .filter((r) => /CNTRIAL_CONTESTANT|CNT_(Detail|Normal)|contestant/i.test(r.name))
     .map((r) => ({ file: r.name.split('/').pop(), bytes: r.transferSize || r.encodedBodySize, ms: Math.round(r.duration) })));
   const a = report.one_player.render, b = report.thirty_players.render;
   report.cost_of_29_contestants = {

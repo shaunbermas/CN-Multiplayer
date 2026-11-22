@@ -1,0 +1,144 @@
+{
+  "result": "PASS",
+  "errors": [],
+  "date": "2026-11-22T03:54:58.079Z",
+  "machine": "4 vCPU, no GPU (SwiftShader software WebGL); frame rates compare runs on this machine only",
+  "quality": "high",
+  "viewport": "1280x720",
+  "camera": "fixed, 9 m behind and 6 m above the spawn grid",
+  "one_player": {
+    "render": {
+      "calls": 146,
+      "triangles": 136537,
+      "programs": 36,
+      "textures": 80,
+      "geometries": 75,
+      "dpr": 1
+    },
+    "heap_mb": 24.7,
+    "contestants": {
+      "system": "shared",
+      "ready": false,
+      "state": "loading",
+      "error": "",
+      "loadMs": 0,
+      "clips": [],
+      "instances": 0,
+      "meshes": 0,
+      "uniqueGeometries": 0,
+      "skeletons": 0,
+      "geometryBytes": 0,
+      "animationCpuMsPerFrame": 0,
+      "uniqueMaterials": 0,
+      "uniqueTextures": 0,
+      "lod": [
+        0,
+        0,
+        0
+      ],
+      "colorways": []
+    },
+    "players": 1,
+    "software_fps": 0.83
+  },
+  "thirty_ready_after_join_ms": 6077,
+  "thirty_players": {
+    "render": {
+      "calls": 202,
+      "triangles": 393845,
+      "programs": 37,
+      "textures": 112,
+      "geometries": 78,
+      "dpr": 1
+    },
+    "heap_mb": 34.9,
+    "contestants": {
+      "system": "shared",
+      "ready": true,
+      "state": "ready",
+      "error": "",
+      "loadMs": 6401,
+      "clips": [
+        "Dive",
+        "Eliminated",
+        "Fall",
+        "Idle",
+        "JumpAir",
+        "JumpLand",
+        "JumpStart",
+        "Pull",
+        "Push",
+        "Recover",
+        "Run",
+        "Start",
+        "Stop",
+        "Stumble",
+        "Victory",
+        "Walk"
+      ],
+      "instances": 30,
+      "meshes": 90,
+      "uniqueGeometries": 3,
+      "skeletons": 30,
+      "geometryBytes": 1164140,
+      "animationCpuMsPerFrame": 0.171,
+      "uniqueMaterials": 30,
+      "uniqueTextures": 2,
+      "lod": [
+        1,
+        8,
+        21
+      ],
+      "colorways": [
+        "CW06",
+        "CW27",
+        "CW08",
+        "CW17",
+        "CW16",
+        "CW28",
+        "CW13",
+        "CW23",
+        "CW19",
+        "CW26",
+        "CW18",
+        "CW11",
+        "CW15",
+        "CW09",
+        "CW07",
+        "CW05",
+        "CW29",
+        "CW24",
+        "CW25",
+        "CW14",
+        "CW20",
+        "CW04",
+        "CW01",
+        "CW22",
+        "CW12",
+        "CW02",
+        "CW03",
+        "CW10",
+        "CW21",
+        "CW30"
+      ]
+    },
+    "players": 30,
+    "software_fps": 0.82
+  },
+  "contestant_downloads": [
+    {
+      "file": "CNTRIAL_CONTESTANT_MASTER.meshopt-LpWodyyK.glb",
+      "bytes": 763992,
+      "ms": 34
+    }
+  ],
+  "cost_of_29_contestants": {
+    "draw_calls": 56,
+    "triangles": 257308,
+    "geometries": 3,
+    "textures": 32,
+    "programs": 1,
+    "heap_mb": 10.2,
+    "fps_drop": 0.01
+  }
+}

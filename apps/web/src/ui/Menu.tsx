@@ -35,13 +35,14 @@ export function HowToPlay({ onClose }: { onClose: () => void }) {
         <li><b>Red light: freeze.</b> Anyone still moving after a short grace moment is spotted and eliminated. Eliminated players spectate.</li>
         <li><b>Finish</b> before the timer runs out. In tournament rules, only the first finishers qualify.</li>
         <li><b>Obstacle twist</b> (host option): barricade rows to weave through and a gate that slides only on green.</li>
-        <li><b>Your contestant</b> is dealt at random when you join. Nobody in the room has the same one.</li>
+        <li><b>Your contestant</b> wears colours dealt at random when you join (kept if you rejoin). Nobody in the room has the same ones. In the lobby, <kbd>Space</kbd> jumps and <kbd>E</kbd> dives, just for fun.</li>
       </ol>
       <table className="keys">
         <tbody>
           <tr><td><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / arrows</td><td>Move</td></tr>
           <tr><td>Mouse (click the game first)</td><td>Look around</td></tr>
-          <tr><td><kbd>Space</kbd></td><td>Skip the briefing</td></tr>
+          <tr><td><kbd>Space</kbd></td><td>Skip the briefing · jump (lobby, just for show)</td></tr>
+          <tr><td><kbd>E</kbd></td><td>Dive (lobby, just for show)</td></tr>
           <tr><td><kbd>Tab</kbd></td><td>Switch the player you spectate</td></tr>
           <tr><td><kbd>R</kbd></td><td>Respawn (lobby practice only)</td></tr>
           <tr><td><kbd>Esc</kbd></td><td>Release the mouse</td></tr>

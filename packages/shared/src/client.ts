@@ -4,6 +4,7 @@ import {
   PROTOCOL_VERSION, STATUS_OF, type ClientMessage, type RosterEntry, type RoundState, type ServerMessage,
   type StartRequestOptions,
 } from './protocol.ts';
+import type { Emote } from './contestantColorways.ts';
 import type { Placing, PlayerStatus } from './round.ts';
 
 export interface PlayerView {
@@ -13,7 +14,8 @@ export interface PlayerView {
   /** Lobby ready flag (Stage 1.5). */
   ready: boolean;
   /** Character dealt by the server (CHR_01–CHR_30), unique in the room. */
-  character: string;
+  /** Colourway of the shared contestant (CW01–CW30). */
+  colorway: string;
 }
 
 export type ResultRow = Placing & { name: string };
@@ -42,11 +44,13 @@ export class RoomClient {
   private ws: WebSocket;
   private closeHandlers: ((code: number, reason: string) => void)[] = [];
   private snapHandlers: (() => void)[] = [];
+  /** Recent lobby emotes (visual only): local receive time in ms. */
+  readonly emotes: { id: string; e: Emote; at: number }[] = [];
 
   private constructor(ws: WebSocket) { this.ws = ws; }
 
   /** Connect to ws(s)://host/api/room/<code>/ws and join. Resolves after the server's welcome. */
-  static connect(url: string, name: string, timeoutMs = 10_000): Promise<RoomClient> {
+  static connect(url: string, name: string, timeoutMs = 10_000, key?: string): Promise<RoomClient> {
     return new Promise((resolve, reject) => {
       const ws = new WebSocket(url);
       const c = new RoomClient(ws);
@@ -58,7 +62,7 @@ export class RoomClient {
         try { ws.close(); } catch { /* ignore */ }
         reject(e);
       };
-      ws.addEventListener('open', () => c.send({ t: 'join', v: PROTOCOL_VERSION, name }));
+      ws.addEventListener('open', () => c.send({ t: 'join', v: PROTOCOL_VERSION, name, ...(key ? { key } : {}) }));
       ws.addEventListener('error', () => fail(new RoomError('network', 'Could not reach the game server')));
       ws.addEventListener('close', (ev) => {
         if (!settled) fail(new RoomError('closed', ev.reason || 'The game server closed the connection'));
@@ -97,6 +101,10 @@ export class RoomClient {
             c.events.push({ kind: msg.kind, id: msg.id, at: Date.now(), roundT: msg.at });
             if (c.events.length > 100) c.events.shift();
             break;
+          case 'emote':
+            c.emotes.push({ id: msg.id, e: msg.e, at: Date.now() });
+            if (c.emotes.length > 60) c.emotes.splice(0, c.emotes.length - 60);
+            break;
           case 'pong':
             if (typeof msg.at === 'number') c.rttMs = Math.max(0, Date.now() - msg.at);
             break;
@@ -119,9 +127,9 @@ export class RoomClient {
     for (const id of [...this.players.keys()]) if (!ids.has(id)) this.players.delete(id);
     for (const r of roster) {
       const p = this.players.get(r.id);
-      if (p) { p.name = r.name; p.spawn = r.spawn; p.ready = !!r.ready; p.character = r.character; continue; }
+      if (p) { p.name = r.name; p.spawn = r.spawn; p.ready = !!r.ready; p.colorway = r.colorway; continue; }
       this.players.set(r.id, {
-        id: r.id, name: r.name, spawn: r.spawn, x: 0, z: 0, vx: 0, vz: 0, yaw: 0, ack: 0, status: 'active', finishTime: -1, ready: !!r.ready, character: r.character,
+        id: r.id, name: r.name, spawn: r.spawn, x: 0, z: 0, vx: 0, vz: 0, yaw: 0, ack: 0, status: 'active', finishTime: -1, ready: !!r.ready, colorway: r.colorway,
       });
     }
   }

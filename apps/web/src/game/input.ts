@@ -1,6 +1,6 @@
 // Keyboard + pointer-lock mouse look. Camera yaw 0 faces -Z (the course).
 import { settings } from '../ui/settings.ts';
-export const input = { forward: 0, right: 0, yaw: 0, pitch: -0.12, respawn: false, skip: false, cycle: false };
+export const input = { forward: 0, right: 0, yaw: 0, pitch: -0.12, respawn: false, skip: false, cycle: false, emote: null as null | 'jump' | 'dive' };
 
 const held = new Set<string>();
 function update() {
@@ -14,6 +14,8 @@ export function attachInput(canvas: HTMLElement): () => void {
     held.add(e.code);
     if (e.code === 'KeyR') input.respawn = true;
     if (e.code === 'Space' || e.code === 'Enter') input.skip = true;
+    if (e.code === 'Space' && !e.repeat) input.emote = 'jump'; // lobby emotes (visual only)
+    if (e.code === 'KeyE' && !e.repeat) input.emote = 'dive';
     if (e.code === 'Tab' || e.code === 'KeyT') { input.cycle = true; e.preventDefault(); }
     update();
   };

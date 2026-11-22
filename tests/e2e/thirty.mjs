@@ -61,9 +61,14 @@ try {
   await sleep(2000);
   await pages[0].screenshot({ path: `${shots}/thirty_lobby_30_slots.png`, timeout: 120_000 });
   report.lobby_slots_taken = await pages[0].evaluate(() => document.querySelectorAll('.lobby-slots .slot.taken').length);
-  // Randomised contestants: 30 players, 30 different characters, drawn as 30 character meshes.
-  report.unique_characters = await pages[0].evaluate(() => new Set(window.__cn.players().map((p) => p.character)).size);
-  if (report.unique_characters !== 30) errors.push(`${report.unique_characters} distinct characters for 30 players`);
+  // Shared contestant: 30 players, 30 different colourways, ONE shared geometry set and texture set.
+  report.unique_colorways = await pages[0].evaluate(() => new Set(window.__cn.players().map((p) => p.colorway)).size);
+  if (report.unique_colorways !== 30) errors.push(`${report.unique_colorways} distinct colourways for 30 players`);
+  await waitFor(() => pages[0].evaluate(() => window.__cn.contestants()?.ready && window.__cn.contestants().instances === 30), 'shared contestant on 30 players', 120_000);
+  report.contestants = await pages[0].evaluate(() => window.__cn.contestants());
+  if (report.contestants.uniqueGeometries > 3) errors.push(`Contestants use ${report.contestants.uniqueGeometries} geometries; expected the 3 shared LODs`);
+  if (report.contestants.uniqueTextures > 2) errors.push(`Contestants use ${report.contestants.uniqueTextures} textures; expected the 2 shared maps`);
+  if (new Set(report.contestants.colorways).size !== 30) errors.push('Contestant materials do not show 30 colourways');
   if (report.lobby_slots_taken !== 30) errors.push(`Lobby shows ${report.lobby_slots_taken} taken slots, expected 30`);
 
   // ---- round with the obstacle twist
