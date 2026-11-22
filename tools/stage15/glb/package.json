@@ -1,0 +1,12 @@
+{
+  "name": "cn-trial-glb-tools",
+  "private": true,
+  "type": "module",
+  "description": "Stage 1.5 runtime GLB derivation (strip 3D background, meshopt). Originals in blender/exports are never modified.",
+  "dependencies": {
+    "@gltf-transform/core": "4.2.1",
+    "@gltf-transform/extensions": "4.2.1",
+    "@gltf-transform/functions": "4.2.1",
+    "meshoptimizer": "0.22.0"
+  }
+}

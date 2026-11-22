@@ -115,6 +115,7 @@ function Lighting({ quality }: { quality: Quality }) {
     const amb = L.ambient;
     const hemi = new THREE.HemisphereLight(new THREE.Color(...(amb.sky as [number, number, number])), new THREE.Color(...(amb.ground as [number, number, number])),
       amb.intensity * (quality === 'low' ? 1.9 : 1.4));
+    hemi.name = 'LGT_STG01_Ambient';
     out.push(hemi);
     const tier = tierOf(quality);
     const casters = shadowLights(quality);
@@ -225,6 +226,9 @@ function Environment({ room, quality }: { room: TrialRoom; quality: Quality }) {
       if (m && m.name?.startsWith('MAT_Signal_')) mats.set(m.name, m);
       // Puddles: a near-black mirror in the approved material; with the sky environment it now reflects.
       if (m && m.name === 'MAT_Puddle') puddles.add(m);
+      // Owner feedback (more horror): the warm lamp strips were the brightest thing at the Watcher's end and
+      // bloomed into a white bar; tone them down so the doll and its red eye dominate.
+      if (m && m.name === 'MAT_Light_Warm' && !m.userData.stage15dim) { m.emissiveIntensity *= 0.35; m.userData.stage15dim = true; }
     });
     for (const n of Object.values(LAMP)) if (!mats.has(n)) stage01Assets.problems.push(`environment: material ${n} missing`);
     stage01Assets.foliageTrianglesRemoved = stripConeTrees(gltf.scene);
@@ -362,7 +366,7 @@ function Watcher({ room, search }: { room: TrialRoom; search: boolean }) {
       <group ref={group} position={[w.x, w.y, w.z]} rotation={[0, w.yaw - Math.PI, 0]}>
         <primitive object={gltf.scene} />
       </group>
-      <WatcherFX room={room} root={gltf.scene} search={search} />
+      <WatcherFX room={room} root={gltf.scene} search eyeLight={search} />
     </>
   );
 }
@@ -382,14 +386,14 @@ void main() {
   gl_Position = projectionMatrix * mv;
   float d = max(-mv.z, 0.1);
   gl_PointSize = uSize * uScale / d;
-  vAlpha = smoothstep(19.0, 8.0, d) * smoothstep(0.8, 2.5, d);
+  vAlpha = (1.0 - smoothstep(8.0, 19.0, d)) * smoothstep(0.8, 2.5, d);
 }`;
 const dustFragment = /* glsl */ `
 uniform vec3 uColor;
 varying float vAlpha;
 void main() {
   float r = length(gl_PointCoord - 0.5);
-  gl_FragColor = vec4(uColor, smoothstep(0.5, 0.0, r) * vAlpha * 0.55);
+  gl_FragColor = vec4(uColor, (1.0 - smoothstep(0.0, 0.5, r)) * vAlpha * 0.55);
 }`;
 
 /** Drifting dust motes around the camera (tier dust count; one draw call, animated on the GPU). */

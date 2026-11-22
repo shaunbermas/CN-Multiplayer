@@ -17,31 +17,36 @@ import lighting from '../../../../../blender/exports/STAGE_01_LIGHTING.json';
 import type { TrialRoom } from '../../net.ts';
 import type { Quality } from '../../game/quality.ts';
 import { signalView } from '../../game/roundClock.ts';
+import { stageGeo } from '../../game/stage.ts';
 import { SKY, SKY_GRADIENT_GLSL, skyUniforms } from './skyModel.ts';
 
 /** What the current tier turned on, for tests (window.__cn.assets().atmosphere). */
-export const atmosphereStatus = { sky: '', cones: 0, mist: 0, wash: false, post: 'none' as string };
+export const atmosphereStatus = { sky: '', cones: 0, glares: 0, mist: 0, wash: false, post: 'none' as string, shroud: false, redDim: 1 };
+
+/** Direction of The Watcher seen from the course (game space, horizontal); the sky and painted world darken there. */
+const WATCHER_DIR = new THREE.Vector3(0, 0, -1);
 
 /** Per-tier atmosphere settings (documented in docs/stage15/P04_ATMOSPHERE_REPORT.md). */
 export const ATMOSPHERE: Record<Quality, { stars: boolean; clouds: boolean; cones: boolean; mist: number; wash: boolean; post: 'none' | 'grade' | 'bloom+grade' }> = {
-  low: { stars: false, clouds: false, cones: false, mist: 0, wash: false, post: 'none' },
+  low: { stars: false, clouds: false, cones: true, mist: 0, wash: false, post: 'none' },
   medium: { stars: true, clouds: true, cones: true, mist: 2, wash: true, post: 'none' },
   high: { stars: true, clouds: true, cones: true, mist: 4, wash: true, post: 'bloom+grade' },
 };
 
 // ------------------------------------------------------------------------------------------ sky dome
-function SkyDome({ stars, clouds }: { stars: boolean; clouds: boolean }) {
+function SkyDome({ stars, clouds, room }: { stars: boolean; clouds: boolean; room: TrialRoom }) {
   const camera = useThree((s) => s.camera);
   const mesh = useMemo(() => {
     const mat = new THREE.ShaderMaterial({
       side: THREE.BackSide, depthWrite: false, depthTest: false, fog: false,
       defines: { STARS: stars ? 1 : 0, CLOUDS: clouds ? 1 : 0 },
-      uniforms: { ...skyUniforms(), uTime: { value: 0 }, uMoonDir: { value: new THREE.Vector3(...SKY.moonDir).normalize() }, uMoon: { value: new THREE.Color(SKY.moon) } },
+      uniforms: { ...skyUniforms(), uTime: { value: 0 }, uMoonDir: { value: new THREE.Vector3(...SKY.moonDir).normalize() }, uMoon: { value: new THREE.Color(SKY.moon) },
+        uDarkDir: { value: WATCHER_DIR.clone() }, uRed: { value: 0 } },
       vertexShader: /* glsl */ `
         varying vec3 vDir;
         void main() { vDir = position; vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_Position = p.xyww; }`,
       fragmentShader: /* glsl */ `${SKY_GRADIENT_GLSL}
-        uniform float uTime; uniform vec3 uMoonDir; uniform vec3 uMoon; varying vec3 vDir;
+        uniform float uTime; uniform vec3 uMoonDir; uniform vec3 uMoon; uniform vec3 uDarkDir; uniform float uRed; varying vec3 vDir;
         float hash(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
         float noise(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
           float a = hash(vec3(i, 1.0)), b = hash(vec3(i + vec2(1, 0), 1.0)), c = hash(vec3(i + vec2(0, 1), 1.0)), d = hash(vec3(i + vec2(1, 1), 1.0));
@@ -68,6 +73,12 @@ function SkyDome({ stars, clouds }: { stars: boolean; clouds: boolean }) {
             vec3 cloudCol = mix(uUpper * 1.6, uMoon * 0.32, pow(m, 6.0));
             c = mix(c, cloudCol, cl * 0.55);
           #endif
+          // The Watcher's side of the sky: a dark, oppressive wedge, with a low red glow while the light is red.
+          vec3 hd = normalize(vec3(d.x, 0.0, d.z) + vec3(1e-4));
+          float toward = smoothstep(0.55, 0.97, dot(hd, uDarkDir));
+          float low = 1.0 - smoothstep(0.0, 0.75, d.y);
+          c *= 1.0 - 0.82 * toward * (0.35 + 0.65 * low);
+          c += vec3(0.42, 0.03, 0.02) * uRed * toward * exp(-max(d.y, 0.0) * 7.0);
           gl_FragColor = vec4(c, 1.0);
           #include <colorspace_fragment>
         }`,
@@ -78,11 +89,14 @@ function SkyDome({ stars, clouds }: { stars: boolean; clouds: boolean }) {
     m.renderOrder = -100; // first; depthTest off and xyww projection keep it behind everything
     return m;
   }, [stars, clouds]);
-  useEffect(() => { atmosphereStatus.sky = `gradient+moon${stars ? '+stars' : ''}${clouds ? '+clouds' : ''}`; }, [stars, clouds]);
+  useEffect(() => { atmosphereStatus.sky = `gradient+moon${stars ? '+stars' : ''}${clouds ? '+clouds' : ''}`; atmosphereStatus.shroud = true; return () => { atmosphereStatus.shroud = false; }; }, [stars, clouds]);
   useEffect(() => () => { mesh.geometry.dispose(); (mesh.material as THREE.Material).dispose(); }, [mesh]);
   useFrame((state) => {
     mesh.position.copy(camera.position);
-    (mesh.material as THREE.ShaderMaterial).uniforms.uTime.value = state.clock.elapsedTime;
+    const u = (mesh.material as THREE.ShaderMaterial).uniforms;
+    u.uTime.value = state.clock.elapsedTime;
+    const sig = signalView(room).signal;
+    u.uRed.value = THREE.MathUtils.lerp(u.uRed.value, sig === 'red' ? 1 : sig === 'warning' ? 0.35 : 0, 0.08);
   });
   return <primitive object={mesh} />;
 }
@@ -113,8 +127,9 @@ function LightCones() {
     const floods = lighting.lights.filter((l) => l.id.startsWith('LGT_STG01_Flood_'));
     const mat = new THREE.ShaderMaterial({
       vertexShader: coneVertex, fragmentShader: coneFragment, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false,
-      uniforms: { uColor: { value: new THREE.Color(SKY.amber) }, uStrength: { value: 0.07 } },
+      uniforms: { uColor: { value: new THREE.Color(SKY.amber) }, uStrength: { value: 0.13 } },
     });
+    const glareMat = new THREE.SpriteMaterial({ map: lampGlowTexture(), color: new THREE.Color(SKY.amber), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, toneMapped: false, opacity: 0.85 });
     for (const l of floods) {
       const len = 26;
       const r = Math.tan(THREE.MathUtils.degToRad((l.angleDeg ?? 40) * 0.5)) * len * 0.85;
@@ -126,12 +141,50 @@ function LightCones() {
       cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), dir);
       cone.renderOrder = 5;
       g.add(cone);
+      // Lamp glare on the flood head, so every floodlight reads as switched on (all tiers).
+      const glare = new THREE.Sprite(glareMat);
+      glare.position.copy(cone.position);
+      glare.scale.set(7, 7, 1);
+      glare.renderOrder = 6;
+      g.add(glare);
     }
     atmosphereStatus.cones = floods.length;
+    atmosphereStatus.glares = floods.length;
     return g;
   }, []);
-  useEffect(() => () => { let mat: THREE.Material | null = null; group.traverse((o) => { const m = o as THREE.Mesh; if (m.isMesh) { m.geometry.dispose(); mat = m.material as THREE.Material; } }); (mat as THREE.Material | null)?.dispose(); atmosphereStatus.cones = 0; }, [group]);
+  useEffect(() => () => {
+    const mats = new Set<THREE.Material>();
+    group.traverse((o) => { const m = o as THREE.Mesh; if (m.isMesh) { if (!(o as THREE.Sprite).isSprite) m.geometry.dispose(); mats.add(m.material as THREE.Material); } });
+    for (const m of mats) { (m as THREE.SpriteMaterial).map?.dispose(); m.dispose(); }
+    atmosphereStatus.cones = 0; atmosphereStatus.glares = 0;
+  }, [group]);
   return <primitive object={group} />;
+}
+
+function lampGlowTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d')!;
+  const grad = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  grad.addColorStop(0, 'rgba(255,250,235,1)'); grad.addColorStop(0.15, 'rgba(255,215,160,0.8)'); grad.addColorStop(0.5, 'rgba(255,160,80,0.18)'); grad.addColorStop(1, 'rgba(255,140,60,0)');
+  g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+
+// ------------------------------------------------------------------------------------------ red-light dimming
+/** While the light is red the yard's ambient light drops, so the floods, the eye and the searchlight dominate. */
+function RedDim({ room }: { room: TrialRoom }) {
+  const scene = useThree((s) => s.scene);
+  useFrame((_, dt) => {
+    const hemi = scene.getObjectByName('LGT_STG01_Ambient') as THREE.HemisphereLight | undefined;
+    if (!hemi) return;
+    // The tier's original strength is kept on the light itself (a new light comes with each quality change).
+    if (hemi.userData.base === undefined) hemi.userData.base = hemi.intensity;
+    const sig = signalView(room).signal;
+    const target = (sig === 'red' ? 0.55 : sig === 'warning' ? 0.8 : 1) * (hemi.userData.base as number);
+    hemi.intensity = THREE.MathUtils.lerp(hemi.intensity, target, 1 - Math.exp(-dt * 3));
+    atmosphereStatus.redDim = +(hemi.intensity / (hemi.userData.base as number)).toFixed(2);
+  });
+  return null;
 }
 
 // ------------------------------------------------------------------------------------------ ground mist
@@ -143,7 +196,7 @@ float noise(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * 
 void main() {
   vec2 p = vWorld.xz * 0.06 + vec2(uTime * 0.03, uTime * 0.012);
   float n = noise(p) * 0.6 + noise(p * 2.7 + 3.1) * 0.4;
-  float edge = smoothstep(0.0, 0.25, vUv.x) * smoothstep(1.0, 0.75, vUv.x) * smoothstep(0.0, 0.3, vUv.y) * smoothstep(1.0, 0.7, vUv.y);
+  float edge = smoothstep(0.0, 0.25, vUv.x) * (1.0 - smoothstep(0.75, 1.0, vUv.x)) * smoothstep(0.0, 0.3, vUv.y) * (1.0 - smoothstep(0.7, 1.0, vUv.y));
   gl_FragColor = vec4(uColor, smoothstep(0.35, 0.85, n) * edge * 0.33);
   #include <colorspace_fragment>
 }`;
@@ -220,7 +273,7 @@ const GradeShader = {
       float l = dot(c.rgb, vec3(0.2126, 0.7152, 0.0722));
       vec3 col = mix(vec3(l), c.rgb, uSat);                 // slightly desaturated
       col = col * uGain + uLift * (1.0 - l);                // teal lift in the shadows, warm highlights
-      float v = smoothstep(0.85, 0.25, length(vUv - 0.5));
+      float v = (1.0 - smoothstep(0.25, 0.85, length(vUv - 0.5)));
       col *= mix(1.0 - uVignette, 1.0, v);
       gl_FragColor = vec4(col, c.a);
     }`,
@@ -252,7 +305,8 @@ export function Atmosphere({ room, quality }: { room: TrialRoom; quality: Qualit
   const a = ATMOSPHERE[quality];
   return (
     <>
-      <SkyDome stars={a.stars} clouds={a.clouds} />
+      <SkyDome stars={a.stars} clouds={a.clouds} room={room} />
+      <RedDim room={room} />
       {a.cones && <LightCones />}
       {a.mist > 0 && <GroundMist count={a.mist} />}
       {a.wash && <SignalWash room={room} />}

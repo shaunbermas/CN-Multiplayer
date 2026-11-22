@@ -75,9 +75,9 @@ try {
     if (a.problems.length) errors.push(`${q}: asset problems ${a.problems.join('; ')}`);
     // Stage 1.5: atmosphere, painted surroundings, midground trees and the sky environment map per tier.
     const want15 = {
-      low: { sky: 'gradient+moon', cones: 0, mist: 0, post: 'none', wash: false },
-      medium: { sky: 'gradient+moon+stars+clouds', cones: 10, mist: 2, post: 'none', wash: true },
-      high: { sky: 'gradient+moon+stars+clouds', cones: 10, mist: 4, post: 'bloom+grade', wash: true },
+      low: { sky: 'gradient+moon', cones: 10, mist: 0, post: 'none', wash: false, shroud: true },
+      medium: { sky: 'gradient+moon+stars+clouds', cones: 10, mist: 2, post: 'none', wash: true, shroud: true },
+      high: { sky: 'gradient+moon+stars+clouds', cones: 10, mist: 4, post: 'bloom+grade', wash: true, shroud: true },
     }[q];
     for (const [k, v] of Object.entries(want15)) if (a.atmosphere[k] !== v) errors.push(`${q}: atmosphere.${k} ${a.atmosphere[k]}; expected ${v}`);
     const matte = JSON.parse(readFileSync(`${root}blender/exports/stage15/STAGE_01_MATTE_PAINTING_MANIFEST.json`, 'utf8'));
