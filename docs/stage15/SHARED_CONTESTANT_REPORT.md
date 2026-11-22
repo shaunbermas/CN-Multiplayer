@@ -129,3 +129,10 @@ A note on the test harness: with five software-rendered pages on four cores, Chr
 the observer can come back as an empty canvas although WebGL is rendering. The test now saves and checks the
 rendered frame itself (`window.__cnSnapshot`), which shows the full scene with 30 contestants
 (`ingame_30_players_round.png`).
+
+## 6. Update, 22 Nov 2026 (decision 031)
+
+You confirmed the shared contestant, so the legacy procedural characters were removed:
+`apps/web/src/game/characters.ts`, `packages/shared/src/roster.ts`, the `?characters=legacy` switch and their
+tests. The "legacy, same build" numbers in §4 are kept as the record of the comparison. Contestants now turn to
+face their direction of movement, and they kick up dust or splash in puddles (`docs/stage15/FEEDBACK_22NOV_B.md`).

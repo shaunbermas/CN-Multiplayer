@@ -11,6 +11,7 @@ import skylineUrl from '../../../../../blender/exports/stage15/MP_IndustrialSkyl
 import forestUrl from '../../../../../blender/exports/stage15/MP_ForestLine.webp?url';
 import atlasUrl from '../../../../../blender/exports/stage15/TREE_Cutout_Atlas.webp?url';
 import type { Quality } from '../../game/quality.ts';
+import { FOG } from './fog.ts';
 
 const LAYER_URL: Record<string, string> = { MP_FarHills: hillsUrl, MP_IndustrialSkyline: skylineUrl, MP_ForestLine: forestUrl };
 
@@ -56,6 +57,13 @@ function MatteLayers() {
       const tex = loadTexture(LAYER_URL[l.id], () => surroundingsStatus.problems.push(`matte layer ${l.id} failed to load`));
       tex.wrapS = THREE.RepeatWrapping;
       const mat = new THREE.MeshBasicMaterial({ map: tex, color: new THREE.Color().setScalar(l.brightness ?? 1), vertexColors: true, transparent: true, depthWrite: false, side: THREE.DoubleSide, fog: false, toneMapped: false });
+      // Decision 031: the painted backdrop sits behind the fog, so it fades toward the fog colour.
+      mat.onBeforeCompile = (sh) => {
+        sh.uniforms.uFogTint = { value: FOG.color };
+        sh.uniforms.uFogTintMix = { value: FOG.backdropMix };
+        sh.fragmentShader = 'uniform vec3 uFogTint; uniform float uFogTintMix;\n' + sh.fragmentShader.replace('#include <opaque_fragment>',
+          '#include <opaque_fragment>\n  gl_FragColor.rgb = mix(gl_FragColor.rgb, uFogTint, uFogTintMix);');
+      };
       const mesh = new THREE.Mesh(layerGeometry(l.radius, l.height, l.bottom, l.uOffset), mat);
       mesh.name = l.id;
       mesh.renderOrder = -10 + l.order; // far layers first; they never write depth

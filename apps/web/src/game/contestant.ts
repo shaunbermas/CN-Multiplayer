@@ -11,6 +11,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { colorwayById, CONTESTANT_COLORWAYS, type Colorway, type Emote } from '@cn-trials/shared';
+import type { GroundKind } from './groundFx.ts';
 import glbUrl from '../../../../blender/exports/contestant/CNTRIAL_CONTESTANT_MASTER.meshopt.glb?url';
 import detailUrl from '../../../../blender/exports/contestant/CNT_Detail.webp?url';
 import normalUrl from '../../../../blender/exports/contestant/CNT_Normal.webp?url';
@@ -222,6 +223,9 @@ export class ContestantInstance {
   private speedHist: { t: number; v: number }[] = [];
   private clock = 0;
   private hop = { t: -1 };
+  /** Ground contacts since the last frame (skid, land, dive, flop) for the dust / splash effects. */
+  readonly events: GroundKind[] = [];
+  private shotEvent = '';
   lod = 1;
 
   constructor(asset: ContestantAsset, colorwayId: string) {
@@ -284,7 +288,13 @@ export class ContestantInstance {
     a.reset();
     a.play();
     this.shot = { name, action: a, t: 0, dur: opts.dur ?? a.getClip().duration, hold: !!opts.hold, w: this.shot?.w ?? 0, next: opts.next ?? [] };
+    this.shotEvent = '';
+    if (name === 'JumpLand') this.events.push('land');
+    if (name === 'Stop' || name === 'Stumble') this.events.push('skid');
   }
+
+  /** True while the jump hop lifts the model off the ground (no footsteps then). */
+  get airborne(): boolean { return this.hop.t >= 0 || this.shot?.name === 'JumpAir' || this.shot?.name === 'JumpStart'; }
 
   emote(e: Emote): void {
     if (e === 'jump') { this.play('JumpStart', { next: [{ name: 'JumpAir', dur: 0.36 }, { name: 'JumpLand' }] }); this.hop.t = 0; }
@@ -329,6 +339,9 @@ export class ContestantInstance {
     const s = this.shot;
     if (s) {
       s.t += dt * s.action.timeScale;
+      // body hits the ground part-way through these clips
+      const hit = s.name === 'Dive' ? 0.42 : s.name === 'Eliminated' ? 0.55 : s.name === 'Fall' ? 0.5 : -1;
+      if (hit > 0 && !this.shotEvent && s.t >= s.dur * hit) { this.shotEvent = 'hit'; this.events.push(s.name === 'Dive' ? 'dive' : 'flop'); }
       const fadeIn = 0.08, fadeOut = 0.16;
       const target = s.hold || s.t < s.dur ? 1 : 0;
       s.w += (target - s.w) * (1 - Math.exp(-dt / (target ? fadeIn : fadeOut) * 3));

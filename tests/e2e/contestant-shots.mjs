@@ -46,6 +46,15 @@ try {
   await sleep(200);
   const url = await page.evaluate(() => window.__cnSnapshot('image/png'));
   writeFileSync(`${out}/ingame_lobby_emotes.png`, Buffer.from(url.split(',')[1], 'base64'));
+  // ground effects (decision 031): dust on dry concrete and a splash in a puddle, captured 0.15 s after impact
+  const wet = await page.evaluate(([x, z]) => window.__cnNearestWet(x, z), [cx, cz - 20]);
+  for (const [name, x, z] of [['ingame_fx_dust', cx + 6, cz - 6], ['ingame_fx_splash', wet[0], wet[1]]]) {
+    await page.evaluate(([x, z]) => { window.__cnView = { pos: [x + 2.2, 1.3, z + 2.2], look: [x, 0.25, z] }; }, [x, z]);
+    await sleep(3500);
+    const frame = await page.evaluate(([x, z]) => { window.__cnEmitGround('land', x, z, 0.15); return window.__cnSnapshot('image/png'); }, [x, z]);
+    writeFileSync(`${out}/${name}.png`, Buffer.from(frame.split(',')[1], 'base64'));
+    console.log('wrote', name);
+  }
   bots.forEach((b) => b.leave());
 } catch (e) { console.error(e); code = 1; } finally { await browser?.close(); worker.stop(); }
 process.exit(code);

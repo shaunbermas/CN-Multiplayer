@@ -3,9 +3,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { inputFromKeys, MOVEMENT, progress, SIM_DT } from '@cn-trials/shared';
 import { Component, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import * as THREE from 'three';
-import { CONTESTANT_ROSTER, colorwayIndex } from '@cn-trials/shared';
-// Legacy: the 30 procedural characters (kept until the owner confirms the shared contestant; ?characters=legacy).
-import { buildContestantGeometry, contestantMaterial as legacyMaterial } from './characters.ts';
+import { GroundFx, groundFx, groundFxStatus, nearestWet } from './groundFx.ts';
 import { ContestantInstance, assignLods, contestantCpu, enableShadowLayer, contestantAsset, contestantStatus, loadContestant, setColorway, type ContestantAsset } from './contestant.ts';
 import type { PlayerView, TrialRoom } from '../net.ts';
 import { hud } from './hudStore.ts';
@@ -20,20 +18,9 @@ import { scheduleFor, signalView } from './roundClock.ts';
 
 /** Collision walls for prediction: the same set the server uses (stage walls + obstacle twist in a round). */
 export function wallsFor(room: TrialRoom): Rect[] {
-  if (!room.round.obstacles || room.round.phase === 'lobby' || !stageObstacles) return stageGeo.walls;
-  const elapsed = room.round.phase === 'active' ? signalView(room).elapsed : 0;
+  if (!room.round.obstacles || !stageObstacles) return stageGeo.walls;
+  const elapsed = room.round.phase === 'active' ? signalView(room).elapsed : 0; // lobby: the gate at rest
   return [...stageGeo.walls, ...obstacleWalls(stageObstacles, greenTime(scheduleFor(room.round.seed), elapsed))];
-}
-
-/** `?characters=legacy` draws the previous 30 procedural characters (comparison and rollback only). */
-export const LEGACY_CHARACTERS = typeof location !== 'undefined' && new URLSearchParams(location.search).get('characters') === 'legacy';
-/** Legacy geometry per colourway slot (CW01 -> the old CHR_01, ...), built once per slot. */
-const legacyGeos = new Map<number, THREE.BufferGeometry>();
-function legacyGeometry(colorway: string | undefined): THREE.BufferGeometry {
-  const i = colorwayIndex(colorway);
-  let g = legacyGeos.get(i);
-  if (!g) { g = buildContestantGeometry(CONTESTANT_ROSTER[i]); legacyGeos.set(i, g); }
-  return g;
 }
 
 /** Live contestant instances by player id (test hooks and stats), and their camera distance this frame. */
@@ -44,7 +31,7 @@ const cpuAcc = { ms: 0 };
 function useContestantAsset(): ContestantAsset | null {
   const [asset, setAsset] = useState(contestantAsset());
   useEffect(() => {
-    if (asset || LEGACY_CHARACTERS) return;
+    if (asset) return;
     let live = true;
     loadContestant().then((a) => { if (live) setAsset(a); }).catch(() => { /* status says error; the name tag still shows */ });
     return () => { live = false; };
@@ -63,24 +50,20 @@ export function canMove(room: TrialRoom): boolean {
 
 function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoom; local: boolean; predictor?: React.RefObject<Predictor | null> }) {
   const group = useRef<THREE.Group>(null);
-  const body = useRef<THREE.Mesh>(null);
   const { camera } = useThree();
   const [status, setStatus] = useState(room.players.get(id)?.status ?? 'active');
   const p0 = room.players.get(id);
   const [colorway, setColorwayState] = useState(p0?.colorway);
   const asset = useContestantAsset();
   // Shared contestant: one clone per player (geometry and textures shared), created once the asset is loaded.
-  const inst = useMemo(() => (asset && !LEGACY_CHARACTERS ? new ContestantInstance(asset, colorway ?? 'CW01') : null), [asset]); // eslint-disable-line react-hooks/exhaustive-deps
+  const inst = useMemo(() => (asset ? new ContestantInstance(asset, colorway ?? 'CW01') : null), [asset]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!inst) return;
     contestantInstances.set(id, inst);
     return () => { contestantInstances.delete(id); lodDist.delete(id); inst.dispose(); };
   }, [inst, id]);
   useEffect(() => { if (inst && colorway) setColorway(inst.material, colorway); }, [inst, colorway]);
-  const legacyGeo = useMemo(() => (LEGACY_CHARACTERS ? legacyGeometry(colorway) : null), [colorway]);
-  const legacyMat = useMemo(() => (LEGACY_CHARACTERS ? legacyMaterial() : null), []);
-  useEffect(() => () => legacyMat?.dispose(), [legacyMat]);
-  const anim = useRef({ phase: 0, swing: 0, speed: 0, lastX: p0?.x ?? 0, lastZ: p0?.z ?? 0, fall: 0, t: 0, emoteAt: Date.now() });
+  const anim = useRef({ speed: 0, vx: 0, vz: 0, face: p0?.yaw ?? 0, lastX: p0?.x ?? 0, lastZ: p0?.z ?? 0, fall: 0, emoteAt: Date.now(), stepDist: 0, side: 1 });
   const tmp = useMemo(() => new THREE.Vector3(), []);
   useFrame((_, dt) => {
     const g = group.current;
@@ -92,20 +75,30 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
     if (local && predictor?.current && canMove(room)) {
       const s = predictor.current.state;
       g.position.set(s.x, 0, s.z);
-      g.rotation.y = input.yaw;
     } else {
       // Remote players (and a frozen local player): smooth toward the latest server position (20 Hz).
       const k = 1 - Math.exp(-dt * 15);
       g.position.x += (p.x - g.position.x) * k;
       g.position.z += (p.z - g.position.z) * k;
-      if (!local) g.rotation.y = p.yaw;
     }
     const a = anim.current;
     const step = Math.min(dt, 0.1);
-    a.t += step;
-    const moved = Math.hypot(g.position.x - a.lastX, g.position.z - a.lastZ);
+    const dx = g.position.x - a.lastX, dz = g.position.z - a.lastZ;
     a.lastX = g.position.x; a.lastZ = g.position.z;
-    a.speed += ((step > 0 ? Math.min(8, moved / step) : 0) - a.speed) * (1 - Math.exp(-step * 10));
+    const ks = 1 - Math.exp(-step * 10);
+    a.vx += ((step > 0 ? dx / step : 0) - a.vx) * ks;
+    a.vz += ((step > 0 ? dz / step : 0) - a.vz) * ks;
+    a.speed = Math.min(8, Math.hypot(a.vx, a.vz));
+    // Owner feedback (decision 031): contestants turn to face where they move, all the way round (360°),
+    // instead of always facing the camera. Facing is presentation only; the server owns positions.
+    if (a.speed > 0.35 && p.status !== 'spotted') {
+      const target = Math.atan2(-a.vx, -a.vz); // yaw 0 faces -Z
+      let d = target - a.face;
+      d = Math.atan2(Math.sin(d), Math.cos(d));
+      a.face += d * (1 - Math.exp(-step * 12));
+    }
+    g.rotation.y = a.face;
+    a.stepDist += Math.hypot(dx, dz);
     a.fall += ((spotted ? 1 : 0) - a.fall) * (1 - Math.exp(-step * 6));
     const tint = 1 - a.fall * 0.5; // spotted contestants grey out (playful, no harm: spec §7)
     if (inst) {
@@ -114,28 +107,36 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
       const t0 = performance.now();
       inst.update(step, { speed: a.speed, status: p.status, greenActive: room.round.phase === 'active' && room.round.signal === 'green' });
       cpuAcc.ms += performance.now() - t0;
-      lodDist.set(id, camera.position.distanceTo(g.getWorldPosition(tmp)));
+      const dist = camera.position.distanceTo(g.getWorldPosition(tmp));
+      lodDist.set(id, dist);
+      // Ground effects (decision 031): dust on dry concrete, splashes in puddles.
+      const fx = groundFx.current;
+      if (fx) {
+        const fwdX = -Math.sin(a.face), fwdZ = -Math.cos(a.face);
+        const dirX = a.speed > 0.2 ? a.vx / a.speed : 0, dirZ = a.speed > 0.2 ? a.vz / a.speed : 0;
+        for (const ev of inst.events) {
+          const ahead = ev === 'dive' ? 0.55 : 0;
+          fx.emit(ev, g.position.x + fwdX * ahead, g.position.z + fwdZ * ahead, dirX, dirZ);
+        }
+        // footsteps: one puff per stride, near the camera only (Low: only your own contestant)
+        const stride = a.speed > 2.2 ? 0.46 : 0.32;
+        if (a.stepDist > stride) {
+          a.stepDist = 0;
+          if (a.speed > 0.5 && p.status !== 'spotted' && !inst.airborne && (quality.tier === 'low' ? local : dist < 30)) {
+            a.side = -a.side;
+            fx.emit('step', g.position.x + Math.cos(a.face) * 0.08 * a.side, g.position.z - Math.sin(a.face) * 0.08 * a.side, dirX, dirZ);
+          }
+        }
+      }
+      inst.events.length = 0;
       inst.material.color.setRGB(tint, tint, tint);
       return;
     }
-    if (!legacyMat || !body.current) return;
-    // Legacy procedural characters: GPU limb swing, bob, sway and a comic topple.
-    const walking = !spotted && a.speed > 0.2;
-    a.phase += step * (walking ? 4 + a.speed * 1.6 : 1.2);
-    a.swing += ((walking ? Math.min(1, a.speed / 3.5) * 0.75 : 0.04) - a.swing) * (1 - Math.exp(-step * 8));
-    legacyMat.userData.uniforms.uPhase.value = a.phase;
-    legacyMat.userData.uniforms.uSwing.value = a.swing;
-    const finished = p.status === 'finished';
-    body.current.rotation.x = a.fall * 1.25;
-    body.current.position.y = (walking ? Math.abs(Math.sin(a.phase)) * 0.035 * a.swing / 0.75 : 0) + (finished ? Math.abs(Math.sin(a.t * 5)) * 0.12 : 0) + a.fall * 0.08;
-    body.current.rotation.z = walking ? Math.sin(a.phase) * 0.04 : Math.sin(a.t * 1.3) * 0.015;
-    legacyMat.color.setRGB(tint, tint, tint);
   });
   const waiting = status === 'waiting';
   return (
     <group ref={group} position={[p0?.x ?? 0, 0, p0?.z ?? 0]} visible={!waiting || !local} name={`PLAYER_${id}`}>
       {inst && <primitive object={inst.root} />}
-      {legacyGeo && legacyMat && <mesh ref={body} geometry={legacyGeo} material={legacyMat} castShadow name={`CHR_LEGACY_${colorway ?? 'unknown'}`} />}
       {(!local || status === 'spotted') && (
         <Html position={[0, 1.65, 0]} center distanceFactor={9} zIndexRange={[10, 0]}>
           <div className={`nametag ${status}`}>{status === 'spotted' ? 'SPOTTED!' : p0?.name}</div>
@@ -152,7 +153,7 @@ function contestantStats(scene: THREE.Object3D) {
   let meshes = 0;
   scene.traverse((o) => {
     const m = o as THREE.Mesh;
-    if (!m.isMesh || !(/^CNT_Contestant_LOD|^CHR_LEGACY_/.test(m.name))) return;
+    if (!m.isMesh || !/^CNT_Contestant_LOD/.test(m.name)) return;
     meshes++;
     geos.set(m.geometry.uuid, m.geometry);
     if ((m as THREE.SkinnedMesh).isSkinnedMesh) skels.add((m as THREE.SkinnedMesh).skeleton.uuid);
@@ -164,15 +165,32 @@ function contestantStats(scene: THREE.Object3D) {
   });
   for (const i of contestantInstances.values()) lod[i.lod]++;
   return {
-    system: LEGACY_CHARACTERS ? 'legacy' : 'shared',
-    ready: LEGACY_CHARACTERS || contestantStatus.state === 'ready',
+    system: 'shared',
+    ready: contestantStatus.state === 'ready',
     state: contestantStatus.state, error: contestantStatus.error, loadMs: contestantStatus.loadMs, clips: contestantStatus.clips,
-    instances: LEGACY_CHARACTERS ? meshes : contestantInstances.size,
+    instances: contestantInstances.size,
     meshes, uniqueGeometries: geos.size, skeletons: skels.size,
     geometryBytes: [...geos.values()].reduce((n, g) => n + Object.values(g.attributes).reduce((k, a) => k + ((a as THREE.BufferAttribute).array?.byteLength ?? 0), 0) + (g.index?.array.byteLength ?? 0), 0),
     animationCpuMsPerFrame: +contestantCpu.msPerFrame.toFixed(3), uniqueMaterials: mats.size, uniqueTextures: tex.size, lod,
     colorways: [...contestantInstances.values()].map((i) => i.material.userData.colorway as string),
   };
+}
+
+/** Owns the scene's ground effects (dust and splashes): one particle draw call and one ripple draw call. */
+function GroundFxLayer() {
+  const { scene, size, camera } = useThree();
+  const fx = useMemo(() => new GroundFx(), []);
+  useEffect(() => {
+    scene.add(fx.points, fx.rings);
+    groundFx.current = fx;
+    return () => { scene.remove(fx.points, fx.rings); fx.dispose(); if (groundFx.current === fx) groundFx.current = null; };
+  }, [scene, fx]);
+  useFrame((_, dt) => {
+    fx.density = quality.tier === 'low' ? 0.5 : 1;
+    fx.setViewport(size.height, (camera as THREE.PerspectiveCamera).fov ?? 60);
+    fx.update(Math.min(dt, 0.1));
+  });
+  return null;
 }
 
 function ContestantHooks({ room }: { room: TrialRoom }) {
@@ -190,11 +208,22 @@ function ContestantHooks({ room }: { room: TrialRoom }) {
   useEffect(() => {
     const w = window as unknown as Record<string, unknown>;
     w.__cnContestants = () => contestantStats(scene);
+    w.__cnGroundFx = () => ({ ...groundFxStatus });
+    w.__cnNearestWet = (x: number, z: number) => nearestWet(x, z);
+    // Test / preview hook: emit a ground effect and advance it, so a capture can show it mid-air.
+    w.__cnEmitGround = (kind: 'step' | 'skid' | 'land' | 'dive' | 'flop', x: number, z: number, advance = 0.15) => {
+      const fx = groundFx.current;
+      if (!fx) return null;
+      fx.emit(kind, x, z);
+      fx.update(advance);
+      return { ...groundFxStatus };
+    };
+    w.__cnFacing = (playerId: string) => scene.getObjectByName(`PLAYER_${playerId}`)?.rotation.y ?? null;
     // Test / preview hook: play any clip of the library on a player (presentation only).
     w.__cnPlayClip = (playerId: string, clip: string) => { contestantInstances.get(playerId)?.play(clip); return contestantInstances.get(playerId)?.currentShot ?? null; };
     // Test hook: render one frame and read it back in the same task (independent of page compositing).
     w.__cnSnapshot = (type = 'image/jpeg') => { gl.render(scene, camera); return gl.domElement.toDataURL(type, 0.9); };
-    return () => { delete w.__cnContestants; delete w.__cnPlayClip; delete w.__cnSnapshot; };
+    return () => { delete w.__cnContestants; delete w.__cnGroundFx; delete w.__cnFacing; delete w.__cnNearestWet; delete w.__cnEmitGround; delete w.__cnPlayClip; delete w.__cnSnapshot; };
   }, [scene, room, gl, camera]);
   return null;
 }
@@ -359,6 +388,7 @@ export function Scene({ room, onStageError }: { room: TrialRoom; onStageError: (
       </StageErrorBoundary>
       <Players room={room} predictor={predictor} />
       <ContestantHooks room={room} />
+      <GroundFxLayer />
       <LocalController room={room} predictor={predictor} />
     </Canvas>
   );

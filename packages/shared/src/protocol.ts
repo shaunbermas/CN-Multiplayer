@@ -10,7 +10,7 @@ export const PROTOCOL_VERSION = 6;
 export interface StartRequestOptions {
   /** Standup Quick (default) or a full tournament (qualifier target, R3). Host only. */
   mode?: Mode;
-  /** Stage 1.5 obstacle twist (barricade rows and the green-only sliding gate). Host only; off by default. */
+  /** Obstacles are always on (decision 031). `false` is honoured only in test rooms (CN_TEST=1). */
   obstacles?: boolean;
   /** Honoured only when the room runs with CN_TEST=1 (deterministic tests). */
   seed?: number;
@@ -53,7 +53,7 @@ export interface RoundState {
   mode: Mode;
   /** Finishers that end the round early (tournament), or -1 when there is no target. */
   target: number;
-  /** Stage 1.5: the obstacle twist is active for this round (protocol v4). */
+  /** The obstacles are active (always, in the lobby too; test rooms may switch them off). */
   obstacles: boolean;
 }
 

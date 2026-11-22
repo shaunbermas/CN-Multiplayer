@@ -9,5 +9,4 @@ export * from './stage-metadata.ts';
 export * from './stages.ts';
 export * from './tournament.ts';
 export * from './obstacles.ts';
-export * from './roster.ts'; // legacy procedural roster, kept until the owner confirms the shared contestant
 export * from './contestantColorways.ts';

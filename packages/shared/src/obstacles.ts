@@ -1,4 +1,4 @@
-// Stage 1.5 (Prompt 05): the optional Stage 01 obstacle twist. Shared by the server (authority) and the
+// Stage 1.5 (Prompt 05): the Stage 01 obstacles (always on since decision 031; first the optional "twist"). Shared by the server (authority) and the
 // client (prediction and visuals), so collision is identical on both. The core rule is unchanged: green you
 // may move, red you must stop; detection and elimination stay in the round engine.
 //
@@ -11,7 +11,8 @@
 //    for the whole red light: it can never push a player during red, and never causes an elimination.
 //
 // The layout is expressed relative to the approved course (start line, finish line, fence width from the
-// stage metadata), not as new absolute coordinates. A round uses it only when the host enables it (flag).
+// stage metadata), not as new absolute coordinates. Always active, in the lobby too (owner, 22 Nov 2026; decision 031).
+// Only test rooms (CN_TEST=1) may switch them off, for the straight-line walk-timing and rollback tests.
 import type { SignalSegment } from './round.ts';
 import type { Rect, StageGeometry } from './stage.ts';
 
@@ -33,16 +34,23 @@ export interface ObstacleLayoutSpec {
 
 /** The Stage 01 twist. Values in metres and seconds; positions relative to the course. */
 export const STAGE01_OBSTACLES: ObstacleLayoutSpec = {
-  id: 'STG01_TWIST_A',
+  id: 'STG01_OBSTACLES_B',
   barricade: {
     depth: 1.2,
     height: 1.1,
     gapWidth: 6,
     rows: [
-      { at: 0.28, gaps: [-0.66, 0, 0.66] },          // pattern A: centre and two side gaps
-      { at: 0.44, gaps: [-0.9, -0.31, 0.31, 0.9] },  // pattern B: centre closed; two inner gaps and one by each fence
-      { at: 0.72, gaps: [-0.66, 0, 0.66] },
-      { at: 0.86, gaps: [-0.9, -0.31, 0.31, 0.9] },
+      // Patterns alternate so the way through keeps changing; every row is mirror-symmetric (no lane advantage).
+      { at: 0.17, gaps: [-0.7, -0.31, 0.31, 0.7] },     // pattern C: centre closed, inner and mid gaps (added, decision 031)
+      { at: 0.28, gaps: [-0.66, 0, 0.66] },            // pattern A: centre and two side gaps
+      { at: 0.36, gaps: [-0.78, 0, 0.78] },             // pattern D: centre and two wide side gaps (added)
+      { at: 0.44, gaps: [-0.9, -0.31, 0.31, 0.9] },    // pattern B: centre closed; two inner gaps and one by each fence
+      { at: 0.51, gaps: [-0.7, -0.31, 0.31, 0.7] },     // C (added), before the sliding gate
+      { at: 0.65, gaps: [-0.66, 0, 0.66] },            // A (added), after the gate
+      { at: 0.72, gaps: [-0.78, 0, 0.78] },             // D (was A)
+      { at: 0.79, gaps: [-0.7, -0.31, 0.31, 0.7] },     // C (added)
+      { at: 0.86, gaps: [-0.9, -0.31, 0.31, 0.9] },    // B
+      { at: 0.93, gaps: [-0.66, 0, 0.66] },            // A (added), last row before the finish
     ],
   },
   gate: { at: 0.58, width: 10, depth: 0.6, height: 2.2, travel: 0.62, period: 7 },

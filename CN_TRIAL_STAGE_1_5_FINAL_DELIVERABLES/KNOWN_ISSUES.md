@@ -2,7 +2,7 @@
 
 | # | Severity | Issue | Impact | Owner action / next step |
 |---|----------|-------|--------|--------------------------|
-| K1 | ~~Blocker for "30 final characters"~~ **Resolved (decisions 029, 030)** | Resolved: ONE shared master contestant with 30 colourways, dealt uniquely per room and kept on reconnect (`docs/stage15/SHARED_CONTESTANT_REPORT.md`) | — | Confirm the shared contestant so the legacy procedural characters (`?characters=legacy`) can be removed |
+| K1 | ~~Blocker for "30 final characters"~~ **Resolved (decisions 029, 030)** | Resolved: ONE shared master contestant with 30 colourways, dealt uniquely per room and kept on reconnect (`docs/stage15/SHARED_CONTESTANT_REPORT.md`) | — | Done: the legacy procedural characters were removed after the owner's confirmation (decision 031) |
 | K2 | High (verification gap) | No real-GPU measurements: every frame-rate figure comes from software WebGL (SwiftShader) on a 4-core cloud machine with no GPU | Smoothness on players' computers is not proven. The adaptive fallback is tested only on software rendering | Run the game on named reference hardware (one mid-range laptop, one desktop) and record FPS, frame time and 1 % lows |
 | K3 | Medium (verification gap) | 30 **real** players were not tested together: the 30-player test uses 5 real browsers and 25 simulated clients | Congestion through the obstacle gaps and 30-human behaviour are untested | A team playtest with 20–30 people |
 | K4 | Medium | No audio exists in the game | No sound cues for signals or eliminations (visual cues only) | A future audio pass (the GDD lists the sounds) |
