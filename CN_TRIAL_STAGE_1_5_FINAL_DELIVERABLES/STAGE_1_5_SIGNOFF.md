@@ -22,3 +22,11 @@ For the owner. Ticked items are verified by the evidence named. Unticked items n
 | Owner approves the Stage 1.5 freeze before Stage 02 | ☐ **Owner** | — |
 
 To approve: review the Stage 1.5 pull request and the screenshots. Decide the roster (decision 028) and decision 027. Then merge, which deploys.
+
+## Owner decision, 22 November 2026
+
+"Approve all then merge it":
+- Decision 027 approved; Stage 1.5 merged (PR #18) and deployed.
+- Roster recommendations approved: rename "The Watcher" contestant, original redesigns for copied designs, shared base body.
+- **Still needed before character production:** the master roster (which board, or a roster table).
+- Still recommended: a check on real computers and a 20–30-person playtest.
