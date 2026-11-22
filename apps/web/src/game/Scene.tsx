@@ -176,7 +176,7 @@ function contestantStats(scene: THREE.Object3D) {
 }
 
 function ContestantHooks({ room }: { room: TrialRoom }) {
-  const { scene } = useThree();
+  const { scene, gl, camera } = useThree();
   // one LOD decision per frame for everyone (budgeted), after each contestant measured its distance
   const shadowCheck = useRef(0);
   useFrame(() => {
@@ -192,8 +192,10 @@ function ContestantHooks({ room }: { room: TrialRoom }) {
     w.__cnContestants = () => contestantStats(scene);
     // Test / preview hook: play any clip of the library on a player (presentation only).
     w.__cnPlayClip = (playerId: string, clip: string) => { contestantInstances.get(playerId)?.play(clip); return contestantInstances.get(playerId)?.currentShot ?? null; };
-    return () => { delete w.__cnContestants; delete w.__cnPlayClip; };
-  }, [scene, room]);
+    // Test hook: render one frame and read it back in the same task (independent of page compositing).
+    w.__cnSnapshot = (type = 'image/jpeg') => { gl.render(scene, camera); return gl.domElement.toDataURL(type, 0.9); };
+    return () => { delete w.__cnContestants; delete w.__cnPlayClip; delete w.__cnSnapshot; };
+  }, [scene, room, gl, camera]);
   return null;
 }
 
