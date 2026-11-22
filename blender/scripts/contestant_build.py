@@ -402,7 +402,6 @@ def render_material():
         if p.exists():
             im = bpy.data.images.get(name) or bpy.data.images.load(str(p))
             im.colorspace_settings.name = "Non-Color"
-            im.alpha_mode = "CHANNEL_PACKED"  # A is the stitch mask, not transparency
             node = N.new("ShaderNodeTexImage")
             node.image = im
             if name.startswith("CNT_Detail"):
@@ -456,7 +455,7 @@ def render_material():
         trim.attribute_name = "cw_trim"
         st = N.new("ShaderNodeMix")
         st.data_type = "RGBA"
-        L.new(detail.outputs["Alpha"], st.inputs["Factor"])
+        L.new(dsep.outputs["Blue"], st.inputs["Factor"])
         L.new(colour, st.inputs["A"])
         L.new(trim.outputs["Color"], st.inputs["B"])
         colour = st.outputs["Result"]
@@ -465,7 +464,11 @@ def render_material():
         cav.blend_type = "MULTIPLY"
         cav.inputs["Factor"].default_value = 1.0
         L.new(colour, cav.inputs["A"])
-        L.new(dsep.outputs["Red"], cav.inputs["B"])
+        cav_k = N.new("ShaderNodeMath")
+        cav_k.operation = "DIVIDE"
+        L.new(dsep.outputs["Red"], cav_k.inputs[0])
+        cav_k.inputs[1].default_value = 0.85  # 0.85 is neutral: seams darker, worn edges lighter
+        L.new(cav_k.outputs[0], cav.inputs["B"])
         colour = cav.outputs["Result"]
         rough = N.new("ShaderNodeMapRange")
         L.new(dsep.outputs["Green"], rough.inputs["Value"])
@@ -541,21 +544,22 @@ def legs(pose, aL, kL, aR, kR, foot=0.6):
 
 def arms(pose, upL, foreL, upR, foreR, outL=0.0, outR=0.0):
     """Upper arm swing (deg, negative = forward), elbow bend (negative bends forward), out = abduction."""
-    pose["CNT_UpperArm_L"] = (upL, 0, outL)
+    # raising an arm sideways is a rotation about the forward (Y) axis: -Y lifts the left arm, +Y the right
+    pose["CNT_UpperArm_L"] = (upL, -outL, 0)
     pose["CNT_Forearm_L"] = (foreL, 0, 0)
-    pose["CNT_UpperArm_R"] = (upR, 0, -outR)
+    pose["CNT_UpperArm_R"] = (upR, outR, 0)
     pose["CNT_Forearm_R"] = (foreR, 0, 0)
 
 
 def coat(pose, aL, aR, flare=0.0, back_lag=0.0):
     """Coat tails follow the thighs with lag and flare outward (secondary motion)."""
-    pose["CNT_CoatFront_L"] = (aL * 0.55 - flare * 0.4, 0, flare * 0.5)
-    pose["CNT_CoatFront2_L"] = (aL * 0.25 - flare * 0.5, 0, 0)
-    pose["CNT_CoatFront_R"] = (aR * 0.55 - flare * 0.4, 0, -flare * 0.5)
-    pose["CNT_CoatFront2_R"] = (aR * 0.25 - flare * 0.5, 0, 0)
-    pose["CNT_CoatBack_L"] = (max(0.0, aL) * 0.4 + flare + back_lag, 0, flare * 0.4)
+    pose["CNT_CoatFront_L"] = (aL * 0.55 - flare * 0.4, -flare * 0.5, 0)
+    pose["CNT_CoatFront2_L"] = (aL * 0.25 - flare * 0.5, -flare * 0.2, 0)
+    pose["CNT_CoatFront_R"] = (aR * 0.55 - flare * 0.4, flare * 0.5, 0)
+    pose["CNT_CoatFront2_R"] = (aR * 0.25 - flare * 0.5, flare * 0.2, 0)
+    pose["CNT_CoatBack_L"] = (max(0.0, aL) * 0.4 + flare + back_lag, -flare * 0.4, 0)
     pose["CNT_CoatBack2_L"] = (flare * 0.6 + back_lag * 0.6, 0, 0)
-    pose["CNT_CoatBack_R"] = (max(0.0, aR) * 0.4 + flare + back_lag, 0, -flare * 0.4)
+    pose["CNT_CoatBack_R"] = (max(0.0, aR) * 0.4 + flare + back_lag, flare * 0.4, 0)
     pose["CNT_CoatBack2_R"] = (flare * 0.6 + back_lag * 0.6, 0, 0)
 
 
@@ -640,7 +644,7 @@ def clip_jump_start(t):
     k = S(math.pi * min(1.0, t / 0.7)) if t < 0.7 else 0.0
     up = max(0.0, (t - 0.55) / 0.45)
     crouch(p, k)
-    arms(p, 30 * k - 120 * up, -20, 30 * k - 120 * up, -20, 15 + 30 * up, 15 + 30 * up)
+    arms(p, 30 * k - 40 * up, -20, 30 * k - 40 * up, -20, 15 + 60 * up, 15 + 60 * up)
     p["squash"] = (1 + 0.06 * k - 0.03 * up, 1 - 0.09 * k + 0.07 * up)
     p["root"] = (0, 0, -0.07 * k + 0.05 * up)
     coat(p, 0, 0, flare=-8 * k + 10 * up)
@@ -651,7 +655,7 @@ def clip_jump_air(t):
     p = {}
     w = S(TAU * t)
     legs(p, -30 + 8 * w, 50 - 6 * w, -18 - 8 * w, 40 + 6 * w)
-    arms(p, -110 + 10 * w, -25, -110 - 10 * w, -25, 55 + 8 * w, 55 - 8 * w)
+    arms(p, -35 + 8 * w, -20, -35 - 8 * w, -20, 82 + 10 * w, 82 - 10 * w)
     p["CNT_Spine"] = (-6, 0, 0)
     p["CNT_Head"] = (-6, 0, 0)
     p["CNT_HoodTip"] = (-14 + 4 * w, 0, 0)
@@ -678,7 +682,7 @@ def clip_dive(t):
     k = sm(0.0, 0.45, t)
     slide = sm(0.45, 1.0, t)
     p["CNT_Root"] = (88 * k, 0, 0)
-    p["root"] = (0, -0.42 * k - 0.18 * slide, 0.06 * S(math.pi * min(1.0, t / 0.45)) - 0.0)
+    p["root"] = (0, -0.42 * k - 0.18 * slide, 0.14 * k + 0.08 * S(math.pi * min(1.0, t / 0.45)))  # lying on the coat, not in the ground
     arms(p, -165 * k, -5, -165 * k, -5, 18, 18)
     legs(p, 22 * k, 30 * k, 26 * k, 36 * k)
     p["CNT_Head"] = (-30 * k, 0, 0)
@@ -728,7 +732,7 @@ def clip_stumble(t):
 
 def fall_pose(p, k, kick=0.0):
     p["CNT_Root"] = (-86 * k, 0, 0)
-    p["root"] = (0, 0.05 * k, 0.05 * k)
+    p["root"] = (0, 0.05 * k, 0.15 * k)
     legs(p, -36 * k - 18 * kick, 30 * k, -28 * k + 18 * kick, 24 * k)
     arms(p, -140 * k, -20, -140 * k, -20, 50 * k + 10, 50 * k + 10)
     p["CNT_Head"] = (24 * k, 0, 0)
@@ -741,7 +745,7 @@ def clip_fall(t):
     k = sm(0.0, 0.55, t) ** 1.6
     bounce = max(0.0, S(math.pi * (t - 0.55) / 0.25)) if 0.55 < t < 0.8 else 0.0
     fall_pose(p, k)
-    p["root"] = (0, 0.05 * k, 0.05 * k + 0.035 * bounce)
+    p["root"] = (0, 0.05 * k, 0.15 * k + 0.035 * bounce)
     p["squash"] = (1 + 0.05 * bounce, 1 - 0.06 * bounce)
     return p
 
@@ -772,7 +776,6 @@ def clip_eliminated(t):
         coat(p, 0, 0, flare=10 * hop)
     else:
         fall_pose(p, k, kick)
-        p["root"] = (0, 0.05 * k, 0.05 * k)
     return p
 
 
@@ -781,7 +784,7 @@ def clip_victory(t):
     ph = TAU * t
     up = max(0.0, S(ph))
     legs(p, -18 * up, 30 * up, -18 * up, 30 * up)
-    arms(p, -40, -20 + 15 * S(2 * ph), -40, -20 - 15 * S(2 * ph), 150 + 12 * S(2 * ph), 150 - 12 * S(2 * ph))
+    arms(p, -12, -10 - 25 * max(0.0, S(2 * ph)), -12, -10 - 25 * max(0.0, -S(2 * ph)), 118 + 14 * S(2 * ph), 118 - 14 * S(2 * ph))
     p["root"] = (0, 0, 0.09 * up)
     p["CNT_Spine"] = (-6 * up, 0, 6 * S(ph))
     p["CNT_Head"] = (-10 * up, 0, 0)

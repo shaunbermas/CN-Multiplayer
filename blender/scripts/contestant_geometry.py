@@ -776,7 +776,7 @@ def emblem(res):
                 pts.append((ccx + rad * math.cos(ang), ccz + rad * math.sin(ang)))
         return pts
 
-    def dense(pts, closed=True, step=0.0035):
+    def dense(pts, closed=True, step=0.0042 / max(res, 0.2) ** 1.2):
         out = []
         n_pts = len(pts)
         for i in range(n_pts if closed else n_pts - 1):
@@ -841,7 +841,7 @@ def emblem(res):
 
 
 # ----------------------------------------------------------------------------------------- assembly
-LODS = {0: 1.0, 1: 0.58, 2: 0.30}
+LODS = {0: 1.0, 1: 0.58, 2: 0.25}
 
 
 def build_parts(lod: int):

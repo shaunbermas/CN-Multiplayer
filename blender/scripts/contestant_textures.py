@@ -4,7 +4,8 @@
 
 Writes blender/textures/CONTESTANT/CNT_Detail.png and CNT_Normal.png (1024 px, one atlas laid out by
 contestant_geometry.ATLAS):
-  CNT_Detail  R cavity (seams and stitch holes darker), G roughness, B edge wear, A stitch mask
+  CNT_Detail  RGB, no alpha (browsers may premultiply alpha): R cavity x 0.85 plus edge wear (so 0.85 is
+              neutral, darker in seams and stitch holes, lighter on worn edges), G roughness, B stitch mask
               (stitches take the colourway's trim colour)
   CNT_Normal  tangent-space normal map (OpenGL / glTF convention): twill weave on fabric, seam grooves,
               raised topstitching, pebbled leather
@@ -122,9 +123,9 @@ def main():
     ln = np.sqrt(nx * nx + ny * ny + nz * nz)
     N = np.stack([nx / ln, ny / ln, nz / ln], -1) * 0.5 + 0.5
 
-    cav = np.clip(1.0 - 0.45 * Se - 0.12 * St - 0.05 * (1 - twill) * F + 0.03 * (noise - 0.5), 0, 1)
-    rough = np.clip(0.80 * F * (0.95 + 0.08 * twill) + 0.55 * Lm * (0.9 + 0.2 * peb) + 0.12 * Gm + 0.30 * Mm + 0.85 * (1 - F - Lm - Gm - Mm) - 0.12 * W * F, 0, 1)
-    D = np.stack([cav, rough, np.clip(W, 0, 1), np.clip(St * 0.75, 0, 1)], -1)
+    cav = np.clip(1.0 - 0.45 * Se - 0.12 * St + 0.03 * (noise - 0.5), 0, 1)  # the weave lives in the normal map
+    rough = np.clip(0.80 * F + 0.55 * Lm + 0.12 * Gm + 0.30 * Mm + 0.85 * (1 - F - Lm - Gm - Mm) - 0.12 * W * F, 0, 1)
+    D = np.stack([np.round(np.clip(0.85 * cav + 0.15 * np.clip(W, 0, 1), 0, 1) * 64) / 64, np.round(rough * 32) / 32, np.clip(St * 0.75, 0, 1)], -1)
 
     def save(arr, name, mode):
         # resize each channel on its own: Pillow premultiplies RGBA when resizing, which would zero the
@@ -135,7 +136,7 @@ def main():
         im.save(OUT / name)
         return im
 
-    save(D, "CNT_Detail.png", "RGBA")
+    save(D, "CNT_Detail.png", "RGB")
     save(N, "CNT_Normal.png", "RGB")
     print({"detail": str(OUT / "CNT_Detail.png"), "normal": str(OUT / "CNT_Normal.png"), "px": G.ATLAS_PX})
 

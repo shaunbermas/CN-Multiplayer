@@ -164,11 +164,12 @@ def lods():
 def animation():
     """Contact sheet: one row per clip, 6 poses each (rendered at low resolution, then tiled)."""
     from PIL import Image
-    s = setup(arg("--samples", 10), 260, 300)
+    px = arg("--px", 260)
+    s = setup(arg("--samples", 10), px, int(px * 1.15))
     body = bpy.data.objects["CNT_Contestant_LOD0"]
     colorway(body, "CW03")
     arm = bpy.data.objects["CNT_Rig"]
-    camera(s, (2.8, -3.2, 1.1), (0, -0.2, 0.5), lens=55)
+    camera(s, (2.6, -2.9, 1.0), (0, -0.25, 0.48), lens=50)
     only = arg("--only", "")
     rows = []
     tmp = OUT / "anim_tmp"
@@ -179,6 +180,8 @@ def animation():
         arm.animation_data.action = act
         f0, f1 = int(act.frame_start), int(act.frame_end)
         frames = [round(f0 + (f1 - f0) * k / 5) for k in range(6)]
+        if act.get("loop"):
+            frames = [round(f0 + (f1 - f0) * k / 6) for k in range(6)]
         row = []
         for k, f in enumerate(frames):
             s.frame_set(f)
@@ -187,7 +190,7 @@ def animation():
             row.append(s.render.filepath)
         rows.append((act.name, row))
         print("Rendered clip", act.name)
-    w, h = 260, 300
+    w, h = px, int(px * 1.15)
     sheet = Image.new("RGB", (w * 6 + 150, h * len(rows)), (210, 210, 220))
     from PIL import ImageDraw
     dr = ImageDraw.Draw(sheet)
