@@ -1,7 +1,7 @@
 {
   "result": "PASS",
   "errors": [],
-  "date": "2026-11-22T01:38:07.850Z",
+  "date": "2026-11-22T04:07:20.790Z",
   "renderer": "headless Chromium, software WebGL (SwiftShader); frame rates compare tiers only",
   "tiers": {
     "low": {
@@ -21,9 +21,9 @@
       "dust": 0,
       "haze": false,
       "draw_calls": 79,
-      "triangles": 71304,
+      "triangles": 78464,
       "shader_programs": 17,
-      "software_fps": 3.4
+      "software_fps": 3.2
     },
     "medium": {
       "atmosphere": {
@@ -42,9 +42,9 @@
       "dust": 150,
       "haze": false,
       "draw_calls": 82,
-      "triangles": 71892,
+      "triangles": 93006,
       "shader_programs": 19,
-      "software_fps": 1.2
+      "software_fps": 1.1
     },
     "high": {
       "atmosphere": {
@@ -65,9 +65,9 @@
       "dust": 400,
       "haze": true,
       "draw_calls": 155,
-      "triangles": 138939,
-      "shader_programs": 38,
-      "software_fps": 1.2
+      "triangles": 162519,
+      "shader_programs": 37,
+      "software_fps": 1
     }
   },
   "adaptive_default": {
@@ -77,7 +77,7 @@
       "medium@1x -> low@1x at 0 fps"
     ],
     "final_tier": "low",
-    "software_fps_after": 3.5
+    "software_fps_after": 3.3
   },
   "screenshots": [
     "tests/reports/screenshots/quality_low.png",
