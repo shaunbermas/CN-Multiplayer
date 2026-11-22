@@ -14,12 +14,15 @@ export function AdaptiveQuality() {
   useFrame((_, dt) => {
     if (quality.pinned) return;
     const a = acc.current;
-    // A gap over 2 s is a hidden tab or a paused page, not a frame-rate measurement; slow frames still count.
-    if (dt > 2 || (typeof document !== 'undefined' && document.hidden)) return;
-    a.since += dt;
+    // Hidden tabs are skipped directly. Slow frames DO count (capped at 5 s each), even very slow ones: a machine
+    // at 0.4 fps is exactly the one that needs to step down. Only a gap over 30 s (a paused or suspended page,
+    // e.g. a laptop waking up) is ignored. Found by CI: the old 2 s cutoff hid every frame of a 0.4 fps page.
+    if ((typeof document !== 'undefined' && document.hidden) || dt > 30) return;
+    const d = Math.min(dt, 5);
+    a.since += d;
     if (a.since < WARMUP_S) return;
     a.frames += 1;
-    a.time += dt;
+    a.time += d;
     if (a.time < WINDOW_S) return;
     const fps = a.frames / a.time;
     quality.fps = Math.round(fps);
