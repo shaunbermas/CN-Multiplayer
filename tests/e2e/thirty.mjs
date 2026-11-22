@@ -88,6 +88,19 @@ try {
     });
   }, 33);
 
+  await sleep(3000);
+  // Signal synchronisation across real pages: each page's signal must match the server schedule at that
+  // page's own round time (pages answer seconds apart under software rendering, so compare against the
+  // schedule, not against each other; a 0.4 s margin covers a page reading right at a light change).
+  const sigs = await Promise.all(pages.map((p) => p.evaluate(() => ({ phase: window.__cn.round().phase, signal: window.__cn.round().signal, elapsed: window.__cn.round().elapsed }))));
+  report.signal_seen_by_pages = sigs;
+  if (sigs.every((s) => s.phase !== 'active')) errors.push('No page was in the active phase for the signal check');
+  for (const [i, s] of sigs.entries()) {
+    if (s.phase !== 'active') continue;
+    const ok = [0, -0.4, 0.4].some((d) => segmentAt(schedule, Math.max(0, s.elapsed + d))?.signal === s.signal);
+    if (!ok) errors.push(`Page ${i} shows ${s.signal} at ${s.elapsed.toFixed(2)} s; the server schedule says ${segmentAt(schedule, s.elapsed)?.signal}`);
+  }
+
   // Observer view over the field with the 30 contestants, obstacles, Watcher and effects.
   await pages[0].evaluate(() => { window.__cnView = { pos: [22, 16, 22], look: [0, 0, -50] }; });
   await sleep(6000);
@@ -118,17 +131,8 @@ try {
   report.low_pages_software_fps = [];
   for (const p of pages.slice(1)) report.low_pages_software_fps.push(+(await fpsOver(p, 2000)).toFixed(2));
 
-  // Signal synchronisation across real pages: each page's signal must match the server schedule at that
-  // page's own round time (pages answer seconds apart under software rendering, so compare against the
-  // schedule, not against each other; a 0.4 s margin covers a page reading right at a light change).
-  const sigs = await Promise.all(pages.map((p) => p.evaluate(() => ({ signal: window.__cn.round().signal, elapsed: window.__cn.round().elapsed }))));
-  report.signal_seen_by_pages = sigs;
-  for (const [i, s] of sigs.entries()) {
-    const ok = [0, -0.4, 0.4].some((d) => segmentAt(schedule, Math.max(0, s.elapsed + d))?.signal === s.signal);
-    if (!ok) errors.push(`Page ${i} shows ${s.signal} at ${s.elapsed.toFixed(2)} s; the server schedule says ${segmentAt(schedule, s.elapsed)?.signal}`);
-  }
-
-  await waitFor(() => pages[0].evaluate(() => window.__cn.round().phase === 'results'), 'results', (ROUND_S + 20) * 1000);
+  // results data, not the phase name: under five software pages the short results phase can pass before we look
+  await waitFor(() => pages[0].evaluate(() => window.__cn.round().phase === 'results' || window.__cn.results().length === 30), 'results', (ROUND_S + 20) * 1000);
   clearInterval(walker);
   await sleep(1500);
   const results = await Promise.all(pages.map((p) => p.evaluate(() => window.__cn.results().map((r) => `${r.name}:${r.status}`).join('|'))));
