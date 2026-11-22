@@ -16,3 +16,27 @@ Branch `claude/stage-1-5`. Not merged to `main` (merging deploys publicly) until
 **Update, 22 Nov 2026 (decision 029):** the P06 contestant blocker is resolved. 30 original randomised
 characters, dealt by the server and never duplicated in a room, replace character select. The 3D backdrop
 was removed (2D matte and PNG only) and The Watcher's effects were strengthened. See `docs/stage15/FEEDBACK_22NOV.md`.
+
+**Update, 22 Nov 2026 (decision 030): shared contestant character system.** The owner's revision replaces the
+30 individually built characters with ONE master contestant and 30 colourways.
+- **Asset:** the master `CNTRIAL_CONTESTANT_MASTER` (coat-first hooded design, 29-bone rig, 16 original clips,
+  LOD0/1/2, one atlas texture set) is built by script, exported to GLB, validated in CI and integrated in the
+  game.
+- **In the game:** per-player skeleton and colour uniforms, a movement-driven animation state machine,
+  budgeted LODs and LOD2 shadows.
+- **Colourways:** dealt uniquely per room and kept on reconnect (protocol v6). Lobby jump and dive emotes.
+- **Documents:** `docs/stage15/CONTESTANT_CHARACTER_SPEC.md` (design lock) and
+  `docs/stage15/SHARED_CONTESTANT_REPORT.md` (validation, before/after performance).
+- **Old assets:** the old procedural characters stay behind `?characters=legacy` until the owner confirms.
+
+| Step | Status | Evidence |
+|---|---|---|
+| Audit and baseline | PASS | `tests/reports/contestant-perf-before.json` |
+| Design lock / spec | PASS | `docs/stage15/CONTESTANT_CHARACTER_SPEC.md` |
+| Blender model (coat priority) | PASS | `blender/scenes/CNTRIAL_CONTESTANT_MASTER.blend`, turnaround and close-up renders |
+| Rig and 16 clips | PASS | `animation_sheet.png`, `validate_contestant.py` |
+| LODs, GLB, manifest | PASS | `blender/exports/contestant/` |
+| 30 colourways, stable assignment | PASS | `contestant-colorways.json`, `test:colorways`, unit tests |
+| Browser integration | PASS | `test:thirty`, `test:ui`, in-game screenshots |
+| Before/after performance | PASS (measured, software renderer) | `tests/reports/contestant-perf-*.json` |
+| Real-GPU timings, 30-human playtest | NOT VERIFIED (no GPU or 30 people here) | |

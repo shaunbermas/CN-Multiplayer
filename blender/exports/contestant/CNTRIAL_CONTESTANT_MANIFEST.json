@@ -1,0 +1,402 @@
+{
+  "asset": "CNTRIAL_CONTESTANT_MASTER",
+  "version": 1,
+  "date": "2026-11-22",
+  "blend": "blender/scenes/CNTRIAL_CONTESTANT_MASTER.blend",
+  "glb": "blender/exports/contestant/CNTRIAL_CONTESTANT_MASTER.glb",
+  "runtime_glb": "blender/exports/contestant/CNTRIAL_CONTESTANT_MASTER.meshopt.glb",
+  "bytes": {
+    "glb": 2404868,
+    "runtime_glb": 763692,
+    "CNT_Detail.webp": 119330,
+    "CNT_Normal.webp": 42286
+  },
+  "units": "metres",
+  "up": "+Y (glTF)",
+  "facing": "+Z in glTF (Blender -Y); the game turns the model by 180 degrees",
+  "height_m": 1.235,
+  "gameplay_capsule": {
+    "height_m": 1.2,
+    "radius_m": 0.3,
+    "note": "collision is the server capsule; the mesh never affects it"
+  },
+  "lods": [
+    {
+      "node": "CNT_Contestant_LOD0",
+      "triangles": 22414,
+      "primitives": 1,
+      "attributes": [
+        "COLOR_0",
+        "JOINTS_0",
+        "NORMAL",
+        "POSITION",
+        "TANGENT",
+        "TEXCOORD_0",
+        "WEIGHTS_0"
+      ]
+    },
+    {
+      "node": "CNT_Contestant_LOD1",
+      "triangles": 8482,
+      "primitives": 1,
+      "attributes": [
+        "COLOR_0",
+        "JOINTS_0",
+        "NORMAL",
+        "POSITION",
+        "TANGENT",
+        "TEXCOORD_0",
+        "WEIGHTS_0"
+      ]
+    },
+    {
+      "node": "CNT_Contestant_LOD2",
+      "triangles": 3554,
+      "primitives": 1,
+      "attributes": [
+        "COLOR_0",
+        "JOINTS_0",
+        "NORMAL",
+        "POSITION",
+        "TANGENT",
+        "TEXCOORD_0",
+        "WEIGHTS_0"
+      ]
+    }
+  ],
+  "lod_policy": {
+    "LOD0": "close / hero (camera under ~7 m)",
+    "LOD1": "normal gameplay view",
+    "LOD2": "distant crowd (over ~20 m)"
+  },
+  "skeleton": {
+    "joints": 29,
+    "names": [
+      "CNT_Root",
+      "CNT_Hips",
+      "CNT_CoatBack_L",
+      "CNT_CoatBack2_L",
+      "CNT_CoatBack_R",
+      "CNT_CoatBack2_R",
+      "CNT_CoatFront_L",
+      "CNT_CoatFront2_L",
+      "CNT_CoatFront_R",
+      "CNT_CoatFront2_R",
+      "CNT_Spine",
+      "CNT_Chest",
+      "CNT_Neck",
+      "CNT_Head",
+      "CNT_HoodTip",
+      "CNT_Shoulder_L",
+      "CNT_UpperArm_L",
+      "CNT_Forearm_L",
+      "CNT_Hand_L",
+      "CNT_Shoulder_R",
+      "CNT_UpperArm_R",
+      "CNT_Forearm_R",
+      "CNT_Hand_R",
+      "CNT_Thigh_L",
+      "CNT_Shin_L",
+      "CNT_Foot_L",
+      "CNT_Thigh_R",
+      "CNT_Shin_R",
+      "CNT_Foot_R"
+    ],
+    "root": "CNT_Root"
+  },
+  "clips": [
+    {
+      "name": "Dive",
+      "duration_s": 0.667,
+      "loop": false,
+      "use": "forward dive / belly flop (lobby emote)",
+      "channels": 87
+    },
+    {
+      "name": "Eliminated",
+      "duration_s": 1.333,
+      "loop": false,
+      "use": "spotted: comic hop and flop (spectator transition follows)",
+      "channels": 87
+    },
+    {
+      "name": "Fall",
+      "duration_s": 0.833,
+      "loop": false,
+      "use": "knocked down onto the back",
+      "channels": 87
+    },
+    {
+      "name": "Idle",
+      "duration_s": 2,
+      "loop": true,
+      "use": "standing still (lobby, red light)",
+      "channels": 87
+    },
+    {
+      "name": "JumpAir",
+      "duration_s": 0.5,
+      "loop": true,
+      "use": "airborne",
+      "channels": 87
+    },
+    {
+      "name": "JumpLand",
+      "duration_s": 0.333,
+      "loop": false,
+      "use": "landing compression",
+      "channels": 87
+    },
+    {
+      "name": "JumpStart",
+      "duration_s": 0.25,
+      "loop": false,
+      "use": "jump take-off (lobby emote; no jump in Stage 01 rules)",
+      "channels": 87
+    },
+    {
+      "name": "Pull",
+      "duration_s": 1,
+      "loop": true,
+      "use": "Tug of War: heave on the rope",
+      "channels": 87
+    },
+    {
+      "name": "Push",
+      "duration_s": 1,
+      "loop": true,
+      "use": "Tug of War: push",
+      "channels": 87
+    },
+    {
+      "name": "Recover",
+      "duration_s": 1,
+      "loop": false,
+      "use": "get back up from Fall",
+      "channels": 87
+    },
+    {
+      "name": "Run",
+      "duration_s": 0.5,
+      "loop": true,
+      "use": "full speed (4 m/s); playback speed follows ground speed",
+      "channels": 87
+    },
+    {
+      "name": "Start",
+      "duration_s": 0.333,
+      "loop": false,
+      "use": "push-off from standing",
+      "channels": 87
+    },
+    {
+      "name": "Stop",
+      "duration_s": 0.417,
+      "loop": false,
+      "use": "skid to a stop (e.g. on amber or red)",
+      "channels": 87
+    },
+    {
+      "name": "Stumble",
+      "duration_s": 0.667,
+      "loop": false,
+      "use": "hit an obstacle at speed",
+      "channels": 87
+    },
+    {
+      "name": "Victory",
+      "duration_s": 1.333,
+      "loop": true,
+      "use": "finished / winner",
+      "channels": 87
+    },
+    {
+      "name": "Walk",
+      "duration_s": 1,
+      "loop": true,
+      "use": "slow movement; playback speed follows ground speed",
+      "channels": 87
+    }
+  ],
+  "vertex_colour": {
+    "name": "COLOR_0 (Blender attribute CNT)",
+    "R": "region id / 15",
+    "G": "baked ambient occlusion (0.55..1)"
+  },
+  "regions": {
+    "coatBase": 0,
+    "coatSecondary": 1,
+    "trim": 2,
+    "beltAccent": 3,
+    "identifierAccent": 4,
+    "faceplate": 5,
+    "emblem": 6,
+    "leather": 7,
+    "inner": 8,
+    "sole": 9,
+    "lining": 10
+  },
+  "fixed_region_colours": {
+    "faceplate": "0B0B0E",
+    "emblem": "F4F4F2",
+    "leather": "1E1C20",
+    "inner": "222126",
+    "sole": "121214",
+    "lining": "151418"
+  },
+  "colourway_regions": [
+    "coatBase",
+    "coatSecondary",
+    "trim",
+    "beltAccent",
+    "identifierAccent"
+  ],
+  "textures": {
+    "CNT_Detail": {
+      "file": "CNT_Detail.webp",
+      "bytes": 119330,
+      "px": 1024,
+      "channels": "R cavity x0.85 + edge wear (0.85 neutral), G roughness, B stitch mask (trim colour)"
+    },
+    "CNT_Normal": {
+      "file": "CNT_Normal.webp",
+      "bytes": 42286,
+      "px": 1024,
+      "channels": "tangent-space normal, OpenGL/glTF convention"
+    }
+  },
+  "uv_atlas": {
+    "hood": [
+      0.00586,
+      0.00586,
+      0.75318,
+      0.30127
+    ],
+    "coat": [
+      0.00586,
+      0.31299,
+      0.58311,
+      0.27212
+    ],
+    "face": [
+      0.59482,
+      0.31299,
+      0.20409,
+      0.20409
+    ],
+    "trouser": [
+      0.80477,
+      0.31299,
+      0.18465,
+      0.16521
+    ],
+    "boot": [
+      0.00586,
+      0.59096,
+      0.20409,
+      0.14578
+    ],
+    "sleeve": [
+      0.21581,
+      0.59096,
+      0.19437,
+      0.14092
+    ],
+    "shirt": [
+      0.41603,
+      0.59096,
+      0.43733,
+      0.1312
+    ],
+    "lapel": [
+      0.85922,
+      0.59096,
+      0.04859,
+      0.1069
+    ],
+    "collar": [
+      0.00586,
+      0.7426,
+      0.46162,
+      0.08261
+    ],
+    "yoke": [
+      0.47334,
+      0.7426,
+      0.20409,
+      0.07775
+    ],
+    "glove": [
+      0.68329,
+      0.7426,
+      0.09718,
+      0.06803
+    ],
+    "storm": [
+      0.78633,
+      0.7426,
+      0.06317,
+      0.05831
+    ],
+    "pocket": [
+      0.85536,
+      0.7426,
+      0.04373,
+      0.04859
+    ],
+    "cuff": [
+      0.00586,
+      0.83107,
+      0.20409,
+      0.02673
+    ],
+    "buckle": [
+      0.21581,
+      0.83107,
+      0.03401,
+      0.0243
+    ],
+    "plain": [
+      0.25568,
+      0.83107,
+      0.0243,
+      0.0243
+    ],
+    "belt": [
+      0.28583,
+      0.83107,
+      0.51022,
+      0.01944
+    ],
+    "flap": [
+      0.80191,
+      0.83107,
+      0.04859,
+      0.01944
+    ],
+    "epaulette": [
+      0.85636,
+      0.83107,
+      0.04859,
+      0.01701
+    ],
+    "patch": [
+      0.91081,
+      0.83107,
+      0.02187,
+      0.01701
+    ]
+  },
+  "material": "one shared material; per-player colour parameters only (no per-player textures)",
+  "colorways": "packages/shared/src/contestant-colorways.json (30 records)",
+  "emblem": {
+    "half_diagonal": 0.094,
+    "stroke": 0.0118,
+    "corner_radius": 0.02,
+    "centre_z": 0.976,
+    "chevron_apex": 0.0,
+    "relief": 0.0035,
+    "mesh_part": "CNT_Emblem (region 6)"
+  },
+  "blender": "5.3.0"
+}

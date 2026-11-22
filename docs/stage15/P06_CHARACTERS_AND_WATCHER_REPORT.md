@@ -46,3 +46,9 @@ The approved model, rig, bones, clips, textures and proportions are unchanged; `
 The contestant roster is no longer blocked: the owner chose **randomised characters**, never duplicated in a room.
 30 original characters are built in code and dealt by the server. See `docs/stage15/FEEDBACK_22NOV.md`.
 The Watcher also gained a red eye glare, a red searchlight and a darker backdrop.
+
+## Update 2, 22 Nov 2026 (decision 030)
+
+The randomised 30-character roster is superseded by the owner's shared contestant system: ONE master character
+(Blender, rigged, 16 clips, 3 LODs) and 30 colourways. Spec: `docs/stage15/CONTESTANT_CHARACTER_SPEC.md`.
+Report: `docs/stage15/SHARED_CONTESTANT_REPORT.md`.

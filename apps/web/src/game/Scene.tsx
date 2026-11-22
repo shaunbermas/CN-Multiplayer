@@ -3,8 +3,10 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { inputFromKeys, MOVEMENT, progress, SIM_DT } from '@cn-trials/shared';
 import { Component, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import * as THREE from 'three';
-import { contestantById, CONTESTANT_ROSTER } from '@cn-trials/shared';
-import { buildContestantGeometry, contestantMaterial } from './characters.ts';
+import { CONTESTANT_ROSTER, colorwayIndex } from '@cn-trials/shared';
+// Legacy: the 30 procedural characters (kept until the owner confirms the shared contestant; ?characters=legacy).
+import { buildContestantGeometry, contestantMaterial as legacyMaterial } from './characters.ts';
+import { ContestantInstance, assignLods, contestantCpu, enableShadowLayer, contestantAsset, contestantStatus, loadContestant, setColorway, type ContestantAsset } from './contestant.ts';
 import type { PlayerView, TrialRoom } from '../net.ts';
 import { hud } from './hudStore.ts';
 import { AdaptiveQuality, quality } from './quality.ts';
@@ -23,13 +25,31 @@ export function wallsFor(room: TrialRoom): Rect[] {
   return [...stageGeo.walls, ...obstacleWalls(stageObstacles, greenTime(scheduleFor(room.round.seed), elapsed))];
 }
 
-/** Contestant geometry per character id, built once and shared by everyone who has that character. */
-const characterGeos = new Map<string, THREE.BufferGeometry>();
-function characterGeometry(id: string | undefined): THREE.BufferGeometry {
-  const c = contestantById(id) ?? CONTESTANT_ROSTER[0];
-  let g = characterGeos.get(c.id);
-  if (!g) { g = buildContestantGeometry(c); characterGeos.set(c.id, g); }
+/** `?characters=legacy` draws the previous 30 procedural characters (comparison and rollback only). */
+export const LEGACY_CHARACTERS = typeof location !== 'undefined' && new URLSearchParams(location.search).get('characters') === 'legacy';
+/** Legacy geometry per colourway slot (CW01 -> the old CHR_01, ...), built once per slot. */
+const legacyGeos = new Map<number, THREE.BufferGeometry>();
+function legacyGeometry(colorway: string | undefined): THREE.BufferGeometry {
+  const i = colorwayIndex(colorway);
+  let g = legacyGeos.get(i);
+  if (!g) { g = buildContestantGeometry(CONTESTANT_ROSTER[i]); legacyGeos.set(i, g); }
   return g;
+}
+
+/** Live contestant instances by player id (test hooks and stats), and their camera distance this frame. */
+export const contestantInstances = new Map<string, ContestantInstance>();
+const lodDist = new Map<string, number>();
+const cpuAcc = { ms: 0 };
+
+function useContestantAsset(): ContestantAsset | null {
+  const [asset, setAsset] = useState(contestantAsset());
+  useEffect(() => {
+    if (asset || LEGACY_CHARACTERS) return;
+    let live = true;
+    loadContestant().then((a) => { if (live) setAsset(a); }).catch(() => { /* status says error; the name tag still shows */ });
+    return () => { live = false; };
+  }, [asset]);
+  return asset;
 }
 
 
@@ -44,19 +64,30 @@ export function canMove(room: TrialRoom): boolean {
 function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoom; local: boolean; predictor?: React.RefObject<Predictor | null> }) {
   const group = useRef<THREE.Group>(null);
   const body = useRef<THREE.Mesh>(null);
+  const { camera } = useThree();
   const [status, setStatus] = useState(room.players.get(id)?.status ?? 'active');
   const p0 = room.players.get(id);
-  const [character, setCharacter] = useState(p0?.character);
-  const geometry = useMemo(() => characterGeometry(character), [character]);
-  const material = useMemo(() => contestantMaterial(), []);
-  useEffect(() => () => material.dispose(), [material]);
-  const anim = useRef({ phase: 0, swing: 0, speed: 0, lastX: p0?.x ?? 0, lastZ: p0?.z ?? 0, fall: 0, t: 0 });
+  const [colorway, setColorwayState] = useState(p0?.colorway);
+  const asset = useContestantAsset();
+  // Shared contestant: one clone per player (geometry and textures shared), created once the asset is loaded.
+  const inst = useMemo(() => (asset && !LEGACY_CHARACTERS ? new ContestantInstance(asset, colorway ?? 'CW01') : null), [asset]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!inst) return;
+    contestantInstances.set(id, inst);
+    return () => { contestantInstances.delete(id); lodDist.delete(id); inst.dispose(); };
+  }, [inst, id]);
+  useEffect(() => { if (inst && colorway) setColorway(inst.material, colorway); }, [inst, colorway]);
+  const legacyGeo = useMemo(() => (LEGACY_CHARACTERS ? legacyGeometry(colorway) : null), [colorway]);
+  const legacyMat = useMemo(() => (LEGACY_CHARACTERS ? legacyMaterial() : null), []);
+  useEffect(() => () => legacyMat?.dispose(), [legacyMat]);
+  const anim = useRef({ phase: 0, swing: 0, speed: 0, lastX: p0?.x ?? 0, lastZ: p0?.z ?? 0, fall: 0, t: 0, emoteAt: Date.now() });
+  const tmp = useMemo(() => new THREE.Vector3(), []);
   useFrame((_, dt) => {
     const g = group.current;
     const p = room.players.get(id);
     if (!g || !p) return;
     if (p.status !== status) setStatus(p.status);
-    if (p.character !== character) setCharacter(p.character);
+    if (p.colorway !== colorway) setColorwayState(p.colorway);
     const spotted = p.status === 'spotted';
     if (local && predictor?.current && canMove(room)) {
       const s = predictor.current.state;
@@ -69,33 +100,42 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
       g.position.z += (p.z - g.position.z) * k;
       if (!local) g.rotation.y = p.yaw;
     }
-    // Walk cycle from the actual movement speed (GPU limb swing), body bob, idle sway.
     const a = anim.current;
     const step = Math.min(dt, 0.1);
     a.t += step;
     const moved = Math.hypot(g.position.x - a.lastX, g.position.z - a.lastZ);
     a.lastX = g.position.x; a.lastZ = g.position.z;
-    a.speed += ((step > 0 ? moved / step : 0) - a.speed) * (1 - Math.exp(-step * 10));
+    a.speed += ((step > 0 ? Math.min(8, moved / step) : 0) - a.speed) * (1 - Math.exp(-step * 10));
+    a.fall += ((spotted ? 1 : 0) - a.fall) * (1 - Math.exp(-step * 6));
+    const tint = 1 - a.fall * 0.5; // spotted contestants grey out (playful, no harm: spec §7)
+    if (inst) {
+      // lobby emotes broadcast by the server (visual only)
+      for (const e of room.emotes) if (e.id === id && e.at > a.emoteAt) { a.emoteAt = e.at; inst.emote(e.e); }
+      const t0 = performance.now();
+      inst.update(step, { speed: a.speed, status: p.status, greenActive: room.round.phase === 'active' && room.round.signal === 'green' });
+      cpuAcc.ms += performance.now() - t0;
+      lodDist.set(id, camera.position.distanceTo(g.getWorldPosition(tmp)));
+      inst.material.color.setRGB(tint, tint, tint);
+      return;
+    }
+    if (!legacyMat || !body.current) return;
+    // Legacy procedural characters: GPU limb swing, bob, sway and a comic topple.
     const walking = !spotted && a.speed > 0.2;
     a.phase += step * (walking ? 4 + a.speed * 1.6 : 1.2);
     a.swing += ((walking ? Math.min(1, a.speed / 3.5) * 0.75 : 0.04) - a.swing) * (1 - Math.exp(-step * 8));
-    material.userData.uniforms.uPhase.value = a.phase;
-    material.userData.uniforms.uSwing.value = a.swing;
-    // Spotted: a comic topple onto the back (spec §7: playful, no harm) and a greyed-out costume.
-    a.fall += ((spotted ? 1 : 0) - a.fall) * (1 - Math.exp(-step * 6));
+    legacyMat.userData.uniforms.uPhase.value = a.phase;
+    legacyMat.userData.uniforms.uSwing.value = a.swing;
     const finished = p.status === 'finished';
-    if (body.current) {
-      body.current.rotation.x = a.fall * 1.25;
-      body.current.position.y = (walking ? Math.abs(Math.sin(a.phase)) * 0.035 * a.swing / 0.75 : 0) + (finished ? Math.abs(Math.sin(a.t * 5)) * 0.12 : 0) + a.fall * 0.08;
-      body.current.rotation.z = walking ? Math.sin(a.phase) * 0.04 : Math.sin(a.t * 1.3) * 0.015;
-    }
-    const tint = 1 - a.fall * 0.55;
-    material.color.setRGB(tint, tint, tint);
+    body.current.rotation.x = a.fall * 1.25;
+    body.current.position.y = (walking ? Math.abs(Math.sin(a.phase)) * 0.035 * a.swing / 0.75 : 0) + (finished ? Math.abs(Math.sin(a.t * 5)) * 0.12 : 0) + a.fall * 0.08;
+    body.current.rotation.z = walking ? Math.sin(a.phase) * 0.04 : Math.sin(a.t * 1.3) * 0.015;
+    legacyMat.color.setRGB(tint, tint, tint);
   });
   const waiting = status === 'waiting';
   return (
-    <group ref={group} position={[p0?.x ?? 0, 0, p0?.z ?? 0]} visible={!waiting || !local}>
-      <mesh ref={body} geometry={geometry} material={material} castShadow name={`CHR_${character ?? 'unknown'}`} />
+    <group ref={group} position={[p0?.x ?? 0, 0, p0?.z ?? 0]} visible={!waiting || !local} name={`PLAYER_${id}`}>
+      {inst && <primitive object={inst.root} />}
+      {legacyGeo && legacyMat && <mesh ref={body} geometry={legacyGeo} material={legacyMat} castShadow name={`CHR_LEGACY_${colorway ?? 'unknown'}`} />}
       {(!local || status === 'spotted') && (
         <Html position={[0, 1.65, 0]} center distanceFactor={9} zIndexRange={[10, 0]}>
           <div className={`nametag ${status}`}>{status === 'spotted' ? 'SPOTTED!' : p0?.name}</div>
@@ -103,6 +143,60 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
       )}
     </group>
   );
+}
+
+/** Contestant statistics for tests (window.__cn.contestants()). */
+function contestantStats(scene: THREE.Object3D) {
+  const geos = new Map<string, THREE.BufferGeometry>(), mats = new Set<string>(), tex = new Set<string>(), skels = new Set<string>();
+  const lod = [0, 0, 0];
+  let meshes = 0;
+  scene.traverse((o) => {
+    const m = o as THREE.Mesh;
+    if (!m.isMesh || !(/^CNT_Contestant_LOD|^CHR_LEGACY_/.test(m.name))) return;
+    meshes++;
+    geos.set(m.geometry.uuid, m.geometry);
+    if ((m as THREE.SkinnedMesh).isSkinnedMesh) skels.add((m as THREE.SkinnedMesh).skeleton.uuid);
+    const mat = m.material as THREE.MeshStandardMaterial;
+    mats.add(mat.uuid);
+    if (mat.normalMap) tex.add(mat.normalMap.uuid);
+    const det = mat.userData?.uniforms?.uDetail?.value as THREE.Texture | undefined;
+    if (det) tex.add(det.uuid);
+  });
+  for (const i of contestantInstances.values()) lod[i.lod]++;
+  return {
+    system: LEGACY_CHARACTERS ? 'legacy' : 'shared',
+    ready: LEGACY_CHARACTERS || contestantStatus.state === 'ready',
+    state: contestantStatus.state, error: contestantStatus.error, loadMs: contestantStatus.loadMs, clips: contestantStatus.clips,
+    instances: LEGACY_CHARACTERS ? meshes : contestantInstances.size,
+    meshes, uniqueGeometries: geos.size, skeletons: skels.size,
+    geometryBytes: [...geos.values()].reduce((n, g) => n + Object.values(g.attributes).reduce((k, a) => k + ((a as THREE.BufferAttribute).array?.byteLength ?? 0), 0) + (g.index?.array.byteLength ?? 0), 0),
+    animationCpuMsPerFrame: +contestantCpu.msPerFrame.toFixed(3), uniqueMaterials: mats.size, uniqueTextures: tex.size, lod,
+    colorways: [...contestantInstances.values()].map((i) => i.material.userData.colorway as string),
+  };
+}
+
+function ContestantHooks({ room }: { room: TrialRoom }) {
+  const { scene, gl, camera } = useThree();
+  // one LOD decision per frame for everyone (budgeted), after each contestant measured its distance
+  const shadowCheck = useRef(0);
+  useFrame(() => {
+    if (++shadowCheck.current % 60 === 1) enableShadowLayer(scene); // lights can change with the quality tier
+    contestantCpu.msPerFrame += (cpuAcc.ms - contestantCpu.msPerFrame) * 0.05;
+    cpuAcc.ms = 0;
+    const items: { inst: ContestantInstance; dist: number }[] = [];
+    for (const [id, inst] of contestantInstances) items.push({ inst, dist: id === room.id ? 0 : lodDist.get(id) ?? 99 });
+    assignLods(items, quality.tier);
+  });
+  useEffect(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__cnContestants = () => contestantStats(scene);
+    // Test / preview hook: play any clip of the library on a player (presentation only).
+    w.__cnPlayClip = (playerId: string, clip: string) => { contestantInstances.get(playerId)?.play(clip); return contestantInstances.get(playerId)?.currentShot ?? null; };
+    // Test hook: render one frame and read it back in the same task (independent of page compositing).
+    w.__cnSnapshot = (type = 'image/jpeg') => { gl.render(scene, camera); return gl.domElement.toDataURL(type, 0.9); };
+    return () => { delete w.__cnContestants; delete w.__cnPlayClip; delete w.__cnSnapshot; };
+  }, [scene, room, gl, camera]);
+  return null;
 }
 
 function LocalController({ room, predictor }: { room: TrialRoom; predictor: React.RefObject<Predictor | null> }) {
@@ -133,6 +227,11 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
         pr.reset({ x: sp.x, z: sp.z, vx: 0, vz: 0 });
         firstMove.current = null;
       }
+    }
+    if (input.emote) {
+      // lobby emotes (or a finished player celebrating): visual only, the server rebroadcasts them to everyone
+      if (phase === 'lobby' || me.status === 'finished') room.send({ t: 'emote', e: input.emote });
+      input.emote = null;
     }
     if (input.skip) {
       input.skip = false;
@@ -198,13 +297,14 @@ function Players({ room, predictor }: { room: TrialRoom; predictor: React.RefObj
 }
 
 /** Renderer statistics of the last frame, for tests (window.__cn.renderInfo). */
-const renderInfo = { calls: 0, triangles: 0, programs: 0, textures: 0, dpr: 1 };
+const renderInfo = { calls: 0, triangles: 0, programs: 0, textures: 0, geometries: 0, dpr: 1 };
 function RenderInfo() {
   useFrame(({ gl }) => {
     renderInfo.calls = gl.info.render.calls;
     renderInfo.triangles = gl.info.render.triangles;
     renderInfo.programs = gl.info.programs?.length ?? 0;
     renderInfo.textures = gl.info.memory.textures;
+    renderInfo.geometries = gl.info.memory.geometries;
     renderInfo.dpr = gl.getPixelRatio();
   });
   return null;
@@ -231,7 +331,8 @@ export function Scene({ room, onStageError }: { room: TrialRoom; onStageError: (
       roomId: room.room,
       sessionId: room.id,
       stage: stageDef.id,
-      players: () => [...room.players.values()].map((p) => ({ id: p.id, name: p.name, x: p.x, z: p.z, status: p.status, finishTime: p.finishTime, character: p.character })),
+      players: () => [...room.players.values()].map((p) => ({ id: p.id, name: p.name, x: p.x, z: p.z, status: p.status, finishTime: p.finishTime, colorway: p.colorway })),
+      contestants: () => (window as unknown as { __cnContestants?: () => unknown }).__cnContestants?.() ?? null,
       self: () => predictor.current?.state,
       round: () => ({ ...room.round }),
       results: () => room.results,
@@ -257,6 +358,7 @@ export function Scene({ room, onStageError }: { room: TrialRoom; onStageError: (
         </Suspense>
       </StageErrorBoundary>
       <Players room={room} predictor={predictor} />
+      <ContestantHooks room={room} />
       <LocalController room={room} predictor={predictor} />
     </Canvas>
   );

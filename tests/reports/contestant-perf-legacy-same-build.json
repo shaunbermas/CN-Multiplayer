@@ -1,0 +1,90 @@
+{
+  "result": "PASS",
+  "errors": [],
+  "date": "2026-11-22T03:55:55.690Z",
+  "machine": "4 vCPU, no GPU (SwiftShader software WebGL); frame rates compare runs on this machine only",
+  "quality": "high",
+  "viewport": "1280x720",
+  "camera": "fixed, 9 m behind and 6 m above the spawn grid",
+  "one_player": {
+    "render": {
+      "calls": 148,
+      "triangles": 139393,
+      "programs": 38,
+      "textures": 80,
+      "geometries": 76,
+      "dpr": 1
+    },
+    "heap_mb": 29.9,
+    "contestants": {
+      "system": "legacy",
+      "ready": true,
+      "state": "idle",
+      "error": "",
+      "loadMs": 0,
+      "clips": [],
+      "instances": 1,
+      "meshes": 1,
+      "uniqueGeometries": 1,
+      "skeletons": 0,
+      "geometryBytes": 222768,
+      "animationCpuMsPerFrame": 0,
+      "uniqueMaterials": 1,
+      "uniqueTextures": 0,
+      "lod": [
+        0,
+        0,
+        0
+      ],
+      "colorways": []
+    },
+    "players": 1,
+    "software_fps": 0.86
+  },
+  "thirty_ready_after_join_ms": 5902,
+  "thirty_players": {
+    "render": {
+      "calls": 200,
+      "triangles": 206999,
+      "programs": 38,
+      "textures": 80,
+      "geometries": 105,
+      "dpr": 1
+    },
+    "heap_mb": 30.1,
+    "contestants": {
+      "system": "legacy",
+      "ready": true,
+      "state": "idle",
+      "error": "",
+      "loadMs": 0,
+      "clips": [],
+      "instances": 30,
+      "meshes": 30,
+      "uniqueGeometries": 30,
+      "skeletons": 0,
+      "geometryBytes": 6086184,
+      "animationCpuMsPerFrame": 0,
+      "uniqueMaterials": 30,
+      "uniqueTextures": 0,
+      "lod": [
+        0,
+        0,
+        0
+      ],
+      "colorways": []
+    },
+    "players": 30,
+    "software_fps": 0.84
+  },
+  "contestant_downloads": [],
+  "cost_of_29_contestants": {
+    "draw_calls": 52,
+    "triangles": 67606,
+    "geometries": 29,
+    "textures": 0,
+    "programs": 0,
+    "heap_mb": 0.2,
+    "fps_drop": 0.02
+  }
+}

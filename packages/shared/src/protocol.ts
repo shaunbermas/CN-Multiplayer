@@ -3,8 +3,9 @@
 // signals, detection and results (GDD §7.3).
 import type { Phase, Placing, PlayerStatus, Signal } from './round.ts';
 import type { Mode } from './tournament.ts';
+import type { Emote } from './contestantColorways.ts';
 
-export const PROTOCOL_VERSION = 5;
+export const PROTOCOL_VERSION = 6;
 
 export interface StartRequestOptions {
   /** Standup Quick (default) or a full tournament (qualifier target, R3). Host only. */
@@ -19,7 +20,8 @@ export interface StartRequestOptions {
 
 // ---- client -> server
 export type ClientMessage =
-  | { t: 'join'; v: number; name: string }
+  /** key: the browser's opaque player key, so a returning player keeps their colourway (protocol v6). */
+  | { t: 'join'; v: number; name: string; key?: string }
   | { t: 'input'; seq: number; mx: number; mz: number; yaw: number }
   | { t: 'respawn' }
   | { t: 'start'; opts?: StartRequestOptions }
@@ -27,10 +29,12 @@ export type ClientMessage =
   | { t: 'probe_ack'; id: number }
   | { t: 'ping'; at: number }
   /** Stage 1.5 lobby: the player is ready (the host can still start at any time). */
-  | { t: 'ready'; ready: boolean };
+  | { t: 'ready'; ready: boolean }
+  /** Lobby emote (jump, dive): visual only; the server rebroadcasts it and never moves the player (v6). */
+  | { t: 'emote'; e: Emote };
 
 // ---- server -> client
-export interface RosterEntry { id: string; name: string; spawn: number; /** Ready in the lobby (Stage 1.5). */ ready?: boolean; /** Character dealt by the server, unique in the room (CHR_01–CHR_30; protocol v5). */ character: string }
+export interface RosterEntry { id: string; name: string; spawn: number; /** Ready in the lobby (Stage 1.5). */ ready?: boolean; /** Colourway of the shared contestant, unique in the room and kept on reconnect (CW01–CW30; protocol v6). */ colorway: string }
 
 /** One player in a snapshot: [id, x, z, vx, vz, yaw, ack, status, finishTime]. */
 export type SnapRow = [string, number, number, number, number, number, number, number, number];
@@ -62,6 +66,7 @@ export type ServerMessage =
   | { t: 'event'; kind: 'spotted' | 'finished'; id: string; at: number }
   | { t: 'probe'; id: number }
   | { t: 'pong'; at: number }
+  | { t: 'emote'; id: string; e: Emote }
   | { t: 'error'; code: 'full' | 'version' | 'bad_request' | 'not_host'; message: string };
 
 export const STATUS_CODE: Record<PlayerStatus, number> = { active: 0, finished: 1, spotted: 2, waiting: 3 };

@@ -1,0 +1,39 @@
+{
+  "result": "PASS",
+  "errors": [],
+  "date": "2026-11-22T03:57:06.308Z",
+  "unique_colorways_30": 30,
+  "reconnects": [
+    {
+      "player": 3,
+      "before": "CW11",
+      "after": "CW11"
+    },
+    {
+      "player": 7,
+      "before": "CW18",
+      "after": "CW18"
+    },
+    {
+      "player": 11,
+      "before": "CW17",
+      "after": "CW17"
+    },
+    {
+      "player": 19,
+      "before": "CW23",
+      "after": "CW23"
+    },
+    {
+      "player": 26,
+      "before": "CW07",
+      "after": "CW07"
+    }
+  ],
+  "unique_after_rejoins": 30,
+  "emote": {
+    "received_by_others": true,
+    "count_seen_by_c9": 1,
+    "moved_m": 0
+  }
+}

@@ -1,0 +1,277 @@
+{
+ "version": 1,
+ "source": "references/SHARED_CONTESTANT/03_TECHNICAL_SPEC/COLORWAY_SYSTEM.csv (owner pack, 22 Nov 2026)",
+ "note": "30 material presets on ONE shared contestant model. Colours are sRGB hex. Geometry, UVs, rig, clips and textures are identical for every colourway.",
+ "colorways": [
+  {
+   "id": "CW01",
+   "displayName": "Obsidian",
+   "coatBase": "1F2028",
+   "coatSecondary": "34333D",
+   "trim": "A7A1B5",
+   "beltAccent": "C8C5D2",
+   "identifierAccent": "F4F0FF"
+  },
+  {
+   "id": "CW02",
+   "displayName": "Deep Teal",
+   "coatBase": "173C42",
+   "coatSecondary": "28565B",
+   "trim": "8AB2B0",
+   "beltAccent": "D3B9A0",
+   "identifierAccent": "E8F7F3"
+  },
+  {
+   "id": "CW03",
+   "displayName": "Rust",
+   "coatBase": "552B25",
+   "coatSecondary": "874638",
+   "trim": "D69A75",
+   "beltAccent": "D9B47C",
+   "identifierAccent": "FFE5CF"
+  },
+  {
+   "id": "CW04",
+   "displayName": "Moss",
+   "coatBase": "34402B",
+   "coatSecondary": "596345",
+   "trim": "A6A17A",
+   "beltAccent": "C3A66B",
+   "identifierAccent": "F1E9CF"
+  },
+  {
+   "id": "CW05",
+   "displayName": "Ochre",
+   "coatBase": "80521F",
+   "coatSecondary": "B77C31",
+   "trim": "E0B86C",
+   "beltAccent": "694A32",
+   "identifierAccent": "FFF0CF"
+  },
+  {
+   "id": "CW06",
+   "displayName": "Slate",
+   "coatBase": "343E4B",
+   "coatSecondary": "566575",
+   "trim": "A7B7C6",
+   "beltAccent": "B78B6A",
+   "identifierAccent": "EDF5FF"
+  },
+  {
+   "id": "CW07",
+   "displayName": "Burgundy",
+   "coatBase": "512B3B",
+   "coatSecondary": "784356",
+   "trim": "C18A9A",
+   "beltAccent": "C7A16B",
+   "identifierAccent": "FFE8F0"
+  },
+  {
+   "id": "CW08",
+   "displayName": "Pine",
+   "coatBase": "1E4438",
+   "coatSecondary": "356A53",
+   "trim": "91B69A",
+   "beltAccent": "B78A58",
+   "identifierAccent": "E5F6E8"
+  },
+  {
+   "id": "CW09",
+   "displayName": "Dust Blue",
+   "coatBase": "344E65",
+   "coatSecondary": "58748B",
+   "trim": "A7C1D4",
+   "beltAccent": "C39B72",
+   "identifierAccent": "EAF5FF"
+  },
+  {
+   "id": "CW10",
+   "displayName": "Plum",
+   "coatBase": "44334D",
+   "coatSecondary": "6D5479",
+   "trim": "B49ABC",
+   "beltAccent": "B9A078",
+   "identifierAccent": "F8ECFF"
+  },
+  {
+   "id": "CW11",
+   "displayName": "Clay",
+   "coatBase": "6A4030",
+   "coatSecondary": "9B6449",
+   "trim": "D3A17C",
+   "beltAccent": "4A342A",
+   "identifierAccent": "FFE8D7"
+  },
+  {
+   "id": "CW12",
+   "displayName": "Steel",
+   "coatBase": "3D4549",
+   "coatSecondary": "69777B",
+   "trim": "B2C1C4",
+   "beltAccent": "C19A70",
+   "identifierAccent": "F0FAFA"
+  },
+  {
+   "id": "CW13",
+   "displayName": "Maroon",
+   "coatBase": "4B2028",
+   "coatSecondary": "79343D",
+   "trim": "C27D80",
+   "beltAccent": "D0A46C",
+   "identifierAccent": "FFE8E8"
+  },
+  {
+   "id": "CW14",
+   "displayName": "Fern",
+   "coatBase": "354B35",
+   "coatSecondary": "567451",
+   "trim": "A9BE8C",
+   "beltAccent": "B78D5B",
+   "identifierAccent": "F0F8E5"
+  },
+  {
+   "id": "CW15",
+   "displayName": "Sand",
+   "coatBase": "75624A",
+   "coatSecondary": "A28A68",
+   "trim": "D4C09A",
+   "beltAccent": "514334",
+   "identifierAccent": "FFF5DF"
+  },
+  {
+   "id": "CW16",
+   "displayName": "Midnight Blue",
+   "coatBase": "202F4D",
+   "coatSecondary": "394F75",
+   "trim": "92A8D0",
+   "beltAccent": "C2A06E",
+   "identifierAccent": "EAF0FF"
+  },
+  {
+   "id": "CW17",
+   "displayName": "Charcoal",
+   "coatBase": "292B30",
+   "coatSecondary": "494B52",
+   "trim": "9699A3",
+   "beltAccent": "A77E5C",
+   "identifierAccent": "F1F1F5"
+  },
+  {
+   "id": "CW18",
+   "displayName": "Copper",
+   "coatBase": "623A26",
+   "coatSecondary": "A35F35",
+   "trim": "D79A60",
+   "beltAccent": "40302A",
+   "identifierAccent": "FFE8D0"
+  },
+  {
+   "id": "CW19",
+   "displayName": "Lilac Grey",
+   "coatBase": "4D4B5D",
+   "coatSecondary": "777488",
+   "trim": "B8B4C9",
+   "beltAccent": "A98D75",
+   "identifierAccent": "F6F2FF"
+  },
+  {
+   "id": "CW20",
+   "displayName": "Deep Red",
+   "coatBase": "5A2529",
+   "coatSecondary": "8C383C",
+   "trim": "D58A83",
+   "beltAccent": "D1AE83",
+   "identifierAccent": "FFF0EB"
+  },
+  {
+   "id": "CW21",
+   "displayName": "Sea Glass",
+   "coatBase": "285052",
+   "coatSecondary": "3D7776",
+   "trim": "A1D0C8",
+   "beltAccent": "B88D66",
+   "identifierAccent": "E9FFFA"
+  },
+  {
+   "id": "CW22",
+   "displayName": "Olive",
+   "coatBase": "454326",
+   "coatSecondary": "707044",
+   "trim": "B4B17A",
+   "beltAccent": "493C2C",
+   "identifierAccent": "F7F3D9"
+  },
+  {
+   "id": "CW23",
+   "displayName": "Cocoa",
+   "coatBase": "49352E",
+   "coatSecondary": "765448",
+   "trim": "B38A70",
+   "beltAccent": "D0A16E",
+   "identifierAccent": "F8E8DC"
+  },
+  {
+   "id": "CW24",
+   "displayName": "Ice Slate",
+   "coatBase": "3D4B59",
+   "coatSecondary": "657C8B",
+   "trim": "B8D0D9",
+   "beltAccent": "8E9A9C",
+   "identifierAccent": "F2FCFF"
+  },
+  {
+   "id": "CW25",
+   "displayName": "Burnt Sienna",
+   "coatBase": "713D2C",
+   "coatSecondary": "A85F43",
+   "trim": "D99470",
+   "beltAccent": "4C3328",
+   "identifierAccent": "FFE8D9"
+  },
+  {
+   "id": "CW26",
+   "displayName": "Ink Green",
+   "coatBase": "233A32",
+   "coatSecondary": "3F5F4D",
+   "trim": "91A88E",
+   "beltAccent": "B18A60",
+   "identifierAccent": "EDF7E9"
+  },
+  {
+   "id": "CW27",
+   "displayName": "Storm Violet",
+   "coatBase": "3A344D",
+   "coatSecondary": "5C5275",
+   "trim": "A69BC4",
+   "beltAccent": "B89978",
+   "identifierAccent": "F4EFFF"
+  },
+  {
+   "id": "CW28",
+   "displayName": "Warm Grey",
+   "coatBase": "4B4944",
+   "coatSecondary": "77736B",
+   "trim": "B9B1A2",
+   "beltAccent": "9A7659",
+   "identifierAccent": "F8F3E8"
+  },
+  {
+   "id": "CW29",
+   "displayName": "Signal Amber",
+   "coatBase": "76501C",
+   "coatSecondary": "A97728",
+   "trim": "E5BE64",
+   "beltAccent": "473322",
+   "identifierAccent": "FFF4D5"
+  },
+  {
+   "id": "CW30",
+   "displayName": "Signal Cyan",
+   "coatBase": "214C59",
+   "coatSecondary": "347D8A",
+   "trim": "91D0D6",
+   "beltAccent": "A98768",
+   "identifierAccent": "E9FFFF"
+  }
+ ]
+}

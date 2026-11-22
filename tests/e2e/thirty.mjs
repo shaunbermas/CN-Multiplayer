@@ -8,7 +8,7 @@
 // not browsers, and are reported as such. Usage: npm run test:thirty
 import { execSync } from 'node:child_process';
 import { createRequire } from 'node:module';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { RoomClient, buildSchedule, segmentAt } from '../../packages/shared/src/index.ts';
 import { root, sleep, startWorker, writeReport } from '../lib.mjs';
 
@@ -51,7 +51,7 @@ try {
   }
   const bots = [];
   for (let i = 0; i < 25; i++) bots.push(await RoomClient.connect(`ws://127.0.0.1:${PORT}/api/room/${ROOM}/ws`, `Bot${String(i + 1).padStart(2, '0')}`));
-  await waitFor(async () => (await Promise.all(pages.map((p) => p.evaluate(() => window.__cn.players().length)))).every((n) => n === 30), 'all pages see 30 players')
+  await waitFor(async () => (await Promise.all(pages.map((p) => p.evaluate(() => window.__cn.players().length)))).every((n) => n === 30), 'all pages see 30 players', 180_000)
     .catch(async (e) => {
       report.seen_on_timeout = await Promise.all(pages.map((p) => p.evaluate(() => window.__cn?.players().length ?? -1).catch((x) => String(x))));
       report.page_errors = consoleErrors.slice(0, 8);
@@ -61,9 +61,14 @@ try {
   await sleep(2000);
   await pages[0].screenshot({ path: `${shots}/thirty_lobby_30_slots.png`, timeout: 120_000 });
   report.lobby_slots_taken = await pages[0].evaluate(() => document.querySelectorAll('.lobby-slots .slot.taken').length);
-  // Randomised contestants: 30 players, 30 different characters, drawn as 30 character meshes.
-  report.unique_characters = await pages[0].evaluate(() => new Set(window.__cn.players().map((p) => p.character)).size);
-  if (report.unique_characters !== 30) errors.push(`${report.unique_characters} distinct characters for 30 players`);
+  // Shared contestant: 30 players, 30 different colourways, ONE shared geometry set and texture set.
+  report.unique_colorways = await pages[0].evaluate(() => new Set(window.__cn.players().map((p) => p.colorway)).size);
+  if (report.unique_colorways !== 30) errors.push(`${report.unique_colorways} distinct colourways for 30 players`);
+  await waitFor(() => pages[0].evaluate(() => window.__cn.contestants()?.ready && window.__cn.contestants().instances === 30), 'shared contestant on 30 players', 120_000);
+  report.contestants = await pages[0].evaluate(() => window.__cn.contestants());
+  if (report.contestants.uniqueGeometries > 3) errors.push(`Contestants use ${report.contestants.uniqueGeometries} geometries; expected the 3 shared LODs`);
+  if (report.contestants.uniqueTextures > 2) errors.push(`Contestants use ${report.contestants.uniqueTextures} textures; expected the 2 shared maps`);
+  if (new Set(report.contestants.colorways).size !== 30) errors.push('Contestant materials do not show 30 colourways');
   if (report.lobby_slots_taken !== 30) errors.push(`Lobby shows ${report.lobby_slots_taken} taken slots, expected 30`);
 
   // ---- round with the obstacle twist
@@ -83,6 +88,19 @@ try {
     });
   }, 33);
 
+  await sleep(3000);
+  // Signal synchronisation across real pages: each page's signal must match the server schedule at that
+  // page's own round time (pages answer seconds apart under software rendering, so compare against the
+  // schedule, not against each other; a 0.4 s margin covers a page reading right at a light change).
+  const sigs = await Promise.all(pages.map((p) => p.evaluate(() => ({ phase: window.__cn.round().phase, signal: window.__cn.round().signal, elapsed: window.__cn.round().elapsed }))));
+  report.signal_seen_by_pages = sigs;
+  if (sigs.every((s) => s.phase !== 'active')) errors.push('No page was in the active phase for the signal check');
+  for (const [i, s] of sigs.entries()) {
+    if (s.phase !== 'active') continue;
+    const ok = [0, -0.4, 0.4].some((d) => segmentAt(schedule, Math.max(0, s.elapsed + d))?.signal === s.signal);
+    if (!ok) errors.push(`Page ${i} shows ${s.signal} at ${s.elapsed.toFixed(2)} s; the server schedule says ${segmentAt(schedule, s.elapsed)?.signal}`);
+  }
+
   // Observer view over the field with the 30 contestants, obstacles, Watcher and effects.
   await pages[0].evaluate(() => { window.__cnView = { pos: [22, 16, 22], look: [0, 0, -50] }; });
   await sleep(6000);
@@ -94,17 +112,27 @@ try {
     obstacles: window.__cn.assets().obstacles,
   }));
   report.observer.software_fps = +(await fpsOver(pages[0], 4000)).toFixed(2);
-  await pages[0].screenshot({ path: `${shots}/thirty_ingame_overview.png`, timeout: 120_000 });
+  report.observer.context_lost = await pages[0].evaluate(() => document.querySelector('canvas')?.getContext('webgl2')?.isContextLost() ?? null);
+  await pages[0].screenshot({ path: `${shots}/thirty_ingame_overview_page.png`, timeout: 120_000 });
+  // The rendered frame itself (rendered and read back in one task), so a slow compositor under five
+  // software-rendered pages cannot hide what WebGL drew. Saved as the overview, and must not be blank.
+  const frame = await pages[0].evaluate(() => window.__cnSnapshot('image/png'));
+  writeFileSync(`${shots}/thirty_ingame_overview.png`, Buffer.from(frame.split(',')[1], 'base64'));
+  report.observer.screenshot_mean = await pages[0].evaluate(async (src) => {
+    const img = new Image(); img.src = src; await img.decode();
+    const c = new OffscreenCanvas(img.width, img.height); const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+    const d = x.getImageData(img.width * 0.25, img.height * 0.25, img.width * 0.5, img.height * 0.5).data;
+    let s = 0; for (let i = 0; i < d.length; i += 4) s += d[i] + d[i + 1] + d[i + 2];
+    return +(s / (d.length / 4) / 3).toFixed(1);
+  }, frame);
+  if (report.observer.context_lost) errors.push('Observer WebGL context lost');
+  if (report.observer.screenshot_mean < 20) errors.push(`Observer screenshot is blank (mean ${report.observer.screenshot_mean})`);
   await pages[0].evaluate(() => { delete window.__cnView; });
   report.low_pages_software_fps = [];
   for (const p of pages.slice(1)) report.low_pages_software_fps.push(+(await fpsOver(p, 2000)).toFixed(2));
 
-  // Signal synchronisation across real pages: each reports the server signal from its last snapshot.
-  const sigs = await Promise.all(pages.map((p) => p.evaluate(() => window.__cn.round().signal)));
-  report.signal_seen_by_pages = sigs;
-  if (new Set(sigs).size > 1) errors.push(`Pages disagree on the server signal: ${sigs.join(', ')}`);
-
-  await waitFor(() => pages[0].evaluate(() => window.__cn.round().phase === 'results'), 'results', (ROUND_S + 20) * 1000);
+  // results data, not the phase name: under five software pages the short results phase can pass before we look
+  await waitFor(() => pages[0].evaluate(() => window.__cn.round().phase === 'results' || window.__cn.results().length === 30), 'results', (ROUND_S + 20) * 1000);
   clearInterval(walker);
   await sleep(1500);
   const results = await Promise.all(pages.map((p) => p.evaluate(() => window.__cn.results().map((r) => `${r.name}:${r.status}`).join('|'))));

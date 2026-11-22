@@ -4,7 +4,7 @@ A desktop browser 3D multiplayer elimination game for the Creative Nomads team: 
 standups (Standup mode) and a seven-round tournament for team events. Up to 30 players in a private
 invite-link room. Formerly titled THE LAST TRIAL.
 
-Stage 1.5 (branch `claude/stage-1-5`, awaiting the owner's sign-off): painted surroundings, night atmosphere, optional obstacle twist, Watcher detection effects, the complete CN TRIAL interface and performance work. See `CN_TRIAL_STAGE_1_5_FINAL_DELIVERABLES/INDEX.md`. The 30-character roster is blocked on an owner decision (`docs/CHARACTER_ROSTER_DISCREPANCY_REPORT.md`).
+Stage 1.5 (merged and live): painted surroundings, night atmosphere, optional obstacle twist, Watcher detection effects, the complete CN TRIAL interface and performance work. See `CN_TRIAL_STAGE_1_5_FINAL_DELIVERABLES/INDEX.md`. Contestants: ONE shared master character with 30 colourways (decision 030): `docs/stage15/CONTESTANT_CHARACTER_SPEC.md`; rebuild with `python blender/scripts/contestant_textures.py && python blender/scripts/contestant_build.py && python blender/scripts/contestant_export.py`.
 
 Status: Stage 01 Red Light, Green Light is playable in the browser with the final environment and The Watcher: lobby practice walk, host-started rounds (Standup or tournament rules), server-side signals, spotting and qualification, spectating and results. See `docs/STAGE_01_BROWSER_INTEGRATION_REPORT.md`.
 

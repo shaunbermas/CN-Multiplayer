@@ -5,7 +5,7 @@ import { DurableObject } from 'cloudflare:workers';
 import {
   CLOSE, INPUT_BURST, INPUT_QUEUE_MAX, MAX_MESSAGE_BYTES, MAX_PLAYERS, PROBE_MS, PROTOCOL_VERSION, RoundEngine, SIM_DT,
   SIM_HZ, SNAPSHOT_MS, TOURNAMENT_ORDER, Tournament, encodeRow, getStage, insideRect, newRoundPlayer, sanitizeInput,
-  dealCharacter, greenTime, obstacleWalls, resolveObstacles, sanitizeName, step, type ClientMessage, type Mode, type RosterEntry, type RoundEvents, type RoundPlayer, type RoundState,
+  EMOTES, dealColorway, sanitizePlayerKey, greenTime, obstacleWalls, resolveObstacles, sanitizeName, step, type ClientMessage, type Mode, type RosterEntry, type RoundEvents, type RoundPlayer, type RoundState,
   type ServerMessage, type StageGeometry,
 } from '@cn-trials/shared';
 import type { Env } from './env.ts';
@@ -26,8 +26,10 @@ interface Player extends RoundPlayer {
   probeSentAt: Map<number, number>;
   /** Lobby ready flag (Stage 1.5). */
   ready: boolean;
-  /** Character dealt at join: random among those nobody else in the room has (owner decision, 22 Nov 2026). */
-  character: string;
+  /** Colourway of the shared contestant, unique in the room (owner pack, 22 Nov 2026). */
+  colorway: string;
+  /** Last lobby emote (room time, ms), for rate limiting. */
+  lastEmoteAt: number;
 }
 
 interface Attachment { room: string; id: string | null }
@@ -36,6 +38,8 @@ const newStats = (): Stats => ({ ticks: 0, totalMs: 0, maxMs: 0, recent: [], acc
 
 export class TrialRoom extends DurableObject<Env> {
   private players = new Map<string, Player>();
+  /** Player key -> last colourway, so a reconnecting browser gets the same colours (room lifetime only; no personal data). */
+  private colorwayByKey = new Map<string, string>();
   private sockets = new Map<string, WebSocket>();
   private engine = new RoundEngine(geo);
   private elapsed = 0;
@@ -87,7 +91,7 @@ export class TrialRoom extends DurableObject<Env> {
         return;
       }
       if (this.players.size >= MAX_PLAYERS) return this.rejectFull(ws, att.room);
-      this.join(ws, att.room, msg.name);
+      this.join(ws, att.room, msg.name, sanitizePlayerKey(msg.key));
       return;
     }
     const p = att.id ? this.players.get(att.id) : undefined;
@@ -124,6 +128,13 @@ export class TrialRoom extends DurableObject<Env> {
           this.broadcast({ t: 'roster', roster: this.roster() });
         }
         break;
+      case 'emote':
+        // Visual only (lobby, or a finished player celebrating): rebroadcast, never move anyone. Max ~1 per 0.7 s.
+        if ((this.engine.phase === 'lobby' || p.status === 'finished') && (EMOTES as readonly string[]).includes(msg.e) && Date.now() - p.lastEmoteAt > 700) {
+          p.lastEmoteAt = Date.now();
+          this.broadcast({ t: 'emote', id: p.id, e: msg.e });
+        }
+        break;
       case 'ping':
         send(ws, { t: 'pong', at: msg.at });
         break;
@@ -139,7 +150,7 @@ export class TrialRoom extends DurableObject<Env> {
     try { ws.close(CLOSE.full, 'Room is full'); } catch { /* closing */ }
   }
 
-  private join(ws: WebSocket, room: string, rawName: unknown): void {
+  private join(ws: WebSocket, room: string, rawName: unknown, key?: string): void {
     const used = new Set([...this.players.values()].map((p) => p.spawn));
     const spawn = geo.spawns.find((s) => !used.has(s.index)) ?? geo.spawns[0];
     const id = `p${this.nextId++}`;
@@ -147,8 +158,15 @@ export class TrialRoom extends DurableObject<Env> {
       ...newRoundPlayer(id, this.nextId, spawn.index, spawn.x, spawn.z),
       name: sanitizeName(rawName, `Nomad ${spawn.index}`),
       vx: 0, vz: 0, yaw: spawn.yaw, ack: 0, queue: [], tokens: INPUT_BURST, firstMoveAt: null, probeSentAt: new Map(), ready: false,
-      character: dealCharacter([...this.players.values()].map((x) => x.character), () => crypto.getRandomValues(new Uint32Array(1))[0] / 2 ** 32) ?? 'CHR_01',
+      // Random among the colourways nobody else has; a returning player (same browser key) keeps theirs when free.
+      colorway: dealColorway([...this.players.values()].map((x) => x.colorway), () => crypto.getRandomValues(new Uint32Array(1))[0] / 2 ** 32,
+        key ? this.colorwayByKey.get(key) : undefined) ?? 'CW01',
+      lastEmoteAt: 0,
     };
+    if (key) {
+      this.colorwayByKey.set(key, p.colorway);
+      if (this.colorwayByKey.size > 200) this.colorwayByKey.delete(this.colorwayByKey.keys().next().value!);
+    }
     if (this.engine.phase !== 'lobby') this.toBench(p, 'waiting'); // late arrivals watch and join the next round
     this.players.set(id, p);
     this.sockets.set(id, ws);
@@ -193,7 +211,7 @@ export class TrialRoom extends DurableObject<Env> {
   }
 
   private roster(): RosterEntry[] {
-    return [...this.players.values()].map((p) => ({ id: p.id, name: p.name, spawn: p.spawn, ready: p.ready, character: p.character }));
+    return [...this.players.values()].map((p) => ({ id: p.id, name: p.name, spawn: p.spawn, ready: p.ready, colorway: p.colorway }));
   }
 
   private startRound(by: Player, opts: { seed?: number; roundS?: number; briefingS?: number; mode?: Mode; obstacles?: boolean } = {}): void {

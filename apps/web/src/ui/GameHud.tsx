@@ -10,7 +10,7 @@ import { signalView } from '../game/roundClock.ts';
 import { stageDef } from '../game/stage.ts';
 import { STAGE_SCENES } from '../stages/registry.ts';
 import { Brand, HowToPlay, SettingsPanel } from './Menu.tsx';
-import { contestantById } from '@cn-trials/shared';
+import { colorwayById } from '@cn-trials/shared';
 import { useSettings } from './settings.ts';
 
 const SIGNAL_UI = {
@@ -67,8 +67,8 @@ function Lobby({ room, tournament, setTournament, obstacles, setObstacles }: {
         {Array.from({ length: MAX_PLAYERS }, (_, i) => {
           const p = players.find((x) => x.spawn === i + 1);
           return (
-            <li key={i} className={`slot${p ? ' taken' : ''}${p?.id === room.id ? ' me' : ''}${p?.ready ? ' ready' : ''}`} title={p ? `${p.name} · ${contestantById(p.character)?.name ?? ''}` : 'Open slot'}
-              style={p ? { boxShadow: `inset 0 -4px 0 ${contestantById(p.character)?.coat ?? 'transparent'}` } : undefined}>
+            <li key={i} className={`slot${p ? ' taken' : ''}${p?.id === room.id ? ' me' : ''}${p?.ready ? ' ready' : ''}`} title={p ? `${p.name} · ${colorwayById(p.colorway)?.displayName ?? ''}` : 'Open slot'}
+              style={p ? { boxShadow: `inset 0 -4px 0 #${colorwayById(p.colorway)?.coatSecondary ?? '000'}, inset 0 -6px 0 #${colorwayById(p.colorway)?.identifierAccent ?? '000'}` } : undefined}>
               <span className="slot-n">{String(i + 1).padStart(2, '0')}</span>
               {p && <span className="slot-name">{p.name}{p.id === r.host ? ' ★' : ''}</span>}
               {p?.ready && <span className="slot-ready" aria-label="ready">✓</span>}
@@ -83,8 +83,8 @@ function Lobby({ room, tournament, setTournament, obstacles, setObstacles }: {
       </div>
       <div className="lobby-actions">
         <button className={`btn${me?.ready ? ' on' : ''}`} onClick={() => room.setReady(!me?.ready)} data-testid="ready" aria-pressed={!!me?.ready}>{me?.ready ? '✓ Ready' : 'Ready'}</button>
-        {me && <span className="my-contestant" data-testid="my-contestant" title="Characters are dealt at random; nobody in the room shares yours">
-          <i style={{ background: contestantById(me.character)?.coat }} aria-hidden="true" />You are <b>{contestantById(me.character)?.name ?? 'a contestant'}</b></span>}
+        {me && <span className="my-contestant" data-testid="my-contestant" title="Colours are dealt at random and kept if you rejoin; nobody in the room shares yours">
+          <i style={{ background: `#${colorwayById(me.colorway)?.coatSecondary}`, borderColor: `#${colorwayById(me.colorway)?.identifierAccent}` }} aria-hidden="true" />You are <b>{colorwayById(me.colorway)?.displayName ?? 'a contestant'}</b></span>}
       </div>
       {room.isHost ? (
         <div className="host">
