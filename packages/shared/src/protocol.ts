@@ -4,7 +4,7 @@
 import type { Phase, Placing, PlayerStatus, Signal } from './round.ts';
 import type { Mode } from './tournament.ts';
 
-export const PROTOCOL_VERSION = 4;
+export const PROTOCOL_VERSION = 5;
 
 export interface StartRequestOptions {
   /** Standup Quick (default) or a full tournament (qualifier target, R3). Host only. */
@@ -30,7 +30,7 @@ export type ClientMessage =
   | { t: 'ready'; ready: boolean };
 
 // ---- server -> client
-export interface RosterEntry { id: string; name: string; spawn: number; /** Ready in the lobby (Stage 1.5). */ ready?: boolean }
+export interface RosterEntry { id: string; name: string; spawn: number; /** Ready in the lobby (Stage 1.5). */ ready?: boolean; /** Character dealt by the server, unique in the room (CHR_01–CHR_30; protocol v5). */ character: string }
 
 /** One player in a snapshot: [id, x, z, vx, vz, yaw, ack, status, finishTime]. */
 export type SnapRow = [string, number, number, number, number, number, number, number, number];

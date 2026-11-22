@@ -12,6 +12,8 @@ export interface PlayerView {
   ack: number; status: PlayerStatus; finishTime: number;
   /** Lobby ready flag (Stage 1.5). */
   ready: boolean;
+  /** Character dealt by the server (CHR_01–CHR_30), unique in the room. */
+  character: string;
 }
 
 export type ResultRow = Placing & { name: string };
@@ -117,9 +119,9 @@ export class RoomClient {
     for (const id of [...this.players.keys()]) if (!ids.has(id)) this.players.delete(id);
     for (const r of roster) {
       const p = this.players.get(r.id);
-      if (p) { p.name = r.name; p.spawn = r.spawn; p.ready = !!r.ready; continue; }
+      if (p) { p.name = r.name; p.spawn = r.spawn; p.ready = !!r.ready; p.character = r.character; continue; }
       this.players.set(r.id, {
-        id: r.id, name: r.name, spawn: r.spawn, x: 0, z: 0, vx: 0, vz: 0, yaw: 0, ack: 0, status: 'active', finishTime: -1, ready: !!r.ready,
+        id: r.id, name: r.name, spawn: r.spawn, x: 0, z: 0, vx: 0, vz: 0, yaw: 0, ack: 0, status: 'active', finishTime: -1, ready: !!r.ready, character: r.character,
       });
     }
   }

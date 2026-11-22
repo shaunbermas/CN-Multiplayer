@@ -61,6 +61,9 @@ try {
   await sleep(2000);
   await pages[0].screenshot({ path: `${shots}/thirty_lobby_30_slots.png`, timeout: 120_000 });
   report.lobby_slots_taken = await pages[0].evaluate(() => document.querySelectorAll('.lobby-slots .slot.taken').length);
+  // Randomised contestants: 30 players, 30 different characters, drawn as 30 character meshes.
+  report.unique_characters = await pages[0].evaluate(() => new Set(window.__cn.players().map((p) => p.character)).size);
+  if (report.unique_characters !== 30) errors.push(`${report.unique_characters} distinct characters for 30 players`);
   if (report.lobby_slots_taken !== 30) errors.push(`Lobby shows ${report.lobby_slots_taken} taken slots, expected 30`);
 
   // ---- round with the obstacle twist

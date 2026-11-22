@@ -1,7 +1,7 @@
 // Stage 1.5 (Prompt 07): out-of-game screens and shared panels. Visual direction from the CN TRIAL UI/UX
 // concept board (layout and style only; its placeholder avatars and imagery are not used).
 import { useState, type ReactNode } from 'react';
-import { CONTESTANT_ROSTER, MAX_PLAYERS, ROSTER_SIZE, ROSTER_STATUS } from '@cn-trials/shared';
+import { MAX_PLAYERS } from '@cn-trials/shared';
 import { applyGraphicsSetting } from '../game/qualityStore.ts';
 import { updateSettings, useSettings, type GraphicsSetting } from './settings.ts';
 
@@ -35,6 +35,7 @@ export function HowToPlay({ onClose }: { onClose: () => void }) {
         <li><b>Red light: freeze.</b> Anyone still moving after a short grace moment is spotted and eliminated. Eliminated players spectate.</li>
         <li><b>Finish</b> before the timer runs out. In tournament rules, only the first finishers qualify.</li>
         <li><b>Obstacle twist</b> (host option): barricade rows to weave through and a gate that slides only on green.</li>
+        <li><b>Your contestant</b> is dealt at random when you join. Nobody in the room has the same one.</li>
       </ol>
       <table className="keys">
         <tbody>
@@ -77,35 +78,6 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
         <label className="check"><input type="checkbox" checked={s.edgeFlash} onChange={(e) => updateSettings({ edgeFlash: e.target.checked })} /> Red screen-edge pulse on red light</label>
         <p className="muted">Signals always show a word and an icon as well as a colour. There is no sound yet, so there are no audio settings.</p>
       </div>
-    </Modal>
-  );
-}
-
-/** Character selection: reads the canonical roster. Until the owner confirms it, the 30 slots show as pending. */
-export function CharacterSelect({ onClose }: { onClose: () => void }) {
-  const [pick, setPick] = useState<number | null>(null);
-  const pending = ROSTER_STATUS !== 'approved' || CONTESTANT_ROSTER.length !== ROSTER_SIZE;
-  return (
-    <Modal title="Select your contestant" onClose={onClose} wide testid="character-select">
-      {pending && (
-        <p className="notice" role="status" data-testid="roster-pending">
-          The final 30 contestants are locked designs, but the roster sheets supplied disagree, so the canonical list is
-          awaiting the owner's decision. Until then everyone plays as a coloured placeholder.
-        </p>
-      )}
-      <div className="slots30" role="listbox" aria-label="Contestant slots">
-        {Array.from({ length: ROSTER_SIZE }, (_, i) => {
-          const c = CONTESTANT_ROSTER.find((x) => x.slot === i + 1);
-          return (
-            <button key={i} role="option" aria-selected={pick === i} disabled={pending || !c} className={`slot${pick === i ? ' on' : ''}`} onClick={() => setPick(i)}>
-              {c?.thumbnail ? <img src={c.thumbnail} alt="" /> : <span className="slot-q" aria-hidden="true">?</span>}
-              <span className="slot-n">{String(i + 1).padStart(2, '0')}</span>
-              {c && <span className="slot-name">{c.name}</span>}
-            </button>
-          );
-        })}
-      </div>
-      <footer className="card-foot"><button className="btn" onClick={onClose}>Back</button><button className="btn primary" disabled={pending || pick === null}>Select</button></footer>
     </Modal>
   );
 }

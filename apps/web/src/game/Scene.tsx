@@ -3,7 +3,8 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { inputFromKeys, MOVEMENT, progress, SIM_DT } from '@cn-trials/shared';
 import { Component, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import * as THREE from 'three';
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { contestantById, CONTESTANT_ROSTER } from '@cn-trials/shared';
+import { buildContestantGeometry, contestantMaterial } from './characters.ts';
 import type { PlayerView, TrialRoom } from '../net.ts';
 import { hud } from './hudStore.ts';
 import { AdaptiveQuality, quality } from './quality.ts';
@@ -14,15 +15,6 @@ import { stageDef, stageGeo, stageObstacles } from './stage.ts';
 import { greenTime, obstacleWalls, type Rect } from '@cn-trials/shared';
 import { scheduleFor, signalView } from './roundClock.ts';
 
-const CAPSULE_LENGTH = MOVEMENT.capsuleHeight - 2 * MOVEMENT.capsuleRadius;
-const capsuleGeo = new THREE.CapsuleGeometry(MOVEMENT.capsuleRadius, CAPSULE_LENGTH, 6, 12);
-capsuleGeo.translate(0, MOVEMENT.capsuleHeight / 2, 0);
-const noseGeo = new THREE.BoxGeometry(0.16, 0.12, 0.2).toNonIndexed();
-noseGeo.translate(0, 0.85, -0.3);
-// Stage 1.5 (Prompt 08): body and facing nose merged into one mesh: one draw call per contestant (and one in
-// the shadow pass) instead of two, which saves 60 calls with 30 players on High.
-const contestantGeo = mergeGeometries([capsuleGeo.toNonIndexed(), noseGeo])!;
-const spottedMat = new THREE.MeshStandardMaterial({ color: '#8a8f99', roughness: 0.9, transparent: true, opacity: 0.55 });
 
 /** Collision walls for prediction: the same set the server uses (stage walls + obstacle twist in a round). */
 export function wallsFor(room: TrialRoom): Rect[] {
@@ -31,9 +23,15 @@ export function wallsFor(room: TrialRoom): Rect[] {
   return [...stageGeo.walls, ...obstacleWalls(stageObstacles, greenTime(scheduleFor(room.round.seed), elapsed))];
 }
 
-function colorFor(spawn: number) {
-  return new THREE.Color().setHSL(((spawn * 0.137) % 1), 0.65, 0.55);
+/** Contestant geometry per character id, built once and shared by everyone who has that character. */
+const characterGeos = new Map<string, THREE.BufferGeometry>();
+function characterGeometry(id: string | undefined): THREE.BufferGeometry {
+  const c = contestantById(id) ?? CONTESTANT_ROSTER[0];
+  let g = characterGeos.get(c.id);
+  if (!g) { g = buildContestantGeometry(c); characterGeos.set(c.id, g); }
+  return g;
 }
+
 
 /** Movement is allowed in the lobby (practice) and for active or finished players during the round. */
 export function canMove(room: TrialRoom): boolean {
@@ -48,12 +46,17 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
   const body = useRef<THREE.Mesh>(null);
   const [status, setStatus] = useState(room.players.get(id)?.status ?? 'active');
   const p0 = room.players.get(id);
-  const material = useMemo(() => new THREE.MeshStandardMaterial({ color: colorFor(p0?.spawn ?? 1), roughness: 0.6 }), [p0?.spawn]);
+  const [character, setCharacter] = useState(p0?.character);
+  const geometry = useMemo(() => characterGeometry(character), [character]);
+  const material = useMemo(() => contestantMaterial(), []);
+  useEffect(() => () => material.dispose(), [material]);
+  const anim = useRef({ phase: 0, swing: 0, speed: 0, lastX: p0?.x ?? 0, lastZ: p0?.z ?? 0, fall: 0, t: 0 });
   useFrame((_, dt) => {
     const g = group.current;
     const p = room.players.get(id);
     if (!g || !p) return;
     if (p.status !== status) setStatus(p.status);
+    if (p.character !== character) setCharacter(p.character);
     const spotted = p.status === 'spotted';
     if (local && predictor?.current && canMove(room)) {
       const s = predictor.current.state;
@@ -66,16 +69,33 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
       g.position.z += (p.z - g.position.z) * k;
       if (!local) g.rotation.y = p.yaw;
     }
-    // Spotted: a comic slump (tilt) instead of any harm (spec §7).
-    const tilt = spotted ? 0.5 : 0;
-    g.rotation.z += (tilt - g.rotation.z) * (1 - Math.exp(-dt * 8));
-    const m = spotted ? spottedMat : material;
-    if (body.current && body.current.material !== m) body.current.material = m;
+    // Walk cycle from the actual movement speed (GPU limb swing), body bob, idle sway.
+    const a = anim.current;
+    const step = Math.min(dt, 0.1);
+    a.t += step;
+    const moved = Math.hypot(g.position.x - a.lastX, g.position.z - a.lastZ);
+    a.lastX = g.position.x; a.lastZ = g.position.z;
+    a.speed += ((step > 0 ? moved / step : 0) - a.speed) * (1 - Math.exp(-step * 10));
+    const walking = !spotted && a.speed > 0.2;
+    a.phase += step * (walking ? 4 + a.speed * 1.6 : 1.2);
+    a.swing += ((walking ? Math.min(1, a.speed / 3.5) * 0.75 : 0.04) - a.swing) * (1 - Math.exp(-step * 8));
+    material.userData.uniforms.uPhase.value = a.phase;
+    material.userData.uniforms.uSwing.value = a.swing;
+    // Spotted: a comic topple onto the back (spec §7: playful, no harm) and a greyed-out costume.
+    a.fall += ((spotted ? 1 : 0) - a.fall) * (1 - Math.exp(-step * 6));
+    const finished = p.status === 'finished';
+    if (body.current) {
+      body.current.rotation.x = a.fall * 1.25;
+      body.current.position.y = (walking ? Math.abs(Math.sin(a.phase)) * 0.035 * a.swing / 0.75 : 0) + (finished ? Math.abs(Math.sin(a.t * 5)) * 0.12 : 0) + a.fall * 0.08;
+      body.current.rotation.z = walking ? Math.sin(a.phase) * 0.04 : Math.sin(a.t * 1.3) * 0.015;
+    }
+    const tint = 1 - a.fall * 0.55;
+    material.color.setRGB(tint, tint, tint);
   });
   const waiting = status === 'waiting';
   return (
     <group ref={group} position={[p0?.x ?? 0, 0, p0?.z ?? 0]} visible={!waiting || !local}>
-      <mesh ref={body} geometry={contestantGeo} material={material} castShadow />
+      <mesh ref={body} geometry={geometry} material={material} castShadow name={`CHR_${character ?? 'unknown'}`} />
       {(!local || status === 'spotted') && (
         <Html position={[0, 1.65, 0]} center distanceFactor={9} zIndexRange={[10, 0]}>
           <div className={`nametag ${status}`}>{status === 'spotted' ? 'SPOTTED!' : p0?.name}</div>
@@ -211,7 +231,7 @@ export function Scene({ room, onStageError }: { room: TrialRoom; onStageError: (
       roomId: room.room,
       sessionId: room.id,
       stage: stageDef.id,
-      players: () => [...room.players.values()].map((p) => ({ id: p.id, name: p.name, x: p.x, z: p.z, status: p.status, finishTime: p.finishTime })),
+      players: () => [...room.players.values()].map((p) => ({ id: p.id, name: p.name, x: p.x, z: p.z, status: p.status, finishTime: p.finishTime, character: p.character })),
       self: () => predictor.current?.state,
       round: () => ({ ...room.round }),
       results: () => room.results,

@@ -9,7 +9,8 @@ import { hud } from '../game/hudStore.ts';
 import { signalView } from '../game/roundClock.ts';
 import { stageDef } from '../game/stage.ts';
 import { STAGE_SCENES } from '../stages/registry.ts';
-import { Brand, CharacterSelect, HowToPlay, SettingsPanel } from './Menu.tsx';
+import { Brand, HowToPlay, SettingsPanel } from './Menu.tsx';
+import { contestantById } from '@cn-trials/shared';
 import { useSettings } from './settings.ts';
 
 const SIGNAL_UI = {
@@ -38,8 +39,8 @@ function ConnectionBadge({ room }: { room: TrialRoom }) {
   return <span className={`conn ${q}`} data-testid="connection" title="Connection to the room"><i aria-hidden="true" />{ms < 0 ? 'Connecting' : `${ms} ms`}</span>;
 }
 
-function Lobby({ room, tournament, setTournament, obstacles, setObstacles, onCharacter }: {
-  room: TrialRoom; tournament: boolean; setTournament: (b: boolean) => void; obstacles: boolean; setObstacles: (b: boolean) => void; onCharacter: () => void;
+function Lobby({ room, tournament, setTournament, obstacles, setObstacles }: {
+  room: TrialRoom; tournament: boolean; setTournament: (b: boolean) => void; obstacles: boolean; setObstacles: (b: boolean) => void;
 }) {
   const r = room.round;
   const players = [...room.players.values()].sort((a, b) => a.spawn - b.spawn);
@@ -66,7 +67,8 @@ function Lobby({ room, tournament, setTournament, obstacles, setObstacles, onCha
         {Array.from({ length: MAX_PLAYERS }, (_, i) => {
           const p = players.find((x) => x.spawn === i + 1);
           return (
-            <li key={i} className={`slot${p ? ' taken' : ''}${p?.id === room.id ? ' me' : ''}${p?.ready ? ' ready' : ''}`} title={p ? p.name : 'Open slot'}>
+            <li key={i} className={`slot${p ? ' taken' : ''}${p?.id === room.id ? ' me' : ''}${p?.ready ? ' ready' : ''}`} title={p ? `${p.name} · ${contestantById(p.character)?.name ?? ''}` : 'Open slot'}
+              style={p ? { boxShadow: `inset 0 -4px 0 ${contestantById(p.character)?.coat ?? 'transparent'}` } : undefined}>
               <span className="slot-n">{String(i + 1).padStart(2, '0')}</span>
               {p && <span className="slot-name">{p.name}{p.id === r.host ? ' ★' : ''}</span>}
               {p?.ready && <span className="slot-ready" aria-label="ready">✓</span>}
@@ -81,7 +83,8 @@ function Lobby({ room, tournament, setTournament, obstacles, setObstacles, onCha
       </div>
       <div className="lobby-actions">
         <button className={`btn${me?.ready ? ' on' : ''}`} onClick={() => room.setReady(!me?.ready)} data-testid="ready" aria-pressed={!!me?.ready}>{me?.ready ? '✓ Ready' : 'Ready'}</button>
-        <button className="btn" onClick={onCharacter} data-testid="open-characters">Contestant</button>
+        {me && <span className="my-contestant" data-testid="my-contestant" title="Characters are dealt at random; nobody in the room shares yours">
+          <i style={{ background: contestantById(me.character)?.coat }} aria-hidden="true" />You are <b>{contestantById(me.character)?.name ?? 'a contestant'}</b></span>}
       </div>
       {room.isHost ? (
         <div className="host">
@@ -99,7 +102,7 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
   const s = useSettings();
   const [tournament, setTournament] = useState(false);
   const [obstacles, setObstacles] = useState(() => new URLSearchParams(location.search).get('obstacles') === '1');
-  const [overlay, setOverlay] = useState<'none' | 'settings' | 'howto' | 'characters'>('none');
+  const [overlay, setOverlay] = useState<'none' | 'settings' | 'howto'>('none');
   const assets = STAGE_SCENES[stageDef.id].assets as { environment?: string; watcher?: string; problems: string[] };
   const loading = assets.environment !== 'ready' || assets.watcher !== 'ready';
   const r = room.round;
@@ -162,7 +165,7 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
       )}
 
       {r.phase === 'lobby' && (
-        <Lobby room={room} tournament={tournament} setTournament={setTournament} obstacles={obstacles} setObstacles={setObstacles} onCharacter={() => setOverlay('characters')} />
+        <Lobby room={room} tournament={tournament} setTournament={setTournament} obstacles={obstacles} setObstacles={setObstacles} />
       )}
 
       {r.phase === 'briefing' && (
@@ -211,7 +214,6 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
 
       {overlay === 'settings' && <SettingsPanel onClose={() => setOverlay('none')} />}
       {overlay === 'howto' && <HowToPlay onClose={() => setOverlay('none')} />}
-      {overlay === 'characters' && <CharacterSelect onClose={() => setOverlay('none')} />}
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { DurableObject } from 'cloudflare:workers';
 import {
   CLOSE, INPUT_BURST, INPUT_QUEUE_MAX, MAX_MESSAGE_BYTES, MAX_PLAYERS, PROBE_MS, PROTOCOL_VERSION, RoundEngine, SIM_DT,
   SIM_HZ, SNAPSHOT_MS, TOURNAMENT_ORDER, Tournament, encodeRow, getStage, insideRect, newRoundPlayer, sanitizeInput,
-  greenTime, obstacleWalls, resolveObstacles, sanitizeName, step, type ClientMessage, type Mode, type RosterEntry, type RoundEvents, type RoundPlayer, type RoundState,
+  dealCharacter, greenTime, obstacleWalls, resolveObstacles, sanitizeName, step, type ClientMessage, type Mode, type RosterEntry, type RoundEvents, type RoundPlayer, type RoundState,
   type ServerMessage, type StageGeometry,
 } from '@cn-trials/shared';
 import type { Env } from './env.ts';
@@ -26,6 +26,8 @@ interface Player extends RoundPlayer {
   probeSentAt: Map<number, number>;
   /** Lobby ready flag (Stage 1.5). */
   ready: boolean;
+  /** Character dealt at join: random among those nobody else in the room has (owner decision, 22 Nov 2026). */
+  character: string;
 }
 
 interface Attachment { room: string; id: string | null }
@@ -145,6 +147,7 @@ export class TrialRoom extends DurableObject<Env> {
       ...newRoundPlayer(id, this.nextId, spawn.index, spawn.x, spawn.z),
       name: sanitizeName(rawName, `Nomad ${spawn.index}`),
       vx: 0, vz: 0, yaw: spawn.yaw, ack: 0, queue: [], tokens: INPUT_BURST, firstMoveAt: null, probeSentAt: new Map(), ready: false,
+      character: dealCharacter([...this.players.values()].map((x) => x.character), () => crypto.getRandomValues(new Uint32Array(1))[0] / 2 ** 32) ?? 'CHR_01',
     };
     if (this.engine.phase !== 'lobby') this.toBench(p, 'waiting'); // late arrivals watch and join the next round
     this.players.set(id, p);
@@ -190,7 +193,7 @@ export class TrialRoom extends DurableObject<Env> {
   }
 
   private roster(): RosterEntry[] {
-    return [...this.players.values()].map((p) => ({ id: p.id, name: p.name, spawn: p.spawn, ready: p.ready }));
+    return [...this.players.values()].map((p) => ({ id: p.id, name: p.name, spawn: p.spawn, ready: p.ready, character: p.character }));
   }
 
   private startRound(by: Player, opts: { seed?: number; roundS?: number; briefingS?: number; mode?: Mode; obstacles?: boolean } = {}): void {
