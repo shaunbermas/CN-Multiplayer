@@ -28,7 +28,7 @@ const waitFor = async (fn, label, ms = 60_000) => {
 
 try {
   await worker.ready;
-  const url = `ws://127.0.0.1:${PORT}/api/room/round-test/ws`;
+  const url = `ws://127.0.0.1:${PORT}/api/room/plain-round-test/ws`;
   const careful = await RoomClient.connect(url, 'Careful');
   const reckless = await RoomClient.connect(url, 'Reckless');
   const statue = await RoomClient.connect(url, 'Statue');

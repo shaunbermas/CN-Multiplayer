@@ -40,3 +40,12 @@ was removed (2D matte and PNG only) and The Watcher's effects were strengthened.
 | Browser integration | PASS | `test:thirty`, `test:ui`, in-game screenshots |
 | Before/after performance | PASS (measured, software renderer) | `tests/reports/contestant-perf-*.json` |
 | Real-GPU timings, 30-human playtest | NOT VERIFIED (no GPU or 30 people here) | |
+
+**Update, 22 Nov 2026 (decision 031):**
+- Legacy characters removed.
+- Contestants turn 360° to face where they move.
+- Dust and puddle splashes.
+- Visible fog and mist on every tier.
+- Obstacles always on (lobby included), with 10 barricade rows.
+
+See `docs/stage15/FEEDBACK_22NOV_B.md`.

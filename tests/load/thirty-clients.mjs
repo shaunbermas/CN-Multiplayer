@@ -12,7 +12,7 @@ import { root, sleep, startWorker, writeReport } from '../lib.mjs';
 const PORT = Number(process.env.LOAD_PORT ?? 8798);
 // LOAD_CLIENTS=1|10|20|30 for staged runs (Stage 1.5 Prompt 08); the 31st-client check runs at 30.
 const N = Math.max(1, Math.min(30, Number(process.env.LOAD_CLIENTS ?? 30)));
-const ROOM = `load-test-${N}`;
+const ROOM = `plain-load-test-${N}`; // plain-: no obstacles (test rooms only) for the straight-line walk timing
 const errors = [];
 if (process.env.SKIP_BUILD !== '1') execSync('npm run build', { cwd: root, stdio: 'ignore' });
 const worker = startWorker(PORT);

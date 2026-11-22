@@ -232,13 +232,24 @@ export class TrialRoom extends DurableObject<Env> {
     for (const p of players) { p.vx = 0; p.vz = 0; p.queue = []; p.firstMoveAt = null; p.ready = false; }
     this.engine.now = this.elapsed;
     this.roundId++;
-    const obstacles = opts?.obstacles === true; // Stage 1.5 twist: host toggle, off by default (rollback switch)
+    // Obstacles are always on (decision 031); only test rooms may switch them off (walk-timing and rollback tests).
+    const obstacles = !(test && (opts?.obstacles === false || this.plainCourse()));
     this.engine.start(players, { seed, roundS, briefingS, mode, obstacles });
     for (const p of players) p.yaw = 0;
     console.log(JSON.stringify({ ev: 'round_start', room: this.roomCode, round: this.roundId, stage: geo.stage, mode, seed, players: players.length,
       schedule: this.engine.schedule.slice(0, 12).map((s) => [s.signal[0], s.start, s.end]) }));
     this.broadcast({ t: 'roster', roster: this.roster() });
     this.broadcastSnapshot();
+  }
+
+  /** Test rooms named plain-* (CN_TEST=1 only) have no obstacles, for the straight-line walk-timing test. */
+  private plainCourse(): boolean {
+    return this.env.CN_TEST === '1' && this.roomCode.startsWith('plain-');
+  }
+
+  /** Obstacles collide in the lobby and in every round (decision 031), unless a test switched them off. */
+  private obstaclesActive(): boolean {
+    return this.engine.phase === 'lobby' ? !this.plainCourse() : this.engine.obstacles;
   }
 
   private roundState(): RoundState {
@@ -253,7 +264,7 @@ export class TrialRoom extends DurableObject<Env> {
       stage: geo.stage,
       mode: e.mode,
       target: Number.isFinite(e.target) ? e.target : -1,
-      obstacles: e.obstacles && e.phase !== 'lobby',
+      obstacles: this.obstaclesActive(),
     };
   }
 
@@ -313,8 +324,9 @@ export class TrialRoom extends DurableObject<Env> {
     const moveEv: RoundEvents = { spotted: [], finished: [] };
     // Stage 1.5: with the obstacle twist on, the barricades and the sliding gate (at the current green time)
     // collide like walls for every player, outside the lobby. The gate only moves on green and warning.
-    const walls = e.obstacles && e.phase !== 'lobby'
-      ? [...geo.walls, ...obstacleWalls(OBSTACLES, greenTime(e.schedule, Math.max(0, this.elapsed - e.goTime)))]
+    // In the lobby the gate rests at its start position (no green time yet); in a round it slides on green only.
+    const walls = this.obstaclesActive()
+      ? [...geo.walls, ...obstacleWalls(OBSTACLES, e.phase === 'active' ? greenTime(e.schedule, Math.max(0, this.elapsed - e.goTime)) : 0)]
       : geo.walls;
     for (const p of this.players.values()) {
       // Token bucket: one step per tick sustained, so a client cannot move faster than real time.

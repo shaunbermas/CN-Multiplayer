@@ -86,7 +86,7 @@ export function Obstacles({ room, shadows }: { room: TrialRoom; shadows: boolean
   useFrame((state) => {
     const r = root.current;
     if (!r || !o) return;
-    const on = room.round.obstacles && room.round.phase !== 'lobby';
+    const on = room.round.obstacles; // always on (decision 031), lobby included
     r.visible = on;
     obstacleStatus.shown = on;
     obstacleStatus.barricades = on ? o.barricades.length : 0;

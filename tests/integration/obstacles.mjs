@@ -1,10 +1,11 @@
-// Stage 1.5 obstacle twist against the real Worker + Durable Object (wrangler dev): the server, not the
-// client, enforces the barricades and the sliding gate.
+// Stage 01 obstacles against the real Worker + Durable Object (wrangler dev): the server, not the client,
+// enforces the barricades and the sliding gate. Obstacles are always on (decision 031), in the lobby too.
 //  - host starts a seeded test round WITH obstacles; a bot spawns, then walks straight down the course centre,
 //    only while the light is green (so it is never spotted)
 //  - expected: the server stops it at the first row whose centre is closed (row 2), it is never spotted, the
 //    round state publishes obstacles=true, and the gate's server-side position never changes during red
-//  - a second round WITHOUT obstacles (the rollback switch): the same walk passes that row
+//  - the lobby and a round started without any option both report obstacles on (the default)
+//  - a second round with obstacles:false (honoured only in test mode): the same walk passes that row
 // Usage: npm run test:obstacles
 import { execSync } from 'node:child_process';
 import {
@@ -21,7 +22,8 @@ if (process.env.SKIP_BUILD !== '1') execSync('npm run build', { cwd: root, stdio
 const worker = startWorker(PORT);
 const geo = getStage('STAGE_01_RED_LIGHT').geometry;
 const obs = resolveObstacles(geo);
-const closedRow = obs.barricades.find((r) => r.minX < obs.gate.centreX && r.maxX > obs.gate.centreX && (r.minZ + r.maxZ) / 2 < -60);
+// the first row (from the start) whose centre is closed: a walker going straight down the centre stops there
+const closedRow = obs.barricades.filter((r) => r.minX < obs.gate.centreX && r.maxX > obs.gate.centreX).sort((a, b) => b.maxZ - a.maxZ)[0];
 const schedule = buildSchedule(SEED, ROUND_S);
 
 const waitFor = async (fn, label, ms = 90_000) => {
@@ -58,9 +60,11 @@ try {
   const url = `ws://127.0.0.1:${PORT}/api/room/obstacle-test/ws`;
   const bot = await RoomClient.connect(url, 'Walker');
   await waitFor(() => bot.snapshots > 0 && bot.self, 'snapshot');
+  report.lobby_obstacles = bot.round.obstacles;
+  if (bot.round.obstacles !== true) errors.push(`Lobby obstacles=${bot.round.obstacles}, expected true (always on)`);
 
-  // ---- round 1: obstacles ON
-  bot.start({ seed: SEED, roundS: ROUND_S, briefingS: 1, obstacles: true });
+  // ---- round 1: no option given: obstacles are on by default
+  bot.start({ seed: SEED, roundS: ROUND_S, briefingS: 1 });
   await waitFor(() => bot.round.phase === 'briefing', 'briefing');
   if (bot.round.obstacles !== true) errors.push(`Round state obstacles=${bot.round.obstacles}, expected true`);
   bot.skipBriefing();
@@ -78,7 +82,7 @@ try {
   await waitFor(() => bot.round.phase === 'results', 'results 1', (ROUND_S + 10) * 1000);
   await waitFor(() => bot.round.phase === 'lobby', 'lobby', 40_000);
 
-  // ---- round 2: obstacles OFF (rollback switch): the same walk goes past that row
+  // ---- round 2: obstacles OFF (test mode only): the same walk goes past that row
   bot.start({ seed: SEED, roundS: ROUND_S, briefingS: 1, obstacles: false });
   await waitFor(() => bot.round.phase === 'briefing', 'briefing 2');
   if (bot.round.obstacles !== false) errors.push(`Round 2 obstacles=${bot.round.obstacles}, expected false`);

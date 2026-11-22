@@ -1,7 +1,7 @@
 {
   "result": "PASS",
   "errors": [],
-  "date": "2026-11-22T04:07:20.790Z",
+  "date": "2026-11-22T06:31:59.991Z",
   "renderer": "headless Chromium, software WebGL (SwiftShader); frame rates compare tiers only",
   "tiers": {
     "low": {
@@ -10,6 +10,7 @@
         "cones": 10,
         "glares": 10,
         "mist": 0,
+        "fieldMist": 4,
         "wash": false,
         "post": "none",
         "shroud": true,
@@ -20,10 +21,10 @@
       "shadows": [],
       "dust": 0,
       "haze": false,
-      "draw_calls": 79,
-      "triangles": 78464,
-      "shader_programs": 17,
-      "software_fps": 3.2
+      "draw_calls": 92,
+      "triangles": 79518,
+      "shader_programs": 20,
+      "software_fps": 3
     },
     "medium": {
       "atmosphere": {
@@ -31,6 +32,7 @@
         "cones": 10,
         "glares": 10,
         "mist": 2,
+        "fieldMist": 7,
         "wash": true,
         "post": "none",
         "shroud": true,
@@ -41,10 +43,10 @@
       "shadows": [],
       "dust": 150,
       "haze": false,
-      "draw_calls": 82,
-      "triangles": 93006,
-      "shader_programs": 19,
-      "software_fps": 1.1
+      "draw_calls": 98,
+      "triangles": 94066,
+      "shader_programs": 22,
+      "software_fps": 1
     },
     "high": {
       "atmosphere": {
@@ -52,6 +54,7 @@
         "cones": 10,
         "glares": 10,
         "mist": 4,
+        "fieldMist": 9,
         "wash": true,
         "post": "bloom+grade",
         "shroud": true,
@@ -64,9 +67,9 @@
       ],
       "dust": 400,
       "haze": true,
-      "draw_calls": 155,
-      "triangles": 162519,
-      "shader_programs": 37,
+      "draw_calls": 180,
+      "triangles": 150617,
+      "shader_programs": 42,
       "software_fps": 1
     }
   },
@@ -77,7 +80,7 @@
       "medium@1x -> low@1x at 0 fps"
     ],
     "final_tier": "low",
-    "software_fps_after": 3.3
+    "software_fps_after": 2.9
   },
   "screenshots": [
     "tests/reports/screenshots/quality_low.png",

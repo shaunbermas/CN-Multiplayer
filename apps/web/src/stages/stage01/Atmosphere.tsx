@@ -1,7 +1,8 @@
 // Stage 1.5 (Prompt 04): cinematic atmosphere for Stage 01, tiered for browser performance.
 //   SkyDome     gradient night sky, moon with halo, procedural stars and drifting cloud bands (one draw call)
 //   LightCones  soft additive cones under the floodlights, a cheap stand-in for volumetric light
-//   GroundMist  low animated mist sheets along the fences and behind the finish, never over the lanes
+//   GroundMist  low animated mist sheets along the fences and behind the finish
+//   FieldMist   fog over the course itself (decision 031): drifting ground sheets and mist banks across the lanes
 //   SignalWash  a coloured light at the signal gantry that follows the server's public signal
 //   PostFX      bloom on emissive lamps and a restrained colour grade with vignette (High only)
 // Presentation only: every gameplay decision stays on the server.
@@ -18,10 +19,11 @@ import type { TrialRoom } from '../../net.ts';
 import type { Quality } from '../../game/quality.ts';
 import { signalView } from '../../game/roundClock.ts';
 import { stageGeo } from '../../game/stage.ts';
+import { FOG } from './fog.ts';
 import { SKY, SKY_GRADIENT_GLSL, skyUniforms } from './skyModel.ts';
 
 /** What the current tier turned on, for tests (window.__cn.assets().atmosphere). */
-export const atmosphereStatus = { sky: '', cones: 0, glares: 0, mist: 0, wash: false, post: 'none' as string, shroud: false, redDim: 1 };
+export const atmosphereStatus = { sky: '', cones: 0, glares: 0, mist: 0, fieldMist: 0, wash: false, post: 'none' as string, shroud: false, redDim: 1 };
 
 /** Direction of The Watcher seen from the course (game space, horizontal); the sky and painted world darken there. */
 const WATCHER_DIR = new THREE.Vector3(0, 0, -1);
@@ -41,12 +43,12 @@ function SkyDome({ stars, clouds, room }: { stars: boolean; clouds: boolean; roo
       side: THREE.BackSide, depthWrite: false, depthTest: false, fog: false,
       defines: { STARS: stars ? 1 : 0, CLOUDS: clouds ? 1 : 0 },
       uniforms: { ...skyUniforms(), uTime: { value: 0 }, uMoonDir: { value: new THREE.Vector3(...SKY.moonDir).normalize() }, uMoon: { value: new THREE.Color(SKY.moon) },
-        uDarkDir: { value: WATCHER_DIR.clone() }, uRed: { value: 0 } },
+        uDarkDir: { value: WATCHER_DIR.clone() }, uRed: { value: 0 }, uFogColor: { value: FOG.color.clone() }, uFogMix: { value: FOG.horizonMix } },
       vertexShader: /* glsl */ `
         varying vec3 vDir;
         void main() { vDir = position; vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_Position = p.xyww; }`,
       fragmentShader: /* glsl */ `${SKY_GRADIENT_GLSL}
-        uniform float uTime; uniform vec3 uMoonDir; uniform vec3 uMoon; uniform vec3 uDarkDir; uniform float uRed; varying vec3 vDir;
+        uniform float uTime; uniform vec3 uMoonDir; uniform vec3 uMoon; uniform vec3 uDarkDir; uniform float uRed; uniform vec3 uFogColor; uniform float uFogMix; varying vec3 vDir;
         float hash(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
         float noise(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
           float a = hash(vec3(i, 1.0)), b = hash(vec3(i + vec2(1, 0), 1.0)), c = hash(vec3(i + vec2(0, 1), 1.0)), d = hash(vec3(i + vec2(1, 1), 1.0));
@@ -73,6 +75,8 @@ function SkyDome({ stars, clouds, room }: { stars: boolean; clouds: boolean; roo
             vec3 cloudCol = mix(uUpper * 1.6, uMoon * 0.32, pow(m, 6.0));
             c = mix(c, cloudCol, cl * 0.55);
           #endif
+          // Fog (decision 031): the low sky dissolves into the same mist colour as the fogged ground.
+          c = mix(c, uFogColor, uFogMix * (1.0 - smoothstep(0.0, 0.55, d.y)));
           // The Watcher's side of the sky: a dark, oppressive wedge, with a low red glow while the light is red.
           vec3 hd = normalize(vec3(d.x, 0.0, d.z) + vec3(1e-4));
           float toward = smoothstep(0.55, 0.97, dot(hd, uDarkDir));
@@ -237,6 +241,73 @@ function GroundMist({ count }: { count: number }) {
   return <primitive object={group} />;
 }
 
+// ------------------------------------------------------------------------------------------ field mist
+// Owner feedback (decision 031): fog you can see over the playing field, on every tier. Ground-hugging
+// sheets drift over the lanes and soft mist banks hang across the course, so the obstacles and The Watcher
+// only come out of the mist as you approach. Each bank thins out right in front of the camera.
+const fieldMistFragment = /* glsl */ `
+uniform float uTime; uniform vec3 uColor; uniform float uOpacity; uniform float uVertical; varying vec2 vUv; varying vec3 vWorld;
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float noise(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y); }
+void main() {
+  vec2 p = uVertical > 0.5 ? vec2(vWorld.x * 0.05 + uTime * 0.045, vWorld.y * 0.2 - uTime * 0.01) : vWorld.xz * 0.045 + vec2(uTime * 0.035, uTime * 0.016);
+  float n = noise(p) * 0.55 + noise(p * 2.3 + 5.0) * 0.3 + noise(p * 5.1 + 1.7) * 0.15;
+  float a = uVertical > 0.5
+    ? smoothstep(0.2, 0.75, n) * (1.0 - smoothstep(0.3, 1.0, vUv.y)) * smoothstep(0.0, 0.06, vUv.y) * smoothstep(0.0, 0.1, vUv.x) * (1.0 - smoothstep(0.9, 1.0, vUv.x))
+    : smoothstep(0.25, 0.8, n) * smoothstep(0.0, 0.05, vUv.x) * (1.0 - smoothstep(0.95, 1.0, vUv.x)) * smoothstep(0.0, 0.03, vUv.y) * (1.0 - smoothstep(0.97, 1.0, vUv.y));
+  a *= smoothstep(2.0, 10.0, distance(cameraPosition, vWorld));
+  gl_FragColor = vec4(uColor, a * uOpacity);
+  #include <colorspace_fragment>
+}`;
+
+const FIELD_MIST = {
+  low: { sheets: 1, banks: 3 },
+  medium: { sheets: 2, banks: 5 },
+  high: { sheets: 2, banks: 7 },
+};
+
+function FieldMist({ quality }: { quality: Quality }) {
+  const group = useMemo(() => {
+    const g = new THREE.Group();
+    g.name = 'STG01_FieldMist';
+    const b = stageGeo.bounds ?? { minX: -30, maxX: 30, minZ: -172, maxZ: 15 };
+    const cx = (b.minX + b.maxX) / 2, w = b.maxX - b.minX + 8;
+    const course0 = stageGeo.startZ, course1 = stageGeo.finishZ;
+    const colour = FOG.color.clone().multiplyScalar(1.9); // mist lit by the floodlights reads lighter than the fog
+    const make = (vertical: boolean, opacity: number) => new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false, fog: false, side: THREE.DoubleSide,
+      uniforms: { uTime: { value: 0 }, uColor: { value: colour }, uOpacity: { value: opacity }, uVertical: { value: vertical ? 1 : 0 } },
+      vertexShader: 'varying vec2 vUv; varying vec3 vWorld; void main() { vUv = uv; vec4 w = modelMatrix * vec4(position, 1.0); vWorld = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }',
+      fragmentShader: fieldMistFragment,
+    });
+    const n = FIELD_MIST[quality];
+    const len = Math.abs(course1 - course0) + 50;
+    [[0.35, 0.5], [1.15, 0.32]].slice(0, n.sheets).forEach(([y, op], i) => {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, len), make(false, op));
+      m.rotation.x = -Math.PI / 2;
+      m.position.set(cx, y, (course0 + course1) / 2 - 10);
+      m.name = `STG01_FieldMist_Sheet_${i + 1}`;
+      g.add(m);
+    });
+    for (let i = 0; i < n.banks; i++) {
+      const t = (i + 0.6) / n.banks;
+      const z = course0 + (course1 - course0) * t - 4;
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, 7), make(true, 0.42));
+      m.position.set(cx + (i % 2 ? 4 : -4), 3.5, z);
+      m.name = `STG01_FieldMist_Bank_${i + 1}`;
+      g.add(m);
+    }
+    atmosphereStatus.fieldMist = n.sheets + n.banks;
+    return g;
+  }, [quality]);
+  useEffect(() => () => { group.traverse((o) => { const m = o as THREE.Mesh; if (m.isMesh) { m.geometry.dispose(); (m.material as THREE.Material).dispose(); } }); atmosphereStatus.fieldMist = 0; }, [group]);
+  useFrame((state) => {
+    for (const c of group.children) ((c as THREE.Mesh).material as THREE.ShaderMaterial).uniforms.uTime.value = state.clock.elapsedTime;
+  });
+  return <primitive object={group} />;
+}
+
 // ------------------------------------------------------------------------------------------ signal wash
 const WASH: Record<string, string> = { green: '#2bff6a', warning: '#ffb020', red: '#ff2a2a' };
 
@@ -309,6 +380,7 @@ export function Atmosphere({ room, quality }: { room: TrialRoom; quality: Qualit
       <RedDim room={room} />
       {a.cones && <LightCones />}
       {a.mist > 0 && <GroundMist count={a.mist} />}
+      <FieldMist quality={quality} />
       {a.wash && <SignalWash room={room} />}
       {a.post === 'bloom+grade' && <PostFX />}
     </>

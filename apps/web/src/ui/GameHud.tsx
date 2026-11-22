@@ -19,12 +19,14 @@ const SIGNAL_UI = {
   red: { word: 'RED LIGHT', icon: '✋', cls: 'stop', sub: 'Freeze' },
 } as const;
 
-function startOptions(tournament: boolean, obstacles: boolean) {
-  // Test hook: ?testSeed=…&testRound=…&testBriefing=… (the server honours these only in test mode).
+function startOptions(tournament: boolean) {
+  // Obstacles are always on (decision 031). Test hooks: ?testSeed=…&testRound=…&testBriefing=…&obstacles=0
+  // (the server honours these only in test mode).
   const q = new URLSearchParams(location.search);
   const mode = tournament ? 'tournament' as const : 'standup' as const;
-  if (!q.get('testSeed')) return { mode, obstacles };
-  return { mode, obstacles, seed: Number(q.get('testSeed')), roundS: Number(q.get('testRound') ?? 30), briefingS: Number(q.get('testBriefing') ?? 2) };
+  const test = q.get('obstacles') === '0' ? { obstacles: false } : {};
+  if (!q.get('testSeed')) return { mode, ...test };
+  return { mode, ...test, seed: Number(q.get('testSeed')), roundS: Number(q.get('testRound') ?? 30), briefingS: Number(q.get('testBriefing') ?? 2) };
 }
 
 function useTick(ms: number) {
@@ -39,8 +41,8 @@ function ConnectionBadge({ room }: { room: TrialRoom }) {
   return <span className={`conn ${q}`} data-testid="connection" title="Connection to the room"><i aria-hidden="true" />{ms < 0 ? 'Connecting' : `${ms} ms`}</span>;
 }
 
-function Lobby({ room, tournament, setTournament, obstacles, setObstacles }: {
-  room: TrialRoom; tournament: boolean; setTournament: (b: boolean) => void; obstacles: boolean; setObstacles: (b: boolean) => void;
+function Lobby({ room, tournament, setTournament }: {
+  room: TrialRoom; tournament: boolean; setTournament: (b: boolean) => void;
 }) {
   const r = room.round;
   const players = [...room.players.values()].sort((a, b) => a.spawn - b.spawn);
@@ -89,8 +91,7 @@ function Lobby({ room, tournament, setTournament, obstacles, setObstacles }: {
       {room.isHost ? (
         <div className="host">
           <label className="check"><input id="tournament-mode" type="checkbox" checked={tournament} onChange={(e) => setTournament(e.target.checked)} /> Full tournament rules (first {target} of {players.length} to finish qualify)</label>
-          <label className="check"><input id="obstacle-twist" data-testid="obstacles" type="checkbox" checked={obstacles} onChange={(e) => setObstacles(e.target.checked)} /> Obstacle twist (barricades and a gate that slides only on green)</label>
-          <button className="btn primary big" data-testid="start" onClick={() => room.start(startOptions(tournament, obstacles))}>Start game ››</button>
+          <button className="btn primary big" data-testid="start" onClick={() => room.start(startOptions(tournament))}>Start game ››</button>
         </div>
       ) : <p className="muted">Waiting for the host to start. Readiness is shown to the host.</p>}
     </section>
@@ -101,7 +102,6 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
   useTick(100);
   const s = useSettings();
   const [tournament, setTournament] = useState(false);
-  const [obstacles, setObstacles] = useState(() => new URLSearchParams(location.search).get('obstacles') === '1');
   const [overlay, setOverlay] = useState<'none' | 'settings' | 'howto'>('none');
   const assets = STAGE_SCENES[stageDef.id].assets as { environment?: string; watcher?: string; problems: string[] };
   const loading = assets.environment !== 'ready' || assets.watcher !== 'ready';
@@ -165,14 +165,14 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
       )}
 
       {r.phase === 'lobby' && (
-        <Lobby room={room} tournament={tournament} setTournament={setTournament} obstacles={obstacles} setObstacles={setObstacles} />
+        <Lobby room={room} tournament={tournament} setTournament={setTournament} />
       )}
 
       {r.phase === 'briefing' && (
         <section className="card briefing" data-testid="briefing">
           <header className="card-head"><span className="card-title">Stage {stageNo} · {stageDef.name}</span></header>
           <p className="rule">{stageDef.briefing.rule}</p>
-          <p className="muted">{stageDef.briefing.detail}{r.mode === 'tournament' && target ? ` The first ${target} to finish qualify.` : ''}{r.obstacles ? ' Obstacle twist: weave through the barricade gaps; the gate slides only on green.' : ''}</p>
+          <p className="muted">{stageDef.briefing.detail}{r.mode === 'tournament' && target ? ` The first ${target} to finish qualify.` : ''}{r.obstacles ? ' Weave through the gaps in the barricades; the gate slides only on green. Mind the fog.' : ''}</p>
           {me?.status === 'waiting'
             ? <p className="muted">You joined mid-round: you'll play the next one.</p>
             : <button className="btn primary" onClick={() => room.skipBriefing()}>Got it (Space)</button>}

@@ -34,7 +34,7 @@ export function HowToPlay({ onClose }: { onClose: () => void }) {
         <li><b>Amber: get ready.</b> The Watcher is turning back. Stop before it faces you.</li>
         <li><b>Red light: freeze.</b> Anyone still moving after a short grace moment is spotted and eliminated. Eliminated players spectate.</li>
         <li><b>Finish</b> before the timer runs out. In tournament rules, only the first finishers qualify.</li>
-        <li><b>Obstacle twist</b> (host option): barricade rows to weave through and a gate that slides only on green.</li>
+        <li><b>Obstacles</b>: barricade rows to weave through and a gate that slides only on green. The yard is foggy: you only see them up close.</li>
         <li><b>Your contestant</b> wears colours dealt at random when you join (kept if you rejoin). Nobody in the room has the same ones. In the lobby, <kbd>Space</kbd> jumps and <kbd>E</kbd> dives, just for fun.</li>
       </ol>
       <table className="keys">

@@ -21,6 +21,8 @@ import { MidgroundTrees, midgroundStatus } from './MidgroundTrees.tsx';
 import { buildSkyEnvironment } from './skyModel.ts';
 import { Atmosphere, atmosphereStatus } from './Atmosphere.tsx';
 import { Obstacles, obstacleStatus } from './Obstacles.tsx';
+import { FOG } from './fog.ts';
+import { setPuddles } from '../../game/groundFx.ts';
 import { WatcherFX, watcherFxStatus } from './WatcherFX.tsx';
 import { CLIP_SECONDS, MISSING_FROM_MANIFEST, WATCHER_CLIPS, chooseWatcherClip, type WatcherChoice } from './watcherAnimation.ts';
 
@@ -48,8 +50,12 @@ export const stage01Assets = {
   foliageTrianglesRemoved: 0,
   /** Stage 1.5 atmosphere (sky, light cones, mist, signal wash, post-processing) for the current tier. */
   atmosphere: atmosphereStatus,
-  /** Stage 1.5 obstacle twist (visible when a round enables it). */
+  /** Stage 01 obstacles (always on since decision 031, lobby included). */
   obstacles: obstacleStatus,
+  /** Puddle cells (0.5 m) found for the splash effects. */
+  wetCells: 0,
+  /** Scene fog (decision 031: visible by default on every tier). */
+  fog: { type: 'none', density: 0, color: '' } as { type: string; density: number; color: string },
   /** Stage 1.5 Watcher detection presentation (scan beam, searchlight) and lens emissive boost. */
   watcherFx: watcherFxStatus,
   environmentMap: false,
@@ -171,10 +177,11 @@ function Lighting({ quality }: { quality: Quality }) {
   useEffect(() => { scene.environmentIntensity = ENV_INTENSITY[quality]; }, [scene, quality]);
   useEffect(() => {
     // The Stage 1.5 sky dome draws the sky; this colour only shows for a frame before it mounts.
-    scene.background = new THREE.Color(...(L.fog.color as [number, number, number]));
-    scene.fog = quality === 'low'
-      ? new THREE.Fog(new THREE.Color(...(L.fog.color as [number, number, number])), 60, 260)
-      : new THREE.FogExp2(new THREE.Color(...(L.fog.color as [number, number, number])), L.fog.density);
+    // Owner feedback (decision 031): visible fog by default on every tier (fog.ts). Replaces the approved
+    // lighting file's light haze (density 0.0045) and Low's linear 60-260 m fog.
+    scene.background = FOG.color.clone();
+    scene.fog = new THREE.FogExp2(FOG.color.clone(), FOG.density);
+    stage01Assets.fog = { type: 'exp2', density: FOG.density, color: `#${FOG.color.getHexString()}` };
     return () => { scene.fog = null; scene.background = null; };
   }, [scene, quality, L]);
   return <>{lights.map((o) => <primitive key={o.uuid} object={o} />)}</>;
@@ -219,7 +226,9 @@ function Environment({ room, quality }: { room: TrialRoom; quality: Quality }) {
   const puddles = useMemo(() => new Set<THREE.MeshStandardMaterial>(), []);
   const lamps = useMemo(() => {
     const mats = new Map<string, THREE.MeshStandardMaterial>();
+    const puddleMeshes: THREE.Mesh[] = [];
     gltf.scene.traverse((o) => {
+      if ((o as THREE.Mesh).isMesh && ((o as THREE.Mesh).material as THREE.Material)?.name === 'MAT_Puddle') puddleMeshes.push(o as THREE.Mesh);
       // The Prompt 05 environment still carries the retired Shepherd placeholder; The Watcher replaces it (decision 023).
       if (o.name.startsWith('ENM_Shepherd_Placeholder')) o.visible = false;
       const m = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined;
@@ -232,6 +241,8 @@ function Environment({ room, quality }: { room: TrialRoom; quality: Quality }) {
     });
     for (const n of Object.values(LAMP)) if (!mats.has(n)) stage01Assets.problems.push(`environment: material ${n} missing`);
     stage01Assets.foliageTrianglesRemoved = stripConeTrees(gltf.scene);
+    // Wet ground for the splash effects (decision 031): the puddles' footprint, rasterised once.
+    stage01Assets.wetCells = setPuddles(puddleMeshes);
     stage01Assets.environment = 'ready';
     return mats;
   }, [gltf]);
