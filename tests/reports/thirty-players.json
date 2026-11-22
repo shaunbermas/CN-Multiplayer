@@ -1,9 +1,7 @@
 {
-  "result": "FAIL",
-  "errors": [
-    "Error: Timed out: results\n    at waitFor (file:///home/user/cn-multiplayer/tests/e2e/thirty.mjs:29:9)\n    at async file:///home/user/cn-multiplayer/tests/e2e/thirty.mjs:134:3"
-  ],
-  "date": "2026-11-22T04:46:08.951Z",
+  "result": "PASS",
+  "errors": [],
+  "date": "2026-11-22T04:57:03.296Z",
   "machine": "4 vCPU Xeon 2.3 GHz, 15 GB, no GPU (SwiftShader software WebGL)",
   "real_browsers": 5,
   "simulated_clients": 25,
@@ -14,7 +12,7 @@
     "ready": true,
     "state": "ready",
     "error": "",
-    "loadMs": 4911,
+    "loadMs": 5313,
     "clips": [
       "Dive",
       "Eliminated",
@@ -38,7 +36,7 @@
     "uniqueGeometries": 3,
     "skeletons": 30,
     "geometryBytes": 1164140,
-    "animationCpuMsPerFrame": 1.105,
+    "animationCpuMsPerFrame": 1.415,
     "uniqueMaterials": 30,
     "uniqueTextures": 2,
     "lod": [
@@ -47,35 +45,35 @@
       20
     ],
     "colorways": [
-      "CW26",
-      "CW16",
-      "CW06",
-      "CW29",
-      "CW25",
-      "CW10",
-      "CW28",
-      "CW08",
-      "CW23",
-      "CW30",
-      "CW14",
-      "CW13",
-      "CW18",
+      "CW02",
+      "CW21",
       "CW11",
-      "CW19",
+      "CW27",
+      "CW16",
       "CW04",
-      "CW07",
-      "CW15",
+      "CW01",
+      "CW30",
       "CW22",
       "CW03",
-      "CW24",
-      "CW27",
-      "CW20",
-      "CW01",
-      "CW09",
-      "CW21",
       "CW17",
-      "CW02",
+      "CW14",
+      "CW23",
+      "CW25",
       "CW12",
+      "CW10",
+      "CW15",
+      "CW19",
+      "CW26",
+      "CW06",
+      "CW29",
+      "CW09",
+      "CW20",
+      "CW07",
+      "CW24",
+      "CW28",
+      "CW08",
+      "CW13",
+      "CW18",
       "CW05"
     ]
   },
@@ -83,27 +81,27 @@
     {
       "phase": "active",
       "signal": "red",
-      "elapsed": 9
-    },
-    {
-      "phase": "active",
-      "signal": "green",
-      "elapsed": 11.87
-    },
-    {
-      "phase": "active",
-      "signal": "green",
-      "elapsed": 11.8
-    },
-    {
-      "phase": "active",
-      "signal": "green",
-      "elapsed": 11.87
+      "elapsed": 8.67
     },
     {
       "phase": "active",
       "signal": "red",
-      "elapsed": 9.83
+      "elapsed": 7.27
+    },
+    {
+      "phase": "active",
+      "signal": "red",
+      "elapsed": 9.23
+    },
+    {
+      "phase": "active",
+      "signal": "red",
+      "elapsed": 9.23
+    },
+    {
+      "phase": "active",
+      "signal": "red",
+      "elapsed": 7.03
     }
   ],
   "observer": {
@@ -117,21 +115,34 @@
     },
     "players_drawn": 30,
     "quality": "high",
-    "heap_mb": 35.3,
+    "heap_mb": 35.1,
     "obstacles": {
       "shown": true,
       "barricades": 14,
       "gateX": -12.42,
       "gateMoving": false
     },
-    "software_fps": 0.69,
+    "software_fps": 0.65,
     "context_lost": false,
     "screenshot_mean": 71.3
   },
   "low_pages_software_fps": [
-    1.01,
-    0.86,
-    0.85,
-    0.83
-  ]
+    0.92,
+    0.88,
+    0.89,
+    0.9
+  ],
+  "results_identical_on_all_pages": true,
+  "results": {
+    "players": 30,
+    "spotted": 13,
+    "active_or_finished": 17
+  },
+  "memory_heap_mb_after_gc": [
+    16.9,
+    10.6,
+    9.4,
+    9.5
+  ],
+  "memory_note": "Full page reloads between cycles; in-page join/leave reuse is covered by test:ui (Exit to menu)."
 }
