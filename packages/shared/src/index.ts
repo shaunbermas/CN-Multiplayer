@@ -8,3 +8,5 @@ export * from './round.ts';
 export * from './stage-metadata.ts';
 export * from './stages.ts';
 export * from './tournament.ts';
+export * from './obstacles.ts';
+export * from './roster.ts';

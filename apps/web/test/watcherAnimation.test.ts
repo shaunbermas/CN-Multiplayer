@@ -42,6 +42,11 @@ describe('Watcher clip adapter', () => {
     expect(pick({ signal: 'green', into: 2, sinceSegmentSeen: 0.1 }).clip).toBe('Watcher_TurnAway');
   });
 
+  it('plays Detect for a server spot even when a slow client first draws it after the light turned green', () => {
+    expect(pick({ signal: 'green', into: 0.4, sinceSpotted: 0.1 }).clip).toBe('Watcher_Detect');
+    expect(pick({ signal: 'green', into: 3, sinceSpotted: 5 }).clip).toBe('Watcher_GreenSignal');
+  });
+
   it('restarts a clip only when its key changes (same segment = same key)', () => {
     expect(pick({ into: 2 }).key).toBe(pick({ into: 3 }).key);
     expect(pick({ into: 2 }).key).not.toBe(pick({ into: 2, segmentStart: 10 }).key);

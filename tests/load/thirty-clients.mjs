@@ -10,8 +10,9 @@ import { RoomClient } from '../../packages/shared/src/index.ts';
 import { root, sleep, startWorker, writeReport } from '../lib.mjs';
 
 const PORT = Number(process.env.LOAD_PORT ?? 8798);
-const N = 30;
-const ROOM = 'load-test';
+// LOAD_CLIENTS=1|10|20|30 for staged runs (Stage 1.5 Prompt 08); the 31st-client check runs at 30.
+const N = Math.max(1, Math.min(30, Number(process.env.LOAD_CLIENTS ?? 30)));
+const ROOM = `load-test-${N}`;
 const errors = [];
 if (process.env.SKIP_BUILD !== '1') execSync('npm run build', { cwd: root, stdio: 'ignore' });
 const worker = startWorker(PORT);
@@ -36,14 +37,14 @@ try {
   // ---- 31st must be rejected
   let rejected = false;
   let rejectMessage = '';
-  try {
+  if (N === 30) try {
     const extra = await RoomClient.connect(wsUrl, 'Extra');
     extra.leave();
   } catch (e) {
     rejected = e?.code === 'full';
     rejectMessage = String(e?.message ?? e);
   }
-  if (!rejected) errors.push(`A 31st client was not rejected as full (${rejectMessage || 'it joined'})`);
+  if (N === 30 && !rejected) errors.push(`A 31st client was not rejected as full (${rejectMessage || 'it joined'})`);
 
   // ---- load: everyone sends 30 Hz input; client 0 walks straight to the finish
   await fetch(`${base}/metrics/reset`, { method: 'POST' });
@@ -63,6 +64,10 @@ try {
   const walker = clients[0];
   while (walker.self?.status !== 'finished' && Date.now() - t0 < 70_000) await sleep(250);
   clearInterval(timer);
+  // Round trip per client (ping/pong through the room), sampled 5 times each under load.
+  const rtts = [];
+  for (let k = 0; k < 5; k++) { clients.forEach((c) => c.ping()); await sleep(400); rtts.push(...clients.map((c) => c.rttMs).filter((x) => x >= 0)); }
+  rtts.sort((a, b) => a - b);
   const loadSeconds = (Date.now() - t0) / 1000;
   const health = await (await fetch(`${base}/health`)).json();
   const finishTime = walker.self?.finishTime ?? -1;
@@ -84,6 +89,7 @@ try {
     every_client_sees: seen[0],
     client_31: { rejected, message: rejectMessage },
     load_seconds: +loadSeconds.toFixed(1),
+    rtt_ms: rtts.length ? { median: rtts[Math.floor(rtts.length / 2)], p95: rtts[Math.floor(rtts.length * 0.95)], max: rtts[rtts.length - 1] } : null,
     room: health,
     snapshots_per_client_per_s: { min: +minRate.toFixed(1), avg: +(rates.reduce((a, b) => a + b, 0) / N).toFixed(1) },
     walk_test: {
@@ -94,7 +100,7 @@ try {
       note: 'Projection assumes the average signal cycle in STAGE_01_SPEC.md §3 and a player who never hesitates.',
     },
   };
-  writeReport('load-30-clients.json', report);
+  writeReport(N === 30 ? 'load-30-clients.json' : `load-${N}-clients.json`, report);
   console.log(JSON.stringify(report, null, 2));
   clients.forEach((c) => c.leave());
 } catch (e) {

@@ -152,6 +152,18 @@ jobs:
           SKIP_BUILD: "1"
           WRANGLER_SEND_METRICS: "false"
 
+      - name: Obstacle twist enforced by the server (Stage 1.5)
+        run: npm run test:obstacles
+        env:
+          SKIP_BUILD: "1"
+          WRANGLER_SEND_METRICS: "false"
+
+      - name: UI walkthrough, every screen and connection state (Stage 1.5)
+        run: npm run test:ui
+        env:
+          SKIP_BUILD: "1"
+          WRANGLER_SEND_METRICS: "false"
+
       - name: Graphics quality tiers and the adaptive fallback
         run: npm run test:quality
         env:

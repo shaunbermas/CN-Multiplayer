@@ -8,7 +8,7 @@ import type { TrialRoom } from '../net.ts';
 let cachedSeed = -1;
 let cached: SignalSegment[] = [];
 
-function scheduleFor(seed: number): SignalSegment[] {
+export function scheduleFor(seed: number): SignalSegment[] {
   if (seed !== cachedSeed) {
     cached = buildSchedule(seed, 600); // longer than any round; the prefix matches the server's
     cachedSeed = seed;
@@ -34,6 +34,13 @@ export interface SignalView {
 export function signalView(room: TrialRoom): SignalView {
   const r = room.round;
   const none = { signal: 'none' as Signal, progress: 0, into: 0, elapsed: 0, segStart: 0, segLength: 1, redIndex: 0 };
+  // Test-only presentation hook for review screenshots (tests/e2e/views.mjs): holds the client's VIEW of the
+  // signal on one state. It never reaches the server, which alone decides signals and spotting.
+  const hold = (globalThis as { __cnSignalHold?: { signal: Signal; since: number } }).__cnSignalHold;
+  if (hold && r.phase === 'active') {
+    const into = (Date.now() - hold.since) / 1000;
+    return { signal: hold.signal, progress: Math.min(1, into / 6), into, elapsed: into, segStart: hold.since / 1000, segLength: 6, redIndex: 0 };
+  }
   if (r.phase !== 'active') return none;
   const elapsed = r.elapsed + (Date.now() - room.roundAt) / 1000;
   const sched = scheduleFor(r.seed);

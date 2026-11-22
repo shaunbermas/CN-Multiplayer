@@ -10,4 +10,6 @@ export const hud = {
   finishTime: -1,
   status: 'active',
   pingMs: 0,
+  /** Name of the player being followed while spectating (Stage 1.5 spectator UI). */
+  spectating: '',
 };

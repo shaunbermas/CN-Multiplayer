@@ -3,20 +3,33 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { inputFromKeys, MOVEMENT, progress, SIM_DT } from '@cn-trials/shared';
 import { Component, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { PlayerView, TrialRoom } from '../net.ts';
 import { hud } from './hudStore.ts';
 import { AdaptiveQuality, quality } from './quality.ts';
 import { attachInput, input } from './input.ts';
 import { Predictor } from './predictor.ts';
 import { STAGE_SCENES } from '../stages/registry.ts';
-import { stageDef, stageGeo } from './stage.ts';
+import { stageDef, stageGeo, stageObstacles } from './stage.ts';
+import { greenTime, obstacleWalls, type Rect } from '@cn-trials/shared';
+import { scheduleFor, signalView } from './roundClock.ts';
 
 const CAPSULE_LENGTH = MOVEMENT.capsuleHeight - 2 * MOVEMENT.capsuleRadius;
 const capsuleGeo = new THREE.CapsuleGeometry(MOVEMENT.capsuleRadius, CAPSULE_LENGTH, 6, 12);
 capsuleGeo.translate(0, MOVEMENT.capsuleHeight / 2, 0);
-const noseGeo = new THREE.BoxGeometry(0.16, 0.12, 0.2);
+const noseGeo = new THREE.BoxGeometry(0.16, 0.12, 0.2).toNonIndexed();
 noseGeo.translate(0, 0.85, -0.3);
+// Stage 1.5 (Prompt 08): body and facing nose merged into one mesh: one draw call per contestant (and one in
+// the shadow pass) instead of two, which saves 60 calls with 30 players on High.
+const contestantGeo = mergeGeometries([capsuleGeo.toNonIndexed(), noseGeo])!;
 const spottedMat = new THREE.MeshStandardMaterial({ color: '#8a8f99', roughness: 0.9, transparent: true, opacity: 0.55 });
+
+/** Collision walls for prediction: the same set the server uses (stage walls + obstacle twist in a round). */
+export function wallsFor(room: TrialRoom): Rect[] {
+  if (!room.round.obstacles || room.round.phase === 'lobby' || !stageObstacles) return stageGeo.walls;
+  const elapsed = room.round.phase === 'active' ? signalView(room).elapsed : 0;
+  return [...stageGeo.walls, ...obstacleWalls(stageObstacles, greenTime(scheduleFor(room.round.seed), elapsed))];
+}
 
 function colorFor(spawn: number) {
   return new THREE.Color().setHSL(((spawn * 0.137) % 1), 0.65, 0.55);
@@ -33,7 +46,6 @@ export function canMove(room: TrialRoom): boolean {
 function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoom; local: boolean; predictor?: React.RefObject<Predictor | null> }) {
   const group = useRef<THREE.Group>(null);
   const body = useRef<THREE.Mesh>(null);
-  const nose = useRef<THREE.Mesh>(null);
   const [status, setStatus] = useState(room.players.get(id)?.status ?? 'active');
   const p0 = room.players.get(id);
   const material = useMemo(() => new THREE.MeshStandardMaterial({ color: colorFor(p0?.spawn ?? 1), roughness: 0.6 }), [p0?.spawn]);
@@ -59,15 +71,13 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
     g.rotation.z += (tilt - g.rotation.z) * (1 - Math.exp(-dt * 8));
     const m = spotted ? spottedMat : material;
     if (body.current && body.current.material !== m) body.current.material = m;
-    if (nose.current && nose.current.material !== m) nose.current.material = m;
   });
   const waiting = status === 'waiting';
   return (
     <group ref={group} position={[p0?.x ?? 0, 0, p0?.z ?? 0]} visible={!waiting || !local}>
-      <mesh ref={body} geometry={capsuleGeo} material={material} castShadow />
-      <mesh ref={nose} geometry={noseGeo} material={material} castShadow />
+      <mesh ref={body} geometry={contestantGeo} material={material} castShadow />
       {(!local || status === 'spotted') && (
-        <Html position={[0, 1.65, 0]} center distanceFactor={14} zIndexRange={[10, 0]}>
+        <Html position={[0, 1.65, 0]} center distanceFactor={9} zIndexRange={[10, 0]}>
           <div className={`nametag ${status}`}>{status === 'spotted' ? 'SPOTTED!' : p0?.name}</div>
         </Html>
       )}
@@ -129,7 +139,8 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
       if (active.length) {
         const t = active[watch.current % active.length];
         fx = t.x; fz = t.z;
-      }
+        hud.spectating = t.name;
+      } else hud.spectating = '';
     }
     const fwx = -Math.sin(input.yaw), fwz = -Math.cos(input.yaw);
     const dist = 5.5;
@@ -138,6 +149,9 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
     if (camPos.current.lengthSq() === 0) camPos.current.copy(target);
     camera.position.copy(camPos.current);
     camera.lookAt(fx + fwx * 4, 1.4 + Math.sin(input.pitch) * 4, fz + fwz * 4);
+    // Test hook for fixed review viewpoints (tests/e2e/views.mjs); never set by the game itself.
+    const view = (window as unknown as { __cnView?: { pos: [number, number, number]; look: [number, number, number] } }).__cnView;
+    if (view) { camera.position.set(...view.pos); camera.lookAt(...view.look); }
 
     const s = pr.state;
     hud.progress = progress(stageGeo, mobile ? s.z : me.z);
@@ -190,7 +204,7 @@ export function Scene({ room, onStageError }: { room: TrialRoom; onStageError: (
   if (!predictor.current) {
     const me = room.self;
     const sp = stageGeo.spawns.find((s) => s.index === me?.spawn) ?? stageGeo.spawns[0];
-    predictor.current = new Predictor({ x: me?.x ?? sp.x, z: me?.z ?? sp.z, vx: 0, vz: 0 }, stageGeo.walls);
+    predictor.current = new Predictor({ x: me?.x ?? sp.x, z: me?.z ?? sp.z, vx: 0, vz: 0 }, () => wallsFor(room));
   }
   useEffect(() => {
     (window as unknown as { __cn: unknown }).__cn = {
@@ -214,7 +228,7 @@ export function Scene({ room, onStageError }: { room: TrialRoom; onStageError: (
   return (
     // Shadow maps stay enabled; whether anything casts a shadow is up to the tier (only High's moon does).
     <Canvas camera={{ fov: 60, near: 0.1, far: 1500 }} gl={{ antialias: true, powerPreference: 'high-performance' }} dpr={quality.dpr}
-      shadows={{ type: THREE.PCFSoftShadowMap }}>
+      shadows={{ type: THREE.PCFShadowMap }}>
       <AdaptiveQuality />
       <RenderInfo />
       <StageErrorBoundary onError={onStageError}>

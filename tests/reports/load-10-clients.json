@@ -1,0 +1,50 @@
+{
+  "result": "PASS",
+  "errors": [],
+  "date": "2026-11-21T21:34:28.789Z",
+  "server": "Cloudflare Worker + Durable Object (wrangler dev, local)",
+  "clients": 10,
+  "join_ms": {
+    "avg": 12.9,
+    "max": 29.7
+  },
+  "every_client_sees": 10,
+  "client_31": {
+    "rejected": false,
+    "message": ""
+  },
+  "load_seconds": 42.5,
+  "rtt_ms": {
+    "median": 3,
+    "p95": 6,
+    "max": 6
+  },
+  "room": {
+    "ok": true,
+    "room": "load-test-10",
+    "players": 10,
+    "running": true,
+    "phase": "lobby",
+    "ticks": 1277,
+    "tickMs": {
+      "avg": 0.057,
+      "p95": 1,
+      "max": 3
+    },
+    "inputs": {
+      "accepted": 12220,
+      "dropped": 0
+    }
+  },
+  "snapshots_per_client_per_s": {
+    "min": 19.5,
+    "avg": 19.5
+  },
+  "walk_test": {
+    "from": "spawn 1 (front row, centre)",
+    "distance_m": 162,
+    "server_finish_time_s": 40.47,
+    "projected_with_signals_s": 71,
+    "note": "Projection assumes the average signal cycle in STAGE_01_SPEC.md §3 and a player who never hesitates."
+  }
+}

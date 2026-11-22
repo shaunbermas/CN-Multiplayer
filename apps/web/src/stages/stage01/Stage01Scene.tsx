@@ -7,13 +7,21 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib.js';
-import envUrl from '../../../../../blender/exports/STAGE_01_ENVIRONMENT.glb?url';
-import watcherUrl from '../../../../../blender/exports/THE_WATCHER.glb?url';
+// Stage 1.5 (Prompt 08): meshopt-compressed copies of the approved GLBs (tools/stage15/compress_glb.sh). The
+// approved originals are unchanged; geometry is identical after decoding (asset checks below still run).
+import envUrl from '../../../../../blender/exports/stage15/STAGE_01_ENVIRONMENT.meshopt.glb?url';
+import watcherUrl from '../../../../../blender/exports/stage15/THE_WATCHER.meshopt.glb?url';
 import lighting from '../../../../../blender/exports/STAGE_01_LIGHTING.json';
 import type { TrialRoom } from '../../net.ts';
 import { useQuality, type Quality } from '../../game/quality.ts';
 import { signalView } from '../../game/roundClock.ts';
 import { stageGeo } from '../../game/stage.ts';
+import { Surroundings, surroundingsStatus } from './Surroundings.tsx';
+import { MidgroundTrees, midgroundStatus } from './MidgroundTrees.tsx';
+import { buildSkyEnvironment } from './skyModel.ts';
+import { Atmosphere, atmosphereStatus } from './Atmosphere.tsx';
+import { Obstacles, obstacleStatus } from './Obstacles.tsx';
+import { WatcherFX, watcherFxStatus } from './WatcherFX.tsx';
 import { CLIP_SECONDS, MISSING_FROM_MANIFEST, WATCHER_CLIPS, chooseWatcherClip, type WatcherChoice } from './watcherAnimation.ts';
 
 export const ENV_URL = envUrl;
@@ -32,7 +40,23 @@ export const stage01Assets = {
   quality: 'high' as Quality,
   /** What the current tier turned on, for tests: light ids, shadow casters, dust count, haze. */
   effects: { lights: [] as string[], shadows: [] as string[], dust: 0, haze: false },
+  /** Stage 1.5 painted surroundings: matte layers and tree cutouts drawn, and load problems. */
+  surroundings: surroundingsStatus,
+  /** Stage 1.5 midground trees (lit impostors at the approved tree positions). */
+  midground: midgroundStatus,
+  /** Cone-tree triangles removed from ENV_VISUAL_FOLIAGE (grass tufts kept), and whether the sky env map is set. */
+  foliageTrianglesRemoved: 0,
+  /** Stage 1.5 atmosphere (sky, light cones, mist, signal wash, post-processing) for the current tier. */
+  atmosphere: atmosphereStatus,
+  /** Stage 1.5 obstacle twist (visible when a round enables it). */
+  obstacles: obstacleStatus,
+  /** Stage 1.5 Watcher detection presentation (scan beam, searchlight) and lens emissive boost. */
+  watcherFx: watcherFxStatus,
+  environmentMap: false,
 };
+
+/** Environment-map strength per tier: reflections in puddles, wet asphalt and steel (Prompt 03). */
+const ENV_INTENSITY: Record<Quality, number> = { low: 0, medium: 0.5, high: 0.6 };
 
 type Tier = { dynamicLights: string[] | string; dust?: number; hazeCards?: boolean; shadows?: string[] | boolean };
 const tierOf = (q: Quality) => lighting.qualityTiers[q] as Tier;
@@ -67,6 +91,9 @@ function fitShadow(light: THREE.DirectionalLight, dir: THREE.Vector3) {
 
 let rectLibReady = false;
 
+/** Lights that followed the retired Shepherd placeholder (decision 023) are not used with The Watcher. */
+export const retiredLight = (l: { follows?: string }) => !!l.follows?.startsWith('ENM_Shepherd_Placeholder');
+
 function dispose(root: THREE.Object3D) {
   root.traverse((o) => {
     const m = o as THREE.Mesh;
@@ -93,11 +120,11 @@ function Lighting({ quality }: { quality: Quality }) {
     const casters = shadowLights(quality);
     const wanted = (id: string) => tier.dynamicLights === 'all' || (tier.dynamicLights as string[]).some((p) => (p.endsWith('*') ? id.startsWith(p.slice(0, -1)) : id === p));
     for (const l of L.lights) {
-      if (!wanted(l.id)) continue;
+      if (!wanted(l.id) || retiredLight(l)) continue;
       const col = new THREE.Color(...(l.color as [number, number, number]));
       let o: THREE.Light | null = null;
       if (l.type === 'directional') o = new THREE.DirectionalLight(col, 0.6);
-      else if (l.type === 'spot') o = new THREE.SpotLight(col, l.id.includes('Rim') ? 2600 : 1700, 110, THREE.MathUtils.degToRad(l.angleDeg ?? 40), l.penumbra ?? 0.5, 1.5);
+      else if (l.type === 'spot') o = new THREE.SpotLight(col, 1700, 110, THREE.MathUtils.degToRad(l.angleDeg ?? 40), l.penumbra ?? 0.5, 1.5);
       else if (l.type === 'point') o = new THREE.PointLight(col, 260, (l.range ?? 25) * 1.4, 1.5);
       else if (l.type === 'rect_area') {
         // The finish gate's lamp strip: a wide, thin area light shining down (MeshStandard materials only).
@@ -130,8 +157,20 @@ function Lighting({ quality }: { quality: Quality }) {
     stage01Assets.effects.shadows = out.filter((o) => (o as THREE.Light).castShadow).map((o) => o.name);
     return out;
   }, [quality, L]);
+  const gl = useThree((st) => st.gl);
   useEffect(() => {
-    scene.background = new THREE.Color(...(L.background.horizon as [number, number, number])).multiplyScalar(1.4);
+    // Low tier: no environment map. Measured as the biggest Low-tier cost (6x CPU-throttled software WebGL:
+    // 1.49 fps with it, 2.48 without), and Low exists for weak machines (Prompt 08).
+    if (quality === 'low') { scene.environment = null; stage01Assets.environmentMap = false; return; }
+    const rt = buildSkyEnvironment(gl);
+    scene.environment = rt.texture;
+    stage01Assets.environmentMap = true;
+    return () => { scene.environment = null; stage01Assets.environmentMap = false; rt.dispose(); };
+  }, [gl, scene, quality]);
+  useEffect(() => { scene.environmentIntensity = ENV_INTENSITY[quality]; }, [scene, quality]);
+  useEffect(() => {
+    // The Stage 1.5 sky dome draws the sky; this colour only shows for a frame before it mounts.
+    scene.background = new THREE.Color(...(L.fog.color as [number, number, number]));
     scene.fog = quality === 'low'
       ? new THREE.Fog(new THREE.Color(...(L.fog.color as [number, number, number])), 60, 260)
       : new THREE.FogExp2(new THREE.Color(...(L.fog.color as [number, number, number])), L.fog.density);
@@ -141,10 +180,42 @@ function Lighting({ quality }: { quality: Quality }) {
 }
 
 // ------------------------------------------------------------------------------------------ environment
+/**
+ * Stage 1.5: the approved scene's stacked-cone trees are replaced by lit impostors (MidgroundTrees). They are
+ * merged into ENV_VISUAL_FOLIAGE together with the grass tufts, so drop the tree trunks (wood) and every
+ * foliage triangle above 1 m (tufts are 0.45–0.55 m tall). The GLB itself is unchanged.
+ */
+function stripConeTrees(root: THREE.Object3D): number {
+  const node = root.getObjectByName('ENV_VISUAL_FOLIAGE');
+  if (!node) { stage01Assets.problems.push('environment: ENV_VISUAL_FOLIAGE missing'); return 0; }
+  let removed = 0;
+  node.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    const mat = mesh.material as THREE.Material;
+    const g = mesh.geometry;
+    if (mat.name === 'MAT_Wood_Weathered') { removed += (g.index ? g.index.count : g.attributes.position.count) / 3; mesh.visible = false; return; }
+    if (mat.name !== 'MAT_Foliage' || !g.index || g.userData.stripped) return;
+    const y = g.attributes.position;
+    const src = g.index.array;
+    const keep: number[] = [];
+    for (let i = 0; i < src.length; i += 3) {
+      if (Math.max(y.getY(src[i]), y.getY(src[i + 1]), y.getY(src[i + 2])) < 1.0) keep.push(src[i], src[i + 1], src[i + 2]);
+      else removed++;
+    }
+    g.setIndex(keep);
+    g.userData.stripped = true;
+    g.computeBoundingSphere();
+  });
+  return removed;
+}
+
 const LAMP: Record<string, string> = { green: 'MAT_Signal_Green', warning: 'MAT_Signal_Amber', red: 'MAT_Signal_Red' };
 
 function Environment({ room, quality }: { room: TrialRoom; quality: Quality }) {
-  const gltf = useGLTF(ENV_URL);
+  const gltf = useGLTF(ENV_URL, false, true);
+  const scene = useThree((st) => st.scene);
+  const puddles = useMemo(() => new Set<THREE.MeshStandardMaterial>(), []);
   const lamps = useMemo(() => {
     const mats = new Map<string, THREE.MeshStandardMaterial>();
     gltf.scene.traverse((o) => {
@@ -152,8 +223,11 @@ function Environment({ room, quality }: { room: TrialRoom; quality: Quality }) {
       if (o.name.startsWith('ENM_Shepherd_Placeholder')) o.visible = false;
       const m = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined;
       if (m && m.name?.startsWith('MAT_Signal_')) mats.set(m.name, m);
+      // Puddles: a near-black mirror in the approved material; with the sky environment it now reflects.
+      if (m && m.name === 'MAT_Puddle') puddles.add(m);
     });
     for (const n of Object.values(LAMP)) if (!mats.has(n)) stage01Assets.problems.push(`environment: material ${n} missing`);
+    stage01Assets.foliageTrianglesRemoved = stripConeTrees(gltf.scene);
     stage01Assets.environment = 'ready';
     return mats;
   }, [gltf]);
@@ -173,6 +247,25 @@ function Environment({ room, quality }: { room: TrialRoom; quality: Quality }) {
   }, [gltf, quality]);
   useEffect(() => () => { dispose(gltf.scene); useGLTF.clear(ENV_URL); stage01Assets.environment = 'loading'; }, [gltf]);
   useFrame(() => {
+    // Puddles (Stage 1.5): give the near-black mirror the sky environment map directly, so its own reflection
+    // strength applies (scene.environment ignores per-material intensity), and spread highlights a little.
+    for (const m of puddles) {
+      if (scene.environment) {
+        if (m.envMap === scene.environment) continue;
+        m.envMap = scene.environment;
+        m.envMapIntensity = 1.4;
+        m.roughness = 0.12;
+        m.color.set(0.01, 0.013, 0.016);
+        m.needsUpdate = true;
+      } else if (m.envMap !== null || m.userData.lowLook !== true) {
+        // Low tier (no reflections): dull, slightly glossy dark water instead of a black mirror.
+        m.envMap = null;
+        m.roughness = 0.3;
+        m.color.set(0.035, 0.05, 0.058);
+        m.userData.lowLook = true;
+        m.needsUpdate = true;
+      }
+    }
     const sig = signalView(room).signal;
     for (const [name, mat] of lamps) mat.emissiveIntensity = LAMP[sig] === name ? 6 : sig === 'none' ? 0.35 : 0.08;
   });
@@ -180,13 +273,14 @@ function Environment({ room, quality }: { room: TrialRoom; quality: Quality }) {
 }
 
 // ------------------------------------------------------------------------------------------ The Watcher
-function Watcher({ room }: { room: TrialRoom }) {
-  const gltf = useGLTF(WATCHER_URL);
+function Watcher({ room, search }: { room: TrialRoom; search: boolean }) {
+  const gltf = useGLTF(WATCHER_URL, false, true);
   const group = useRef<THREE.Group>(null);
   const { actions } = useAnimations(gltf.animations, group);
   const current = useRef<WatcherChoice | null>(null);
   const resultsAt = useRef<number | null>(null);
   const segSeen = useRef<{ key: string; at: number }>({ key: '', at: 0 });
+  const spotSeen = useRef<{ key: string; at: number }>({ key: '', at: 0 });
   const w = stageGeo.watcher!;
 
   useEffect(() => {
@@ -204,6 +298,12 @@ function Watcher({ room }: { room: TrialRoom }) {
     }
     // Skinned bounds move with the clips, so never frustum-cull; The Watcher casts the moon's shadow on High.
     gltf.scene.traverse((o) => { if ((o as THREE.Mesh).isMesh) { o.frustumCulled = false; o.castShadow = true; } });
+    // Stage 1.5 material polish (presentation only, approved design unchanged): the signal lens materials glow a
+    // little brighter so the red / green state reads at 190 m and catches the High tier's bloom.
+    gltf.scene.traverse((o) => {
+      const m = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined;
+      if (m?.name?.startsWith('MAT_Watcher_Lens_') && !m.userData.stage15) { m.emissiveIntensity *= 1.8; m.userData.stage15 = true; }
+    });
     // Measure in the asset's own frame: by now the scene may already sit under the plinth-height group,
     // so detach it for the measurement (skinned bounds use the bones' world matrices).
     const parent = gltf.scene.parent;
@@ -228,9 +328,16 @@ function Watcher({ room }: { room: TrialRoom }) {
     // A segment is identified by phase, signal and start time (the countdown and the first green both start at 0).
     const segKey = `${phase}:${v.signal}:${v.segStart}`;
     if (segSeen.current.key !== segKey) segSeen.current = { key: segKey, at: Date.now() };
+    // Each server spot plays Watcher_Detect in full from the first frame that draws it, so a slow client whose
+    // next frame comes late still shows The Watcher reacting (same rule as the segment opening clips).
+    // Only spots from this round count (events from earlier rounds stay in the client's list).
+    const goLocal = Date.now() - v.elapsed * 1000;
+    const thisRoundSpot = spotted && phase === 'active' && spotted.at >= goLocal - 1000 ? spotted : undefined;
+    const spotKey = thisRoundSpot ? `${thisRoundSpot.id}@${thisRoundSpot.at}` : '';
+    if (spotSeen.current.key !== spotKey) spotSeen.current = { key: spotKey, at: Date.now() };
     const choice = chooseWatcherClip({
       phase, signal: v.signal, into: v.into, sinceSegmentSeen: (Date.now() - segSeen.current.at) / 1000, segmentLength: v.segLength, segmentStart: v.segStart, redIndex: v.redIndex,
-      sinceSpotted: spotted && phase === 'active' ? (Date.now() - spotted.at) / 1000 : Infinity,
+      sinceSpotted: thisRoundSpot ? (Date.now() - spotSeen.current.at) / 1000 : Infinity,
       sinceResults: resultsAt.current === null ? Infinity : (Date.now() - resultsAt.current) / 1000,
     });
     if (current.current?.key === choice.key) return;
@@ -251,9 +358,12 @@ function Watcher({ room }: { room: TrialRoom }) {
 
   // The GLB faces +Z (game yaw PI); rotate by the stage's facing relative to that.
   return (
-    <group ref={group} position={[w.x, w.y, w.z]} rotation={[0, w.yaw - Math.PI, 0]}>
-      <primitive object={gltf.scene} />
-    </group>
+    <>
+      <group ref={group} position={[w.x, w.y, w.z]} rotation={[0, w.yaw - Math.PI, 0]}>
+        <primitive object={gltf.scene} />
+      </group>
+      <WatcherFX room={room} root={gltf.scene} search={search} />
+    </>
   );
 }
 
@@ -325,13 +435,17 @@ export function Stage01Scene({ room }: { room: TrialRoom }) {
     <>
       <Lighting quality={quality} />
       <Environment room={room} quality={quality} />
-      <Watcher room={room} />
+      <Watcher room={room} search={quality !== 'low'} />
+      <Atmosphere room={room} quality={quality} />
+      <Surroundings quality={quality} />
+      <MidgroundTrees shadows={shadowLights(quality).length > 0} />
+      <Obstacles room={room} shadows={shadowLights(quality).length > 0} />
       {dust > 0 && <Dust count={dust} />}
     </>
   );
 }
 
 export function preloadStage01() {
-  useGLTF.preload(ENV_URL);
-  useGLTF.preload(WATCHER_URL);
+  useGLTF.preload(ENV_URL, false, true);
+  useGLTF.preload(WATCHER_URL, false, true);
 }

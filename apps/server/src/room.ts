@@ -5,13 +5,15 @@ import { DurableObject } from 'cloudflare:workers';
 import {
   CLOSE, INPUT_BURST, INPUT_QUEUE_MAX, MAX_MESSAGE_BYTES, MAX_PLAYERS, PROBE_MS, PROTOCOL_VERSION, RoundEngine, SIM_DT,
   SIM_HZ, SNAPSHOT_MS, TOURNAMENT_ORDER, Tournament, encodeRow, getStage, insideRect, newRoundPlayer, sanitizeInput,
-  sanitizeName, step, type ClientMessage, type Mode, type RosterEntry, type RoundEvents, type RoundPlayer, type RoundState,
+  greenTime, obstacleWalls, resolveObstacles, sanitizeName, step, type ClientMessage, type Mode, type RosterEntry, type RoundEvents, type RoundPlayer, type RoundState,
   type ServerMessage, type StageGeometry,
 } from '@cn-trials/shared';
 import type { Env } from './env.ts';
 
 // Stage geometry comes from the approved stage metadata via the shared stage registry (no copied coordinates).
 let geo: StageGeometry = getStage(TOURNAMENT_ORDER[0]).geometry;
+// Stage 1.5 obstacle twist, resolved against the approved course (used only when the host enables it).
+let OBSTACLES = resolveObstacles(geo);
 
 interface Player extends RoundPlayer {
   name: string;
@@ -22,6 +24,8 @@ interface Player extends RoundPlayer {
   /** Lobby practice walk: room time of the first move. */
   firstMoveAt: number | null;
   probeSentAt: Map<number, number>;
+  /** Lobby ready flag (Stage 1.5). */
+  ready: boolean;
 }
 
 interface Attachment { room: string; id: string | null }
@@ -111,6 +115,13 @@ export class TrialRoom extends DurableObject<Env> {
         }
         break;
       }
+      case 'ready':
+        // Stage 1.5 lobby ready state; ignored outside the lobby. Rebroadcast the roster so everyone sees it.
+        if (this.engine.phase === 'lobby' && typeof msg.ready === 'boolean' && p.ready !== msg.ready) {
+          p.ready = msg.ready;
+          this.broadcast({ t: 'roster', roster: this.roster() });
+        }
+        break;
       case 'ping':
         send(ws, { t: 'pong', at: msg.at });
         break;
@@ -133,7 +144,7 @@ export class TrialRoom extends DurableObject<Env> {
     const p: Player = {
       ...newRoundPlayer(id, this.nextId, spawn.index, spawn.x, spawn.z),
       name: sanitizeName(rawName, `Nomad ${spawn.index}`),
-      vx: 0, vz: 0, yaw: spawn.yaw, ack: 0, queue: [], tokens: INPUT_BURST, firstMoveAt: null, probeSentAt: new Map(),
+      vx: 0, vz: 0, yaw: spawn.yaw, ack: 0, queue: [], tokens: INPUT_BURST, firstMoveAt: null, probeSentAt: new Map(), ready: false,
     };
     if (this.engine.phase !== 'lobby') this.toBench(p, 'waiting'); // late arrivals watch and join the next round
     this.players.set(id, p);
@@ -179,10 +190,10 @@ export class TrialRoom extends DurableObject<Env> {
   }
 
   private roster(): RosterEntry[] {
-    return [...this.players.values()].map((p) => ({ id: p.id, name: p.name, spawn: p.spawn }));
+    return [...this.players.values()].map((p) => ({ id: p.id, name: p.name, spawn: p.spawn, ready: p.ready }));
   }
 
-  private startRound(by: Player, opts: { seed?: number; roundS?: number; briefingS?: number; mode?: Mode } = {}): void {
+  private startRound(by: Player, opts: { seed?: number; roundS?: number; briefingS?: number; mode?: Mode; obstacles?: boolean } = {}): void {
     if (by.id !== this.hostId) {
       const ws = this.sockets.get(by.id);
       if (ws) send(ws, { t: 'error', code: 'not_host', message: 'Only the host can start the round' });
@@ -195,11 +206,13 @@ export class TrialRoom extends DurableObject<Env> {
     const briefingS = test && typeof opts?.briefingS === 'number' ? Math.max(0, Math.min(15, opts.briefingS)) : undefined;
     const mode: Mode = opts?.mode === 'tournament' ? 'tournament' : 'standup';
     geo = getStage(this.tournament.currentStageId).geometry;
+    OBSTACLES = resolveObstacles(geo);
     const players = [...this.players.values()];
-    for (const p of players) { p.vx = 0; p.vz = 0; p.queue = []; p.firstMoveAt = null; }
+    for (const p of players) { p.vx = 0; p.vz = 0; p.queue = []; p.firstMoveAt = null; p.ready = false; }
     this.engine.now = this.elapsed;
     this.roundId++;
-    this.engine.start(players, { seed, roundS, briefingS, mode });
+    const obstacles = opts?.obstacles === true; // Stage 1.5 twist: host toggle, off by default (rollback switch)
+    this.engine.start(players, { seed, roundS, briefingS, mode, obstacles });
     for (const p of players) p.yaw = 0;
     console.log(JSON.stringify({ ev: 'round_start', room: this.roomCode, round: this.roundId, stage: geo.stage, mode, seed, players: players.length,
       schedule: this.engine.schedule.slice(0, 12).map((s) => [s.signal[0], s.start, s.end]) }));
@@ -219,6 +232,7 @@ export class TrialRoom extends DurableObject<Env> {
       stage: geo.stage,
       mode: e.mode,
       target: Number.isFinite(e.target) ? e.target : -1,
+      obstacles: e.obstacles && e.phase !== 'lobby',
     };
   }
 
@@ -276,6 +290,11 @@ export class TrialRoom extends DurableObject<Env> {
     const ev = e.tick(this.elapsed, this.roundPlayers());
     this.handlePhase(before, ev);
     const moveEv: RoundEvents = { spotted: [], finished: [] };
+    // Stage 1.5: with the obstacle twist on, the barricades and the sliding gate (at the current green time)
+    // collide like walls for every player, outside the lobby. The gate only moves on green and warning.
+    const walls = e.obstacles && e.phase !== 'lobby'
+      ? [...geo.walls, ...obstacleWalls(OBSTACLES, greenTime(e.schedule, Math.max(0, this.elapsed - e.goTime)))]
+      : geo.walls;
     for (const p of this.players.values()) {
       // Token bucket: one step per tick sustained, so a client cannot move faster than real time.
       p.tokens = Math.min(INPUT_BURST, p.tokens + 1);
@@ -286,7 +305,7 @@ export class TrialRoom extends DurableObject<Env> {
         if (!e.canMove(p)) { p.vx = 0; p.vz = 0; continue; }
         const input = sanitizeInput(m.mx, m.mz);
         const ox = p.x, oz = p.z;
-        const next = step(p, input, SIM_DT, geo.walls);
+        const next = step(p, input, SIM_DT, walls);
         p.x = next.x; p.z = next.z; p.vx = next.vx; p.vz = next.vz;
         if (typeof m.yaw === 'number' && Number.isFinite(m.yaw)) p.yaw = m.yaw;
         if (e.phase === 'lobby') this.practiceFinish(p, input);

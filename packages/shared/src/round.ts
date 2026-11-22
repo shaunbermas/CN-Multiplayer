@@ -143,7 +143,7 @@ export interface RoundEvents {
   results?: Placing[];
 }
 
-export interface StartOptions { seed: number; roundS?: number; briefingS?: number; mode?: Mode }
+export interface StartOptions { seed: number; roundS?: number; briefingS?: number; mode?: Mode; /** Stage 1.5 obstacle twist (host toggle). */ obstacles?: boolean }
 
 /**
  * Phase machine for one room. The room calls:
@@ -164,6 +164,8 @@ export class RoundEngine {
   skipped = new Set<string>();
   lastResults: Placing[] = [];
   mode: Mode = 'standup';
+  /** Stage 1.5 obstacle twist enabled for the current round (host toggle; rollback = off). */
+  obstacles = false;
   starters = 0;
   /** Finishers needed to end the round early (tournament only; R2/R3). */
   target = Infinity;
@@ -184,6 +186,7 @@ export class RoundEngine {
     this.skipped.clear();
     this.lastResults = [];
     this.mode = opts.mode === 'tournament' ? 'tournament' : 'standup';
+    this.obstacles = opts.obstacles === true;
     this.starters = players.length;
     this.target = qualifierTarget(this.mode, this.starters);
     const order = shuffled(players.map((p) => p.id), this.seed);

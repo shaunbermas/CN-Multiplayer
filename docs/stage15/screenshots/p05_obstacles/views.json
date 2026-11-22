@@ -1,0 +1,135 @@
+{
+  "quality": "high",
+  "date": "2026-11-21T21:10:45.218Z",
+  "renderer": "SwiftShader",
+  "errors": [],
+  "renderInfo": {
+    "obstacles_overview": {
+      "calls": 171,
+      "triangles": 138575,
+      "programs": 39,
+      "textures": 81,
+      "dpr": 1,
+      "phase": "active",
+      "obstacles": {
+        "shown": true,
+        "barricades": 14,
+        "gateX": 11.68,
+        "gateMoving": true
+      }
+    },
+    "obstacles_runner": {
+      "calls": 170,
+      "triangles": 138563,
+      "programs": 39,
+      "textures": 81,
+      "dpr": 1,
+      "phase": "active",
+      "obstacles": {
+        "shown": true,
+        "barricades": 14,
+        "gateX": 11.54,
+        "gateMoving": true
+      }
+    },
+    "spawn_gameplay": {
+      "calls": 174,
+      "triangles": 138901,
+      "programs": 39,
+      "textures": 81,
+      "dpr": 1,
+      "phase": "active",
+      "obstacles": {
+        "shown": true,
+        "barricades": 14,
+        "gateX": 4.24,
+        "gateMoving": false
+      }
+    },
+    "midfield_to_watcher": {
+      "calls": 168,
+      "triangles": 138515,
+      "programs": 39,
+      "textures": 81,
+      "dpr": 1,
+      "phase": "results",
+      "obstacles": {
+        "shown": true,
+        "barricades": 14,
+        "gateX": 0,
+        "gateMoving": false
+      }
+    },
+    "finish_looking_back": {
+      "calls": 167,
+      "triangles": 138009,
+      "programs": 39,
+      "textures": 81,
+      "dpr": 1,
+      "phase": "results",
+      "obstacles": {
+        "shown": true,
+        "barricades": 14,
+        "gateX": 0,
+        "gateMoving": false
+      }
+    },
+    "side_skyline_west": {
+      "calls": 141,
+      "triangles": 136505,
+      "programs": 39,
+      "textures": 81,
+      "dpr": 1,
+      "phase": "lobby",
+      "obstacles": {
+        "shown": false,
+        "barricades": 0,
+        "gateX": 0,
+        "gateMoving": false
+      }
+    },
+    "side_skyline_east": {
+      "calls": 139,
+      "triangles": 134523,
+      "programs": 39,
+      "textures": 81,
+      "dpr": 1,
+      "phase": "lobby",
+      "obstacles": {
+        "shown": false,
+        "barricades": 0,
+        "gateX": 0,
+        "gateMoving": false
+      }
+    },
+    "overview_high": {
+      "calls": 163,
+      "triangles": 138037,
+      "programs": 39,
+      "textures": 81,
+      "dpr": 1,
+      "phase": "lobby",
+      "obstacles": {
+        "shown": false,
+        "barricades": 0,
+        "gateX": 0,
+        "gateMoving": false
+      }
+    },
+    "watcher_close": {
+      "calls": 142,
+      "triangles": 134597,
+      "programs": 39,
+      "textures": 81,
+      "dpr": 1,
+      "phase": "lobby",
+      "obstacles": {
+        "shown": false,
+        "barricades": 0,
+        "gateX": 0,
+        "gateMoving": false
+      }
+    }
+  },
+  "signalCaptures": "held via window.__cnSignalHold (presentation only)"
+}

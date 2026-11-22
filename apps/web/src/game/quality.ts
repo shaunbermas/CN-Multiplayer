@@ -1,64 +1,9 @@
-// Graphics quality: the tier (STAGE_01_LIGHTING.json qualityTiers) and the render resolution.
-// Default is High with every lighting effect on (decision 026). Unless the URL pins a tier
-// (?quality=low|medium|high), an adaptive monitor keeps the frame rate smooth: when the average frame rate
-// stays under MIN_FPS it first lowers the resolution, then steps the tier down (high -> medium -> low).
-// It never steps back up during a session, so the picture does not flicker between tiers.
+// Graphics quality: re-exports the store and adds the adaptive monitor that runs inside the Canvas.
 import { useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useRef, useSyncExternalStore } from 'react';
+import { useEffect, useRef } from 'react';
+import { MIN_FPS, WARMUP_S, WINDOW_S, nextStepDown, quality, setQuality, useQuality } from './qualityStore.ts';
 
-export type Quality = 'low' | 'medium' | 'high';
-export const QUALITY_ORDER: Quality[] = ['low', 'medium', 'high'];
-
-/** Average frame rate below which the monitor lowers quality. */
-export const MIN_FPS = 45;
-/** Seconds ignored after a start or a change (shader compiles, texture uploads). */
-const WARMUP_S = 2.5;
-/** Seconds of frames averaged per decision. */
-const WINDOW_S = 2;
-/** Highest render resolution multiplier; 1.5 looks sharp on high-DPI screens at a much lower cost than 2. */
-const MAX_DPR = 1.5;
-
-export interface QualityChange { at: number; from: string; to: string; fps: number }
-
-function pinnedFromUrl(): Quality | null {
-  const q = typeof location === 'undefined' ? null : new URLSearchParams(location.search).get('quality');
-  return q === 'low' || q === 'medium' || q === 'high' ? q : null;
-}
-
-const pinned = pinnedFromUrl();
-const deviceDpr = typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1;
-
-export const quality = {
-  tier: (pinned ?? 'high') as Quality,
-  /** True when the URL chose the tier: the adaptive monitor then leaves it alone. */
-  pinned: pinned !== null,
-  dpr: Math.min(deviceDpr, MAX_DPR),
-  /** Last measured average frame rate (0 until the first window completes). */
-  fps: 0,
-  changes: [] as QualityChange[],
-};
-
-const listeners = new Set<() => void>();
-function emit() { for (const l of listeners) l(); }
-function subscribe(l: () => void) { listeners.add(l); return () => listeners.delete(l); }
-
-export function setQuality(tier: Quality) {
-  if (tier === quality.tier) return;
-  quality.tier = tier;
-  emit();
-}
-
-/** React hook: the current tier, re-rendering when it changes. */
-export function useQuality(): Quality {
-  return useSyncExternalStore(subscribe, () => quality.tier, () => quality.tier);
-}
-
-/** The next lower step for the monitor, or null at the bottom. */
-export function nextStepDown(tier: Quality, dpr: number): { tier: Quality; dpr: number } | null {
-  if (dpr > 1) return { tier, dpr: 1 };
-  const i = QUALITY_ORDER.indexOf(tier);
-  return i > 0 ? { tier: QUALITY_ORDER[i - 1], dpr } : null;
-}
+export * from './qualityStore.ts';
 
 /** Inside the Canvas: applies the resolution and runs the adaptive monitor. */
 export function AdaptiveQuality() {
@@ -69,12 +14,15 @@ export function AdaptiveQuality() {
   useFrame((_, dt) => {
     if (quality.pinned) return;
     const a = acc.current;
-    // A gap over 2 s is a hidden tab or a paused page, not a frame-rate measurement; slow frames still count.
-    if (dt > 2 || (typeof document !== 'undefined' && document.hidden)) return;
-    a.since += dt;
+    // Hidden tabs are skipped directly. Slow frames DO count (capped at 5 s each), even very slow ones: a machine
+    // at 0.4 fps is exactly the one that needs to step down. Only a gap over 30 s (a paused or suspended page,
+    // e.g. a laptop waking up) is ignored. Found by CI: the old 2 s cutoff hid every frame of a 0.4 fps page.
+    if ((typeof document !== 'undefined' && document.hidden) || dt > 30) return;
+    const d = Math.min(dt, 5);
+    a.since += d;
     if (a.since < WARMUP_S) return;
     a.frames += 1;
-    a.time += dt;
+    a.time += d;
     if (a.time < WINDOW_S) return;
     const fps = a.frames / a.time;
     quality.fps = Math.round(fps);

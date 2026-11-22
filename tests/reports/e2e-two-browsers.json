@@ -1,11 +1,11 @@
 {
   "result": "PASS",
   "errors": [],
-  "date": "2026-11-21T18:04:35.815Z",
+  "date": "2026-11-21T21:58:58.755Z",
   "same_room": true,
   "both_see_players": 2,
   "walk_4s": {
-    "moved_m_seen_by_other_browser": 16.47,
+    "moved_m_seen_by_other_browser": 15.94,
     "prediction_error_m": 0
   },
   "round": {
@@ -34,14 +34,14 @@
   "renderer": "headless Chromium, software WebGL (SwiftShader)",
   "player_a_cpu_throttle": 6,
   "steps": [
-    "42.4 s host clicks start",
-    "53.3 s round active",
-    "60.9 s green checked; Beta walks",
-    "63.0 s Beta spotted",
-    "68.8 s detect checked",
-    "76.3 s spectator checked",
-    "77.3 s waiting for results",
-    "84.0 s results on Beta, phase results",
-    "89.7 s results on Alpha"
+    "115.9 s host clicks start",
+    "134.7 s round active",
+    "146.8 s green checked; Beta walks",
+    "152.3 s Beta spotted",
+    "158.6 s detect checked",
+    "168.3 s spectator checked",
+    "170.6 s waiting for results",
+    "212.2 s results on Beta, phase results",
+    "225.3 s results on Alpha"
   ]
 }
