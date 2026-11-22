@@ -198,13 +198,14 @@ function Players({ room, predictor }: { room: TrialRoom; predictor: React.RefObj
 }
 
 /** Renderer statistics of the last frame, for tests (window.__cn.renderInfo). */
-const renderInfo = { calls: 0, triangles: 0, programs: 0, textures: 0, dpr: 1 };
+const renderInfo = { calls: 0, triangles: 0, programs: 0, textures: 0, geometries: 0, dpr: 1 };
 function RenderInfo() {
   useFrame(({ gl }) => {
     renderInfo.calls = gl.info.render.calls;
     renderInfo.triangles = gl.info.render.triangles;
     renderInfo.programs = gl.info.programs?.length ?? 0;
     renderInfo.textures = gl.info.memory.textures;
+    renderInfo.geometries = gl.info.memory.geometries;
     renderInfo.dpr = gl.getPixelRatio();
   });
   return null;

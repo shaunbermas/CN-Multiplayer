@@ -1,0 +1,59 @@
+{
+  "result": "PASS",
+  "errors": [],
+  "date": "2026-11-22T03:15:36.573Z",
+  "machine": "4 vCPU, no GPU (SwiftShader software WebGL); frame rates compare runs on this machine only",
+  "quality": "high",
+  "viewport": "1280x720",
+  "camera": "fixed, 9 m behind and 6 m above the spawn grid",
+  "one_player": {
+    "render": {
+      "calls": 148,
+      "triangles": 139181,
+      "programs": 39,
+      "textures": 80,
+      "geometries": 76,
+      "dpr": 1
+    },
+    "heap_mb": 29,
+    "contestants": null,
+    "players": 1,
+    "software_fps": 0.91
+  },
+  "thirty_ready_after_join_ms": 7119,
+  "thirty_players": {
+    "render": {
+      "calls": 200,
+      "triangles": 206861,
+      "programs": 39,
+      "textures": 80,
+      "geometries": 105,
+      "dpr": 1
+    },
+    "heap_mb": 35.6,
+    "contestants": null,
+    "players": 30,
+    "software_fps": 0.86
+  },
+  "contestant_downloads": [],
+  "cost_of_29_contestants": {
+    "draw_calls": 52,
+    "triangles": 67680,
+    "geometries": 29,
+    "textures": 0,
+    "programs": 0,
+    "heap_mb": 6.6,
+    "fps_drop": 0.05
+  },
+  "system": "procedural: 30 different code-built meshes (apps/web/src/game/characters.ts at 8efaf15)",
+  "offline_geometry": {
+    "characters": 30,
+    "unique_geometries": 30,
+    "geometry_bytes": 6086184,
+    "triangles_total": 39014,
+    "vertices_total": 117042,
+    "download_bytes": 0,
+    "code_gzip_bytes": 5332,
+    "note": "geometry built in the browser from code; no asset download"
+  }
+}
