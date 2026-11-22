@@ -104,6 +104,28 @@ What costs more, and why: a much more detailed character draws more triangles. L
 On a real GPU the added 257k skinned triangles are well within budget for High. That claim is not measured
 here, because this machine has no GPU.
 
-## 5. Regression results
+## 5. Regression results (final run, this machine)
 
-Filled in from the final run before the pull request (see the PR description for the exact list).
+| Check | Result |
+|---|---|
+| `npm run typecheck` | PASS |
+| `npm test` (59 unit tests) | PASS |
+| `validate_contestant.py` | PASS (every check) |
+| `test:colorways` | PASS |
+| `test:round` | PASS |
+| `test:e2e` (two browsers: movement, prediction, Watcher clips, spotted, results) | PASS |
+| `test:obstacles` (server-enforced barricades and gate) | PASS |
+| `test:ui` (18 screens and connection states; "You are <colourway>" in the lobby) | PASS |
+| `test:quality` (tiers and adaptive fallback) | PASS |
+| `test:load` with 30 clients | PASS, 30 distinct colourways |
+| `test:thirty` (5 browsers + 25 clients, obstacle round) | PASS |
+
+Details of the `test:thirty` run:
+- 30 distinct colourways, 3 shared geometries, 2 shared textures.
+- Every page's signal matched the server schedule, and every page showed the same results (13 spotted).
+- No context loss; the rendered frame is not blank (centre mean 71).
+
+A note on the test harness: with five software-rendered pages on four cores, Chromium's page screenshot of
+the observer can come back as an empty canvas although WebGL is rendering. The test now saves and checks the
+rendered frame itself (`window.__cnSnapshot`), which shows the full scene with 30 contestants
+(`ingame_30_players_round.png`).
