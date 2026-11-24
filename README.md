@@ -10,6 +10,7 @@ Status: Stage 01 Red Light, Green Light is playable in the browser with the fina
 
 | Read | For |
 |------|-----|
+| `docs/CN_TRIAL_INTELLIGENCE/` | Project intelligence (audit 24 Nov 2026): master GDD summary, visual, character, environment, technical, UI/UX bibles, asset registry, production tracker with the Stage 01 completion matrix |
 | `docs/GAME_DESIGN_DOCUMENT.md` | Canonical rules and scope (v0.2) |
 | `docs/DECISIONS.md` | What has been decided and what is open |
 | `docs/STAGE_01_DESIGN_SPEC.md` | Stage 01 environment design: layout, figure plinth, props, cameras, assets, lighting (approved; the figure is now The Watcher) |
