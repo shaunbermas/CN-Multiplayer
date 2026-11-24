@@ -174,16 +174,20 @@ function build(parts: Parts, b: Barricade) {
       break;
     }
     case 'tires': {
-      const torus = new THREE.TorusGeometry(0.36, 0.15, 8, 18);
+      const torus = new THREE.TorusGeometry(0.36, 0.15, 5, 12);
       torus.rotateX(Math.PI / 2);
       for (let x = b.minX + 0.52; x <= b.maxX - 0.5; x += 1.02) {
+        // Lower tyres as one cylinder (the tread texture shows the rings), a full torus only on top: about a
+        // fifth of the triangles of a torus per tyre, and the same silhouette from the course.
         const n = 2 + Math.floor(r() * 3);
-        for (let i = 0; i < n; i++) add(parts, 'rubber', torus, [x + (r() - 0.5) * 0.08, 0.15 + i * 0.29, cz + (r() - 0.5) * 0.12], [0, r() * 3, (r() - 0.5) * 0.06], '#ffffff', [3, 1]);
+        const jx = x + (r() - 0.5) * 0.08, jz = cz + (r() - 0.5) * 0.12;
+        add(parts, 'rubber', new THREE.CylinderGeometry(0.5, 0.5, (n - 1) * 0.29, 12, 1, true), [jx, (n - 1) * 0.145, jz], [0, r() * 3, 0], '#ffffff', [3, n - 1]);
+        add(parts, 'rubber', torus, [jx, 0.15 + (n - 1) * 0.29, jz], [0, r() * 3, (r() - 0.5) * 0.06], '#ffffff', [3, 1]);
       }
       break;
     }
     case 'drums': {
-      const drum = new THREE.CylinderGeometry(0.29, 0.29, 0.88, 14);
+      const drum = new THREE.CylinderGeometry(0.29, 0.29, 0.88, 10);
       for (const dz of [-0.3, 0.3]) {
         for (let x = b.minX + 0.32; x <= b.maxX - 0.3; x += 0.64) {
           const col = DRUM_COLOURS[Math.floor(r() * DRUM_COLOURS.length)];
@@ -198,9 +202,9 @@ function build(parts: Parts, b: Barricade) {
       let x = b.minX;
       while (x < b.maxX - 0.5) {
         const l = Math.min(b.maxX - x, 2.0 + r() * 0.4) - 0.08;
-        const outer = new THREE.CylinderGeometry(rad, rad, l, 18, 1, true);
-        const inner = new THREE.CylinderGeometry(rad * 0.8, rad * 0.8, l, 18, 1, true);
-        const ring = new THREE.RingGeometry(rad * 0.8, rad, 18);
+        const outer = new THREE.CylinderGeometry(rad, rad, l, 14, 1, true);
+        const inner = new THREE.CylinderGeometry(rad * 0.8, rad * 0.8, l, 14, 1, true);
+        const ring = new THREE.RingGeometry(rad * 0.8, rad, 14);
         const zOff = (r() - 0.5) * (depth - rad * 2.2);
         add(parts, 'concrete', outer, [x + l / 2 + 0.04, rad, cz + zOff], [0, 0, Math.PI / 2], '#ffffff', [2, 1]);
         add(parts, 'concrete', inner, [x + l / 2 + 0.04, rad, cz + zOff], [0, 0, Math.PI / 2], '#9a978f');

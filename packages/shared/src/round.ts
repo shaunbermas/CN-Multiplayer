@@ -13,7 +13,7 @@ export type PlayerStatus = 'active' | 'finished' | 'spotted' | 'waiting';
  * Stage 01 refinement (owner brief 24 Nov 2026, "the game takes too long"): shorter briefing, round, red
  * lights and results; warning length and detection grace are unchanged (fairness). Previous values in
  * brackets; rationale and measurements in docs/STAGE_01_REFINEMENT_IMPLEMENTATION.md §Timing.
- * Results lengths per stage and for the final leaderboard live in MATCH (match.ts).
+ * The match's between-stage timings live here too, so every game length is tuned in this one block.
  */
 export const ROUND = {
   briefingS: 6,         // S1 (skippable)            [15]
@@ -28,7 +28,11 @@ export const ROUND = {
   speedLimit: 0.3,      // D2 m/s, averaged over speedWindow ticks
   speedWindow: 3,
   dispLimit: 0.15,      // D2 m since the grace window ended
-  resultsS: 9,          // single-stage default; the match uses MATCH.stageResultsS / finalResultsS [20]
+  resultsS: 9,          // single-stage default                          [20]
+  // Match flow (match.ts reads these): results between stages, the final leaderboard, later briefings.
+  stageResultsS: 9,     // host can skip                                 [new]
+  finalResultsS: 16,    // then everyone returns to the lobby            [new]
+  nextBriefingS: 4,     // stage 2 onward (rules already known, skippable) [new]
 } as const;
 
 // ------------------------------------------------------------------ seeded random (mulberry32)

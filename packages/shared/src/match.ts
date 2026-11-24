@@ -15,7 +15,7 @@
 //   4. lower total finish time over the stages they finished
 //   5. better place in the last stage played
 //   6. earlier to join the room (deterministic last resort, so there is always exactly one winner)
-import type { Placing } from './round.ts';
+import { ROUND, type Placing } from './round.ts';
 import { DEFAULT_STAGE_ID } from './stages.ts';
 
 export const MATCH = {
@@ -25,12 +25,10 @@ export const MATCH = {
    */
   stages: 3,
   points: { first: 2, finished: 1, eliminated: 0, unfinished: 0 },
-  /** Seconds the stage results stay up before the next stage's briefing (host can skip). */
-  stageResultsS: 9,
-  /** Seconds the final leaderboard stays up before the room returns to the lobby. */
-  finalResultsS: 16,
-  /** Briefing length for stage 2 onward (everyone already knows the rules; skippable). */
-  nextBriefingS: 4,
+  /** Timings come from ROUND (round.ts), the one block where every game length is tuned. */
+  stageResultsS: ROUND.stageResultsS,
+  finalResultsS: ROUND.finalResultsS,
+  nextBriefingS: ROUND.nextBriefingS,
 } as const;
 
 /** Stage order for a match of `n` stages: the registered stages in order, repeating while only Stage 01 exists. */
