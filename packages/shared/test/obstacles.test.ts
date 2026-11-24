@@ -14,6 +14,16 @@ const rows = () => {
 };
 
 describe('obstacle twist layout', () => {
+  it('dresses segments in varied kits, mirror-symmetric per row, with containers only against a fence', () => {
+    const b = geo.bounds!, cx = o.gate.centreX;
+    expect(new Set(o.barricades.map((r) => r.kit)).size).toBeGreaterThanOrEqual(6);
+    for (const r of o.barricades) {
+      const twin = o.barricades.find((q) => Math.abs((q.minZ + q.maxZ) / 2 - (r.minZ + r.maxZ) / 2) < 1e-6 && Math.abs((cx - q.maxX) - (r.minX - cx)) < 1e-6);
+      expect(twin?.kit).toBe(r.kit);
+      if (r.kit === 'container') expect(r.minX <= b.minX + 0.01 || r.maxX >= b.maxX - 0.01).toBe(true);
+    }
+  });
+
   it('builds four barricade rows between the start and finish lines, inside the fence', () => {
     const b = geo.bounds!;
     expect(rows()).toHaveLength(STAGE01_OBSTACLES.barricade.rows.length);

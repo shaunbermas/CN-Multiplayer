@@ -57,9 +57,31 @@ export const STAGE01_OBSTACLES: ObstacleLayoutSpec = {
   fenceMargin: 1.5,
 };
 
+/**
+ * Stage 01 refinement (Phase 03): what each barricade segment is dressed as. The collider is always the
+ * segment's box (same on server and client); the kit only sets its depth and the model drawn on it.
+ * Assignment is mirror-symmetric per row, so the fairness rules above still hold.
+ */
+export type ObstacleKit = 'jersey' | 'crates' | 'tires' | 'drums' | 'pipes' | 'lowbar' | 'equipment' | 'container';
+
+/** Collider depth (m, along the course) and model height per kit. Containers lie by the fences only. */
+export const OBSTACLE_KITS: Record<ObstacleKit, { depth: number; height: number; label: string }> = {
+  jersey: { depth: 1.2, height: 1.1, label: 'concrete jersey barriers' },
+  crates: { depth: 1.3, height: 1.25, label: 'stacked wooden crates' },
+  tires: { depth: 1.2, height: 0.95, label: 'tyre stacks' },
+  drums: { depth: 1.2, height: 1.0, label: 'oil drums' },
+  pipes: { depth: 1.4, height: 1.05, label: 'concrete pipes' },
+  lowbar: { depth: 0.8, height: 0.8, label: 'low timber barricade' },
+  equipment: { depth: 1.4, height: 1.15, label: 'fallen floodlight frame and generator' },
+  container: { depth: 2.44, height: 2.59, label: 'shipping container (fence side only)' },
+};
+const INNER_KITS: ObstacleKit[] = ['jersey', 'crates', 'tires', 'drums', 'pipes', 'lowbar', 'equipment'];
+
+export interface Barricade extends Rect { kit: ObstacleKit }
+
 export interface ResolvedObstacles {
   id: string;
-  barricades: Rect[];
+  barricades: Barricade[];
   gate: { z: number; halfWidth: number; halfDepth: number; amplitude: number; period: number; height: number; centreX: number };
   barricadeHeight: number;
 }
@@ -72,16 +94,23 @@ export function resolveObstacles(geo: StageGeometry, spec: ObstacleLayoutSpec = 
   const cx = (b.minX + b.maxX) / 2, half = (maxX - minX) / 2;
   const gateHalf = half - spec.fenceMargin;
   const zAt = (t: number) => geo.startZ + (geo.finishZ - geo.startZ) * t;
-  const barricades: Rect[] = [];
+  const barricades: Barricade[] = [];
   spec.barricade.rows.forEach((row, r) => {
-    const z = zAt(row.at), hd = spec.barricade.depth / 2;
+    const z = zAt(row.at);
     const open = row.gaps.map((g) => [cx + g * half - spec.barricade.gapWidth / 2, cx + g * half + spec.barricade.gapWidth / 2]).sort((p, q) => p[0] - q[0]);
+    const spans: [number, number][] = [];
     let x = minX;
-    let k = 0;
     for (const [g0, g1] of [...open.map(([a, c]) => [Math.max(minX, a), Math.min(maxX, c)]), [maxX, maxX]]) {
-      if (g0 - x > 0.01) barricades.push({ id: `OBS_STG01_Barricade_${r + 1}_${++k}`, minX: x, maxX: g0, minZ: z - hd, maxZ: z + hd });
+      if (g0 - x > 0.01) spans.push([x, g0]);
       x = g1;
     }
+    spans.forEach(([x0, x1], k) => {
+      const m = Math.min(k, spans.length - 1 - k);             // mirror index: same kit on both sides
+      const atFence = x0 <= minX + 0.01 || x1 >= maxX - 0.01;
+      const kit: ObstacleKit = atFence && x1 - x0 >= 5 && r % 3 === 1 ? 'container' : INNER_KITS[(r * 2 + m * 3) % INNER_KITS.length];
+      const hd = OBSTACLE_KITS[kit].depth / 2;
+      barricades.push({ id: `OBS_STG01_Barricade_${r + 1}_${k + 1}`, minX: x0, maxX: x1, minZ: z - hd, maxZ: z + hd, kit });
+    });
   });
   return {
     id: spec.id,

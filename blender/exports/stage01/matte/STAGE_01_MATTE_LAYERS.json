@@ -33,8 +33,8 @@
         2048,
         512
       ],
-      "source_bytes": 786305,
-      "runtime_bytes": 236508,
+      "source_bytes": 744475,
+      "runtime_bytes": 210442,
       "gpu_bytes_rgba8_with_mips": 5592405
     },
     {

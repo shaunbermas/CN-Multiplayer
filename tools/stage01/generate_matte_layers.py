@@ -215,9 +215,11 @@ def sky(seed: int = 101) -> np.ndarray:
     band = np.clip((y - 0.62) / 0.38, 0, 1) ** 1.4
     over(img, np.broadcast_to(HAZE_HI, img[..., :3].shape).copy(), np.broadcast_to(band * 0.55, (H, W)).copy())
     # Moon halo glow in the cloud layer.
-    over(img, np.broadcast_to(MOON, img[..., :3].shape).copy(), (moon_near * 0.22).astype(np.float32))
+    over(img, np.broadcast_to(MOON, img[..., :3].shape).copy(), (moon_near * 0.12).astype(np.float32))
     # Fade out toward the top edge so there is never a visible cylinder rim against the sky dome.
-    img[..., 3] *= np.clip(y / 0.22, 0, 1)
+    # Long smooth fade toward the top edge so the cylinder rim never shows against the sky dome.
+    f = np.clip(y / 0.6, 0, 1)
+    img[..., 3] *= f * f * (3 - 2 * f)
     return img
 
 

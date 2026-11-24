@@ -22,6 +22,7 @@ import { Atmosphere, atmosphereStatus } from './Atmosphere.tsx';
 import { Obstacles, obstacleStatus } from './Obstacles.tsx';
 import { FOG } from './fog.ts';
 import { setPuddles } from '../../game/groundFx.ts';
+import { driveLens, eyeState, upgradeWatcherMaterials, watcherLookStatus, type WatcherLook } from './watcherLook.ts';
 import { WatcherFX, watcherFxStatus } from './WatcherFX.tsx';
 import { CLIP_SECONDS, MISSING_FROM_MANIFEST, WATCHER_CLIPS, chooseWatcherClip, type WatcherChoice } from './watcherAnimation.ts';
 
@@ -57,6 +58,8 @@ export const stage01Assets = {
   fog: { type: 'none', density: 0, color: '' } as { type: string; density: number; color: string },
   /** Stage 1.5 Watcher detection presentation (scan beam, searchlight) and lens emissive boost. */
   watcherFx: watcherFxStatus,
+  /** Phase 05: upgraded Watcher materials and the current eye state (neutral, green, red, detect). */
+  watcherLook: watcherLookStatus,
   environmentMap: false,
 };
 
@@ -301,6 +304,7 @@ function Watcher({ room, search }: { room: TrialRoom; search: boolean }) {
   const resultsAt = useRef<number | null>(null);
   const segSeen = useRef<{ key: string; at: number }>({ key: '', at: 0 });
   const spotSeen = useRef<{ key: string; at: number }>({ key: '', at: 0 });
+  const look = useRef<WatcherLook | null>(null);
   const w = stageGeo.watcher!;
 
   useEffect(() => {
@@ -335,9 +339,11 @@ function Watcher({ room, search }: { room: TrialRoom; search: boolean }) {
     stage01Assets.watcherHeight = +(box.max.y - box.min.y).toFixed(3);
     if (Math.abs(stage01Assets.watcherHeight - w.height) > 0.2) stage01Assets.problems.push(`watcher: height ${stage01Assets.watcherHeight} m, stage expects ${w.height} m`);
     if (Math.abs(box.min.y) > 0.05) stage01Assets.problems.push(`watcher: feet at ${box.min.y.toFixed(2)} m, expected 0 at the root`);
+    // Stage 01 refinement (Phase 05): material and lens polish only; geometry is locked (watcherLook.ts).
+    look.current = upgradeWatcherMaterials(gltf.scene, w.y, w.height);
     stage01Assets.watcher = 'ready';
-    return () => { dispose(gltf.scene); useGLTF.clear(WATCHER_URL); stage01Assets.watcher = 'loading'; };
-  }, [gltf, w.height]);
+    return () => { look.current?.dispose(); look.current = null; dispose(gltf.scene); useGLTF.clear(WATCHER_URL); stage01Assets.watcher = 'loading'; };
+  }, [gltf, w.height, w.y]);
 
   useFrame(() => {
     const v = signalView(room);
@@ -355,6 +361,7 @@ function Watcher({ room, search }: { room: TrialRoom; search: boolean }) {
     const thisRoundSpot = spotted && phase === 'active' && spotted.at >= goLocal - 1000 ? spotted : undefined;
     const spotKey = thisRoundSpot ? `${thisRoundSpot.id}@${thisRoundSpot.at}` : '';
     if (spotSeen.current.key !== spotKey) spotSeen.current = { key: spotKey, at: Date.now() };
+    if (look.current) driveLens(look.current, eyeState(phase, v.signal, thisRoundSpot ? (Date.now() - spotSeen.current.at) / 1000 : Infinity), performance.now() / 1000);
     const choice = chooseWatcherClip({
       phase, signal: v.signal, into: v.into, sinceSegmentSeen: (Date.now() - segSeen.current.at) / 1000, segmentLength: v.segLength, segmentStart: v.segStart, redIndex: v.redIndex,
       sinceSpotted: thisRoundSpot ? (Date.now() - spotSeen.current.at) / 1000 : Infinity,

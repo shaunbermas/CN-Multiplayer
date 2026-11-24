@@ -34,15 +34,16 @@ function loadTexture(url: string, onError: (e: unknown) => void) {
 }
 
 /** Open cylinder facing inward, u = 0 toward +Z, increasing toward +X (the manifest's convention). */
-function layerGeometry(radius: number, height: number, bottom: number, uOffset: number, segments = 128) {
+function layerGeometry(radius: number, height: number, bottom: number, uOffset: number, gloom = 0.7, segments = 128) {
   const pos: number[] = [], uv: number[] = [], idx: number[] = [], col: number[] = [];
   for (let i = 0; i <= segments; i++) {
     const u = i / segments;
     const a = u * Math.PI * 2;
     const x = Math.sin(a) * radius, z = Math.cos(a) * radius;
     pos.push(x, bottom, z, x, bottom + height, z);
-    // Darker toward The Watcher (u = 0.5 faces -Z): the painted world falls into gloom behind the doll.
-    const k = 1 - 0.7 * Math.exp(-(((u - 0.5) / 0.09) ** 2));
+    // Darker toward The Watcher (u = 0.5 faces -Z): the painted world falls into gloom behind the doll. Not on
+    // the translucent cloud and mist layers, where darkening would show as a dark band in the sky.
+    const k = 1 - gloom * Math.exp(-(((u - 0.5) / 0.09) ** 2));
     col.push(k, k, k, k, k, k);
     uv.push(u + uOffset, 0, u + uOffset, 1);
     if (i < segments) { const k = i * 2; idx.push(k, k + 2, k + 1, k + 1, k + 2, k + 3); }
@@ -72,7 +73,7 @@ function MatteLayers({ quality }: { quality: Quality }) {
         sh.fragmentShader = 'uniform vec3 uFogTint; uniform float uFogTintMix;\n' + sh.fragmentShader.replace('#include <opaque_fragment>',
           '#include <opaque_fragment>\n  gl_FragColor.rgb = mix(gl_FragColor.rgb, uFogTint, uFogTintMix);');
       };
-      const mesh = new THREE.Mesh(layerGeometry(l.radius, l.height, l.bottom, l.uOffset), mat);
+      const mesh = new THREE.Mesh(layerGeometry(l.radius, l.height, l.bottom, l.uOffset, l.id === 'MP01_Sky' || l.id === 'MP06_Foreground' ? 0 : 0.7), mat);
       mesh.name = l.id;
       mesh.renderOrder = -10 + l.order; // far layers first; they never write depth
       mesh.frustumCulled = false;

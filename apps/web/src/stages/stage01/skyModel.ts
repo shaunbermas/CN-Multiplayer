@@ -4,8 +4,8 @@ import * as THREE from 'three';
 
 /** Sky colours (sRGB hex): zenith to horizon, plus the moon and the warm glow of the yard's floodlights. */
 export const SKY = {
-  zenith: '#070a1a',
-  upper: '#141c38',
+  zenith: '#060c18',       // Phase 10: teal-blue night with a purple undertone higher up
+  upper: '#171d3a',
   horizon: '#456569',      // equals the scene fog colour (STAGE_01_LIGHTING.json fog), so fog melts into the sky
   horizonGlow: '#55777a',
   below: '#0b1416',

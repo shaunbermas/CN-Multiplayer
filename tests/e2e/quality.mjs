@@ -81,13 +81,15 @@ try {
       high: { sky: 'gradient+moon+stars+clouds', cones: 10, mist: 4, post: 'bloom+grade', wash: true, shroud: true },
     }[q];
     for (const [k, v] of Object.entries(want15)) if (a.atmosphere[k] !== v) errors.push(`${q}: atmosphere.${k} ${a.atmosphere[k]}; expected ${v}`);
-    const matte = JSON.parse(readFileSync(`${root}blender/exports/stage15/STAGE_01_MATTE_PAINTING_MANIFEST.json`, 'utf8'));
-    const wantCutouts = matte.cutouts.instances.filter((i) => i.rank < matte.cutouts.qualityFraction[q]).length;
-    if (a.surroundings.layers !== matte.layers.length || a.surroundings.cutouts !== wantCutouts || a.surroundings.problems.length)
-      errors.push(`${q}: surroundings ${JSON.stringify(a.surroundings)}; expected ${matte.layers.length} layers, ${wantCutouts} cutouts`);
-    if (a.midground.trees !== 49) errors.push(`${q}: midground trees ${a.midground.trees}; expected 49`);
+    // Stage 01 refinement (Phase 04): six painted layers, no tree cutouts, no midground trees, no 3D trees at all.
+    const matte = JSON.parse(readFileSync(`${root}blender/exports/stage01/matte/STAGE_01_MATTE_LAYERS.json`, 'utf8'));
+    if (a.surroundings.layers !== matte.layers.length || a.surroundings.cutouts !== 0 || a.surroundings.problems.length)
+      errors.push(`${q}: surroundings ${JSON.stringify(a.surroundings)}; expected ${matte.layers.length} layers, 0 cutouts`);
+    if (a.midground.trees !== 0) errors.push(`${q}: midground trees ${a.midground.trees}; expected 0`);
+    // Phase 05: Watcher materials upgraded at runtime (geometry untouched), three signal lens materials driven.
+    if (!(a.watcherLook?.upgraded?.length >= 6) || a.watcherLook?.lensMaterials !== 3) errors.push(`${q}: watcher look ${JSON.stringify(a.watcherLook)}`);
     if (a.environmentMap !== (q !== 'low')) errors.push(`${q}: sky environment map ${a.environmentMap}; expected ${q !== 'low'} (off on Low)`);
-    if (!(a.foliageTrianglesRemoved > 0)) errors.push(`${q}: cone trees were not stripped`);
+    if (!(a.foliageTrianglesRemoved > 2000)) errors.push(`${q}: cone trees were not stripped (${a.foliageTrianglesRemoved} triangles removed)`);
     const fps = await fpsOver(page, 3000);
     const info = await page.evaluate(() => window.__cn.renderInfo());
     // A software-rendered High frame can take many seconds on a 2-core CI runner; a screenshot waits for one.

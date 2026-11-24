@@ -1,15 +1,17 @@
 // Stage 1.5 (Prompt 05): visible models for the obstacle twist. Collision lives in packages/shared/src/
 // obstacles.ts and runs on the server (authority) and in prediction; this only draws the same shapes.
-//   - barricade rows: low-poly jersey barriers (trapezoid section) merged into one draw call
+//   - barricade rows: each segment dressed as a modular kit (jersey barriers, crates, tyres, drums, pipes, timber
+//     barricades, fallen equipment, containers by the fences), merged into one mesh per material (obstacleKits.ts)
 //   - sliding gate: steel panel with hazard stripes on ground rails; its beacon blinks amber while it moves
 //     (green / warning) and turns solid red when it is frozen (red light), so its state is readable
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import { gateX, greenTime, type Rect } from '@cn-trials/shared';
+import { gateX, greenTime } from '@cn-trials/shared';
 import type { TrialRoom } from '../../net.ts';
 import { scheduleFor, signalView } from '../../game/roundClock.ts';
 import { stageObstacles } from '../../game/stage.ts';
+import { buildKitMeshes, kitMaterials } from './obstacleKits.ts';
 
 export const obstacleStatus = { shown: false, barricades: 0, gateX: 0, gateMoving: false };
 
@@ -28,35 +30,6 @@ function hazardTexture() {
   return t;
 }
 
-/** One merged mesh of jersey barriers: trapezoid section (full depth at the base, 40 % at the top). */
-function barricadeGeometry(rects: Rect[], height: number) {
-  const pos: number[] = [], uv: number[] = [], idx: number[] = [];
-  for (const r of rects) {
-    const cz = (r.minZ + r.maxZ) / 2, d = (r.maxZ - r.minZ) / 2, len = r.maxX - r.minX;
-    const prof: [number, number][] = [[-d, 0], [-d * 0.75, height * 0.18], [-d * 0.4, height], [d * 0.4, height], [d * 0.75, height * 0.18], [d, 0]];
-    // side and top strips along X
-    for (let k = 0; k < prof.length - 1; k++) {
-      const b = pos.length / 3;
-      const [z0, y0] = prof[k], [z1, y1] = prof[k + 1];
-      pos.push(r.minX, y0, cz + z0, r.maxX, y0, cz + z0, r.minX, y1, cz + z1, r.maxX, y1, cz + z1);
-      const v0 = 1 - y0 / height, v1 = 1 - y1 / height;
-      uv.push(0, v0, len / 4, v0, 0, v1, len / 4, v1);
-      idx.push(b, b + 1, b + 2, b + 2, b + 1, b + 3);
-    }
-    for (const x of [r.minX, r.maxX]) { // end caps (fan)
-      const b = pos.length / 3;
-      for (const [z, y] of prof) { pos.push(x, y, cz + z); uv.push(0.5 + z / (4 * d), 1 - y / height); }
-      for (let k = 1; k < prof.length - 1; k++) idx.push(b, b + k, b + k + 1);
-    }
-  }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
-  g.setIndex(idx);
-  g.computeVertexNormals();
-  return g;
-}
-
 export function Obstacles({ room, shadows }: { room: TrialRoom; shadows: boolean }) {
   const o = stageObstacles;
   const gate = useRef<THREE.Group>(null);
@@ -65,9 +38,10 @@ export function Obstacles({ room, shadows }: { room: TrialRoom; shadows: boolean
   const built = useMemo(() => {
     if (!o) return null;
     const tex = hazardTexture();
-    const concrete = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85, metalness: 0, side: THREE.DoubleSide });
-    const barricades = new THREE.Mesh(barricadeGeometry(o.barricades, o.barricadeHeight), concrete);
+    const kitMats = kitMaterials();
+    const barricades = new THREE.Group();
     barricades.name = 'OBS_STG01_Barricades';
+    for (const m of buildKitMeshes(o.barricades, kitMats)) barricades.add(m);
     const steelTex = tex.clone(); steelTex.repeat.set(2, 1); steelTex.needsUpdate = true;
     const steel = new THREE.MeshStandardMaterial({ map: steelTex, color: '#b9b4aa', roughness: 0.45, metalness: 0.6 });
     const rail = new THREE.MeshStandardMaterial({ color: '#3a3d40', roughness: 0.4, metalness: 0.8 });
@@ -75,12 +49,14 @@ export function Obstacles({ room, shadows }: { room: TrialRoom; shadows: boolean
     const rails = new THREE.Mesh(new THREE.BoxGeometry(travel * 2 + 2, 0.06, 0.14), rail);
     rails.position.set(o.gate.centreX, 0.03, o.gate.z);
     rails.name = 'OBS_STG01_GateRail';
-    return { tex, steelTex, concrete, steel, rail, barricades, rails };
+    return { tex, steelTex, kitMats, steel, rail, barricades, rails };
   }, [o]);
   useEffect(() => () => {
     if (!built) return;
-    built.barricades.geometry.dispose(); built.rails.geometry.dispose();
-    built.tex.dispose(); built.steelTex.dispose(); built.concrete.dispose(); built.steel.dispose(); built.rail.dispose();
+    built.barricades.traverse((x) => { if ((x as THREE.Mesh).isMesh) (x as THREE.Mesh).geometry.dispose(); });
+    built.rails.geometry.dispose();
+    for (const m of Object.values(built.kitMats)) { m.map?.dispose(); m.dispose(); }
+    built.tex.dispose(); built.steelTex.dispose(); built.steel.dispose(); built.rail.dispose();
   }, [built]);
   useEffect(() => { if (root.current) root.current.traverse((x) => { if ((x as THREE.Mesh).isMesh) { x.castShadow = shadows; x.receiveShadow = shadows; } }); }, [shadows, built]);
   useFrame((state) => {
