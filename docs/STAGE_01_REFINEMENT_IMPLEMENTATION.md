@@ -48,8 +48,8 @@ Rules (all values in `COLLISION`, `packages/shared/src/constants.ts`):
 - **Never an elimination**: the separation and the knock-down are applied after the movement step and are not
   input-driven movement, so the red-light detector does not count them. Players who are down cannot move, so
   they cannot be spotted while down either.
-- Server authority: the room runs it after every 30 Hz step for humans and bots alike (only `active` players
-  during a stage); snapshots carry each player's knock-down time left (protocol v7, 10th row element); clients
+- Server authority: the room runs it after every 30 Hz step for humans and bots alike (everyone in the lobby;
+  during a stage only players still racing); snapshots carry each player's knock-down time left (protocol v7, 10th row element); clients
   play Fall/Recover from it and block local input while down. A `collision` event drives a toast.
 - Tests: `collisions.test.ts` (7 cases: contact distance is two capsule radii, a hard hit knocks both down,
   direction matters (side brush and slow nudge only separate), head-on speeds add, no chaining while down or

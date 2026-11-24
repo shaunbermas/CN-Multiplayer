@@ -50,7 +50,8 @@ sidestep for a moment (stuck watchdog). When knocked down it has no control (lik
 Headless, 30 bots, default Stage 01 (`bots.test.ts` → `simulateStage`, three seeds), and in a real match on
 the Worker (`tests/reports/refinement-measure.json`): about half finish, a quarter are spotted, the rest are
 still walking when the stage closes; the first finish lands around 70 s; collisions happen every stage
-(about 20 knock-downs at 30 players). Exact figures are in `docs/STAGE_01_QA_REPORT.md`.
+(about 20 knock-downs per stage at 30 players). In the measured 3-stage match: 14 / 21 / 12 finished, 13 / 5 / 12
+spotted, first finishes at 78.8 / 73.3 / 81.3 s, 63 knock-downs in total. Details: `docs/STAGE_01_QA_REPORT.md`.
 
 Server cost: bots run inside the room's 30 Hz step. With 29 bots the server tick stays far below the 33 ms
 budget (QA report §Performance).
