@@ -136,7 +136,12 @@ try {
   if (!(fxB?.spotBeams >= 1)) errors.push(`Detection beam did not fire after the spot (${JSON.stringify(fxB)})`);
   const hist = (await assets(pageB)).clipHistory.map(([c]) => c);
   redClip = hist.includes('Watcher_Detect') ? 'Watcher_Detect' : hist.at(-1);
-  if (!hist.includes('Watcher_FocusLock')) errors.push(`Watcher_FocusLock never played at red (clips: ${hist.join(', ')})`);
+  // The red opens with FocusLock unless the server's spot lands inside FocusLock's first second: Detect then
+  // takes over (by design, watcherAnimation.ts). Both are a correct red-light reaction; slow software frames
+  // decide which one the client draws first.
+  const redIdx = hist.lastIndexOf('Watcher_TurnToField');
+  const afterWarn = redIdx >= 0 ? hist.slice(redIdx + 1) : hist;
+  if (!afterWarn.includes('Watcher_FocusLock') && afterWarn[0] !== 'Watcher_Detect') errors.push(`Neither Watcher_FocusLock nor Watcher_Detect opened the red (clips: ${hist.join(', ')})`);
   await pageB.screenshot({ path: `${shots}/s1-4_red_view.png` });
   step('detect checked');
   await sleep(2600); // past the SPOTTED! stamp

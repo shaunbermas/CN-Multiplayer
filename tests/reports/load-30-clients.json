@@ -1,12 +1,12 @@
 {
   "result": "PASS",
   "errors": [],
-  "date": "2026-11-24T17:28:44.657Z",
+  "date": "2026-11-24T21:36:50.941Z",
   "server": "Cloudflare Worker + Durable Object (wrangler dev, local)",
   "clients": 30,
   "join_ms": {
-    "avg": 16.8,
-    "max": 41.4
+    "avg": 13.4,
+    "max": 28.8
   },
   "every_client_sees": 30,
   "unique_colorways": 30,
@@ -17,8 +17,8 @@
   "load_seconds": 42.5,
   "rtt_ms": {
     "median": 6,
-    "p95": 37,
-    "max": 38
+    "p95": 9,
+    "max": 9
   },
   "room": {
     "ok": true,
@@ -33,31 +33,31 @@
       "total": 0,
       "final": false
     },
-    "knockdowns": 44,
+    "knockdowns": 42,
     "snapshot": {
-      "count": 814,
-      "avgBytes": 1610
+      "count": 823,
+      "avgBytes": 1611
     },
     "ticks": 1277,
     "tickMs": {
-      "avg": 0.17,
-      "p95": 1,
-      "max": 3
+      "avg": 0.042,
+      "p95": 0,
+      "max": 1
     },
     "inputs": {
-      "accepted": 36600,
+      "accepted": 36660,
       "dropped": 0
     }
   },
   "snapshots_per_client_per_s": {
-    "min": 19.1,
-    "avg": 19.1
+    "min": 19.3,
+    "avg": 19.3
   },
   "walk_test": {
     "from": "spawn 1 (front row, centre)",
     "distance_m": 162,
-    "server_finish_time_s": 40.47,
-    "projected_with_signals_s": 71,
+    "server_finish_time_s": 40.5,
+    "projected_with_signals_s": 71.1,
     "note": "Projection assumes the average signal cycle in STAGE_01_SPEC.md §3 and a player who never hesitates."
   }
 }

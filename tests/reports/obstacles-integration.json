@@ -1,23 +1,23 @@
 {
   "result": "PASS",
   "errors": [],
-  "date": "2026-11-24T17:27:58.643Z",
+  "date": "2026-11-24T21:36:01.729Z",
   "seed": 12345,
   "layout": "STG01_OBSTACLES_B",
   "barricades": 41,
   "lobby_obstacles": true,
   "with_obstacles": {
-    "z": -26.3,
+    "z": -26.2,
     "x": 0,
-    "minZ": -26.3,
+    "minZ": -26.2,
     "status": "active",
-    "closed_row_face_z": -26.6,
-    "expected_stop_z": -26.3
+    "closed_row_face_z": -26.5,
+    "expected_stop_z": -26.2
   },
   "without_obstacles": {
-    "z": -30.894,
+    "z": -31.286,
     "x": 0,
-    "minZ": -30.894,
+    "minZ": -31.286,
     "status": "active"
   }
 }
