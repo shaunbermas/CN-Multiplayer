@@ -20,6 +20,7 @@
 | 06 UI/UX Bible | Screens, flows, HUD, states, gaps |
 | 07 Asset Registry | Every production asset with path, size, budget and status |
 | 08 Production Tracker | Stage 01 completion matrix, Stage 1.5 readiness, quality checklists, sequence |
+| 09 Next Milestone Plan | Stage 1.5 second pass: git safety, architecture findings, specs (audio, reconnect, winner, performance), polish audit, order (PROPOSED) |
 
 **Labels used throughout:**
 
@@ -44,7 +45,8 @@ the next milestone. The repository records otherwise:
 - Deliverables: `CN_TRIAL_STAGE_1_5_FINAL_DELIVERABLES/`, `docs/stage15/`.
 
 This set therefore treats "Stage 1.5" as **a first pass that is complete and live, with open items**, and
-08 §2 assesses readiness for the remaining Stage 1.5 work (a second polish pass) rather than a fresh start.
+08 §2 assesses readiness for the remaining Stage 1.5 work (a second polish pass) rather than a fresh start. **Confirmed by the owner on 24 Nov 2026 (decision 032):** the next milestone is the
+Stage 1.5 second pass; see 09.
 The owner should confirm this reading (see 08 §6, question Q1).
 
 ## 2. Product identity

@@ -2,7 +2,10 @@
 
 Audit date 24 Nov 2026, `main` @ `7ccb1ba`. Labels: see 01. This file holds the Stage 01 completion matrix
 (Phase 4), the Stage 1.5 readiness assessment (Phase 5), the quality and consistency system (Phase 6) and the
-recommended production sequence. Earlier trackers stay where they are: `docs/stage15/STAGE_1_5_PRODUCTION_TRACKER.md`,
+recommended production sequence. **Update 24 Nov 2026 (decision 032):** the owner confirmed that the first Stage 1.5
+pass is implemented and deployed and that the next milestone is the Stage 1.5 second pass (polish, quality,
+validation). Its roadmap, specs and architecture findings are in `09_CN_TRIAL_NEXT_MILESTONE_PLAN.md` (PROPOSED,
+awaiting owner approval). Earlier trackers stay where they are: `docs/stage15/STAGE_1_5_PRODUCTION_TRACKER.md`,
 `CN_TRIAL_STAGE_1_5_FINAL_DELIVERABLES/`.
 
 ## 1. Evidence gathered in this audit (real runs, 24 Nov 2026)
@@ -110,7 +113,8 @@ items should come first because polish adds rendering cost and changes readabili
 
 ## 3. Stage 1.5 pre-production readiness (Phase 5)
 
-Context (01 §1): a first Stage 1.5 pass is merged and live. The table assesses what a second pass would reuse and
+Context (01 §1, decision 032): a first Stage 1.5 pass is merged and live, and the owner confirmed the next milestone is
+the second pass. The table assesses what the second pass reuses and
 what needs new production. Readiness: **READY** (inputs exist), **READY WITH INPUTS** (needs an owner input first),
 **NOT READY** (blocked by a dependency).
 
@@ -209,6 +213,9 @@ listed evidence, checked by a person or an automated test, and recorded with the
 
 ## 6. Recommended production sequence (PROPOSED)
 
+Superseded in detail by 09 §5, which orders the second pass after the owner's 24 Nov confirmation. The table below
+is kept as the audit's original proposal.
+
 | Step | Work | Why first | Owner input |
 |---|---|---|---|
 | 0 | Answer Q1–Q5 below | Several items are blocked only on these | Yes |
@@ -225,7 +232,7 @@ listed evidence, checked by a person or an automated test, and recorded with the
 
 | # | Question |
 |---|---|
-| Q1 | Stage 1.5 was merged and deployed on 22 Nov (decisions 027, 029–031). Is the next milestone a second Stage 1.5 pass, as this set assumes? |
+| Q1 | ~~Is the next milestone a second Stage 1.5 pass?~~ **Answered yes** by the owner on 24 Nov 2026 (decision 032) |
 | Q2 | Should "Fall Guys-inspired movement" stay an animation-feel direction in Stage 01 (walk-only rules unchanged), with jump/sprint arriving in later stages? |
 | Q3 | Which machines are the reference and minimum hardware for the frame-rate targets? |
 | Q4 | Audio: original sound design, licensed packs, or generated? Any budget constraint (the project aims to cost nothing)? |
