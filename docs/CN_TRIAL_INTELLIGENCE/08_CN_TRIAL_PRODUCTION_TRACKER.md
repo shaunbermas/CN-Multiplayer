@@ -20,8 +20,8 @@ Chromium with software WebGL. Nothing was skipped silently; anything not run is 
 | Two browsers in one room | `npm run test:e2e` | PASS (prediction error 0 m) |
 | Obstacles enforced by the server | `npm run test:obstacles` | PASS |
 | Colourways unique, kept on reconnect, emotes | `npm run test:colorways` | PASS |
-| UI walkthrough | `npm run test:ui` | __UI_RESULT__ |
-| Graphics tiers + adaptive fallback | `npm run test:quality` | __QUALITY_RESULT__ |
+| UI walkthrough | `npm run test:ui` | PASS (every screen and the connection-lost and room-full states; software renderer, Low tier) |
+| Graphics tiers + adaptive fallback | `npm run test:quality` | PASS: each tier turns on its effects; default starts High; adaptive fallback stepped High → Medium → Low on the software renderer (software fps 2.0 / 0.9 / 0.8 Low / Medium / High: comparison only) |
 | Blender asset checks | `bash blender/scripts/run_stage.sh …`, `validate_*.py` | NOT RUN in this audit (no asset changed). Last CI evidence: Checks run 37 (`test` job) **success** on PR #22, 22 Nov 2026 |
 | 30-player browser scene | `npm run test:thirty` | NOT RUN (about 20 minutes of six software renderers; not in CI). Last recorded: PASS, `tests/reports/thirty-players.json` |
 | Live site | Deploy run 17 smoke test of `/api/health` | **success**, 22 Nov 2026 07:04 UTC (GitHub Actions). Not reachable from this container (network proxy) |
