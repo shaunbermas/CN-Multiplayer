@@ -47,7 +47,7 @@ the next milestone. The repository records otherwise:
 This set therefore treats "Stage 1.5" as **a first pass that is complete and live, with open items**, and
 08 §2 assesses readiness for the remaining Stage 1.5 work (a second polish pass) rather than a fresh start. **Confirmed by the owner on 24 Nov 2026 (decision 032):** the next milestone is the
 Stage 1.5 second pass; see 09.
-The owner should confirm this reading (see 08 §6, question Q1).
+(This was question Q1 in 08 §6.)
 
 ## 2. Product identity
 
