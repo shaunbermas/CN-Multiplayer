@@ -56,7 +56,7 @@ try {
     p.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(`${tag}: ${m.text()}`); });
   }
   // Alpha joins first, so Alpha is the host; the test seed makes the round deterministic (test mode only).
-  await pageA.goto(url('Alpha', `&testSeed=12345&testRound=${ROUND_S}&testBriefing=1`));
+  await pageA.goto(url('Alpha', `&testSeed=12345&testRound=${ROUND_S}&testBriefing=1&testStages=1`));
   await waitFor(async () => pageA.evaluate(() => !!window.__cn), 'Alpha joined first (host)');
   await pageB.goto(url('Beta'));
   await waitFor(async () => (await pageA.evaluate(() => !!window.__cn)) && (await pageB.evaluate(() => !!window.__cn)), 'both pages joined');
@@ -154,7 +154,7 @@ try {
   await waitFor(async () => (await pageB.evaluate(() => window.__cn.resultsMeta())) !== null, 'results message (Beta)', (ROUND_S + 30) * 1000);
   step(`results on Beta, phase ${(await round(pageB)).phase}`);
   if ((await round(pageB)).phase === 'results') {
-    await waitFor(async () => (await pageB.locator('.results .tag.out').count()) > 0, 'results screen on Beta', 10_000)
+    await waitFor(async () => (await pageB.locator('[data-testid=stage-board] .out').count()) > 0, 'results screen on Beta', 10_000)
       .catch(() => errors.push('Results screen has no eliminated tag'));
     await pageB.screenshot({ path: `${shots}/s1-4_results_view.png` });
   } else errors.push(`Results screen closed before the test could check it (Beta phase ${(await round(pageB)).phase})`);

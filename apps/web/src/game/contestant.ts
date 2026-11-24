@@ -10,7 +10,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
-import { colorwayById, CONTESTANT_COLORWAYS, type Colorway, type Emote } from '@cn-trials/shared';
+import { COLLISION, colorwayById, CONTESTANT_COLORWAYS, type Colorway, type Emote } from '@cn-trials/shared';
 import type { GroundKind } from './groundFx.ts';
 import glbUrl from '../../../../blender/exports/contestant/CNTRIAL_CONTESTANT_MASTER.meshopt.glb?url';
 import detailUrl from '../../../../blender/exports/contestant/CNT_Detail.webp?url';
@@ -205,6 +205,8 @@ export interface ContestantDrive {
   status: 'active' | 'finished' | 'spotted' | 'waiting';
   /** Round phase is active and the light is green (a hard stop then means a stumble, not a stop for red). */
   greenActive: boolean;
+  /** Seconds of collision knock-down left (server), 0 when standing (Stage 01 refinement). */
+  down?: number;
 }
 
 interface Chain { name: string; dur?: number }
@@ -226,6 +228,8 @@ export class ContestantInstance {
   /** Ground contacts since the last frame (skid, land, dive, flop) for the dust / splash effects. */
   readonly events: GroundKind[] = [];
   private shotEvent = '';
+  /** Collision knock-down presentation: none -> falling (Fall, held) -> recovering (Recover). */
+  private downState: 'none' | 'falling' | 'recovering' = 'none';
   lod = 1;
 
   constructor(asset: ContestantAsset, colorwayId: string) {
@@ -313,12 +317,20 @@ export class ContestantInstance {
       else if (this.lastStatus === 'finished' && this.shot?.name === 'Victory') this.shot.hold = false;
       this.lastStatus = d.status;
     }
+    // Collision knock-down (server timer): fall and hold on the ground, then get up for the last recoverS.
+    const down = d.down ?? 0;
+    if (down > 0 && this.downState === 'none') { this.downState = 'falling'; this.play('Fall', { hold: true }); this.speedHist.length = 0; }
+    else if (down > 0 && down <= COLLISION.recoverS && this.downState === 'falling') { this.downState = 'recovering'; this.play('Recover', { dur: COLLISION.recoverS }); }
+    else if (down <= 0 && this.downState !== 'none') {
+      if (this.downState === 'falling') this.play('Recover'); // a late snapshot skipped the recover window
+      this.downState = 'none';
+    }
     // start / stop / stumble from the speed history
     this.speedHist.push({ t: this.clock, v: d.speed });
     while (this.speedHist.length && this.clock - this.speedHist[0].t > 0.35) this.speedHist.shift();
     const peak = Math.max(...this.speedHist.map((h) => h.v));
     const free = !this.shot || (!this.shot.hold && this.shot.t > this.shot.dur * 0.6);
-    if (d.status === 'active' && free) {
+    if (d.status === 'active' && free && this.downState === 'none') {
       if (peak > 2.6 && d.speed < 0.5) {
         this.play(d.greenActive ? 'Stumble' : 'Stop');
         this.speedHist.length = 0;

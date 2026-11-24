@@ -84,3 +84,12 @@ export function step(s: MoveState, input: MoveInput, dt: number, walls: Rect[]):
   }
   return { x, z, vx, vz };
 }
+
+/** Pushes a capsule centre out of every wall (used after a player-to-player separation push). */
+export function pushOutOfWalls(x: number, z: number, walls: Rect[]): [number, number] {
+  for (const w of walls) {
+    const [nx, nz] = resolveRect(x, z, MOVEMENT.capsuleRadius, w);
+    x = nx; z = nz;
+  }
+  return [x, z];
+}

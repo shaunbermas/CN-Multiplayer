@@ -1,11 +1,11 @@
 {
   "result": "PASS",
   "errors": [],
-  "date": "2026-11-22T06:22:29.731Z",
+  "date": "2026-11-24T17:25:45.408Z",
   "seed": 12345,
   "round_s": 25,
-  "first_red_s": 6.78,
-  "reckless_spotted_at_s": 7.13,
+  "first_red_s": 6.27,
+  "reckless_spotted_at_s": 6.63,
   "placings": [
     "1. Careful (active)",
     "2. Statue (active)",
@@ -19,13 +19,64 @@
   "signals_seen": [
     "green",
     "warning",
-    "red"
+    "red",
+    "none"
   ],
-  "tournament_round": {
-    "target": 3,
-    "qualified": [
-      "Careful",
-      "Reckless"
+  "match_two_stages": {
+    "standings": [
+      {
+        "rank": 1,
+        "name": "Careful",
+        "points": 0,
+        "perStage": [
+          0,
+          0
+        ]
+      },
+      {
+        "rank": 2,
+        "name": "Reckless",
+        "points": 0,
+        "perStage": [
+          0,
+          0
+        ]
+      },
+      {
+        "rank": 3,
+        "name": "Statue",
+        "points": 0,
+        "perStage": [
+          0,
+          0
+        ]
+      },
+      {
+        "rank": 4,
+        "name": "Late",
+        "points": 0,
+        "perStage": [
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  "bots": {
+    "filled": {
+      "players": 30,
+      "bots": 28
+    },
+    "after_human_join": {
+      "players": 3
+    },
+    "names_sample": [
+      "Juniper",
+      "Indigo",
+      "Nimbus",
+      "Maple",
+      "Cinder",
+      "Nova"
     ]
   }
 }

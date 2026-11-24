@@ -86,11 +86,12 @@ describe('round engine (spec §4–§5)', () => {
 
   it('spots movement during red after the grace window, never during green, warning or the grace', () => {
     const { engine, players } = setup();
-    runTo(engine, players, 0, 4.05, () => 0); // briefing + countdown
+    runTo(engine, players, 0, 4.1, () => 0); // briefing + countdown
+    expect(engine.phase).toBe('active'); // goTime is known from here on
     const sched = engine.schedule;
     const firstRed = sched.find((s) => s.signal === 'red')!;
     // a: moves only during green (stops at warning start). b: keeps moving into red. c: moves only during the grace window.
-    const ev = runTo(engine, players, 4.05, engine.goTime + firstRed.end - 0.1, (p, t) => {
+    const ev = runTo(engine, players, 4.1, engine.goTime + firstRed.end - 0.1, (p, t) => {
       const seg = segmentAt(sched, t)!;
       if (p.id === 'a') return seg.signal === 'green' ? 4 : 0;
       if (p.id === 'b') return 4;

@@ -1,33 +1,33 @@
 {
   "result": "PASS",
   "errors": [],
-  "date": "2026-11-22T06:21:30.346Z",
+  "date": "2026-11-24T17:26:28.338Z",
   "unique_colorways_30": 30,
   "reconnects": [
     {
       "player": 3,
-      "before": "CW16",
-      "after": "CW16"
+      "before": "CW05",
+      "after": "CW05"
     },
     {
       "player": 7,
-      "before": "CW17",
-      "after": "CW17"
+      "before": "CW18",
+      "after": "CW18"
     },
     {
       "player": 11,
-      "before": "CW10",
-      "after": "CW10"
+      "before": "CW09",
+      "after": "CW09"
     },
     {
       "player": 19,
-      "before": "CW13",
-      "after": "CW13"
+      "before": "CW22",
+      "after": "CW22"
     },
     {
       "player": 26,
-      "before": "CW30",
-      "after": "CW30"
+      "before": "CW21",
+      "after": "CW21"
     }
   ],
   "unique_after_rejoins": 30,

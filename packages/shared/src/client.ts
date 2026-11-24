@@ -1,11 +1,12 @@
 // Small room client used by the web app and by the Node tests (Node 22+ has a global WebSocket).
 // Keeps the latest server snapshot per player and the round state; the web app adds prediction.
 import {
-  PROTOCOL_VERSION, STATUS_OF, type ClientMessage, type RosterEntry, type RoundState, type ServerMessage,
+  PROTOCOL_VERSION, STATUS_OF, type ClientMessage, type MatchState, type ResultPlacing, type RosterEntry, type RoundState, type ServerMessage,
   type StartRequestOptions,
 } from './protocol.ts';
+import type { Standing } from './match.ts';
 import type { Emote } from './contestantColorways.ts';
-import type { Placing, PlayerStatus } from './round.ts';
+import type { PlayerStatus } from './round.ts';
 
 export interface PlayerView {
   id: string; name: string; spawn: number;
@@ -13,18 +14,21 @@ export interface PlayerView {
   ack: number; status: PlayerStatus; finishTime: number;
   /** Lobby ready flag (Stage 1.5). */
   ready: boolean;
-  /** Character dealt by the server (CHR_01–CHR_30), unique in the room. */
   /** Colourway of the shared contestant (CW01–CW30). */
   colorway: string;
+  /** Server-side bot (v7). */
+  bot: boolean;
+  /** Seconds of collision knock-down left (0 = standing; v7). */
+  down: number;
 }
 
-export type ResultRow = Placing & { name: string };
+export type ResultRow = ResultPlacing;
 
 export class RoomError extends Error {
   constructor(public code: string, message: string) { super(message); }
 }
 
-const LOBBY: RoundState = { phase: 'lobby', signal: 'none', remaining: -1, elapsed: 0, host: '', seed: 0, stage: '', mode: 'standup', target: -1, obstacles: false };
+const LOBBY: RoundState = { phase: 'lobby', signal: 'none', remaining: -1, elapsed: 0, host: '', seed: 0, stage: '', mode: 'standup', target: -1, obstacles: false, match: { stage: 0, total: 0, final: false } };
 
 export class RoomClient {
   readonly players = new Map<string, PlayerView>();
@@ -38,9 +42,12 @@ export class RoomClient {
   roundAt = 0;
   results: ResultRow[] = [];
   /** Round id, stage and mode of the last results message. */
-  resultsMeta: { roundId: number; stage: string; mode: string } | null = null;
+  resultsMeta: { roundId: number; stage: string; mode: string; match: MatchState } | null = null;
+  /** Overall match standings (v7), newest from the server. */
+  standings: Standing[] = [];
+  standingsMatch: MatchState | null = null;
   /** at = local receive time (ms); roundT = seconds since GO on the server's clock. */
-  readonly events: { kind: 'spotted' | 'finished'; id: string; at: number; roundT: number }[] = [];
+  readonly events: { kind: 'spotted' | 'finished' | 'collision'; id: string; at: number; roundT: number; other?: string }[] = [];
   private ws: WebSocket;
   private closeHandlers: ((code: number, reason: string) => void)[] = [];
   private snapHandlers: (() => void)[] = [];
@@ -87,18 +94,24 @@ export class RoomClient {
             c.time = msg.time;
             c.snapshots++;
             c.setRound(msg.round);
-            for (const [id, x, z, vx, vz, yaw, ack, st, ft] of msg.rows) {
+            for (const [id, x, z, vx, vz, yaw, ack, st, ft, down] of msg.rows) {
               const p = c.players.get(id);
-              if (p) Object.assign(p, { x, z, vx, vz, yaw, ack, status: STATUS_OF[st] ?? 'active', finishTime: ft });
+              if (p) Object.assign(p, { x, z, vx, vz, yaw, ack, status: STATUS_OF[st] ?? 'active', finishTime: ft, down: down ?? 0 });
             }
             for (const h of c.snapHandlers) h();
             break;
           case 'results':
             c.results = msg.placings;
-            c.resultsMeta = { roundId: msg.roundId, stage: msg.stage, mode: msg.mode };
+            c.resultsMeta = { roundId: msg.roundId, stage: msg.stage, mode: msg.mode, match: msg.match };
+            c.standings = msg.standings;
+            c.standingsMatch = msg.match;
+            break;
+          case 'standings':
+            c.standings = msg.standings;
+            c.standingsMatch = msg.match;
             break;
           case 'event':
-            c.events.push({ kind: msg.kind, id: msg.id, at: Date.now(), roundT: msg.at });
+            c.events.push({ kind: msg.kind, id: msg.id, at: Date.now(), roundT: msg.at, ...(msg.other ? { other: msg.other } : {}) });
             if (c.events.length > 100) c.events.shift();
             break;
           case 'emote':
@@ -118,6 +131,8 @@ export class RoomClient {
 
   private setRound(r: RoundState): void {
     if (r.phase === 'briefing' && this.round.phase !== 'briefing') this.results = [];
+    // A new match (stage 1 briefing) clears the previous match's standings.
+    if (r.phase === 'briefing' && r.match?.stage === 1 && this.round.phase !== 'briefing') { this.standings = []; this.standingsMatch = null; }
     this.round = r;
     this.roundAt = Date.now();
   }
@@ -127,9 +142,10 @@ export class RoomClient {
     for (const id of [...this.players.keys()]) if (!ids.has(id)) this.players.delete(id);
     for (const r of roster) {
       const p = this.players.get(r.id);
-      if (p) { p.name = r.name; p.spawn = r.spawn; p.ready = !!r.ready; p.colorway = r.colorway; continue; }
+      if (p) { p.name = r.name; p.spawn = r.spawn; p.ready = !!r.ready; p.colorway = r.colorway; p.bot = !!r.bot; continue; }
       this.players.set(r.id, {
         id: r.id, name: r.name, spawn: r.spawn, x: 0, z: 0, vx: 0, vz: 0, yaw: 0, ack: 0, status: 'active', finishTime: -1, ready: !!r.ready, colorway: r.colorway,
+        bot: !!r.bot, down: 0,
       });
     }
   }
@@ -156,6 +172,12 @@ export class RoomClient {
   /** Stage 1.5 lobby ready toggle. */
   setReady(ready: boolean): void { this.send({ t: 'ready', ready }); }
   skipBriefing(): void { this.send({ t: 'skip' }); }
+  /** Host: add random bots (lobby), fill every free slot, or remove all bots (v7). */
+  addBots(count?: number): void { this.send({ t: 'bots', action: 'add', ...(count ? { count } : {}) }); }
+  fillBots(): void { this.send({ t: 'bots', action: 'fill' }); }
+  clearBots(): void { this.send({ t: 'bots', action: 'clear' }); }
+  /** Host: start the next stage now instead of waiting out the results (v7). */
+  nextStage(): void { this.send({ t: 'next' }); }
 
   onClose(h: (code: number, reason: string) => void): void { this.closeHandlers.push(h); }
   onSnapshot(h: () => void): void { this.snapHandlers.push(h); }

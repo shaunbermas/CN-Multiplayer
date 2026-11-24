@@ -1,0 +1,121 @@
+{
+  "T_W_Porcelain": {
+    "BC": {
+      "file": "T_W_Porcelain_BC.png",
+      "size": 1024,
+      "mode": "RGB"
+    },
+    "ORM": {
+      "file": "T_W_Porcelain_ORM.png",
+      "size": 512,
+      "mode": "RGB"
+    },
+    "N": {
+      "file": "T_W_Porcelain_N.png",
+      "size": 1024,
+      "mode": "RGB"
+    }
+  },
+  "T_W_EnamelTeal": {
+    "BC": {
+      "file": "T_W_EnamelTeal_BC.png",
+      "size": 1024,
+      "mode": "RGB"
+    },
+    "ORM": {
+      "file": "T_W_EnamelTeal_ORM.png",
+      "size": 512,
+      "mode": "RGB"
+    },
+    "N": {
+      "file": "T_W_EnamelTeal_N.png",
+      "size": 512,
+      "mode": "RGB"
+    }
+  },
+  "T_W_Brass": {
+    "BC": {
+      "file": "T_W_Brass_BC.png",
+      "size": 512,
+      "mode": "RGB"
+    },
+    "ORM": {
+      "file": "T_W_Brass_ORM.png",
+      "size": 256,
+      "mode": "RGB"
+    },
+    "N": {
+      "file": "T_W_Brass_N.png",
+      "size": 256,
+      "mode": "RGB"
+    }
+  },
+  "T_W_SteelDark": {
+    "BC": {
+      "file": "T_W_SteelDark_BC.png",
+      "size": 512,
+      "mode": "RGB"
+    },
+    "ORM": {
+      "file": "T_W_SteelDark_ORM.png",
+      "size": 256,
+      "mode": "RGB"
+    },
+    "N": {
+      "file": "T_W_SteelDark_N.png",
+      "size": 512,
+      "mode": "RGB"
+    }
+  },
+  "T_W_Rubber": {
+    "BC": {
+      "file": "T_W_Rubber_BC.png",
+      "size": 256,
+      "mode": "RGB"
+    },
+    "ORM": {
+      "file": "T_W_Rubber_ORM.png",
+      "size": 256,
+      "mode": "RGB"
+    },
+    "N": {
+      "file": "T_W_Rubber_N.png",
+      "size": 256,
+      "mode": "RGB"
+    }
+  },
+  "T_W_Textile": {
+    "BC": {
+      "file": "T_W_Textile_BC.png",
+      "size": 512,
+      "mode": "RGB"
+    },
+    "ORM": {
+      "file": "T_W_Textile_ORM.png",
+      "size": 256,
+      "mode": "RGB"
+    },
+    "N": {
+      "file": "T_W_Textile_N.png",
+      "size": 512,
+      "mode": "RGB"
+    }
+  },
+  "T_W_HairLacquer": {
+    "BC": {
+      "file": "T_W_HairLacquer_BC.png",
+      "size": 512,
+      "mode": "RGB"
+    },
+    "ORM": {
+      "file": "T_W_HairLacquer_ORM.png",
+      "size": 256,
+      "mode": "RGB"
+    },
+    "N": {
+      "file": "T_W_HairLacquer_N.png",
+      "size": 512,
+      "mode": "RGB"
+    }
+  }
+}

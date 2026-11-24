@@ -1,0 +1,91 @@
+{
+  "asset_id": "THE_WATCHER",
+  "character_type": "full_body_robotic_doll",
+  "scale_source": "docs/STAGE_01_SPEC.md",
+  "height_m": 28.0,
+  "collections": [
+    "WATCHER_CHARACTER",
+    "WATCHER_RIG",
+    "WATCHER_MATERIALS",
+    "WATCHER_ANIMATION",
+    "WATCHER_GAMEPLAY_ANCHORS",
+    "WATCHER_COLLISION",
+    "WATCHER_EXPORT"
+  ],
+  "anchors": [
+    "Watcher_Root",
+    "Watcher_Facing",
+    "Watcher_OpticalOrigin",
+    "Watcher_DetectionForward",
+    "Watcher_AudioOrigin",
+    "Watcher_InteractionBounds"
+  ],
+  "animations": [
+    {
+      "name": "Watcher_Idle",
+      "frame_start": 1,
+      "frame_end": 97,
+      "loop": true
+    },
+    {
+      "name": "Watcher_TurnAway",
+      "frame_start": 1,
+      "frame_end": 37,
+      "loop": false
+    },
+    {
+      "name": "Watcher_GreenSignal",
+      "frame_start": 1,
+      "frame_end": 49,
+      "loop": true
+    },
+    {
+      "name": "Watcher_TurnToField",
+      "frame_start": 1,
+      "frame_end": 37,
+      "loop": false
+    },
+    {
+      "name": "Watcher_FocusLock",
+      "frame_start": 1,
+      "frame_end": 25,
+      "loop": false
+    },
+    {
+      "name": "Watcher_RedSignal",
+      "frame_start": 1,
+      "frame_end": 49,
+      "loop": true
+    },
+    {
+      "name": "Watcher_ScanSweep",
+      "frame_start": 1,
+      "frame_end": 97,
+      "loop": true
+    },
+    {
+      "name": "Watcher_Detect",
+      "frame_start": 1,
+      "frame_end": 41,
+      "loop": false
+    },
+    {
+      "name": "Watcher_ReturnNeutral",
+      "frame_start": 1,
+      "frame_end": 37,
+      "loop": false
+    }
+  ],
+  "exports": {
+    "blend": "blender/scenes/THE_WATCHER.blend",
+    "glb": "blender/exports/THE_WATCHER.glb",
+    "fbx": null
+  },
+  "validation": {
+    "scale_verified": true,
+    "rig_verified": true,
+    "animations_verified": true,
+    "materials_verified": true,
+    "glb_verified": true
+  }
+}

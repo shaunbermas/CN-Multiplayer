@@ -37,7 +37,7 @@ const fpsOver = (page, ms) => page.evaluate((ms) => new Promise((done) => {
 try {
   await worker.ready;
   browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-precise-memory-info'] });
-  const url = (name, q) => `http://127.0.0.1:${PORT}/?name=${name}&autojoin=1&room=${ROOM}&quality=${q}&testSeed=${SEED}&testRound=${ROUND_S}&testBriefing=2&obstacles=1`;
+  const url = (name, q) => `http://127.0.0.1:${PORT}/?name=${name}&autojoin=1&room=${ROOM}&quality=${q}&testSeed=${SEED}&testRound=${ROUND_S}&testBriefing=2&obstacles=1&testStages=1`;
   const pages = [];
   const consoleErrors = [];
   for (let i = 0; i < 5; i++) {

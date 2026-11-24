@@ -64,7 +64,7 @@ try {
   if (bot.round.obstacles !== true) errors.push(`Lobby obstacles=${bot.round.obstacles}, expected true (always on)`);
 
   // ---- round 1: no option given: obstacles are on by default
-  bot.start({ seed: SEED, roundS: ROUND_S, briefingS: 1 });
+  bot.start({ seed: SEED, roundS: ROUND_S, briefingS: 1, stages: 1, resultsS: 3 });
   await waitFor(() => bot.round.phase === 'briefing', 'briefing');
   if (bot.round.obstacles !== true) errors.push(`Round state obstacles=${bot.round.obstacles}, expected true`);
   bot.skipBriefing();
@@ -83,7 +83,7 @@ try {
   await waitFor(() => bot.round.phase === 'lobby', 'lobby', 40_000);
 
   // ---- round 2: obstacles OFF (test mode only): the same walk goes past that row
-  bot.start({ seed: SEED, roundS: ROUND_S, briefingS: 1, obstacles: false });
+  bot.start({ seed: SEED, roundS: ROUND_S, briefingS: 1, obstacles: false, stages: 1, resultsS: 3 });
   await waitFor(() => bot.round.phase === 'briefing', 'briefing 2');
   if (bot.round.obstacles !== false) errors.push(`Round 2 obstacles=${bot.round.obstacles}, expected false`);
   bot.skipBriefing();

@@ -8,18 +8,27 @@ export type Phase = 'lobby' | 'briefing' | 'countdown' | 'active' | 'results';
 export type Signal = 'none' | 'green' | 'warning' | 'red';
 export type PlayerStatus = 'active' | 'finished' | 'spotted' | 'waiting';
 
+/**
+ * Round timing and detection: the ONE place these numbers live (server and client both import it).
+ * Stage 01 refinement (owner brief 24 Nov 2026, "the game takes too long"): shorter briefing, round, red
+ * lights and results; warning length and detection grace are unchanged (fairness). Previous values in
+ * brackets; rationale and measurements in docs/STAGE_01_REFINEMENT_IMPLEMENTATION.md §Timing.
+ * Results lengths per stage and for the final leaderboard live in MATCH (match.ts).
+ */
 export const ROUND = {
-  briefingS: 15,        // S1 (skippable)
-  countdownS: 3,        // S2
-  roundS: 120,          // R1
-  greenMinS: 3, greenMaxS: 6, firstGreenMinS: 5, // S3
-  warningS: 0.8,        // S4
-  redMinS: 3, redMaxS: 5, // S5
-  graceBaseS: 0.3, graceMaxS: 0.5, // D1
+  briefingS: 6,         // S1 (skippable)            [15]
+  countdownS: 3,        // S2                         [3]
+  roundS: 100,          // R1                         [120]
+  /** New: once the first player finishes, the others have this long before the round closes. */
+  closeAfterFirstS: 30, //                            [none: the full timer always ran]
+  greenMinS: 3, greenMaxS: 5.5, firstGreenMinS: 4, // S3 [3, 6, 5]
+  warningS: 0.8,        // S4                         [0.8, unchanged: time to react]
+  redMinS: 1.8, redMaxS: 3.2, // S5                   [3, 5]
+  graceBaseS: 0.3, graceMaxS: 0.5, // D1              [unchanged]
   speedLimit: 0.3,      // D2 m/s, averaged over speedWindow ticks
   speedWindow: 3,
   dispLimit: 0.15,      // D2 m since the grace window ended
-  resultsS: 20,
+  resultsS: 9,          // single-stage default; the match uses MATCH.stageResultsS / finalResultsS [20]
 } as const;
 
 // ------------------------------------------------------------------ seeded random (mulberry32)
@@ -86,10 +95,14 @@ export interface RoundPlayer {
   // detection state (server-side only)
   redDisp: number;
   recent: number[];
+  /** Room time until which the player is knocked down by a collision (no control), or 0. */
+  downUntil: number;
+  /** Room time until which a collision cannot knock the player down again, or 0. */
+  immuneUntil: number;
 }
 
 export function newRoundPlayer(id: string, joinOrder: number, spawn: number, x: number, z: number): RoundPlayer {
-  return { id, joinOrder, spawn, x, z, status: 'active', finishTime: -1, spotTime: -1, latencyS: 0, redDisp: 0, recent: [] };
+  return { id, joinOrder, spawn, x, z, status: 'active', finishTime: -1, spotTime: -1, latencyS: 0, redDisp: 0, recent: [], downUntil: 0, immuneUntil: 0 };
 }
 
 export function graceFor(latencyS: number): number {
@@ -143,7 +156,7 @@ export interface RoundEvents {
   results?: Placing[];
 }
 
-export interface StartOptions { seed: number; roundS?: number; briefingS?: number; mode?: Mode; /** Stage 1.5 obstacle twist (host toggle). */ obstacles?: boolean }
+export interface StartOptions { seed: number; roundS?: number; briefingS?: number; mode?: Mode; /** Stage 1.5 obstacle twist (host toggle). */ obstacles?: boolean; /** Results screen length for this stage (match: per-stage or final). */ resultsS?: number; /** Seconds left for the others after the first finish. */ closeAfterFirstS?: number }
 
 /**
  * Phase machine for one room. The room calls:
@@ -169,6 +182,10 @@ export class RoundEngine {
   starters = 0;
   /** Finishers needed to end the round early (tournament only; R2/R3). */
   target = Infinity;
+  resultsS: number = ROUND.resultsS;
+  closeAfterFirstS: number = ROUND.closeAfterFirstS;
+  /** Room time of the first finish this round, or -1. */
+  firstFinishAt = -1;
 
   constructor(private geo: StageGeometry) {}
 
@@ -182,6 +199,9 @@ export class RoundEngine {
   start(players: RoundPlayer[], opts: StartOptions): Map<string, number> {
     this.seed = opts.seed >>> 0;
     this.roundS = opts.roundS ?? ROUND.roundS;
+    this.resultsS = opts.resultsS ?? ROUND.resultsS;
+    this.closeAfterFirstS = opts.closeAfterFirstS ?? ROUND.closeAfterFirstS;
+    this.firstFinishAt = -1;
     this.schedule = buildSchedule(this.seed, this.roundS);
     this.skipped.clear();
     this.lastResults = [];
@@ -194,7 +214,7 @@ export class RoundEngine {
     order.forEach((id, i) => spawnOf.set(id, this.geo.spawns[i % this.geo.spawns.length].index));
     for (const p of players) {
       const s = this.geo.spawns.find((x) => x.index === spawnOf.get(p.id))!;
-      Object.assign(p, { spawn: s.index, x: s.x, z: s.z, status: 'active', finishTime: -1, spotTime: -1, redDisp: 0, recent: [] });
+      Object.assign(p, { spawn: s.index, x: s.x, z: s.z, status: 'active', finishTime: -1, spotTime: -1, redDisp: 0, recent: [], downUntil: 0, immuneUntil: 0 });
     }
     this.setPhase('briefing', opts.briefingS ?? ROUND.briefingS);
     return spawnOf;
@@ -214,6 +234,7 @@ export class RoundEngine {
 
   /** Movement is allowed in the lobby (practice walk) and for active players during the round. */
   canMove(p: RoundPlayer): boolean {
+    if (p.downUntil > this.now) return false; // knocked down by a collision: no control until back up
     if (this.phase === 'lobby') return true;
     if (this.phase !== 'active') return false;
     return p.status === 'active' || p.status === 'finished';
@@ -251,6 +272,11 @@ export class RoundEngine {
     if (this.phase === 'lobby' || now < this.phaseEnd) {
       const done = this.phase === 'active' && (!players.some((p) => p.status === 'active') // nobody left (R2)
         || players.filter((p) => p.status === 'finished').length >= this.target);         // qualifier target reached (R2)
+      // Finish-line closing time (refinement): the first finish shortens the round to closeAfterFirstS from then.
+      if (this.phase === 'active' && this.firstFinishAt < 0) {
+        const f = players.find((p) => p.status === 'finished');
+        if (f) { this.firstFinishAt = now; this.phaseEnd = Math.min(this.phaseEnd, now + this.closeAfterFirstS); }
+      }
       if (done) this.phaseEnd = now;
       else return ev;
     }
@@ -265,7 +291,7 @@ export class RoundEngine {
       case 'active':
         this.lastResults = qualify(rankPlayers(players.filter((p) => p.status !== 'waiting'), this.geo), this.mode, this.starters);
         ev.results = this.lastResults;
-        this.setPhase('results', ROUND.resultsS);
+        this.setPhase('results', this.resultsS);
         break;
       case 'results':
         this.setPhase('lobby', Infinity);

@@ -11,16 +11,17 @@ import { AdaptiveQuality, quality } from './quality.ts';
 import { attachInput, input } from './input.ts';
 import { Predictor } from './predictor.ts';
 import { STAGE_SCENES } from '../stages/registry.ts';
-import { stageDef, stageGeo, stageObstacles } from './stage.ts';
+import { activeStage } from './stage.ts';
 import { greenTime, obstacleWalls, type Rect } from '@cn-trials/shared';
 import { scheduleFor, signalView } from './roundClock.ts';
 
 
 /** Collision walls for prediction: the same set the server uses (stage walls + obstacle twist in a round). */
 export function wallsFor(room: TrialRoom): Rect[] {
-  if (!room.round.obstacles || !stageObstacles) return stageGeo.walls;
+  const { geo, obstacles } = activeStage(room);
+  if (!room.round.obstacles || !obstacles) return geo.walls;
   const elapsed = room.round.phase === 'active' ? signalView(room).elapsed : 0; // lobby: the gate at rest
-  return [...stageGeo.walls, ...obstacleWalls(stageObstacles, greenTime(scheduleFor(room.round.seed), elapsed))];
+  return [...geo.walls, ...obstacleWalls(obstacles, greenTime(scheduleFor(room.round.seed), elapsed))];
 }
 
 /** Live contestant instances by player id (test hooks and stats), and their camera distance this frame. */
@@ -44,6 +45,7 @@ function useContestantAsset(): ContestantAsset | null {
 export function canMove(room: TrialRoom): boolean {
   const me = room.self;
   if (!me) return false;
+  if (me.down > 0) return false; // knocked down by a collision (server-authoritative): no control until back up
   if (room.round.phase === 'lobby') return true;
   return room.round.phase === 'active' && (me.status === 'active' || me.status === 'finished');
 }
@@ -105,7 +107,7 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
       // lobby emotes broadcast by the server (visual only)
       for (const e of room.emotes) if (e.id === id && e.at > a.emoteAt) { a.emoteAt = e.at; inst.emote(e.e); }
       const t0 = performance.now();
-      inst.update(step, { speed: a.speed, status: p.status, greenActive: room.round.phase === 'active' && room.round.signal === 'green' });
+      inst.update(step, { speed: a.speed, status: p.status, greenActive: room.round.phase === 'active' && room.round.signal === 'green', down: p.down });
       cpuAcc.ms += performance.now() - t0;
       const dist = camera.position.distanceTo(g.getWorldPosition(tmp));
       lodDist.set(id, dist);
@@ -252,7 +254,7 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
       input.respawn = false;
       if (phase === 'lobby') {
         room.send({ t: 'respawn' });
-        const sp = stageGeo.spawns.find((s) => s.index === me.spawn)!;
+        const sp = activeStage(room).geo.spawns.find((s) => s.index === me.spawn)!;
         pr.reset({ x: sp.x, z: sp.z, vx: 0, vz: 0 });
         firstMove.current = null;
       }
@@ -302,8 +304,10 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
     if (view) { camera.position.set(...view.pos); camera.lookAt(...view.look); }
 
     const s = pr.state;
-    hud.progress = progress(stageGeo, mobile ? s.z : me.z);
-    hud.distance = Math.max(0, (mobile ? s.z : me.z) - stageGeo.finishZ);
+    const geo = activeStage(room).geo;
+    hud.progress = progress(geo, mobile ? s.z : me.z);
+    hud.distance = Math.max(0, (mobile ? s.z : me.z) - geo.finishZ);
+    hud.down = me.down;
     hud.status = me.status;
     hud.finishTime = me.finishTime;
     hud.walkTime = phase === 'lobby'
@@ -349,31 +353,34 @@ class StageErrorBoundary extends Component<{ children: ReactNode; onError: (msg:
 
 export function Scene({ room, onStageError }: { room: TrialRoom; onStageError: (msg: string) => void }) {
   const predictor = useRef<Predictor | null>(null);
-  const stageModule = STAGE_SCENES[stageDef.id];
+  const stage = activeStage(room);
+  const stageModule = STAGE_SCENES[stage.def.id] ?? Object.values(STAGE_SCENES)[0];
   if (!predictor.current) {
     const me = room.self;
-    const sp = stageGeo.spawns.find((s) => s.index === me?.spawn) ?? stageGeo.spawns[0];
+    const sp = stage.geo.spawns.find((s) => s.index === me?.spawn) ?? stage.geo.spawns[0];
     predictor.current = new Predictor({ x: me?.x ?? sp.x, z: me?.z ?? sp.z, vx: 0, vz: 0 }, () => wallsFor(room));
   }
   useEffect(() => {
     (window as unknown as { __cn: unknown }).__cn = {
       roomId: room.room,
       sessionId: room.id,
-      stage: stageDef.id,
-      players: () => [...room.players.values()].map((p) => ({ id: p.id, name: p.name, x: p.x, z: p.z, status: p.status, finishTime: p.finishTime, colorway: p.colorway })),
+      stage: stage.def.id,
+      players: () => [...room.players.values()].map((p) => ({ id: p.id, name: p.name, x: p.x, z: p.z, status: p.status, finishTime: p.finishTime, colorway: p.colorway, bot: p.bot, down: p.down })),
       contestants: () => (window as unknown as { __cnContestants?: () => unknown }).__cnContestants?.() ?? null,
       self: () => predictor.current?.state,
       round: () => ({ ...room.round }),
       results: () => room.results,
       resultsMeta: () => room.resultsMeta,
       events: () => room.events.map((e) => ({ ...e })),
-      watcher: stageGeo.watcher,
-      spawns: stageGeo.spawns,
+      watcher: stage.geo.watcher,
+      spawns: stage.geo.spawns,
+      standings: () => room.standings,
+      match: () => ({ ...room.round.match }),
       assets: () => JSON.parse(JSON.stringify(stageModule.assets)),
       quality: () => JSON.parse(JSON.stringify(quality)),
       renderInfo: () => ({ ...renderInfo }),
     };
-  }, [room, stageModule]);
+  }, [room, stageModule, stage]);
   const StageScene = stageModule.Scene;
   return (
     // Shadow maps stay enabled; whether anything casts a shadow is up to the tier (only High's moon does).

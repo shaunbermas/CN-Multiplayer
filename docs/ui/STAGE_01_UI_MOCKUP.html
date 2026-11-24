@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CN TRIAL · Stage 01 UI visual reference</title>
+<!-- The visual target for the Stage 01 refinement UI. It uses the game's own stylesheet, so the mockup and the
+     implementation share one design system. Open from the repository (file://) or any static server. Sample names
+     and numbers only; backdrops are real captures of the current build (docs/refinement/before). -->
+<link rel="stylesheet" href="../../apps/web/src/styles.css" />
+<style>
+  html, body { overflow: auto; height: auto; }
+  body { padding: 32px; background: #05080a; }
+  .sheet-head { max-width: 1280px; margin: 0 auto 28px; display: grid; gap: 10px; }
+  .sheet-head h1 { margin: 0; font: 800 48px/0.95 var(--display); letter-spacing: 0.02em; text-transform: uppercase; }
+  .sheet-head p { margin: 0; max-width: 80ch; color: #b8c6c9; }
+  .tokens { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+  .tokens span { display: inline-flex; align-items: center; gap: 8px; padding: 4px 10px 4px 4px; border: 1px solid var(--line); font: 600 13px/1 var(--body); }
+  .tokens span i { width: 22px; height: 22px; display: inline-block; }
+  figure { margin: 0 auto 36px; width: 1280px; }
+  figcaption { display: flex; gap: 12px; align-items: baseline; margin-bottom: 8px; font: 700 14px/1 var(--display); letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  figcaption b { color: var(--porcelain); font-size: 18px; letter-spacing: 0.08em; }
+  /* each frame is a 1280x720 game viewport; transform makes position:fixed children stay inside it */
+  .frame { position: relative; width: 1280px; height: 720px; overflow: hidden; transform: translateZ(0); background: #0b1215 center / cover no-repeat; outline: 1px solid var(--line); }
+  .frame.menu-frame .menu { height: 720px; }
+  .shade::before { content: ""; position: absolute; inset: 0; background: rgba(5, 9, 11, 0.35); }
+</style>
+</head>
+<body>
+<header class="sheet-head">
+  <span class="eyebrow">CN TRIAL · Stage 01 refinement · visual reference</span>
+  <h1>Night yard under inspection</h1>
+  <p>Dark steel panels with one notched corner, porcelain type set in Barlow Condensed, and signal colours used only for
+    what they mean. The signature is the <b>lens</b>, the camera aperture from The Watcher's single eye: it is the
+    signal indicator, the brand mark and the countdown dial. Every signal also shows a word, so colour is never the only cue.</p>
+  <div class="tokens">
+    <span><i style="background:#0a0f12;outline:1px solid #333"></i>Night #0a0f12</span>
+    <span><i style="background:#142126"></i>Steel #142126</span>
+    <span><i style="background:#e9e2d4"></i>Porcelain #e9e2d4</span>
+    <span><i style="background:#39d98a"></i>Go #39d98a</span>
+    <span><i style="background:#f4a72a"></i>Hold #f4a72a</span>
+    <span><i style="background:#ef3b2d"></i>Stop #ef3b2d</span>
+    <span><i style="background:#c9a35b"></i>Brass #c9a35b</span>
+  </div>
+</header>
+
+<!-- 1 main menu -->
+<figure><figcaption><b>Main menu / room entry</b> screen 1</figcaption>
+<div class="frame menu-frame">
+  <main class="menu"><div class="menu-art"></div>
+    <section class="menu-col">
+      <div class="brand"><span class="lens"></span><span class="brand-word">CN TRIAL</span></div>
+      <p class="menu-sub">Red Light, Green Light for up to 30 players. Make a private room and send the link.</p>
+      <label class="name-field">Your nickname<input value="Maya" /></label>
+      <div class="menu-actions">
+        <button class="btn primary big wide">Create private room</button>
+        <div class="menu-row"><button class="btn">Join with a code</button><button class="btn">How to play</button></div>
+        <button class="btn ghost">Settings</button>
+      </div>
+      <p class="menu-foot">Stage 01 · Red Light, Green Light</p>
+    </section>
+  </main>
+</div></figure>
+
+<!-- 2-5 lobby -->
+<figure><figcaption><b>Room lobby · ready state · random players · player count</b> screens 2 to 5 (host view)</figcaption>
+<div class="frame shade" style="background-image:url(../refinement/before/spawn_gameplay.webp)">
+  <div class="hud">
+    <div class="hud-top">
+      <div class="hud-left"><div class="chip stage-chip"><b>LOBBY</b><span>Practice walk is open</span></div></div>
+      <div></div>
+      <div class="hud-right"><div class="hud-tools"><span class="conn good"><i></i>24 ms</span><button class="icon-btn">?</button><button class="icon-btn">⚙</button></div></div>
+    </div>
+    <section class="card lobby">
+      <div class="lobby-roster">
+        <header class="card-head"><span class="card-title">Contestants</span><span class="eyebrow" style="margin-left:auto">Colours are dealt at random</span></header>
+        <ol class="slots30" id="slots"></ol>
+      </div>
+      <aside class="lobby-side">
+        <div class="invite"><span class="eyebrow">Invite code</span><span class="code">K7QX2</span>
+          <div class="invite-row"><button class="btn">Copy link</button><button class="btn">Copy code</button></div></div>
+        <div><span class="eyebrow">Players</span><div class="count-big num">17<small>/ 30</small></div>
+          <div class="count-split"><span><b>4</b> people</span><span><b>13</b> random</span><span><b>15</b> ready</span></div></div>
+        <div class="lobby-actions">
+          <button class="btn go big wide">Start game</button>
+          <button class="btn wide">Add random players <span class="k">+5</span></button>
+          <div class="bot-tools"><div class="row"><button class="btn ghost">Fill all 13 free slots</button><button class="btn ghost">Remove random players</button></div></div>
+        </div>
+        <div class="my-contestant"><span class="swatch" style="background:#2b6f8f;border-color:#f4c84a"></span>You are <b>Harbour Blue</b></div>
+        <p class="lobby-hint">3 stages · first finisher 2 points, every finisher 1. Most points wins.</p>
+      </aside>
+    </section>
+  </div>
+</div></figure>
+
+<!-- 6 countdown -->
+<figure><figcaption><b>Game countdown</b> screen 6</figcaption>
+<div class="frame" style="background-image:url(../refinement/before/spawn_gameplay.webp)">
+  <div class="hud">
+    <div class="hud-top"><div class="hud-left"><div class="chip stage-chip"><b>STAGE 01 <i>/ 03</i></b><span>Red Light, Green Light</span></div></div><div></div><div class="hud-right"><div class="counts num"><span>IN 30</span></div></div></div>
+    <div class="countdown"><div class="dial"><span class="lens"></span><span class="cd-num">2</span></div><span class="cd-label">Get ready</span></div>
+  </div>
+</div></figure>
+
+<!-- 7-8 HUD green -->
+<figure><figcaption><b>Active gameplay HUD · green signal</b> screens 7 and 8</figcaption>
+<div class="frame" style="background-image:url(../refinement/before/midfield_to_watcher.webp)">
+  <div class="hud" data-signal="green">
+    <div class="hud-top">
+      <div class="hud-left"><div class="chip stage-chip"><b>STAGE 02 <i>/ 03</i></b><span>Red Light, Green Light</span></div>
+        <div class="chip me-chip"><span class="swatch" style="background:#2b6f8f;border-color:#f4c84a"></span>Maya<span class="pts">3 PTS</span><span class="muted">#4</span></div></div>
+      <div class="hud-centre"><div class="signal go"><span class="lens go"></span><span class="word">GREEN LIGHT</span><span class="sub">Move</span><div class="seg-bar"><i style="width:38%"></i></div></div></div>
+      <div class="hud-right"><div class="timer num">1:12</div><div class="counts num"><span>IN 24/30</span><span class="out">✕ 4</span><span class="in">✓ 2</span></div><div class="hud-tools"><span class="conn good"><i></i>31 ms</span><button class="icon-btn">?</button><button class="icon-btn">⚙</button></div></div>
+    </div>
+    <div class="feed"><div class="toast finished">Nova finished first · +2</div><div class="toast collision">Pixel and Theo collided</div></div>
+    <div class="hud-lower"><div class="track"><div class="fill" style="width:46%"></div><span class="pip" style="left:71%"></span></div></div>
+    <div class="hud-bottom"><span class="num">86 m to go</span><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move · mouse look</span><span>room K7QX2</span></div>
+  </div>
+</div></figure>
+
+<!-- 9 red + 10 elimination -->
+<figure><figcaption><b>Red signal · elimination notification</b> screens 9 and 10</figcaption>
+<div class="frame" style="background-image:url(../refinement/before/watcher_close.webp)">
+  <div class="edge-red"></div>
+  <div class="hud">
+    <div class="hud-top">
+      <div class="hud-left"><div class="chip stage-chip"><b>STAGE 02 <i>/ 03</i></b><span>Red Light, Green Light</span></div>
+        <div class="chip me-chip"><span class="swatch" style="background:#2b6f8f;border-color:#f4c84a"></span>Maya<span class="pts">3 PTS</span><span class="muted">#4</span></div></div>
+      <div class="hud-centre"><div class="signal stop"><span class="lens detect"></span><span class="word">RED LIGHT</span><span class="sub">Freeze</span><div class="seg-bar"><i style="width:62%"></i></div></div><div class="scanning">SCANNING</div></div>
+      <div class="hud-right"><div class="timer num">0:51</div><div class="counts num"><span>IN 22/30</span><span class="out">✕ 6</span><span class="in">✓ 2</span></div></div>
+    </div>
+    <div class="banner spotted"><b>Spotted</b><span>You moved while The Watcher was looking. You keep your 3 points and play the next stage.</span></div>
+  </div>
+</div></figure>
+
+<!-- 11 finish -->
+<figure><figcaption><b>Finish-line notification · amber warning · knock-down</b> screen 11</figcaption>
+<div class="frame" style="background-image:url(../refinement/before/finish_looking_back.webp)">
+  <div class="hud">
+    <div class="hud-top">
+      <div class="hud-left"><div class="chip stage-chip"><b>STAGE 02 <i>/ 03</i></b><span>Red Light, Green Light</span></div>
+        <div class="chip me-chip"><span class="swatch" style="background:#2b6f8f;border-color:#f4c84a"></span>Maya<span class="pts">5 PTS</span><span class="muted">#1</span></div></div>
+      <div class="hud-centre"><div class="signal warn"><span class="lens hold"></span><span class="word">GET READY</span><span class="sub">Stop before red</span><div class="seg-bar"><i style="width:70%"></i></div></div></div>
+      <div class="hud-right"><div class="timer closing num"><small>Finish closes</small>0:27</div><div class="counts num"><span>IN 22/30</span><span class="out">✕ 6</span><span class="in">✓ 3</span></div></div>
+    </div>
+    <div class="banner finished"><b>Finished 1st</b><span>Fastest to the line this stage</span><span class="pts">+2 POINTS</span></div>
+  </div>
+</div></figure>
+
+<!-- 12-13 stage results -->
+<figure><figcaption><b>Stage results · accumulated leaderboard</b> screens 12 and 13</figcaption>
+<div class="frame shade" style="background-image:url(../refinement/before/overview_high.webp)">
+  <div class="hud">
+    <section class="card results">
+      <div class="results-head">
+        <div><span class="eyebrow">Stage results</span><h2>Stage 02 <i>/ 03</i></h2></div>
+        <div class="first-finisher"><span class="swatch" style="background:#8f2b4c;border-color:#e9e2d4"></span><div><small>First to finish · +2</small><b>Nova</b> <span class="muted num">58.4 s</span></div></div>
+      </div>
+      <div class="results-body">
+        <div><span class="eyebrow">This stage</span><table class="board" id="stageBoard"><thead><tr><th></th><th>Contestant</th><th>Result</th><th class="r">Points</th></tr></thead><tbody></tbody></table></div>
+        <div><span class="eyebrow">Overall standings</span><table class="board" id="totalBoard"><thead><tr><th></th><th>Contestant</th><th>Stages</th><th class="r">Total</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <footer class="card-foot"><span class="next-line">Stage 03 starts in 7 s · eliminated players play it too</span><div style="display:flex;gap:8px"><button class="btn">Exit to menu</button><button class="btn go">Start stage 03 now</button></div></footer>
+    </section>
+  </div>
+</div></figure>
+
+<!-- 14 next stage -->
+<figure><figcaption><b>Next stage transition</b> screen 14 (briefing for stage 2 onward, 4 s, skippable)</figcaption>
+<div class="frame" style="background-image:url(../refinement/before/spawn_gameplay.webp)">
+  <div class="hud">
+    <div class="hud-top"><div class="hud-left"><div class="chip stage-chip"><b>STAGE 03 <i>/ 03</i></b><span>Final stage</span></div></div><div></div><div class="hud-right"></div></div>
+    <section class="card briefing">
+      <span class="eyebrow">Next stage</span>
+      <div class="stage-of">Stage 03 <i>/ 03</i></div>
+      <p class="rule">Move on green. Freeze when The Watcher turns.</p>
+      <p class="muted">Last stage. Everyone plays, including anyone spotted before. First finisher +2, every finisher +1.</p>
+      <ul class="mini-standings"><li><b>1</b><span>Nova</span><span class="num">4 pts</span></li><li><b>2</b><span>Maya</span><span class="num">3 pts</span></li><li><b>3</b><span>Pixel</span><span class="num">3 pts</span></li></ul>
+      <footer class="card-foot"><span class="muted">Starting in 3 s</span><button class="btn primary">Got it <span class="k">Space</span></button></footer>
+    </section>
+  </div>
+</div></figure>
+
+<!-- 15 final -->
+<figure><figcaption><b>Final winner screen · overall leaderboard</b> screen 15</figcaption>
+<div class="frame shade" style="background-image:url(../refinement/before/watcher_close.webp)">
+  <div class="hud">
+    <section class="card results final">
+      <div class="results-head"><div><span class="eyebrow">Final results · 3 stages</span><h2>Match complete</h2></div></div>
+      <div class="winner-hero">
+        <div class="crest" style="background:#8f2b4c;border-color:#e9e2d4">1</div>
+        <div><span class="eyebrow" style="color:var(--brass)">Winner</span><h3>Nova</h3><div class="why">Tied on 5 points with Maya: won on faster total finish time.</div></div>
+        <div class="score num">5<small>POINTS</small></div>
+      </div>
+      <div class="podium"><div class="p2"><span>2nd</span><b>Maya</b><span>5 pts · 2 wins</span></div><div class="p1"><span>1st</span><b>Nova</b><span>5 pts · 2 wins</span></div><div class="p3"><span>3rd</span><b>Pixel</b><span>4 pts</span></div></div>
+      <table class="board" id="finalBoard"><thead><tr><th></th><th>Contestant</th><th>Per stage</th><th class="r">Wins</th><th class="r">Finished</th><th class="r">Total</th></tr></thead><tbody></tbody></table>
+      <footer class="card-foot"><span class="next-line">Back to the lobby in 12 s · ties: points, then stage wins, finishes, total time</span><div style="display:flex;gap:8px"><button class="btn">Exit to menu</button><button class="btn primary">Back to lobby</button></div></footer>
+    </section>
+  </div>
+</div></figure>
+
+<script>
+// Sample content only (fills the repeated rows).
+const people = [['Maya','#2b6f8f','#f4c84a',1,1,0],['Theo','#6b4a2b','#9fd0c4',0,1,0],['Ines','#3d6b3a','#e9e2d4',0,1,0],['Sam','#4a3d6b','#f29b6b',0,0,0]];
+const bots = ['Nova','Pixel','Juniper','Orbit','Maple','Echo','Biscuit','Comet','Pebble','Willow','Dash','Mochi','Rivet'];
+const cols = ['#8f2b4c','#2b8f7a','#8f6a2b','#2b3f8f','#6b8f2b','#8f2b2b','#3a6b6b','#6b2b8f','#8f8f2b','#2b6b3a','#5a5a6b','#8f4a2b','#2b5a8f'];
+const slots = document.getElementById('slots');
+for (let i = 0; i < 30; i++) {
+  const li = document.createElement('li');
+  let p = i < people.length ? people[i] : null; let b = !p && i - people.length < bots.length ? bots[i - people.length] : null;
+  if (p) { li.className = `slot taken${i===0?' me host':''}${p[4]?' ready':''}`; li.innerHTML = `<i class="coat" style="background:${p[1]};box-shadow:inset -2px 0 0 ${p[2]}"></i><span class="slot-name">${p[0]}</span><span class="slot-meta">${i===0?'Host':p[4]?'Ready':''}</span>`; }
+  else if (b) { const c = cols[(i-4)%cols.length]; li.className = 'slot taken ready'; li.innerHTML = `<i class="coat" style="background:${c};box-shadow:inset -2px 0 0 #e9e2d4"></i><span class="slot-name">${b}</span><span class="slot-meta">Bot</span>`; }
+  else { li.className = 'slot empty'; li.innerHTML = `<i class="coat"></i><span class="slot-name">Open</span><span class="slot-meta"></span>`; }
+  li.insertAdjacentHTML('beforeend', `<span class="slot-n">${String(i+1).padStart(2,'0')}</span>`);
+  slots.appendChild(li);
+}
+const stage = [['Nova','finished','58.4 s',2,'#8f2b4c'],['Maya','finished','61.0 s',1,'#2b6f8f'],['Pixel','finished','63.7 s',1,'#2b8f7a'],['Theo','finished','70.2 s',1,'#6b4a2b'],['Juniper','unfinished','84% of the way',0,'#8f6a2b'],['Orbit','spotted','Spotted',0,'#2b3f8f'],['Ines','spotted','Spotted',0,'#3d6b3a'],['Maple','spotted','Spotted',0,'#6b8f2b']];
+const sb = document.querySelector('#stageBoard tbody');
+stage.forEach((r, i) => sb.insertAdjacentHTML('beforeend', `<tr class="${r[0]==='Maya'?'me':''}"><td class="place">${i+1}</td><td class="name"><span class="dot" style="background:${r[4]};border-color:#e9e2d4"></span>${r[0]}${['Nova','Pixel','Juniper','Orbit','Maple'].includes(r[0])?'<span class="tag bot">bot</span>':''}${r[1]==='spotted'?'<span class="tag out">spotted</span>':''}</td><td class="muted">${r[2]}</td><td class="r gain ${r[3]?'':'zero'}">+${r[3]}</td></tr>`));
+const tot = [['Nova',[2,2],4],['Maya',[2,1],3],['Pixel',[1,1],2],['Theo',[0,1],1],['Juniper',[1,0],1],['Ines',[1,0],1],['Orbit',[0,0],0],['Maple',[0,0],0]];
+const pts = (a) => `<span class="stage-pts">${a.map((x)=>`<i class="${x===2?'p2':x===1?'p1':''}">${x===null?'–':x}</i>`).join('')}</span>`;
+const tb = document.querySelector('#totalBoard tbody');
+tot.forEach((r, i) => tb.insertAdjacentHTML('beforeend', `<tr class="${r[0]==='Maya'?'me':''}"><td class="place">${i+1}</td><td class="name">${r[0]}</td><td>${pts(r[1])}</td><td class="r total">${r[2]}</td></tr>`));
+const fin = [['Nova',[2,2,1],2,3,5],['Maya',[2,1,2],2,3,5],['Pixel',[1,1,2],1,3,4],['Theo',[0,1,1],0,2,2],['Juniper',[1,0,1],0,2,2],['Ines',[1,0,0],0,1,1],['Orbit',[0,0,1],0,1,1],['Maple',[0,0,0],0,0,0]];
+const fb = document.querySelector('#finalBoard tbody');
+fin.forEach((r, i) => fb.insertAdjacentHTML('beforeend', `<tr class="${r[0]==='Maya'?'me':''}"><td class="place">${i+1}</td><td class="name">${r[0]}</td><td>${pts(r[1])}</td><td class="r num">${r[2]}</td><td class="r num">${r[3]}</td><td class="r total">${r[4]}</td></tr>`));
+</script>
+</body>
+</html>
