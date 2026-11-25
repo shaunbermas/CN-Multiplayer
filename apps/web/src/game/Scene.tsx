@@ -75,13 +75,19 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
     if (p.colorway !== colorway) setColorwayState(p.colorway);
     const spotted = p.status === 'spotted';
     if (local && predictor?.current && canMove(room)) {
-      const s = predictor.current.state;
-      g.position.set(s.x, 0, s.z);
+      // Interpolated between fixed steps (LocalController runs first each frame), so no stair-stepping.
+      const r = predictor.current.render;
+      g.position.set(r.x, 0, r.z);
     } else {
-      // Remote players (and a frozen local player): smooth toward the latest server position (20 Hz).
-      const k = 1 - Math.exp(-dt * 15);
-      g.position.x += (p.x - g.position.x) * k;
-      g.position.z += (p.z - g.position.z) * k;
+      // Remote players (and a frozen local player): snapshots arrive at 20 Hz. Extrapolate each one along its
+      // server velocity for up to 0.1 s, then smooth toward that, so walkers glide instead of hopping every
+      // 50 ms (second pass). A frozen or knocked-down player has zero velocity, so nothing overshoots.
+      const ahead = Math.min(0.1, Math.max(0, (Date.now() - room.roundAt) / 1000));
+      const tx = p.x + (p.down ? 0 : p.vx * ahead), tz = p.z + (p.down ? 0 : p.vz * ahead);
+      if (Math.hypot(tx - g.position.x, tz - g.position.z) > 6) g.position.set(tx, 0, tz); // respawn: cut
+      const k = 1 - Math.exp(-dt * 12);
+      g.position.x += (tx - g.position.x) * k;
+      g.position.z += (tz - g.position.z) * k;
     }
     const a = anim.current;
     const step = Math.min(dt, 0.1);
@@ -234,6 +240,8 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
   const { camera, gl } = useThree();
   const acc = useRef(0);
   const camPos = useRef(new THREE.Vector3());
+  /** Smoothed point the camera rig hangs from; position and look target both derive from it. */
+  const anchor = useRef<THREE.Vector3 | null>(null);
   const firstMove = useRef<number | null>(null);
   const clock = useRef(0);
   const watch = useRef(0);
@@ -280,10 +288,11 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
       const seq = pr.apply(mv);
       room.send({ t: 'input', seq, mx: mv.mx, mz: mv.mz, yaw: input.yaw });
     }
+    const rp = pr.updateRender(acc.current / SIM_DT, dt);
     // Follow ourselves, or spectate an active player once spotted or while waiting (spec §7).
     let fx = me.x, fz = me.z;
     if (mobile || me.status === 'finished') {
-      fx = pr.state.x; fz = pr.state.z;
+      fx = rp.x; fz = rp.z;
     } else if (me.status === 'spotted' || me.status === 'waiting') {
       const active = [...room.players.values()].filter((p) => p.status === 'active');
       if (active.length) {
@@ -292,13 +301,17 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
         hud.spectating = t.name;
       } else hud.spectating = '';
     }
+    // Camera rig: smooth one anchor point, then place the camera and its look target rigidly from it.
+    // (Before, the position was smoothed but the look target was not, so every sideways step swung the view.)
+    if (!anchor.current) anchor.current = new THREE.Vector3(fx, 0, fz);
+    const an = anchor.current;
+    if (Math.hypot(fx - an.x, fz - an.z) > 8) an.set(fx, 0, fz); // spectator switch or respawn: cut
+    else { const k = 1 - Math.exp(-dt * 14); an.x += (fx - an.x) * k; an.z += (fz - an.z) * k; }
     const fwx = -Math.sin(input.yaw), fwz = -Math.cos(input.yaw);
     const dist = 5.5;
-    const target = new THREE.Vector3(fx - fwx * dist * Math.cos(input.pitch), 2.2 - Math.sin(input.pitch) * dist, fz - fwz * dist * Math.cos(input.pitch));
-    camPos.current.lerp(target, 1 - Math.exp(-dt * 12));
-    if (camPos.current.lengthSq() === 0) camPos.current.copy(target);
+    camPos.current.set(an.x - fwx * dist * Math.cos(input.pitch), 2.2 - Math.sin(input.pitch) * dist, an.z - fwz * dist * Math.cos(input.pitch));
     camera.position.copy(camPos.current);
-    camera.lookAt(fx + fwx * 4, 1.4 + Math.sin(input.pitch) * 4, fz + fwz * 4);
+    camera.lookAt(an.x + fwx * 4, 1.4 + Math.sin(input.pitch) * 4, an.z + fwz * 4);
     // Test hook for fixed review viewpoints (tests/e2e/views.mjs); never set by the game itself.
     const view = (window as unknown as { __cnView?: { pos: [number, number, number]; look: [number, number, number] } }).__cnView;
     if (view) { camera.position.set(...view.pos); camera.lookAt(...view.look); }
@@ -313,7 +326,7 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
     hud.walkTime = phase === 'lobby'
       ? (me.status === 'finished' ? me.finishTime : firstMove.current === null ? 0 : clock.current - firstMove.current)
       : 0;
-  });
+  }, -1); // before the contestants, so they draw this frame's interpolated position
   return null;
 }
 

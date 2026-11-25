@@ -1,15 +1,37 @@
 // Client-side prediction for the local player with server reconciliation (GDD §7.3).
+//
+// Presentation smoothing (second pass, owner feedback 25 Nov 2026: "remove the jagged or laggy feeling when
+// walking left or right"). The simulation advances in fixed 30 Hz steps, but screens refresh at 60 Hz or more,
+// so drawing the latest step made the contestant (and the camera's look target) move in visible stair steps.
+// Sideways walking showed it most, because each step swung the camera. `renderPos` now interpolates between the
+// last two steps, and a reconciliation correction is blended out over a few frames instead of snapping.
+// None of this changes what is simulated or sent: the server still owns positions.
 import { SIM_DT, step, type MoveInput, type MoveState, type Rect } from '@cn-trials/shared';
+
+/** Corrections larger than this (metres) snap instead of blending: a respawn, a knock-back, a teleport. */
+const SNAP_DISTANCE = 1.5;
+/** How fast a reconciliation error fades (1/s). About 90 % gone after 0.15 s. */
+const ERROR_DECAY = 16;
 
 export class Predictor {
   state: MoveState;
+  /** State before the latest fixed step, for interpolation. */
+  private prev: MoveState;
   seq = 0;
   private history: { seq: number; input: MoveInput }[] = [];
   private lastAck = -1;
+  /** Visual offset left by a reconciliation correction; decays to zero. */
+  private errX = 0;
+  private errZ = 0;
+  /** Smoothed position to draw this frame (set by `updateRender`). */
+  readonly render = { x: 0, z: 0 };
 
   /** Walls for the next step: the stage walls, plus the obstacle twist when a round uses it (Stage 1.5). */
   constructor(start: MoveState, private walls: Rect[] | (() => Rect[])) {
     this.state = { ...start };
+    this.prev = { ...start };
+    this.render.x = start.x;
+    this.render.z = start.z;
   }
 
   /** Apply one fixed step locally; returns the sequence number to send. */
@@ -17,6 +39,7 @@ export class Predictor {
     this.seq += 1;
     this.history.push({ seq: this.seq, input });
     if (this.history.length > 300) this.history.shift();
+    this.prev = this.state;
     this.state = step(this.state, input, SIM_DT, this.wallsNow());
     return this.seq;
   }
@@ -29,7 +52,32 @@ export class Predictor {
     let s: MoveState = { x: server.x, z: server.z, vx: server.vx, vz: server.vz };
     const walls = this.wallsNow();
     for (const h of this.history) s = step(s, h.input, SIM_DT, walls);
+    const dx = s.x - this.state.x, dz = s.z - this.state.z;
+    if (dx !== 0 || dz !== 0) {
+      // Shift the interpolation pair with the correction, and keep the old picture as a fading offset.
+      this.prev = { ...this.prev, x: this.prev.x + dx, z: this.prev.z + dz };
+      this.errX -= dx;
+      this.errZ -= dz;
+      if (Math.hypot(this.errX, this.errZ) > SNAP_DISTANCE) { this.errX = 0; this.errZ = 0; }
+    }
     this.state = s;
+  }
+
+  /**
+   * Work out where to draw the contestant this frame.
+   * @param alpha fraction of a fixed step accumulated since the last one (0..1)
+   * @param dt frame time in seconds, for fading the correction offset
+   */
+  updateRender(alpha: number, dt: number): { x: number; z: number } {
+    const a = Math.max(0, Math.min(1, alpha));
+    const fade = Math.exp(-dt * ERROR_DECAY);
+    this.errX *= fade;
+    this.errZ *= fade;
+    if (Math.abs(this.errX) < 1e-4) this.errX = 0;
+    if (Math.abs(this.errZ) < 1e-4) this.errZ = 0;
+    this.render.x = this.prev.x + (this.state.x - this.prev.x) * a + this.errX;
+    this.render.z = this.prev.z + (this.state.z - this.prev.z) * a + this.errZ;
+    return this.render;
   }
 
   private wallsNow(): Rect[] { return typeof this.walls === 'function' ? this.walls() : this.walls; }
@@ -37,6 +85,11 @@ export class Predictor {
   /** Teleport (respawn): drop pending inputs. */
   reset(s: MoveState): void {
     this.state = { ...s };
+    this.prev = { ...s };
     this.history = [];
+    this.errX = 0;
+    this.errZ = 0;
+    this.render.x = s.x;
+    this.render.z = s.z;
   }
 }
