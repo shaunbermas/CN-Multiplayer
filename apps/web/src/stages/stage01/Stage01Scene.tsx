@@ -17,12 +17,12 @@ import { useQuality, type Quality } from '../../game/quality.ts';
 import { signalView } from '../../game/roundClock.ts';
 import { stageGeo } from '../../game/stage.ts';
 import { Surroundings, surroundingsStatus } from './Surroundings.tsx';
-import { MidgroundTrees, midgroundStatus } from './MidgroundTrees.tsx';
 import { buildSkyEnvironment } from './skyModel.ts';
 import { Atmosphere, atmosphereStatus } from './Atmosphere.tsx';
 import { Obstacles, obstacleStatus } from './Obstacles.tsx';
 import { FOG } from './fog.ts';
 import { setPuddles } from '../../game/groundFx.ts';
+import { driveLens, eyeState, upgradeWatcherMaterials, watcherLookStatus, type WatcherLook } from './watcherLook.ts';
 import { WatcherFX, watcherFxStatus } from './WatcherFX.tsx';
 import { CLIP_SECONDS, MISSING_FROM_MANIFEST, WATCHER_CLIPS, chooseWatcherClip, type WatcherChoice } from './watcherAnimation.ts';
 
@@ -44,8 +44,8 @@ export const stage01Assets = {
   effects: { lights: [] as string[], shadows: [] as string[], dust: 0, haze: false },
   /** Stage 1.5 painted surroundings: matte layers and tree cutouts drawn, and load problems. */
   surroundings: surroundingsStatus,
-  /** Stage 1.5 midground trees (lit impostors at the approved tree positions). */
-  midground: midgroundStatus,
+  /** Midground trees are retired (Phase 04: no 3D trees); kept at 0 so older test reports still parse. */
+  midground: { trees: 0 },
   /** Cone-tree triangles removed from ENV_VISUAL_FOLIAGE (grass tufts kept), and whether the sky env map is set. */
   foliageTrianglesRemoved: 0,
   /** Stage 1.5 atmosphere (sky, light cones, mist, signal wash, post-processing) for the current tier. */
@@ -58,6 +58,8 @@ export const stage01Assets = {
   fog: { type: 'none', density: 0, color: '' } as { type: string; density: number; color: string },
   /** Stage 1.5 Watcher detection presentation (scan beam, searchlight) and lens emissive boost. */
   watcherFx: watcherFxStatus,
+  /** Phase 05: upgraded Watcher materials and the current eye state (neutral, green, red, detect). */
+  watcherLook: watcherLookStatus,
   environmentMap: false,
 };
 
@@ -189,7 +191,7 @@ function Lighting({ quality }: { quality: Quality }) {
 
 // ------------------------------------------------------------------------------------------ environment
 /**
- * Stage 1.5: the approved scene's stacked-cone trees are replaced by lit impostors (MidgroundTrees). They are
+ * Stage 01 refinement (Phase 04): no 3D trees at all; the painted matte layers carry the forest. The cone trees are
  * merged into ENV_VISUAL_FOLIAGE together with the grass tufts, so drop the tree trunks (wood) and every
  * foliage triangle above 1 m (tufts are 0.45–0.55 m tall). The GLB itself is unchanged.
  */
@@ -197,6 +199,7 @@ function stripConeTrees(root: THREE.Object3D): number {
   const node = root.getObjectByName('ENV_VISUAL_FOLIAGE');
   if (!node) { stage01Assets.problems.push('environment: ENV_VISUAL_FOLIAGE missing'); return 0; }
   let removed = 0;
+  root.updateMatrixWorld(true);
   node.traverse((o) => {
     const mesh = o as THREE.Mesh;
     if (!mesh.isMesh) return;
@@ -204,11 +207,16 @@ function stripConeTrees(root: THREE.Object3D): number {
     const g = mesh.geometry;
     if (mat.name === 'MAT_Wood_Weathered') { removed += (g.index ? g.index.count : g.attributes.position.count) / 3; mesh.visible = false; return; }
     if (mat.name !== 'MAT_Foliage' || !g.index || g.userData.stripped) return;
-    const y = g.attributes.position;
+    // Height in world metres. The GLB is quantised (KHR_mesh_quantization): local positions are normalised
+    // shorts scaled up by the node, so the old local-space test kept every triangle and the cone trees stayed
+    // visible in every Stage 1.5 build (found in the Stage 01 refinement, Phase 04).
+    const pos = g.attributes.position;
+    const e = mesh.matrixWorld.elements;
+    const wy = (i: number) => e[1] * pos.getX(i) + e[5] * pos.getY(i) + e[9] * pos.getZ(i) + e[13];
     const src = g.index.array;
     const keep: number[] = [];
     for (let i = 0; i < src.length; i += 3) {
-      if (Math.max(y.getY(src[i]), y.getY(src[i + 1]), y.getY(src[i + 2])) < 1.0) keep.push(src[i], src[i + 1], src[i + 2]);
+      if (Math.max(wy(src[i]), wy(src[i + 1]), wy(src[i + 2])) < 1.0) keep.push(src[i], src[i + 1], src[i + 2]);
       else removed++;
     }
     g.setIndex(keep);
@@ -296,6 +304,7 @@ function Watcher({ room, search }: { room: TrialRoom; search: boolean }) {
   const resultsAt = useRef<number | null>(null);
   const segSeen = useRef<{ key: string; at: number }>({ key: '', at: 0 });
   const spotSeen = useRef<{ key: string; at: number }>({ key: '', at: 0 });
+  const look = useRef<WatcherLook | null>(null);
   const w = stageGeo.watcher!;
 
   useEffect(() => {
@@ -330,9 +339,11 @@ function Watcher({ room, search }: { room: TrialRoom; search: boolean }) {
     stage01Assets.watcherHeight = +(box.max.y - box.min.y).toFixed(3);
     if (Math.abs(stage01Assets.watcherHeight - w.height) > 0.2) stage01Assets.problems.push(`watcher: height ${stage01Assets.watcherHeight} m, stage expects ${w.height} m`);
     if (Math.abs(box.min.y) > 0.05) stage01Assets.problems.push(`watcher: feet at ${box.min.y.toFixed(2)} m, expected 0 at the root`);
+    // Stage 01 refinement (Phase 05): material and lens polish only; geometry is locked (watcherLook.ts).
+    look.current = upgradeWatcherMaterials(gltf.scene, w.y, w.height);
     stage01Assets.watcher = 'ready';
-    return () => { dispose(gltf.scene); useGLTF.clear(WATCHER_URL); stage01Assets.watcher = 'loading'; };
-  }, [gltf, w.height]);
+    return () => { look.current?.dispose(); look.current = null; dispose(gltf.scene); useGLTF.clear(WATCHER_URL); stage01Assets.watcher = 'loading'; };
+  }, [gltf, w.height, w.y]);
 
   useFrame(() => {
     const v = signalView(room);
@@ -350,6 +361,7 @@ function Watcher({ room, search }: { room: TrialRoom; search: boolean }) {
     const thisRoundSpot = spotted && phase === 'active' && spotted.at >= goLocal - 1000 ? spotted : undefined;
     const spotKey = thisRoundSpot ? `${thisRoundSpot.id}@${thisRoundSpot.at}` : '';
     if (spotSeen.current.key !== spotKey) spotSeen.current = { key: spotKey, at: Date.now() };
+    if (look.current) driveLens(look.current, eyeState(phase, v.signal, thisRoundSpot ? (Date.now() - spotSeen.current.at) / 1000 : Infinity), performance.now() / 1000);
     const choice = chooseWatcherClip({
       phase, signal: v.signal, into: v.into, sinceSegmentSeen: (Date.now() - segSeen.current.at) / 1000, segmentLength: v.segLength, segmentStart: v.segStart, redIndex: v.redIndex,
       sinceSpotted: thisRoundSpot ? (Date.now() - spotSeen.current.at) / 1000 : Infinity,
@@ -453,7 +465,6 @@ export function Stage01Scene({ room }: { room: TrialRoom }) {
       <Watcher room={room} search={quality !== 'low'} />
       <Atmosphere room={room} quality={quality} />
       <Surroundings quality={quality} />
-      <MidgroundTrees shadows={shadowLights(quality).length > 0} />
       <Obstacles room={room} shadows={shadowLights(quality).length > 0} />
       {dust > 0 && <Dust count={dust} />}
     </>

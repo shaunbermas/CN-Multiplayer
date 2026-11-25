@@ -1,6 +1,6 @@
 // Stage 1.5 (Prompt 07): player settings, remembered in this browser only (localStorage; every access is
-// guarded, so a private window or blocked storage simply uses the defaults). No audio setting: the game has
-// no sound yet, and a control that does nothing would be misleading.
+// guarded, so a private window or blocked storage simply uses the defaults). Second pass (decision 034 B):
+// sound volume and mute.
 import { useSyncExternalStore } from 'react';
 
 export type GraphicsSetting = 'auto' | 'high' | 'medium' | 'low';
@@ -15,10 +15,14 @@ export interface Settings {
   hudScale: number;
   /** Red screen-edge pulse while the light is red (in addition to the label and icon). */
   edgeFlash: boolean;
+  /** All game sound off (also M in a game, or the speaker button in the HUD). */
+  muted: boolean;
+  /** Master volume 0..1. */
+  volume: number;
 }
 
 const KEY = 'cn-trial-settings-v1';
-export const DEFAULT_SETTINGS: Settings = { graphics: 'auto', sensitivity: 1, invertY: false, hudScale: 1, edgeFlash: true };
+export const DEFAULT_SETTINGS: Settings = { graphics: 'auto', sensitivity: 1, invertY: false, hudScale: 1, edgeFlash: true, muted: false, volume: 0.7 };
 
 function load(): Settings {
   try {
@@ -31,6 +35,8 @@ function load(): Settings {
       invertY: v.invertY === true,
       hudScale: [1, 1.25, 1.5].includes(v.hudScale as number) ? (v.hudScale as number) : 1,
       edgeFlash: v.edgeFlash !== false,
+      muted: v.muted === true,
+      volume: typeof v.volume === 'number' && Number.isFinite(v.volume) ? Math.min(1, Math.max(0, v.volume)) : DEFAULT_SETTINGS.volume,
     };
   } catch { return { ...DEFAULT_SETTINGS }; }
 }

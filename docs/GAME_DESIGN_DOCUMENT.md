@@ -20,6 +20,8 @@ INITIAL PRE-PRODUCTION SPECIFICATION
 | Primary implementation | Claude Code + React / Three.js + Cloudflare Workers and Durable Objects (v0.4; was Colyseus) |
 | 3D production | Blender, with web-ready GLB / glTF exports |
 
+> **STAGE 01 REFINEMENT (24 Nov 2026, decision 033, PROPOSED)** On the refinement branch, Stage 01 plays as a points match (first finisher 2, other finishers 1, others 0; spotted players continue to the next stage) with server bots, player collisions and shorter timings. The approved sections below are unchanged until the owner signs off; see `docs/STAGE_01_REFINEMENT_IMPLEMENTATION.md` and `docs/STAGE_01_SCORING_SYSTEM.md`.
+
 > **SCOPE NOTE** This document defines the first production baseline. It is not a claim that all systems, stage counts, player counts or performance targets have already been proven in a playable build.
 
 ### Version history

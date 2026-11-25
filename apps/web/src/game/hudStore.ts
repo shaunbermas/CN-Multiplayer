@@ -12,4 +12,6 @@ export const hud = {
   pingMs: 0,
   /** Name of the player being followed while spectating (Stage 1.5 spectator UI). */
   spectating: '',
+  /** Seconds of collision knock-down left for the local player (0 = standing). */
+  down: 0,
 };

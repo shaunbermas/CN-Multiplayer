@@ -118,7 +118,7 @@ void main() {
 const coneFragment = /* glsl */ `
 uniform vec3 uColor; uniform float uStrength; varying float vAlong; varying vec3 vN; varying vec3 vView;
 void main() {
-  float edge = pow(abs(dot(normalize(vN), normalize(vView))), 1.6); // soft at the silhouette
+  float edge = pow(abs(dot(normalize(vN), normalize(vView))), 2.2); // soft at the silhouette (refinement: softer)
   float fall = (1.0 - vAlong) * (1.0 - vAlong) * smoothstep(0.0, 0.08, vAlong);
   gl_FragColor = vec4(uColor * edge * fall * uStrength, 1.0);
   #include <colorspace_fragment>
@@ -131,9 +131,9 @@ function LightCones() {
     const floods = lighting.lights.filter((l) => l.id.startsWith('LGT_STG01_Flood_'));
     const mat = new THREE.ShaderMaterial({
       vertexShader: coneVertex, fragmentShader: coneFragment, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false,
-      uniforms: { uColor: { value: new THREE.Color(SKY.amber) }, uStrength: { value: 0.13 } },
+      uniforms: { uColor: { value: new THREE.Color(SKY.amber) }, uStrength: { value: 0.085 } }, // Phase 10: softer beams (was 0.13)
     });
-    const glareMat = new THREE.SpriteMaterial({ map: lampGlowTexture(), color: new THREE.Color(SKY.amber), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, toneMapped: false, opacity: 0.85 });
+    const glareMat = new THREE.SpriteMaterial({ map: lampGlowTexture(), color: new THREE.Color(SKY.amber), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, toneMapped: false, opacity: 0.6 }); // Phase 10: less glare (was 0.85)
     for (const l of floods) {
       const len = 26;
       const r = Math.tan(THREE.MathUtils.degToRad((l.angleDeg ?? 40) * 0.5)) * len * 0.85;
@@ -148,7 +148,7 @@ function LightCones() {
       // Lamp glare on the flood head, so every floodlight reads as switched on (all tiers).
       const glare = new THREE.Sprite(glareMat);
       glare.position.copy(cone.position);
-      glare.scale.set(7, 7, 1);
+      glare.scale.set(5.5, 5.5, 1);
       glare.renderOrder = 6;
       g.add(glare);
     }
@@ -356,7 +356,8 @@ function PostFX() {
     const c = new EffectComposer(gl);
     c.addPass(new RenderPass(scene, camera));
     // Only bright emissive lamps, signal lights and the moon bloom; the threshold keeps contestants crisp.
-    c.addPass(new UnrealBloomPass(new THREE.Vector2(size.width / 2, size.height / 2), 0.42, 0.4, 0.93));
+    // Phase 10 (refinement): gentler bloom so lamps and the red eye glow without smearing (was 0.42 / 0.4 / 0.93).
+    c.addPass(new UnrealBloomPass(new THREE.Vector2(size.width / 2, size.height / 2), 0.26, 0.3, 0.95));
     c.addPass(new ShaderPass(GradeShader));
     c.addPass(new OutputPass());
     return c;

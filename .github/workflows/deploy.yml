@@ -9,6 +9,14 @@ name: Deploy
 on:
   push:
     branches: [main]
+    # Owner decision 034 (E): merges that only change documentation do not redeploy, because a deploy
+    # restarts the Worker and ends any rooms in progress. Run this workflow by hand to force a deploy.
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - 'references/**'
+      - 'renders/**'
+      - 'tests/reports/**'
   workflow_dispatch:
 
 permissions:

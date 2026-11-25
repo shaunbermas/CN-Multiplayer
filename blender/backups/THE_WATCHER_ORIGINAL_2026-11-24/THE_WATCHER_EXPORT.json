@@ -1,0 +1,164 @@
+{
+  "glb": "blender/exports/THE_WATCHER.glb",
+  "blend": "blender/scenes/THE_WATCHER.blend",
+  "blender": "5.3.0",
+  "fps": 24,
+  "triangles_lod0": 12662,
+  "triangles_lod1": 6314,
+  "clips_in_blend": {
+    "Watcher_Detect": [
+      1,
+      41,
+      false
+    ],
+    "Watcher_FocusLock": [
+      1,
+      25,
+      false
+    ],
+    "Watcher_GreenSignal": [
+      1,
+      49,
+      true
+    ],
+    "Watcher_Idle": [
+      1,
+      97,
+      true
+    ],
+    "Watcher_RedSignal": [
+      1,
+      49,
+      true
+    ],
+    "Watcher_ReturnNeutral": [
+      1,
+      37,
+      false
+    ],
+    "Watcher_ScanSweep": [
+      1,
+      97,
+      true
+    ],
+    "Watcher_TurnAway": [
+      1,
+      37,
+      false
+    ],
+    "Watcher_TurnToField": [
+      1,
+      37,
+      false
+    ]
+  },
+  "glb_summary": {
+    "bytes": 2278516,
+    "nodes": 41,
+    "meshes": 1,
+    "primitives": 12,
+    "skins": 1,
+    "joints": 33,
+    "joint_names": [
+      "Watcher_Root",
+      "Watcher_Pelvis",
+      "Watcher_Spine",
+      "Watcher_Chest",
+      "Watcher_Clavicle_L",
+      "Watcher_UpperArm_L",
+      "Watcher_Forearm_L",
+      "Watcher_Hand_L",
+      "Watcher_Index_L",
+      "Watcher_Middle_L",
+      "Watcher_Ring_L",
+      "Watcher_Thumb_L",
+      "Watcher_Clavicle_R",
+      "Watcher_UpperArm_R",
+      "Watcher_Forearm_R",
+      "Watcher_Hand_R",
+      "Watcher_Index_R",
+      "Watcher_Middle_R",
+      "Watcher_Ring_R",
+      "Watcher_Thumb_R",
+      "Watcher_Key",
+      "Watcher_Neck",
+      "Watcher_Head",
+      "Watcher_Eye",
+      "Watcher_LensGreen",
+      "Watcher_LensNeutral",
+      "Watcher_LensRed",
+      "Watcher_Thigh_L",
+      "Watcher_Shin_L",
+      "Watcher_Foot_L",
+      "Watcher_Thigh_R",
+      "Watcher_Shin_R",
+      "Watcher_Foot_R"
+    ],
+    "materials": [
+      "MAT_Watcher_Brass",
+      "MAT_Watcher_EnamelTeal",
+      "MAT_Watcher_HairLacquer",
+      "MAT_Watcher_LensGlass",
+      "MAT_Watcher_Lens_Green",
+      "MAT_Watcher_Lens_Neutral",
+      "MAT_Watcher_Lens_Red",
+      "MAT_Watcher_Porcelain",
+      "MAT_Watcher_Rubber",
+      "MAT_Watcher_Seam",
+      "MAT_Watcher_SteelDark",
+      "MAT_Watcher_Textile"
+    ],
+    "images": 21,
+    "animations": [
+      {
+        "name": "Watcher_Detect",
+        "channels": 99,
+        "duration_s": 1.667
+      },
+      {
+        "name": "Watcher_FocusLock",
+        "channels": 99,
+        "duration_s": 1
+      },
+      {
+        "name": "Watcher_GreenSignal",
+        "channels": 99,
+        "duration_s": 2
+      },
+      {
+        "name": "Watcher_Idle",
+        "channels": 99,
+        "duration_s": 4
+      },
+      {
+        "name": "Watcher_RedSignal",
+        "channels": 99,
+        "duration_s": 2
+      },
+      {
+        "name": "Watcher_ReturnNeutral",
+        "channels": 99,
+        "duration_s": 1.5
+      },
+      {
+        "name": "Watcher_ScanSweep",
+        "channels": 99,
+        "duration_s": 4
+      },
+      {
+        "name": "Watcher_TurnAway",
+        "channels": 99,
+        "duration_s": 1.5
+      },
+      {
+        "name": "Watcher_TurnToField",
+        "channels": 99,
+        "duration_s": 1.5
+      }
+    ],
+    "extensions_used": [
+      "KHR_materials_emissive_strength",
+      "EXT_texture_webp"
+    ]
+  }
+}

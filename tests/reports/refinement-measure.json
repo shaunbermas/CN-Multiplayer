@@ -1,0 +1,200 @@
+{
+  "date": "2026-11-24T21:26:51.546Z",
+  "renderer": "headless Chromium, SwiftShader software WebGL (no GPU in this container)",
+  "errors": [],
+  "load": {
+    "ms_to_stage_ready": 15951,
+    "resources": 17,
+    "bytes_total": 4810082,
+    "bytes_by_type": {
+      "js": 523577,
+      "css": 5849,
+      "woff2": 134192,
+      "glb": 3657292,
+      "webp": 489172
+    },
+    "heap_mb": 34.6,
+    "render": {
+      "calls": 189,
+      "triangles": 197903,
+      "programs": 49,
+      "textures": 92,
+      "geometries": 100,
+      "dpr": 1
+    },
+    "idle_frames": {
+      "frames": 5,
+      "fps": 0.81,
+      "p50_ms": 1416.6,
+      "p95_ms": 1933.2,
+      "max_ms": 1933.2,
+      "spikes_over_250ms": 4
+    }
+  },
+  "match": {
+    "players": 30,
+    "real_browsers": 1,
+    "server_bots": 29,
+    "stages": [
+      {
+        "stage": 1,
+        "finished": 14,
+        "spotted": 13,
+        "unfinished": 3,
+        "first": "Tofu",
+        "first_time_s": 78.833,
+        "points_awarded": 15,
+        "knockdowns_total": 21,
+        "tick_ms": {
+          "avg": 0.151,
+          "p95": 1,
+          "max": 7
+        },
+        "snapshot_avg_bytes": 1336
+      },
+      {
+        "stage": 2,
+        "finished": 21,
+        "spotted": 5,
+        "unfinished": 4,
+        "first": "Quill",
+        "first_time_s": 73.3,
+        "points_awarded": 22,
+        "knockdowns_total": 34,
+        "tick_ms": {
+          "avg": 0.122,
+          "p95": 1,
+          "max": 7
+        },
+        "snapshot_avg_bytes": 1470
+      },
+      {
+        "stage": 3,
+        "finished": 12,
+        "spotted": 12,
+        "unfinished": 6,
+        "first": "Juniper",
+        "first_time_s": 81.3,
+        "points_awarded": 13,
+        "knockdowns_total": 63,
+        "tick_ms": {
+          "avg": 0.11,
+          "p95": 1,
+          "max": 7
+        },
+        "snapshot_avg_bytes": 1521
+      }
+    ],
+    "final_standings_top5": [
+      {
+        "rank": 1,
+        "name": "Tofu",
+        "points": 4,
+        "wins": 1,
+        "finishes": 3,
+        "perStage": [
+          2,
+          1,
+          1
+        ]
+      },
+      {
+        "rank": 2,
+        "name": "Quill",
+        "points": 3,
+        "wins": 1,
+        "finishes": 2,
+        "perStage": [
+          1,
+          2,
+          0
+        ]
+      },
+      {
+        "rank": 3,
+        "name": "Juniper",
+        "points": 3,
+        "wins": 1,
+        "finishes": 2,
+        "perStage": [
+          0,
+          1,
+          2
+        ]
+      },
+      {
+        "rank": 4,
+        "name": "Saffron",
+        "points": 3,
+        "wins": 0,
+        "finishes": 3,
+        "perStage": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "rank": 5,
+        "name": "Sorrel",
+        "points": 3,
+        "wins": 0,
+        "finishes": 3,
+        "perStage": [
+          1,
+          1,
+          1
+        ]
+      }
+    ],
+    "points_total": 50,
+    "ws_bytes_per_s_into_browser_active": 32780,
+    "frames_during_match": {
+      "frames": 157,
+      "fps": 0.88,
+      "p50_ms": 1449.9,
+      "p95_ms": 1716.6,
+      "max_ms": 1800,
+      "spikes_over_250ms": 118
+    },
+    "heap_mb_before": 36.8,
+    "heap_mb_after": 37.1,
+    "render_during_match": {
+      "calls": 247,
+      "triangles": 404035,
+      "programs": 51,
+      "textures": 121,
+      "geometries": 104,
+      "dpr": 1
+    },
+    "health_end": {
+      "ok": true,
+      "room": "measure13496",
+      "players": 30,
+      "humans": 1,
+      "bots": 29,
+      "running": true,
+      "phase": "results",
+      "match": {
+        "stage": 3,
+        "total": 3,
+        "final": true
+      },
+      "knockdowns": 63,
+      "snapshot": {
+        "count": 7720,
+        "avgBytes": 1523
+      },
+      "ticks": 11891,
+      "tickMs": {
+        "avg": 0.109,
+        "p95": 1,
+        "max": 7
+      },
+      "inputs": {
+        "accepted": 7478,
+        "dropped": 0
+      }
+    }
+  }
+}

@@ -10,7 +10,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
-import { colorwayById, CONTESTANT_COLORWAYS, type Colorway, type Emote } from '@cn-trials/shared';
+import { COLLISION, colorwayById, CONTESTANT_COLORWAYS, type Colorway, type Emote } from '@cn-trials/shared';
 import type { GroundKind } from './groundFx.ts';
 import glbUrl from '../../../../blender/exports/contestant/CNTRIAL_CONTESTANT_MASTER.meshopt.glb?url';
 import detailUrl from '../../../../blender/exports/contestant/CNT_Detail.webp?url';
@@ -205,6 +205,23 @@ export interface ContestantDrive {
   status: 'active' | 'finished' | 'spotted' | 'waiting';
   /** Round phase is active and the light is green (a hard stop then means a stumble, not a stop for red). */
   greenActive: boolean;
+  /** Seconds of collision knock-down left (server), 0 when standing (Stage 01 refinement). */
+  down?: number;
+  /** How fast the contestant is turning (rad/s, + = left), for leaning into turns. */
+  turn?: number;
+}
+
+/** Second pass (decision 034 C), "Fall Guys-inspired movement" as presentation only: a bouncy, wobbly walk.
+ *  Stride length for the waddle and bounce cycle (m per step). */
+const FEEL_STRIDE = 0.62;
+const AXIS_X = new THREE.Vector3(1, 0, 0), AXIS_Y = new THREE.Vector3(0, 1, 0), AXIS_Z = new THREE.Vector3(0, 0, 1);
+const qA = new THREE.Quaternion(), qB = new THREE.Quaternion(), qC = new THREE.Quaternion();
+/** Under-damped spring (overshoots a little, then settles): the wobble on starts, stops and turns. */
+function spring(st: { x: number; v: number }, target: number, dt: number, k = 90, c = 7): number {
+  const h = Math.min(dt, 1 / 30);
+  st.v += (k * (target - st.x) - c * st.v) * h;
+  st.x += st.v * h;
+  return st.x;
 }
 
 interface Chain { name: string; dur?: number }
@@ -223,9 +240,13 @@ export class ContestantInstance {
   private speedHist: { t: number; v: number }[] = [];
   private clock = 0;
   private hop = { t: -1 };
+  /** Procedural feel layer state (lean and roll springs, stride phase). */
+  private feel = { phase: 0, lastSpeed: 0, lean: { x: 0, v: 0 }, roll: { x: 0, v: 0 }, weight: 0 };
   /** Ground contacts since the last frame (skid, land, dive, flop) for the dust / splash effects. */
   readonly events: GroundKind[] = [];
   private shotEvent = '';
+  /** Collision knock-down presentation: none -> falling (Fall, held) -> recovering (Recover). */
+  private downState: 'none' | 'falling' | 'recovering' = 'none';
   lod = 1;
 
   constructor(asset: ContestantAsset, colorwayId: string) {
@@ -313,12 +334,20 @@ export class ContestantInstance {
       else if (this.lastStatus === 'finished' && this.shot?.name === 'Victory') this.shot.hold = false;
       this.lastStatus = d.status;
     }
+    // Collision knock-down (server timer): fall and hold on the ground, then get up for the last recoverS.
+    const down = d.down ?? 0;
+    if (down > 0 && this.downState === 'none') { this.downState = 'falling'; this.play('Fall', { hold: true }); this.speedHist.length = 0; }
+    else if (down > 0 && down <= COLLISION.recoverS && this.downState === 'falling') { this.downState = 'recovering'; this.play('Recover', { dur: COLLISION.recoverS }); }
+    else if (down <= 0 && this.downState !== 'none') {
+      if (this.downState === 'falling') this.play('Recover'); // a late snapshot skipped the recover window
+      this.downState = 'none';
+    }
     // start / stop / stumble from the speed history
     this.speedHist.push({ t: this.clock, v: d.speed });
     while (this.speedHist.length && this.clock - this.speedHist[0].t > 0.35) this.speedHist.shift();
     const peak = Math.max(...this.speedHist.map((h) => h.v));
     const free = !this.shot || (!this.shot.hold && this.shot.t > this.shot.dur * 0.6);
-    if (d.status === 'active' && free) {
+    if (d.status === 'active' && free && this.downState === 'none') {
       if (peak > 2.6 && d.speed < 0.5) {
         this.play(d.greenActive ? 'Stumble' : 'Stop');
         this.speedHist.length = 0;
@@ -357,13 +386,36 @@ export class ContestantInstance {
     walkA?.setEffectiveWeight(walk * lw);
     runA?.setEffectiveWeight(run * lw);
     this.mixer.update(dt);
+    const model = this.root.children[0];
+    // Feel layer (decision 034 C): a springy waddle on top of the clips. It sways side to side with each
+    // step, bounces a little with squash and stretch, leans into speeding up, rocks back and wobbles when
+    // stopping, and leans into turns. Presentation only: the server position and the rules are unchanged.
+    const f = this.feel;
+    const standing = (d.status === 'active' || d.status === 'finished') && this.downState === 'none';
+    const loco = (walk + run) * lw * (standing ? 1 : 0);
+    f.weight += ((standing ? lw : 0) - f.weight) * (1 - Math.exp(-dt * 8));
+    f.phase += (d.speed * dt) / FEEL_STRIDE * Math.PI;
+    const accel = dt > 0 ? (d.speed - f.lastSpeed) / dt : 0;
+    f.lastSpeed = d.speed;
+    const lean = spring(f.lean, (Math.max(-0.2, Math.min(0.2, accel * 0.03)) + 0.05 * run) * f.weight, dt);
+    const roll = spring(f.roll, Math.max(-0.22, Math.min(0.22, (d.turn ?? 0) * 0.045)) * loco, dt, 70, 8)
+      + Math.sin(f.phase) * 0.075 * loco;
+    // lean forward = top toward -Z (the facing direction); roll about the facing axis; then the model's base turn
+    qA.setFromAxisAngle(AXIS_X, -lean);
+    qB.setFromAxisAngle(AXIS_Z, roll);
+    qC.setFromAxisAngle(AXIS_Y, Math.PI);
+    model.quaternion.copy(qA).multiply(qB).multiply(qC);
+    const bounce = Math.abs(Math.sin(f.phase));
+    const sy = 1 + (0.05 * Math.cos(2 * f.phase)) * loco; // stretch mid-step, squash on each footfall
+    const sxz = 1 / Math.sqrt(sy);
+    model.scale.set(sxz, sy, sxz);
     // lobby jump emote: a visual hop of the model only (the server position is untouched)
     if (this.hop.t >= 0) {
       this.hop.t += dt;
       const T = 0.62, t = this.hop.t - 0.12;
-      this.root.children[0].position.y = t > 0 && t < T ? 4 * 0.42 * (t / T) * (1 - t / T) : 0;
-      if (this.hop.t > T + 0.3) { this.hop.t = -1; this.root.children[0].position.y = 0; }
-    }
+      model.position.y = t > 0 && t < T ? 4 * 0.42 * (t / T) * (1 - t / T) : 0;
+      if (this.hop.t > T + 0.3) { this.hop.t = -1; model.position.y = 0; }
+    } else model.position.y = 0.035 * bounce * loco;
   }
 
   dispose(): void {

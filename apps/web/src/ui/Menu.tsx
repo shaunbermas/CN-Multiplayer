@@ -1,15 +1,16 @@
-// Stage 1.5 (Prompt 07): out-of-game screens and shared panels. Visual direction from the CN TRIAL UI/UX
-// concept board (layout and style only; its placeholder avatars and imagery are not used).
+// Out-of-game screens and shared panels. Stage 01 refinement redesign (24 Nov 2026): visual reference
+// docs/ui/STAGE_01_UI_MOCKUP.html, which uses the same stylesheet (styles.css).
 import { useState, type ReactNode } from 'react';
 import { MAX_PLAYERS } from '@cn-trials/shared';
 import { applyGraphicsSetting } from '../game/qualityStore.ts';
 import { updateSettings, useSettings, type GraphicsSetting } from './settings.ts';
+import { applyVolume, setMuted } from '../game/audio.ts';
 
 export function Brand({ small = false }: { small?: boolean }) {
   return (
     <div className={`brand${small ? ' small' : ''}`} aria-label="CN TRIAL">
+      <span className="lens" aria-hidden="true" />
       <span className="brand-word">CN TRIAL</span>
-      <span className="brand-slash" aria-hidden="true" />
     </div>
   );
 }
@@ -33,7 +34,9 @@ export function HowToPlay({ onClose }: { onClose: () => void }) {
         <li><b>Green light: move.</b> Walk toward the finish line at the far end of the yard.</li>
         <li><b>Amber: get ready.</b> The Watcher is turning back. Stop before it faces you.</li>
         <li><b>Red light: freeze.</b> Anyone still moving after a short grace moment is spotted and eliminated. Eliminated players spectate.</li>
-        <li><b>Finish</b> before the timer runs out. In tournament rules, only the first finishers qualify.</li>
+        <li><b>Finish</b> before the timer runs out. Once the first player finishes, everyone else has 30 seconds.</li>
+        <li><b>Points.</b> First to finish a stage: 2 points. Every other finisher: 1. Spotted or out of time: 0. A match has several stages; everyone plays every stage, and the most points wins.</li>
+        <li><b>Bumping into someone</b> knocks you both over for a moment. Falling never eliminates you, but it costs time.</li>
         <li><b>Obstacles</b>: barricade rows to weave through and a gate that slides only on green. The yard is foggy: you only see them up close.</li>
         <li><b>Your contestant</b> wears colours dealt at random when you join (kept if you rejoin). Nobody in the room has the same ones. In the lobby, <kbd>Space</kbd> jumps and <kbd>E</kbd> dives, just for fun.</li>
       </ol>
@@ -45,6 +48,7 @@ export function HowToPlay({ onClose }: { onClose: () => void }) {
           <tr><td><kbd>E</kbd></td><td>Dive (lobby, just for show)</td></tr>
           <tr><td><kbd>Tab</kbd></td><td>Switch the player you spectate</td></tr>
           <tr><td><kbd>R</kbd></td><td>Respawn (lobby practice only)</td></tr>
+          <tr><td><kbd>M</kbd></td><td>Mute or unmute the sound</td></tr>
           <tr><td><kbd>Esc</kbd></td><td>Release the mouse</td></tr>
         </tbody>
       </table>
@@ -77,7 +81,11 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
           </select>
         </label>
         <label className="check"><input type="checkbox" checked={s.edgeFlash} onChange={(e) => updateSettings({ edgeFlash: e.target.checked })} /> Red screen-edge pulse on red light</label>
-        <p className="muted">Signals always show a word and an icon as well as a colour. There is no sound yet, so there are no audio settings.</p>
+        <label className="check"><input type="checkbox" checked={!s.muted} onChange={(e) => setMuted(!e.target.checked)} data-testid="sound-on" /> Sound on <span className="muted">(<kbd>M</kbd> in a game)</span></label>
+        <label>Volume <output>{Math.round(s.volume * 100)} %</output>
+          <input type="range" min={0} max={1} step={0.05} value={s.volume} disabled={s.muted} onChange={(e) => { updateSettings({ volume: Number(e.target.value) }); applyVolume(); }} data-testid="volume" />
+        </label>
+        <p className="muted">Signals always show a word and the lens shape as well as a colour, and each one also has its own sound, so the game works with the sound off.</p>
       </div>
     </Modal>
   );
@@ -96,30 +104,32 @@ export function MainMenu({ initialName, inviteCode, busy, error, onJoin }: {
       <div className="menu-art" aria-hidden="true" />
       <section className="menu-col">
         <Brand />
-        <p className="menu-sub">Multiplayer elimination game · up to {MAX_PLAYERS} per private room</p>
+        <p className="menu-sub">Red Light, Green Light for up to {MAX_PLAYERS} players. Make a private room and send the link.</p>
         <label className="name-field">Your nickname
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Guest nickname" maxLength={16} autoFocus={!inviteCode} data-testid="nickname" />
         </label>
         {inviteCode && <p className="notice" data-testid="invite-notice">You were invited to room <b>{inviteCode.toUpperCase()}</b>.</p>}
         <div className="menu-actions">
           {inviteCode ? (
-            <button className="btn primary big" disabled={!nameOk || busy} onClick={() => onJoin(name.trim(), inviteCode)} data-testid="join-invite">▶ Join room {inviteCode.toUpperCase()}</button>
+            <button className="btn primary big wide" disabled={!nameOk || busy} onClick={() => onJoin(name.trim(), inviteCode)} data-testid="join-invite">Join room {inviteCode.toUpperCase()}</button>
           ) : (
-            <button className="btn primary big" disabled={!nameOk || busy} onClick={() => onJoin(name.trim(), null)} data-testid="create-room">▶ Create private room</button>
+            <button className="btn primary big wide" disabled={!nameOk || busy} onClick={() => onJoin(name.trim(), null)} data-testid="create-room">Create private room</button>
           )}
-          <button className="btn" onClick={() => setPanel(panel === 'join' ? 'none' : 'join')} aria-expanded={panel === 'join'}>Join with a code</button>
+          <div className="menu-row">
+            <button className="btn" onClick={() => setPanel(panel === 'join' ? 'none' : 'join')} aria-expanded={panel === 'join'}>Join with a code</button>
+            <button className="btn" onClick={() => setPanel('howto')}>How to play</button>
+          </div>
           {panel === 'join' && (
             <form className="join-row" onSubmit={(e) => { e.preventDefault(); if (nameOk && code.trim()) onJoin(name.trim(), code.trim().toLowerCase()); }}>
               <input value={code} onChange={(e) => setCode(e.target.value.replace(/[^a-zA-Z0-9-]/g, '').slice(0, 32))} placeholder="Room code" aria-label="Room code" data-testid="room-code" />
               <button className="btn primary" disabled={!nameOk || !code.trim() || busy} data-testid="join-code">Join</button>
             </form>
           )}
-          <button className="btn" onClick={() => setPanel('howto')}>How to play</button>
-          <button className="btn" onClick={() => setPanel('settings')}>Settings</button>
+          <button className="btn ghost" onClick={() => setPanel('settings')}>Settings</button>
         </div>
         {busy && <p className="muted" role="status">Connecting…</p>}
         {error && <p className="error" role="alert" data-testid="menu-error">{error}</p>}
-        <p className="menu-foot muted">Stage 01 · Red Light, Green Light</p>
+        <p className="menu-foot">Stage 01 · Red Light, Green Light</p>
       </section>
       {panel === 'howto' && <HowToPlay onClose={() => setPanel('none')} />}
       {panel === 'settings' && <SettingsPanel onClose={() => setPanel('none')} />}

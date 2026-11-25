@@ -1,7 +1,7 @@
 {
   "result": "PASS",
   "errors": [],
-  "date": "2026-11-22T06:30:18.751Z",
+  "date": "2026-11-24T21:45:26.600Z",
   "screens": [
     "01_menu",
     "01b_menu_keyboard_focus",
@@ -22,6 +22,8 @@
     "16_room_full",
     "17_connection_lost"
   ],
-  "screenshot_after_screen_closed": [],
+  "screenshot_after_screen_closed": [
+    "spotted"
+  ],
   "renderer": "headless Chromium, SwiftShader, low tier"
 }

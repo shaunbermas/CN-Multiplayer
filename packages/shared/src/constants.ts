@@ -24,3 +24,29 @@ export const INPUT_QUEUE_MAX = 60;
 export const NAME_MAX = 16;
 export const DEFAULT_ROOM = 'default';
 export const DEV_WORKER_PORT = 8787;
+
+/**
+ * Player-to-player collisions (Stage 01 refinement, owner brief 24 Nov 2026). Server-authoritative: the room
+ * detects contacts after every simulation step (packages/shared/src/collisions.ts). Two capsules touch when
+ * their centres are closer than 2 × capsuleRadius (no oversized bounds). A contact knocks BOTH players down
+ * only when they hit hard enough; gentle touches just push them apart.
+ */
+export const COLLISION = {
+  /** Centre distance at which two capsules touch (m): exactly two capsule radii. */
+  contactDist: 2 * MOVEMENT.capsuleRadius,
+  /** Closing speed along the contact line (m/s) needed for a knock-down: a bit over a third of walking speed,
+   *  so walking into someone knocks you both over but brushing past or pushing gently does not. */
+  minImpactSpeed: 1.5,
+  /** Seconds on the ground (no movement control). */
+  fallS: 1.0,
+  /** Seconds getting back up (still no control). Total time without control = fallS + recoverS. */
+  recoverS: 0.6,
+  /** Seconds after standing up during which the player cannot be knocked down again (no endless falls). */
+  immuneS: 1.5,
+} as const;
+
+/** Room capacity counts humans and bots together (owner brief: 30 total). */
+export const BOT_LIMITS = {
+  /** Most bots one "add random players" press adds. */
+  addStep: 5,
+} as const;

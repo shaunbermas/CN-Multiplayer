@@ -10,17 +10,20 @@ import { hud } from './hudStore.ts';
 import { AdaptiveQuality, quality } from './quality.ts';
 import { attachInput, input } from './input.ts';
 import { Predictor } from './predictor.ts';
+import { sfx } from './audio.ts';
+import { PerfProbe, perfEnabled } from './PerfOverlay.tsx';
 import { STAGE_SCENES } from '../stages/registry.ts';
-import { stageDef, stageGeo, stageObstacles } from './stage.ts';
+import { activeStage } from './stage.ts';
 import { greenTime, obstacleWalls, type Rect } from '@cn-trials/shared';
 import { scheduleFor, signalView } from './roundClock.ts';
 
 
 /** Collision walls for prediction: the same set the server uses (stage walls + obstacle twist in a round). */
 export function wallsFor(room: TrialRoom): Rect[] {
-  if (!room.round.obstacles || !stageObstacles) return stageGeo.walls;
+  const { geo, obstacles } = activeStage(room);
+  if (!room.round.obstacles || !obstacles) return geo.walls;
   const elapsed = room.round.phase === 'active' ? signalView(room).elapsed : 0; // lobby: the gate at rest
-  return [...stageGeo.walls, ...obstacleWalls(stageObstacles, greenTime(scheduleFor(room.round.seed), elapsed))];
+  return [...geo.walls, ...obstacleWalls(obstacles, greenTime(scheduleFor(room.round.seed), elapsed))];
 }
 
 /** Live contestant instances by player id (test hooks and stats), and their camera distance this frame. */
@@ -44,6 +47,7 @@ function useContestantAsset(): ContestantAsset | null {
 export function canMove(room: TrialRoom): boolean {
   const me = room.self;
   if (!me) return false;
+  if (me.down > 0) return false; // knocked down by a collision (server-authoritative): no control until back up
   if (room.round.phase === 'lobby') return true;
   return room.round.phase === 'active' && (me.status === 'active' || me.status === 'finished');
 }
@@ -63,7 +67,7 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
     return () => { contestantInstances.delete(id); lodDist.delete(id); inst.dispose(); };
   }, [inst, id]);
   useEffect(() => { if (inst && colorway) setColorway(inst.material, colorway); }, [inst, colorway]);
-  const anim = useRef({ speed: 0, vx: 0, vz: 0, face: p0?.yaw ?? 0, lastX: p0?.x ?? 0, lastZ: p0?.z ?? 0, fall: 0, emoteAt: Date.now(), stepDist: 0, side: 1 });
+  const anim = useRef({ speed: 0, vx: 0, vz: 0, face: p0?.yaw ?? 0, lastX: p0?.x ?? 0, lastZ: p0?.z ?? 0, fall: 0, emoteAt: Date.now(), stepDist: 0, side: 1, audioDist: 0, turn: 0 });
   const tmp = useMemo(() => new THREE.Vector3(), []);
   useFrame((_, dt) => {
     const g = group.current;
@@ -73,13 +77,19 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
     if (p.colorway !== colorway) setColorwayState(p.colorway);
     const spotted = p.status === 'spotted';
     if (local && predictor?.current && canMove(room)) {
-      const s = predictor.current.state;
-      g.position.set(s.x, 0, s.z);
+      // Interpolated between fixed steps (LocalController runs first each frame), so no stair-stepping.
+      const r = predictor.current.render;
+      g.position.set(r.x, 0, r.z);
     } else {
-      // Remote players (and a frozen local player): smooth toward the latest server position (20 Hz).
-      const k = 1 - Math.exp(-dt * 15);
-      g.position.x += (p.x - g.position.x) * k;
-      g.position.z += (p.z - g.position.z) * k;
+      // Remote players (and a frozen local player): snapshots arrive at 20 Hz. Extrapolate each one along its
+      // server velocity for up to 0.1 s, then smooth toward that, so walkers glide instead of hopping every
+      // 50 ms (second pass). A frozen or knocked-down player has zero velocity, so nothing overshoots.
+      const ahead = Math.min(0.1, Math.max(0, (Date.now() - room.roundAt) / 1000));
+      const tx = p.x + (p.down ? 0 : p.vx * ahead), tz = p.z + (p.down ? 0 : p.vz * ahead);
+      if (Math.hypot(tx - g.position.x, tz - g.position.z) > 6) g.position.set(tx, 0, tz); // respawn: cut
+      const k = 1 - Math.exp(-dt * 12);
+      g.position.x += (tx - g.position.x) * k;
+      g.position.z += (tz - g.position.z) * k;
     }
     const a = anim.current;
     const step = Math.min(dt, 0.1);
@@ -91,21 +101,28 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
     a.speed = Math.min(8, Math.hypot(a.vx, a.vz));
     // Owner feedback (decision 031): contestants turn to face where they move, all the way round (360°),
     // instead of always facing the camera. Facing is presentation only; the server owns positions.
+    const faceBefore = a.face;
     if (a.speed > 0.35 && p.status !== 'spotted') {
       const target = Math.atan2(-a.vx, -a.vz); // yaw 0 faces -Z
       let d = target - a.face;
       d = Math.atan2(Math.sin(d), Math.cos(d));
       a.face += d * (1 - Math.exp(-step * 12));
     }
+    a.turn += ((step > 0 ? (a.face - faceBefore) / step : 0) - a.turn) * (1 - Math.exp(-step * 10));
     g.rotation.y = a.face;
     a.stepDist += Math.hypot(dx, dz);
+    // Your own footsteps (sound, decision 034 B): one soft scuff per stride while you walk.
+    if (local && inst && !inst.airborne && a.speed > 0.8 && p.status === 'active') {
+      a.audioDist += Math.hypot(dx, dz);
+      if (a.audioDist > 0.62) { a.audioDist = 0; sfx.footstep(); }
+    }
     a.fall += ((spotted ? 1 : 0) - a.fall) * (1 - Math.exp(-step * 6));
     const tint = 1 - a.fall * 0.5; // spotted contestants grey out (playful, no harm: spec §7)
     if (inst) {
       // lobby emotes broadcast by the server (visual only)
       for (const e of room.emotes) if (e.id === id && e.at > a.emoteAt) { a.emoteAt = e.at; inst.emote(e.e); }
       const t0 = performance.now();
-      inst.update(step, { speed: a.speed, status: p.status, greenActive: room.round.phase === 'active' && room.round.signal === 'green' });
+      inst.update(step, { speed: a.speed, status: p.status, greenActive: room.round.phase === 'active' && room.round.signal === 'green', down: p.down, turn: a.turn });
       cpuAcc.ms += performance.now() - t0;
       const dist = camera.position.distanceTo(g.getWorldPosition(tmp));
       lodDist.set(id, dist);
@@ -232,6 +249,8 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
   const { camera, gl } = useThree();
   const acc = useRef(0);
   const camPos = useRef(new THREE.Vector3());
+  /** Smoothed point the camera rig hangs from; position and look target both derive from it. */
+  const anchor = useRef<THREE.Vector3 | null>(null);
   const firstMove = useRef<number | null>(null);
   const clock = useRef(0);
   const watch = useRef(0);
@@ -252,7 +271,7 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
       input.respawn = false;
       if (phase === 'lobby') {
         room.send({ t: 'respawn' });
-        const sp = stageGeo.spawns.find((s) => s.index === me.spawn)!;
+        const sp = activeStage(room).geo.spawns.find((s) => s.index === me.spawn)!;
         pr.reset({ x: sp.x, z: sp.z, vx: 0, vz: 0 });
         firstMove.current = null;
       }
@@ -278,10 +297,11 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
       const seq = pr.apply(mv);
       room.send({ t: 'input', seq, mx: mv.mx, mz: mv.mz, yaw: input.yaw });
     }
+    const rp = pr.updateRender(acc.current / SIM_DT, dt);
     // Follow ourselves, or spectate an active player once spotted or while waiting (spec §7).
     let fx = me.x, fz = me.z;
     if (mobile || me.status === 'finished') {
-      fx = pr.state.x; fz = pr.state.z;
+      fx = rp.x; fz = rp.z;
     } else if (me.status === 'spotted' || me.status === 'waiting') {
       const active = [...room.players.values()].filter((p) => p.status === 'active');
       if (active.length) {
@@ -290,26 +310,32 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
         hud.spectating = t.name;
       } else hud.spectating = '';
     }
+    // Camera rig: smooth one anchor point, then place the camera and its look target rigidly from it.
+    // (Before, the position was smoothed but the look target was not, so every sideways step swung the view.)
+    if (!anchor.current) anchor.current = new THREE.Vector3(fx, 0, fz);
+    const an = anchor.current;
+    if (Math.hypot(fx - an.x, fz - an.z) > 8) an.set(fx, 0, fz); // spectator switch or respawn: cut
+    else { const k = 1 - Math.exp(-dt * 14); an.x += (fx - an.x) * k; an.z += (fz - an.z) * k; }
     const fwx = -Math.sin(input.yaw), fwz = -Math.cos(input.yaw);
     const dist = 5.5;
-    const target = new THREE.Vector3(fx - fwx * dist * Math.cos(input.pitch), 2.2 - Math.sin(input.pitch) * dist, fz - fwz * dist * Math.cos(input.pitch));
-    camPos.current.lerp(target, 1 - Math.exp(-dt * 12));
-    if (camPos.current.lengthSq() === 0) camPos.current.copy(target);
+    camPos.current.set(an.x - fwx * dist * Math.cos(input.pitch), 2.2 - Math.sin(input.pitch) * dist, an.z - fwz * dist * Math.cos(input.pitch));
     camera.position.copy(camPos.current);
-    camera.lookAt(fx + fwx * 4, 1.4 + Math.sin(input.pitch) * 4, fz + fwz * 4);
+    camera.lookAt(an.x + fwx * 4, 1.4 + Math.sin(input.pitch) * 4, an.z + fwz * 4);
     // Test hook for fixed review viewpoints (tests/e2e/views.mjs); never set by the game itself.
     const view = (window as unknown as { __cnView?: { pos: [number, number, number]; look: [number, number, number] } }).__cnView;
     if (view) { camera.position.set(...view.pos); camera.lookAt(...view.look); }
 
     const s = pr.state;
-    hud.progress = progress(stageGeo, mobile ? s.z : me.z);
-    hud.distance = Math.max(0, (mobile ? s.z : me.z) - stageGeo.finishZ);
+    const geo = activeStage(room).geo;
+    hud.progress = progress(geo, mobile ? s.z : me.z);
+    hud.distance = Math.max(0, (mobile ? s.z : me.z) - geo.finishZ);
+    hud.down = me.down;
     hud.status = me.status;
     hud.finishTime = me.finishTime;
     hud.walkTime = phase === 'lobby'
       ? (me.status === 'finished' ? me.finishTime : firstMove.current === null ? 0 : clock.current - firstMove.current)
       : 0;
-  });
+  }, -1); // before the contestants, so they draw this frame's interpolated position
   return null;
 }
 
@@ -349,31 +375,34 @@ class StageErrorBoundary extends Component<{ children: ReactNode; onError: (msg:
 
 export function Scene({ room, onStageError }: { room: TrialRoom; onStageError: (msg: string) => void }) {
   const predictor = useRef<Predictor | null>(null);
-  const stageModule = STAGE_SCENES[stageDef.id];
+  const stage = activeStage(room);
+  const stageModule = STAGE_SCENES[stage.def.id] ?? Object.values(STAGE_SCENES)[0];
   if (!predictor.current) {
     const me = room.self;
-    const sp = stageGeo.spawns.find((s) => s.index === me?.spawn) ?? stageGeo.spawns[0];
+    const sp = stage.geo.spawns.find((s) => s.index === me?.spawn) ?? stage.geo.spawns[0];
     predictor.current = new Predictor({ x: me?.x ?? sp.x, z: me?.z ?? sp.z, vx: 0, vz: 0 }, () => wallsFor(room));
   }
   useEffect(() => {
     (window as unknown as { __cn: unknown }).__cn = {
       roomId: room.room,
       sessionId: room.id,
-      stage: stageDef.id,
-      players: () => [...room.players.values()].map((p) => ({ id: p.id, name: p.name, x: p.x, z: p.z, status: p.status, finishTime: p.finishTime, colorway: p.colorway })),
+      stage: stage.def.id,
+      players: () => [...room.players.values()].map((p) => ({ id: p.id, name: p.name, x: p.x, z: p.z, status: p.status, finishTime: p.finishTime, colorway: p.colorway, bot: p.bot, down: p.down })),
       contestants: () => (window as unknown as { __cnContestants?: () => unknown }).__cnContestants?.() ?? null,
       self: () => predictor.current?.state,
       round: () => ({ ...room.round }),
       results: () => room.results,
       resultsMeta: () => room.resultsMeta,
       events: () => room.events.map((e) => ({ ...e })),
-      watcher: stageGeo.watcher,
-      spawns: stageGeo.spawns,
+      watcher: stage.geo.watcher,
+      spawns: stage.geo.spawns,
+      standings: () => room.standings,
+      match: () => ({ ...room.round.match }),
       assets: () => JSON.parse(JSON.stringify(stageModule.assets)),
       quality: () => JSON.parse(JSON.stringify(quality)),
       renderInfo: () => ({ ...renderInfo }),
     };
-  }, [room, stageModule]);
+  }, [room, stageModule, stage]);
   const StageScene = stageModule.Scene;
   return (
     // Shadow maps stay enabled; whether anything casts a shadow is up to the tier (only High's moon does).
@@ -390,6 +419,7 @@ export function Scene({ room, onStageError }: { room: TrialRoom; onStageError: (
       <ContestantHooks room={room} />
       <GroundFxLayer />
       <LocalController room={room} predictor={predictor} />
+      {perfEnabled && <PerfProbe room={room} />}
     </Canvas>
   );
 }

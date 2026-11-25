@@ -1,0 +1,114 @@
+{
+  "quality": "high",
+  "date": "2026-11-24T22:07:05.607Z",
+  "renderer": "SwiftShader",
+  "errors": [],
+  "renderInfo": {
+    "spawn_gameplay": {
+      "calls": 189,
+      "triangles": 197903,
+      "programs": 49,
+      "textures": 92,
+      "geometries": 100,
+      "dpr": 1,
+      "phase": "lobby",
+      "obstacles": {
+        "shown": true,
+        "barricades": 41,
+        "gateX": 0,
+        "gateMoving": false
+      }
+    },
+    "midfield_to_watcher": {
+      "calls": 178,
+      "triangles": 175415,
+      "programs": 49,
+      "textures": 92,
+      "geometries": 100,
+      "dpr": 1,
+      "phase": "lobby",
+      "obstacles": {
+        "shown": true,
+        "barricades": 41,
+        "gateX": 0,
+        "gateMoving": false
+      }
+    },
+    "finish_looking_back": {
+      "calls": 183,
+      "triangles": 197789,
+      "programs": 49,
+      "textures": 92,
+      "geometries": 102,
+      "dpr": 1,
+      "phase": "lobby",
+      "obstacles": {
+        "shown": true,
+        "barricades": 41,
+        "gateX": 0,
+        "gateMoving": false
+      }
+    },
+    "side_skyline_west": {
+      "calls": 160,
+      "triangles": 174915,
+      "programs": 49,
+      "textures": 92,
+      "geometries": 102,
+      "dpr": 1,
+      "phase": "lobby",
+      "obstacles": {
+        "shown": true,
+        "barricades": 41,
+        "gateX": 0,
+        "gateMoving": false
+      }
+    },
+    "side_skyline_east": {
+      "calls": 159,
+      "triangles": 172945,
+      "programs": 49,
+      "textures": 92,
+      "geometries": 102,
+      "dpr": 1,
+      "phase": "lobby",
+      "obstacles": {
+        "shown": true,
+        "barricades": 41,
+        "gateX": 0,
+        "gateMoving": false
+      }
+    },
+    "overview_high": {
+      "calls": 193,
+      "triangles": 198001,
+      "programs": 49,
+      "textures": 92,
+      "geometries": 102,
+      "dpr": 1,
+      "phase": "lobby",
+      "obstacles": {
+        "shown": true,
+        "barricades": 41,
+        "gateX": 0,
+        "gateMoving": false
+      }
+    },
+    "watcher_close": {
+      "calls": 149,
+      "triangles": 155771,
+      "programs": 49,
+      "textures": 92,
+      "geometries": 102,
+      "dpr": 1,
+      "phase": "lobby",
+      "obstacles": {
+        "shown": true,
+        "barricades": 41,
+        "gateX": 0,
+        "gateMoving": false
+      }
+    }
+  },
+  "signalCaptures": "held via window.__cnSignalHold (presentation only)"
+}

@@ -1,7 +1,7 @@
 {
   "result": "PASS",
   "errors": [],
-  "date": "2026-11-22T06:31:59.991Z",
+  "date": "2026-11-24T21:42:44.644Z",
   "renderer": "headless Chromium, software WebGL (SwiftShader); frame rates compare tiers only",
   "tiers": {
     "low": {
@@ -16,15 +16,15 @@
         "shroud": true,
         "redDim": 1
       },
-      "cutouts": 457,
+      "cutouts": 0,
       "lights": 2,
       "shadows": [],
       "dust": 0,
       "haze": false,
-      "draw_calls": 92,
-      "triangles": 79518,
-      "shader_programs": 20,
-      "software_fps": 3
+      "draw_calls": 99,
+      "triangles": 97148,
+      "shader_programs": 27,
+      "software_fps": 2.2
     },
     "medium": {
       "atmosphere": {
@@ -38,15 +38,15 @@
         "shroud": true,
         "redDim": 1
       },
-      "cutouts": 760,
+      "cutouts": 0,
       "lights": 13,
       "shadows": [],
       "dust": 150,
       "haze": false,
-      "draw_calls": 98,
-      "triangles": 94066,
-      "shader_programs": 22,
-      "software_fps": 1
+      "draw_calls": 105,
+      "triangles": 97158,
+      "shader_programs": 29,
+      "software_fps": 0.9
     },
     "high": {
       "atmosphere": {
@@ -60,17 +60,17 @@
         "shroud": true,
         "redDim": 1
       },
-      "cutouts": 1099,
+      "cutouts": 0,
       "lights": 15,
       "shadows": [
         "LGT_STG01_Moon"
       ],
       "dust": 400,
       "haze": true,
-      "draw_calls": 180,
-      "triangles": 150617,
-      "shader_programs": 42,
-      "software_fps": 1
+      "draw_calls": 189,
+      "triangles": 183971,
+      "shader_programs": 48,
+      "software_fps": 0.9
     }
   },
   "adaptive_default": {
@@ -80,7 +80,7 @@
       "medium@1x -> low@1x at 0 fps"
     ],
     "final_tier": "low",
-    "software_fps_after": 2.9
+    "software_fps_after": 2.5
   },
   "screenshots": [
     "tests/reports/screenshots/quality_low.png",

@@ -56,7 +56,7 @@ try {
     p.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(`${tag}: ${m.text()}`); });
   }
   // Alpha joins first, so Alpha is the host; the test seed makes the round deterministic (test mode only).
-  await pageA.goto(url('Alpha', `&testSeed=12345&testRound=${ROUND_S}&testBriefing=1`));
+  await pageA.goto(url('Alpha', `&testSeed=12345&testRound=${ROUND_S}&testBriefing=1&testStages=1`));
   await waitFor(async () => pageA.evaluate(() => !!window.__cn), 'Alpha joined first (host)');
   await pageB.goto(url('Beta'));
   await waitFor(async () => (await pageA.evaluate(() => !!window.__cn)) && (await pageB.evaluate(() => !!window.__cn)), 'both pages joined');
@@ -71,7 +71,7 @@ try {
   const roomB = await pageB.evaluate(() => window.__cn.roomId);
   if (roomA !== roomB) errors.push(`Different rooms: ${roomA} vs ${roomB}`);
   await sleep(1500); // let the stage render and the camera settle
-  await pageA.screenshot({ path: `${shots}/s1-3_start_view.png` });
+  await pageA.screenshot({ path: `${shots}/s1-3_start_view.png`, timeout: 120_000 });
 
   const idA = await pageA.evaluate(() => window.__cn.sessionId);
   const zBefore = (await players(pageB)).find((p) => p.id === idA).z;
@@ -94,8 +94,8 @@ try {
   if (!(moved > 8)) errors.push(`Player A moved only ${moved.toFixed(2)} m as seen by B (expected > 8 m in 4 s)`);
   const predictionError = Math.hypot(predicted.x - serverA.x, predicted.z - serverA.z);
   if (predictionError > 0.5) errors.push(`Prediction differs from the server by ${predictionError.toFixed(2)} m after stopping`);
-  await pageA.screenshot({ path: `${shots}/s1-3_after_walk.png` });
-  await pageB.screenshot({ path: `${shots}/s1-3_other_player_view.png` });
+  await pageA.screenshot({ path: `${shots}/s1-3_after_walk.png`, timeout: 120_000 });
+  await pageB.screenshot({ path: `${shots}/s1-3_other_player_view.png`, timeout: 120_000 });
 
   // ---- S1-4: a full round through the UI. Alpha (host) starts; Beta keeps walking into the red light.
   const round = (page) => page.evaluate(() => window.__cn.round());
@@ -113,7 +113,7 @@ try {
   const histG = (await assets(pageB)).clipHistory.map(([c]) => c);
   greenClip = histG.includes('Watcher_GreenSignal') ? 'Watcher_GreenSignal' : histG.at(-1);
   if (!histG.includes('Watcher_TurnAway')) errors.push(`Watcher_TurnAway never played at GREEN (clips: ${histG.join(', ')})`);
-  await pageB.screenshot({ path: `${shots}/s1-4_green_view.png` });
+  await pageB.screenshot({ path: `${shots}/s1-4_green_view.png`, timeout: 120_000 });
   step('green checked; Beta walks');
   await pageB.keyboard.down('KeyW');
   // Wait for the server's decision rather than polling for the short red window (slow software WebGL in CI
@@ -136,14 +136,19 @@ try {
   if (!(fxB?.spotBeams >= 1)) errors.push(`Detection beam did not fire after the spot (${JSON.stringify(fxB)})`);
   const hist = (await assets(pageB)).clipHistory.map(([c]) => c);
   redClip = hist.includes('Watcher_Detect') ? 'Watcher_Detect' : hist.at(-1);
-  if (!hist.includes('Watcher_FocusLock')) errors.push(`Watcher_FocusLock never played at red (clips: ${hist.join(', ')})`);
-  await pageB.screenshot({ path: `${shots}/s1-4_red_view.png` });
+  // The red opens with FocusLock unless the server's spot lands inside FocusLock's first second: Detect then
+  // takes over (by design, watcherAnimation.ts). Both are a correct red-light reaction; slow software frames
+  // decide which one the client draws first.
+  const redIdx = hist.lastIndexOf('Watcher_TurnToField');
+  const afterWarn = redIdx >= 0 ? hist.slice(redIdx + 1) : hist;
+  if (!afterWarn.includes('Watcher_FocusLock') && afterWarn[0] !== 'Watcher_Detect') errors.push(`Neither Watcher_FocusLock nor Watcher_Detect opened the red (clips: ${hist.join(', ')})`);
+  await pageB.screenshot({ path: `${shots}/s1-4_red_view.png`, timeout: 120_000 });
   step('detect checked');
   await sleep(2600); // past the SPOTTED! stamp
   // The HUD shows the spectator status after the 2.5 s SPOTTED! stamp; allow for a slow software-rendered page.
   await waitFor(async () => (await pageB.locator('[data-testid=spectating]').count()) > 0, 'spectator status on Beta', 10_000)
     .catch(() => errors.push('Spotted player does not see the spectator status'));
-  await pageB.screenshot({ path: `${shots}/s1-4_spotted_view.png` });
+  await pageB.screenshot({ path: `${shots}/s1-4_spotted_view.png`, timeout: 120_000 });
   step('spectator checked');
   await pageB.keyboard.up('KeyW');
   const alphaStatus = (await players(pageA)).find((p) => p.id === idA)?.status;
@@ -154,9 +159,9 @@ try {
   await waitFor(async () => (await pageB.evaluate(() => window.__cn.resultsMeta())) !== null, 'results message (Beta)', (ROUND_S + 30) * 1000);
   step(`results on Beta, phase ${(await round(pageB)).phase}`);
   if ((await round(pageB)).phase === 'results') {
-    await waitFor(async () => (await pageB.locator('.results .tag.out').count()) > 0, 'results screen on Beta', 10_000)
+    await waitFor(async () => (await pageB.locator('[data-testid=stage-board] .out').count()) > 0, 'results screen on Beta', 10_000)
       .catch(() => errors.push('Results screen has no eliminated tag'));
-    await pageB.screenshot({ path: `${shots}/s1-4_results_view.png` });
+    await pageB.screenshot({ path: `${shots}/s1-4_results_view.png`, timeout: 120_000 });
   } else errors.push(`Results screen closed before the test could check it (Beta phase ${(await round(pageB)).phase})`);
   await pageA.bringToFront();
   await waitFor(async () => (await pageA.evaluate(() => window.__cn.results().length)) >= 2, 'results (seen by Alpha)', 30_000);

@@ -24,7 +24,8 @@ function glowTexture() {
 }
 
 const SPOT_S = 1.6;
-const beamMat = () => new THREE.MeshBasicMaterial({ color: new THREE.Color('#ff2a1a').multiplyScalar(3), transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, toneMapped: false });
+// Phase 10: a softer "laser" (less hot, more translucent) so the spot reads without blowing out the bloom.
+const beamMat = () => new THREE.MeshBasicMaterial({ color: new THREE.Color('#ff3a24').multiplyScalar(1.7), transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, toneMapped: false });
 
 export function WatcherFX({ room, root, search, eyeLight }: { room: TrialRoom; root: THREE.Object3D | null; search: boolean; eyeLight: boolean }) {
   const fx = useMemo(() => {
@@ -46,7 +47,7 @@ export function WatcherFX({ room, root, search, eyeLight }: { room: TrialRoom; r
     // Soft volumetric-looking beam: brightest near the lens, fading along its length and toward its edges.
     const coneMat = new THREE.ShaderMaterial({
       transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false,
-      uniforms: { uColor: { value: new THREE.Color('#ff2a18') }, uStrength: { value: 0.32 } },
+      uniforms: { uColor: { value: new THREE.Color('#ff2a18') }, uStrength: { value: 0.22 } }, // Phase 10: was 0.32
       vertexShader: `varying float vAlong; varying vec3 vN; varying vec3 vView;
         void main() { vAlong = position.y; vec4 wp = modelMatrix * vec4(position, 1.0); vN = normalize(mat3(modelMatrix) * normal);
           vView = normalize(cameraPosition - wp.xyz); gl_Position = projectionMatrix * viewMatrix * wp; }`,

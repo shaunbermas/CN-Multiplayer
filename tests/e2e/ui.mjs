@@ -60,7 +60,7 @@ try {
 
   // 5: invite link
   const code = 'uitest';
-  await page.goto(`${base}?room=${code}&quality=low&testSeed=12345&testRound=120&testBriefing=3`);
+  await page.goto(`${base}?room=${code}&quality=low&testSeed=12345&testRound=120&testBriefing=3&testStages=1`);
   await page.fill('[data-testid=nickname]', 'Host');
   await step(page, '05_invite_link', async () => { await waitFor(() => visible(page, '[data-testid=invite-notice]'), 'invite notice'); });
 
@@ -70,10 +70,10 @@ try {
   const bots = [];
   for (const n of ['Mara', 'Teo', 'Ines', 'Reckless']) bots.push(await RoomClient.connect(wsUrl(code), n));
   bots[0].setReady(true); bots[2].setReady(true);
-  await page.click('[data-testid=ready]');
+  // The host starts the match (decision 033: host has Start, everyone else Ready), so only the two bots are ready.
   await step(page, '06_lobby_30_slots', async () => {
     await waitFor(() => page.evaluate(() => document.querySelectorAll('.lobby-slots .slot.taken').length === 5), '5 taken slots');
-    await waitFor(() => page.evaluate(() => document.querySelectorAll('.lobby-slots .slot.ready').length === 3), '3 ready');
+    await waitFor(() => page.evaluate(() => document.querySelectorAll('.lobby-slots .slot.ready').length === 2), '2 ready');
     const codeShown = await page.textContent('[data-testid=room-code-display]');
     if (codeShown?.trim() !== code.toUpperCase()) throw new Error(`room code shows ${codeShown}`);
   });

@@ -10,3 +10,6 @@ export * from './stages.ts';
 export * from './tournament.ts';
 export * from './obstacles.ts';
 export * from './contestantColorways.ts';
+export * from './collisions.ts';
+export * from './match.ts';
+export * from './bots.ts';
