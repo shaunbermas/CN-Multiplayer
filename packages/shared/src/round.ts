@@ -22,9 +22,11 @@ export const ROUND = {
   /** New: once the first player finishes, the others have this long before the round closes. */
   closeAfterFirstS: 30, //                            [none: the full timer always ran]
   greenMinS: 3, greenMaxS: 5.5, firstGreenMinS: 4, // S3 [3, 6, 5]
-  warningS: 0.8,        // S4                         [0.8, unchanged: time to react]
+  /** Decision 037 (owner, 25 Nov 2026): no amber "get ready" warning; RED follows GREEN directly. */
+  warningS: 0,          // S4                         [0.8]
   redMinS: 1.8, redMaxS: 3.2, // S5                   [3, 5]
-  graceBaseS: 0.3, graceMaxS: 0.5, // D1              [unchanged]
+  /** D1: with no warning, the grace is the whole time to react to RED (decision 037), so it is a little longer. */
+  graceBaseS: 0.4, graceMaxS: 0.6, //                 [0.3, 0.5]
   speedLimit: 0.3,      // D2 m/s, averaged over speedWindow ticks
   speedWindow: 3,
   dispLimit: 0.15,      // D2 m since the grace window ended
@@ -60,7 +62,7 @@ export function shuffled<T>(items: T[], seed: number): T[] {
 // ------------------------------------------------------------------ signal schedule
 export interface SignalSegment { signal: 'green' | 'warning' | 'red'; start: number; end: number }
 
-/** Seeded GREEN → WARNING → RED cycle covering [0, totalS) from GO. The first green lasts at least 5 s. */
+/** Seeded GREEN → RED cycle covering [0, totalS) from GO (a WARNING segment only if warningS > 0). The first green lasts at least 4 s. */
 export function buildSchedule(seed: number, totalS: number = ROUND.roundS): SignalSegment[] {
   const r = rng(seed);
   const between = (a: number, b: number) => Math.round((a + (b - a) * r()) * 100) / 100;
@@ -71,7 +73,7 @@ export function buildSchedule(seed: number, totalS: number = ROUND.roundS): Sign
     const g = between(first ? ROUND.firstGreenMinS : ROUND.greenMinS, ROUND.greenMaxS);
     first = false;
     segs.push({ signal: 'green', start: t, end: t + g }); t += g;
-    segs.push({ signal: 'warning', start: t, end: t + ROUND.warningS }); t += ROUND.warningS;
+    if (ROUND.warningS > 0) { segs.push({ signal: 'warning', start: t, end: t + ROUND.warningS }); t += ROUND.warningS; }
     const red = between(ROUND.redMinS, ROUND.redMaxS);
     segs.push({ signal: 'red', start: t, end: t + red }); t += red;
   }

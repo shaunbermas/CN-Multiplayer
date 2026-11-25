@@ -15,10 +15,12 @@ import { Brand, HowToPlay, SettingsPanel } from './Menu.tsx';
 import { useSettings } from './settings.ts';
 import { setMuted } from '../game/audio.ts';
 
+// Decision 037 (owner, 25 Nov 2026): the HUD shows only GREEN LIGHT or RED LIGHT. No time-left bar, no
+// "get ready" warning and no hint text: knowing when red comes is part of the challenge.
 const SIGNAL_UI = {
-  green: { word: 'GREEN LIGHT', cls: 'go', lens: 'go', sub: 'Move' },
-  warning: { word: 'GET READY', cls: 'warn', lens: 'hold', sub: 'Stop before red' },
-  red: { word: 'RED LIGHT', cls: 'stop', lens: 'stop', sub: 'Freeze' },
+  green: { word: 'GREEN LIGHT', cls: 'go', lens: 'go' },
+  warning: { word: 'GREEN LIGHT', cls: 'go', lens: 'go' },
+  red: { word: 'RED LIGHT', cls: 'stop', lens: 'stop' },
 } as const;
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
@@ -223,11 +225,9 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
           {ui && (
             <div className={`signal ${ui.cls}`} data-testid="signal" aria-live="assertive">
               <span className={`lens ${sig.signal === 'red' && spotSeen ? 'detect' : ui.lens}`} aria-hidden="true" />
-              <span className="word">{ui.word}</span><span className="sub">{ui.sub}</span>
-              <div className="seg-bar" aria-hidden="true"><i style={{ width: `${(sig.progress * 100).toFixed(1)}%` }} /></div>
+              <span className="word">{ui.word}</span>
             </div>
           )}
-          {r.phase === 'active' && sig.signal === 'red' && <div className="scanning" aria-hidden="true">SCANNING</div>}
         </div>
         <div className="hud-right">
           {r.phase === 'active' ? <div className={`timer num${closing ? ' closing' : ''}`} data-testid="timer">{closing && <small>Finish closes</small>}{fmtClock(remaining)}</div>

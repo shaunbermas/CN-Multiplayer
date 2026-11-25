@@ -70,7 +70,7 @@ Standup Quick (15 s briefing + 3 s countdown + up to 120 s + 20 s results ≈ 2.
 ## 3. Signal state machine (server-owned)
 
 ```
-BRIEFING → COUNTDOWN (3 s) → GREEN ⇄ WARNING → RED → GREEN … → RESULTS
+BRIEFING → COUNTDOWN (3 s) → GREEN → RED → GREEN … → RESULTS   (no WARNING since decision 037)
                                   (cycle repeats until the round ends)
 ```
 
@@ -79,7 +79,7 @@ BRIEFING → COUNTDOWN (3 s) → GREEN ⇄ WARNING → RED → GREEN … → RES
 | S1 | BRIEFING | ≤ 15 s; skippable by players who have seen it; countdown waits for the longest remaining | Rule text: "Move on green. Freeze when The Watcher turns." |
 | S2 | COUNTDOWN | 3 s | Movement locked |
 | S3 | GREEN | Random 3.0–6.0 s from the round seed; the first GREEN is at least 5 s | Movement free |
-| S4 | WARNING | 0.8 s | Movement still free; The Watcher starts turning; warning sound |
+| S4 | ~~WARNING~~ | removed (decision 037, owner 25 Nov 2026) | RED follows GREEN with no warning; The Watcher snaps round in the first 0.35 s of RED. The longer grace (D1: 0.4 s + latency, max 0.6 s) is the whole time to react |
 | S5 | RED | Random 3.0–5.0 s from the round seed | Grace window first (§4), then detection |
 | S6 | RESULTS | Freeze all movement; server finalises placings | |
 
@@ -116,7 +116,7 @@ The signal always uses at least three channels, never colour alone (GDD §5.2, �
 | Moment | Watcher | Light | Sound | HUD |
 |--------|----------|-------|-------|-----|
 | GREEN starts | Turns away (0.6 s), lantern lowered | Warm floodlights; lantern dim green | Short bright chime | "GO" with a walking icon |
-| WARNING starts | Begins turning toward players (0.8 s, ends facing exactly at RED) | Lantern brightens amber | Rising whistle | "GO" pulses (no more than 3 flashes/s) |
+| ~~WARNING~~ | Removed (decision 037): no warning state | | | |
 | RED | Faces players, lantern and crook raised, slow head scan left↔right | Lantern red, a soft scan beam sweeps the yard | Low hum while scanning | "FREEZE" with a hand icon |
 | Player spotted | Head snaps to the player | Beam settles on them | Comic "boing" sting | That player: "SPOTTED!" |
 
@@ -133,7 +133,12 @@ Animation follows the server's state; it never decides anything (GDD §2.6).
 - **Spectator camera:** follows an active player (switch with A/D or click), plus a high camera
   behind The Watcher showing the whole yard. HUD shows timer, signal state and qualified count.
 
-## 8. Audio cue list (originals to be produced)
+## 8. Audio cue list
+
+> Decision 037 (25 Nov 2026): the sound is now a thriller score (drone, heartbeat, horn on green, "braaam" and
+> metal screech on red, heavy impact when spotted), synthesised in `apps/web/src/game/audio.ts`. The HUD shows only
+> GREEN LIGHT / RED LIGHT (no time-left bar, no hint text), and a spotted player watches their own fall for 3 s
+> before spectating. The list below is the original plan.
 
 Green chime · warning whistle · red hum and scan · spotted sting · finish fanfare (small) · countdown
 ticks and "GO" · ambient night yard (wind, distant machinery, crowd murmur) · results sting.
@@ -170,7 +175,7 @@ Approve the spec as a whole, or name the IDs to change.
 |-------|-----|-----------|
 | Layout | L1–L11 | 60 m wide, 160 m course, The Watcher 28 m tall at Y 185 |
 | Movement | M1–M7 | 4.0 m/s, no sprint, no jump |
-| Signals | S1–S6 | Green 3–6 s, warning 0.8 s, red 3–5 s |
-| Detection | D1–D6 | Grace 0.3 s + latency (max 0.5 s); 0.3 m/s or 0.15 m |
+| Signals | S1–S6 | Green 3–5.5 s, no warning (decision 037), red 1.8–3.2 s |
+| Detection | D1–D6 | Grace 0.4 s + latency (max 0.6 s; decision 037); 0.3 m/s or 0.15 m |
 | Results | R1–R7 | 120 s timer; 22 of 30 qualify; Standup Quick ranks everyone |
 | Presentation | §6–§8 | Lantern and crook signals; playful "SPOTTED!" elimination |

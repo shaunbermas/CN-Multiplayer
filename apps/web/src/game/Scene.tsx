@@ -28,6 +28,9 @@ export function wallsFor(room: TrialRoom): Rect[] {
 
 /** Live contestant instances by player id (test hooks and stats), and their camera distance this frame. */
 export const contestantInstances = new Map<string, ContestantInstance>();
+/** Seconds a spotted player watches their own fall before the camera spectates others (decision 037). */
+export const SPOTTED_HOLD_S = 3;
+
 const lodDist = new Map<string, number>();
 const cpuAcc = { ms: 0 };
 
@@ -254,6 +257,8 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
   const firstMove = useRef<number | null>(null);
   const clock = useRef(0);
   const watch = useRef(0);
+  /** Local clock time when we were spotted, for the death cam (decision 037), or null. */
+  const spottedAt = useRef<number | null>(null);
 
   useEffect(() => attachInput(gl.domElement), [gl]);
 
@@ -300,8 +305,14 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
     const rp = pr.updateRender(acc.current / SIM_DT, dt);
     // Follow ourselves, or spectate an active player once spotted or while waiting (spec §7).
     let fx = me.x, fz = me.z;
+    // Spotted (decision 037): first watch your own fall for SPOTTED_HOLD_S, then spectate other players.
+    if (me.status === 'spotted') { if (spottedAt.current === null) spottedAt.current = clock.current; } else spottedAt.current = null;
+    const deathCam = spottedAt.current !== null ? Math.min(1, (clock.current - spottedAt.current) / SPOTTED_HOLD_S) : -1;
     if (mobile || me.status === 'finished') {
       fx = rp.x; fz = rp.z;
+    } else if (deathCam >= 0 && deathCam < 1) {
+      fx = me.x; fz = me.z;
+      hud.spectating = '';
     } else if (me.status === 'spotted' || me.status === 'waiting') {
       const active = [...room.players.values()].filter((p) => p.status === 'active');
       if (active.length) {
@@ -317,10 +328,19 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
     if (Math.hypot(fx - an.x, fz - an.z) > 8) an.set(fx, 0, fz); // spectator switch or respawn: cut
     else { const k = 1 - Math.exp(-dt * 14); an.x += (fx - an.x) * k; an.z += (fz - an.z) * k; }
     const fwx = -Math.sin(input.yaw), fwz = -Math.cos(input.yaw);
-    const dist = 5.5;
-    camPos.current.set(an.x - fwx * dist * Math.cos(input.pitch), 2.2 - Math.sin(input.pitch) * dist, an.z - fwz * dist * Math.cos(input.pitch));
-    camera.position.copy(camPos.current);
-    camera.lookAt(an.x + fwx * 4, 1.4 + Math.sin(input.pitch) * 4, an.z + fwz * 4);
+    if (deathCam >= 0 && deathCam < 1) {
+      // Death cam: ease up and back while turning to look down at the body on the ground.
+      const e = 1 - Math.pow(1 - Math.min(1, deathCam * 2.2), 3);
+      const back = 5.5 + 1.5 * e, up = 2.2 + 1.6 * e, side = 1.8 * e;
+      camPos.current.set(an.x - fwx * back + fwz * side, up, an.z - fwz * back - fwx * side);
+      camera.position.copy(camPos.current);
+      camera.lookAt(an.x + fwx * 4 * (1 - e), 1.4 - 1.1 * e, an.z + fwz * 4 * (1 - e));
+    } else {
+      const dist = 5.5;
+      camPos.current.set(an.x - fwx * dist * Math.cos(input.pitch), 2.2 - Math.sin(input.pitch) * dist, an.z - fwz * dist * Math.cos(input.pitch));
+      camera.position.copy(camPos.current);
+      camera.lookAt(an.x + fwx * 4, 1.4 + Math.sin(input.pitch) * 4, an.z + fwz * 4);
+    }
     // Test hook for fixed review viewpoints (tests/e2e/views.mjs); never set by the game itself.
     const view = (window as unknown as { __cnView?: { pos: [number, number, number]; look: [number, number, number] } }).__cnView;
     if (view) { camera.position.set(...view.pos); camera.lookAt(...view.look); }

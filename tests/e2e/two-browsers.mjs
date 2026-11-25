@@ -139,9 +139,14 @@ try {
   // The red opens with FocusLock unless the server's spot lands inside FocusLock's first second: Detect then
   // takes over (by design, watcherAnimation.ts). Both are a correct red-light reaction; slow software frames
   // decide which one the client draws first.
-  const redIdx = hist.lastIndexOf('Watcher_TurnToField');
-  const afterWarn = redIdx >= 0 ? hist.slice(redIdx + 1) : hist;
-  if (!afterWarn.includes('Watcher_FocusLock') && afterWarn[0] !== 'Watcher_Detect') errors.push(`Neither Watcher_FocusLock nor Watcher_Detect opened the red (clips: ${hist.join(', ')})`);
+  // Decision 037: no warning, so every red opens with the snap (TurnToField), then FocusLock or Detect.
+  // Check the reds that have finished their opening (the last one may have just started).
+  const reds = hist.map((c, i) => (c === 'Watcher_TurnToField' ? i : -1)).filter((i) => i >= 0 && i < hist.length - 1);
+  // A slow software frame can land after a short red has already ended (the next clip is then a green one), but
+  // while red lasts the snap must never skip straight to the hold or scan loop.
+  const skipped = reds.some((i) => hist[i + 1] === 'Watcher_RedSignal' || hist[i + 1] === 'Watcher_ScanSweep');
+  const locked = reds.some((i) => hist[i + 1] === 'Watcher_FocusLock' || hist[i + 1] === 'Watcher_Detect');
+  if (!reds.length || skipped || !locked) errors.push(`Neither Watcher_FocusLock nor Watcher_Detect opened the red (clips: ${hist.join(', ')})`);
   await pageB.screenshot({ path: `${shots}/s1-4_red_view.png`, timeout: 120_000 });
   step('detect checked');
   await sleep(2600); // past the SPOTTED! stamp

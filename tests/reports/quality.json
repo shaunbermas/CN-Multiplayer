@@ -1,7 +1,7 @@
 {
   "result": "PASS",
   "errors": [],
-  "date": "2026-11-24T21:42:44.644Z",
+  "date": "2026-11-25T05:09:44.435Z",
   "renderer": "headless Chromium, software WebGL (SwiftShader); frame rates compare tiers only",
   "tiers": {
     "low": {
@@ -21,10 +21,10 @@
       "shadows": [],
       "dust": 0,
       "haze": false,
-      "draw_calls": 99,
-      "triangles": 97148,
-      "shader_programs": 27,
-      "software_fps": 2.2
+      "draw_calls": 115,
+      "triangles": 97354,
+      "shader_programs": 29,
+      "software_fps": 1.7
     },
     "medium": {
       "atmosphere": {
@@ -43,10 +43,10 @@
       "shadows": [],
       "dust": 150,
       "haze": false,
-      "draw_calls": 105,
-      "triangles": 97158,
-      "shader_programs": 29,
-      "software_fps": 0.9
+      "draw_calls": 121,
+      "triangles": 97428,
+      "shader_programs": 31,
+      "software_fps": 0.8
     },
     "high": {
       "atmosphere": {
@@ -67,10 +67,10 @@
       ],
       "dust": 400,
       "haze": true,
-      "draw_calls": 189,
-      "triangles": 183971,
-      "shader_programs": 48,
-      "software_fps": 0.9
+      "draw_calls": 205,
+      "triangles": 184293,
+      "shader_programs": 50,
+      "software_fps": 0.7
     }
   },
   "adaptive_default": {
@@ -80,7 +80,7 @@
       "medium@1x -> low@1x at 0 fps"
     ],
     "final_tier": "low",
-    "software_fps_after": 2.5
+    "software_fps_after": 1.8
   },
   "screenshots": [
     "tests/reports/screenshots/quality_low.png",

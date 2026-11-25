@@ -34,7 +34,7 @@ const waitFor = async (fn, label, ms = 90_000) => {
 
 /** Walk the bot to the course centre line, then straight toward the finish, only on green. One input per
  *  simulation tick (the server applies one per tick), on a local clock anchored at GO, stopping 0.5 s before
- *  the green ends so no queued input can carry it into the warning or red. */
+ *  the green ends so no queued input can carry it into the red. */
 async function walkCentre(bot, untilZ, maxS) {
   let seq = 1;
   const goLocal = Date.now() - bot.round.elapsed * 1000;

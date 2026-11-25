@@ -32,3 +32,6 @@ blender/exports/stage01/** -filter -diff -merge
 docs/refinement/** -filter -diff -merge
 docs/ui/mockup/** -filter -diff -merge
 docs/second-pass/*.webp -filter -diff -merge
+
+# Decision 037: the landing background (one render of the real stage) is a small normal git file.
+apps/web/src/assets/landing/*.webp -filter -diff -merge

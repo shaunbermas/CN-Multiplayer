@@ -104,7 +104,11 @@ try {
   await page.evaluate(() => { globalThis.__cnSignalHold = { signal: 'green', since: Date.now() }; });
   await step(page, '10_hud_green', async () => { await waitFor(() => page.evaluate(() => document.querySelector('[data-testid=signal]')?.textContent?.includes('GREEN')), 'green banner'); });
   await page.evaluate(() => { globalThis.__cnSignalHold = { signal: 'red', since: Date.now() }; });
-  await step(page, '11_hud_red_scanning', async () => { await waitFor(() => visible(page, '.scanning'), 'scanning'); });
+  // Decision 037: the HUD shows only the RED LIGHT word and lens (no SCANNING tag, no time-left bar, no hint).
+  await step(page, '11_hud_red_scanning', async () => {
+    await waitFor(() => page.evaluate(() => document.querySelector('[data-testid=signal]')?.textContent?.trim() === 'RED LIGHT'), 'red banner, word only');
+    if (await page.evaluate(() => !!document.querySelector('.seg-bar, .scanning, .signal .sub'))) throw new Error('signal hints still shown (time bar, SCANNING or sub text)');
+  });
   await page.evaluate(() => { delete globalThis.__cnSignalHold; });
 
   // 12: another player is eliminated (bot keeps walking into the first red) → feed toast

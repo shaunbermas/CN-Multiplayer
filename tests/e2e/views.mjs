@@ -69,14 +69,14 @@ try {
     const t0 = Date.now();
     while (Date.now() - t0 < 60_000 && (await page.evaluate(() => window.__cn.round().phase)) !== 'active') await sleep(200);
     const got = new Set();
-    for (const s of ['green', 'warning', 'red']) {
+    for (const s of ['green', 'red']) { // decision 037: no warning signal
       await page.evaluate((s) => { globalThis.__cnSignalHold = { signal: s, since: Date.now() }; }, s);
       await sleep(5000); // opening clip (TurnAway / FocusLock) and the wash fade complete
       await page.screenshot({ path: `${out}/signal_${s}.png` });
       got.add(s);
     }
     await page.evaluate(() => { delete globalThis.__cnSignalHold; });
-    if (got.size < 3) errors.push(`signal captures: only ${[...got].join(', ')}`);
+    if (got.size < 2) errors.push(`signal captures: only ${[...got].join(', ')}`);
   }
   writeFileSync(`${out}/views.json`, JSON.stringify({ quality, date: new Date().toISOString(), renderer: 'SwiftShader', errors, renderInfo: info, signalCaptures: 'held via window.__cnSignalHold (presentation only)' }, null, 2));
   console.log(JSON.stringify({ out, errors, renderInfo: info }, null, 2));

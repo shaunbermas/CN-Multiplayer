@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import type { TrialRoom } from '../net.ts';
 import { signalView } from './roundClock.ts';
-import { audioState, bindAudioUnlock, sfx, startAmbience, startScan, stopAmbience, stopScan, toggleMute } from './audio.ts';
+import { audioState, bindAudioUnlock, setHeartbeat, sfx, startAmbience, startHeartbeat, startScan, stopAmbience, stopHeartbeat, stopScan, toggleMute } from './audio.ts';
 
 export function AudioDirector({ room }: { room: TrialRoom }) {
   useEffect(() => {
@@ -30,13 +30,21 @@ export function AudioDirector({ room }: { room: TrialRoom }) {
       }
       if (r.phase !== phase) {
         if (phase === 'countdown' && r.phase === 'active') sfx.count(0);
-        if (phase === 'active') { stopScan(); signal = 'none'; }
+        if (phase === 'active') { stopScan(); stopHeartbeat(); signal = 'none'; }
         if (r.phase === 'results') sfx.stageEnd();
         if (r.phase !== 'countdown') count = -1;
         phase = r.phase;
       }
       if (r.phase === 'active') {
-        const s = signalView(room).signal;
+        // Heartbeat (decision 037): races on green while you are still in it, pounds on red; calm once you are out.
+        startHeartbeat();
+        const me = room.self;
+        const sv = signalView(room);
+        const out = me && me.status !== 'active';
+        if (out) setHeartbeat(64, 0.25);
+        else if (sv.signal === 'red') setHeartbeat(150, 1);
+        else setHeartbeat(118 + 30 * Math.min(1, room.round.elapsed / 60), 0.6);
+        const s = sv.signal;
         if (s !== signal) {
           const first = signal === 'none';
           if (s === 'green' && !first) sfx.green(); // the first green is covered by the GO beep
@@ -69,6 +77,7 @@ export function AudioDirector({ room }: { room: TrialRoom }) {
       clearInterval(t);
       window.removeEventListener('keydown', onKey);
       stopScan();
+      stopHeartbeat();
       stopAmbience();
     };
   }, [room]);

@@ -1,0 +1,1245 @@
+{
+ "stage": "STAGE_01_RED_LIGHT",
+ "decision": "037",
+ "generator": "tools/stage01/render_midground_props.py",
+ "atlas": "blender/exports/stage01/props/STG01_Midground_Props.webp",
+ "treeAtlas": "blender/exports/stage15/TREE_Cutout_Atlas.webp",
+ "grid": [
+  4,
+  2
+ ],
+ "cellPx": 512,
+ "atlas_bytes": 90802,
+ "rendering": "alpha-tested quads facing the course (props) or the camera about Y (trees); fogged by depth; no collision",
+ "licensing": "Original renders of primitive models made by the project's own script. No photographs, third-party or AI-generated images.",
+ "cells": [
+  {
+   "index": 0,
+   "kind": "floodlight_mast",
+   "uv": [
+    0.10596,
+    0.5,
+    0.03809,
+    0.5
+   ],
+   "aspect": 0.1523,
+   "height_m": 17.66,
+   "glows": [
+    [
+     0.5,
+     0.957
+    ]
+   ]
+  },
+  {
+   "index": 1,
+   "kind": "street_lamp",
+   "uv": [
+    0.34375,
+    0.5,
+    0.06201,
+    0.5
+   ],
+   "aspect": 0.248,
+   "height_m": 9.67,
+   "glows": [
+    [
+     1.231,
+     0.972
+    ]
+   ]
+  },
+  {
+   "index": 2,
+   "kind": "guard_cabin",
+   "uv": [
+    0.5,
+    0.5,
+    0.25,
+    0.45215
+   ],
+   "aspect": 1.1058,
+   "height_m": 3.36,
+   "glows": [
+    [
+     0.07,
+     0.669
+    ]
+   ]
+  },
+  {
+   "index": 3,
+   "kind": "container_stack",
+   "uv": [
+    0.75,
+    0.5,
+    0.25,
+    0.30176
+   ],
+   "aspect": 1.657,
+   "height_m": 5.5,
+   "glows": []
+  },
+  {
+   "index": 4,
+   "kind": "factory",
+   "uv": [
+    0.02051,
+    0.0,
+    0.20898,
+    0.5
+   ],
+   "aspect": 0.8359,
+   "height_m": 26.87,
+   "glows": [
+    [
+     0.723,
+     0.975
+    ],
+    [
+     0.879,
+     0.826
+    ]
+   ]
+  },
+  {
+   "index": 5,
+   "kind": "water_tower",
+   "uv": [
+    0.33154,
+    0.0,
+    0.08643,
+    0.5
+   ],
+   "aspect": 0.3457,
+   "height_m": 22.79,
+   "glows": [
+    [
+     0.5,
+     0.983
+    ]
+   ]
+  },
+  {
+   "index": 6,
+   "kind": "watchtower",
+   "uv": [
+    0.59082,
+    0.0,
+    0.06836,
+    0.5
+   ],
+   "aspect": 0.2734,
+   "height_m": 13.96,
+   "glows": [
+    [
+     0.762,
+     0.938
+    ]
+   ]
+  },
+  {
+   "index": 7,
+   "kind": "utility_pole",
+   "uv": [
+    0.8418,
+    0.0,
+    0.06641,
+    0.5
+   ],
+   "aspect": 0.2656,
+   "height_m": 10.01,
+   "glows": []
+  }
+ ],
+ "treeCells": [
+  {
+   "index": 0,
+   "kind": "conifer_tall",
+   "uv": [
+    0.0,
+    0.5,
+    0.25,
+    0.5
+   ],
+   "aspect": 0.5,
+   "top_frac": 0.984
+  },
+  {
+   "index": 1,
+   "kind": "conifer_narrow",
+   "uv": [
+    0.25,
+    0.5,
+    0.25,
+    0.5
+   ],
+   "aspect": 0.5,
+   "top_frac": 0.984
+  },
+  {
+   "index": 2,
+   "kind": "conifer_wide",
+   "uv": [
+    0.5,
+    0.5,
+    0.25,
+    0.5
+   ],
+   "aspect": 0.5,
+   "top_frac": 0.984
+  },
+  {
+   "index": 3,
+   "kind": "conifer_broken",
+   "uv": [
+    0.75,
+    0.5,
+    0.25,
+    0.5
+   ],
+   "aspect": 0.5,
+   "top_frac": 0.984
+  },
+  {
+   "index": 4,
+   "kind": "broadleaf_a",
+   "uv": [
+    0.0,
+    0.0,
+    0.25,
+    0.5
+   ],
+   "aspect": 0.5,
+   "top_frac": 0.984
+  },
+  {
+   "index": 5,
+   "kind": "broadleaf_b",
+   "uv": [
+    0.25,
+    0.0,
+    0.25,
+    0.5
+   ],
+   "aspect": 0.5,
+   "top_frac": 0.923
+  },
+  {
+   "index": 6,
+   "kind": "dead_a",
+   "uv": [
+    0.5,
+    0.0,
+    0.25,
+    0.5
+   ],
+   "aspect": 0.5,
+   "top_frac": 0.588
+  },
+  {
+   "index": 7,
+   "kind": "dead_b",
+   "uv": [
+    0.75,
+    0.0,
+    0.25,
+    0.5
+   ],
+   "aspect": 0.5,
+   "top_frac": 0.629
+  }
+ ],
+ "placements": [
+  {
+   "kind": "street_lamp",
+   "pos": [
+    -39.53,
+    0,
+    8.0
+   ],
+   "scale": 0.951,
+   "tree": false
+  },
+  {
+   "kind": "utility_pole",
+   "pos": [
+    -37.73,
+    0,
+    -14.72
+   ],
+   "scale": 0.956,
+   "tree": false
+  },
+  {
+   "kind": "street_lamp",
+   "pos": [
+    -39.01,
+    0,
+    -37.1
+   ],
+   "scale": 1.065,
+   "tree": false
+  },
+  {
+   "kind": "utility_pole",
+   "pos": [
+    -39.83,
+    0,
+    -57.84
+   ],
+   "scale": 1.018,
+   "tree": false
+  },
+  {
+   "kind": "street_lamp",
+   "pos": [
+    -39.61,
+    0,
+    -82.35
+   ],
+   "scale": 1.085,
+   "tree": false
+  },
+  {
+   "kind": "utility_pole",
+   "pos": [
+    -37.93,
+    0,
+    -106.15
+   ],
+   "scale": 1.046,
+   "tree": false
+  },
+  {
+   "kind": "street_lamp",
+   "pos": [
+    -37.08,
+    0,
+    -130.61
+   ],
+   "scale": 0.993,
+   "tree": false
+  },
+  {
+   "kind": "utility_pole",
+   "pos": [
+    -38.7,
+    0,
+    -154.96
+   ],
+   "scale": 1.043,
+   "tree": false
+  },
+  {
+   "kind": "street_lamp",
+   "pos": [
+    -38.31,
+    0,
+    -176.41
+   ],
+   "scale": 1.098,
+   "tree": false
+  },
+  {
+   "kind": "street_lamp",
+   "pos": [
+    38.11,
+    0,
+    8.0
+   ],
+   "scale": 1.055,
+   "tree": false
+  },
+  {
+   "kind": "utility_pole",
+   "pos": [
+    39.36,
+    0,
+    -16.52
+   ],
+   "scale": 0.953,
+   "tree": false
+  },
+  {
+   "kind": "street_lamp",
+   "pos": [
+    37.97,
+    0,
+    -41.03
+   ],
+   "scale": 1.043,
+   "tree": false
+  },
+  {
+   "kind": "utility_pole",
+   "pos": [
+    38.39,
+    0,
+    -63.67
+   ],
+   "scale": 1.056,
+   "tree": false
+  },
+  {
+   "kind": "street_lamp",
+   "pos": [
+    38.24,
+    0,
+    -84.57
+   ],
+   "scale": 0.98,
+   "tree": false
+  },
+  {
+   "kind": "utility_pole",
+   "pos": [
+    38.83,
+    0,
+    -107.2
+   ],
+   "scale": 1.089,
+   "tree": false
+  },
+  {
+   "kind": "street_lamp",
+   "pos": [
+    39.96,
+    0,
+    -131.63
+   ],
+   "scale": 0.996,
+   "tree": false
+  },
+  {
+   "kind": "utility_pole",
+   "pos": [
+    37.36,
+    0,
+    -152.06
+   ],
+   "scale": 1.051,
+   "tree": false
+  },
+  {
+   "kind": "street_lamp",
+   "pos": [
+    39.51,
+    0,
+    -177.42
+   ],
+   "scale": 1.031,
+   "tree": false
+  },
+  {
+   "kind": "container_stack",
+   "pos": [
+    -54.88,
+    0,
+    -13.98
+   ],
+   "scale": 1.0,
+   "tree": false
+  },
+  {
+   "kind": "guard_cabin",
+   "pos": [
+    -49.42,
+    0,
+    -62.54
+   ],
+   "scale": 1.0,
+   "tree": false
+  },
+  {
+   "kind": "container_stack",
+   "pos": [
+    -45.3,
+    0,
+    -125.69
+   ],
+   "scale": 1.0,
+   "tree": false
+  },
+  {
+   "kind": "guard_cabin",
+   "pos": [
+    -54.65,
+    0,
+    -164.16
+   ],
+   "scale": 1.0,
+   "tree": false
+  },
+  {
+   "kind": "container_stack",
+   "pos": [
+    53.56,
+    0,
+    -7.6
+   ],
+   "scale": 1.0,
+   "tree": false
+  },
+  {
+   "kind": "container_stack",
+   "pos": [
+    53.08,
+    0,
+    -63.29
+   ],
+   "scale": 1.0,
+   "tree": false
+  },
+  {
+   "kind": "guard_cabin",
+   "pos": [
+    47.38,
+    0,
+    -122.06
+   ],
+   "scale": 1.0,
+   "tree": false
+  },
+  {
+   "kind": "container_stack",
+   "pos": [
+    49.51,
+    0,
+    -153.97
+   ],
+   "scale": 1.0,
+   "tree": false
+  },
+  {
+   "kind": "floodlight_mast",
+   "pos": [
+    -48,
+    0,
+    -38.9
+   ],
+   "scale": 1.0,
+   "tree": false
+  },
+  {
+   "kind": "watchtower",
+   "pos": [
+    -52,
+    0,
+    -140.41
+   ],
+   "scale": 1.0,
+   "tree": false
+  },
+  {
+   "kind": "floodlight_mast",
+   "pos": [
+    -50,
+    0,
+    -172.9
+   ],
+   "scale": 1.0,
+   "tree": false
+  },
+  {
+   "kind": "floodlight_mast",
+   "pos": [
+    48,
+    0,
+    -35.17
+   ],
+   "scale": 1.0,
+   "tree": false
+  },
+  {
+   "kind": "watchtower",
+   "pos": [
+    52,
+    0,
+    -133.95
+   ],
+   "scale": 1.0,
+   "tree": false
+  },
+  {
+   "kind": "floodlight_mast",
+   "pos": [
+    50,
+    0,
+    -177.66
+   ],
+   "scale": 1.0,
+   "tree": false
+  },
+  {
+   "kind": "factory",
+   "pos": [
+    -95,
+    0,
+    -110
+   ],
+   "scale": 1.0,
+   "tree": false
+  },
+  {
+   "kind": "factory",
+   "pos": [
+    105,
+    0,
+    -60
+   ],
+   "scale": 0.9,
+   "tree": false
+  },
+  {
+   "kind": "water_tower",
+   "pos": [
+    82,
+    0,
+    -150
+   ],
+   "scale": 1.0,
+   "tree": false
+  },
+  {
+   "kind": "water_tower",
+   "pos": [
+    -88,
+    0,
+    -25
+   ],
+   "scale": 0.9,
+   "tree": false
+  },
+  {
+   "kind": "watchtower",
+   "pos": [
+    0,
+    0,
+    45
+   ],
+   "scale": 1.0,
+   "tree": false
+  },
+  {
+   "kind": "dead_a",
+   "pos": [
+    -90.34,
+    0,
+    -89.63
+   ],
+   "scale": 0.864,
+   "tree": true
+  },
+  {
+   "kind": "conifer_broken",
+   "pos": [
+    -70.93,
+    0,
+    10.57
+   ],
+   "scale": 0.949,
+   "tree": true
+  },
+  {
+   "kind": "conifer_tall",
+   "pos": [
+    -45.39,
+    0,
+    -70.26
+   ],
+   "scale": 0.815,
+   "tree": true
+  },
+  {
+   "kind": "conifer_narrow",
+   "pos": [
+    -81.25,
+    0,
+    -86.39
+   ],
+   "scale": 1.389,
+   "tree": true
+  },
+  {
+   "kind": "conifer_tall",
+   "pos": [
+    -95.2,
+    0,
+    3.58
+   ],
+   "scale": 1.18,
+   "tree": true
+  },
+  {
+   "kind": "dead_a",
+   "pos": [
+    -55.22,
+    0,
+    -62.87
+   ],
+   "scale": 1.372,
+   "tree": true
+  },
+  {
+   "kind": "conifer_tall",
+   "pos": [
+    -97.59,
+    0,
+    -178.29
+   ],
+   "scale": 1.382,
+   "tree": true
+  },
+  {
+   "kind": "conifer_wide",
+   "pos": [
+    -107.35,
+    0,
+    -92.81
+   ],
+   "scale": 1.398,
+   "tree": true
+  },
+  {
+   "kind": "dead_a",
+   "pos": [
+    -55.83,
+    0,
+    -8.15
+   ],
+   "scale": 1.233,
+   "tree": true
+  },
+  {
+   "kind": "dead_b",
+   "pos": [
+    -80.14,
+    0,
+    -4.38
+   ],
+   "scale": 1.189,
+   "tree": true
+  },
+  {
+   "kind": "conifer_tall",
+   "pos": [
+    -99.46,
+    0,
+    -87.1
+   ],
+   "scale": 0.992,
+   "tree": true
+  },
+  {
+   "kind": "conifer_narrow",
+   "pos": [
+    -85.28,
+    0,
+    -17.65
+   ],
+   "scale": 1.239,
+   "tree": true
+  },
+  {
+   "kind": "conifer_narrow",
+   "pos": [
+    -95.29,
+    0,
+    3.22
+   ],
+   "scale": 0.816,
+   "tree": true
+  },
+  {
+   "kind": "dead_b",
+   "pos": [
+    -65.69,
+    0,
+    -68.85
+   ],
+   "scale": 1.143,
+   "tree": true
+  },
+  {
+   "kind": "dead_b",
+   "pos": [
+    -71.81,
+    0,
+    -73.1
+   ],
+   "scale": 0.894,
+   "tree": true
+  },
+  {
+   "kind": "broadleaf_a",
+   "pos": [
+    -68.24,
+    0,
+    -21.14
+   ],
+   "scale": 1.01,
+   "tree": true
+  },
+  {
+   "kind": "conifer_wide",
+   "pos": [
+    -80.68,
+    0,
+    -143.37
+   ],
+   "scale": 1.096,
+   "tree": true
+  },
+  {
+   "kind": "dead_b",
+   "pos": [
+    -63.67,
+    0,
+    -30.06
+   ],
+   "scale": 1.149,
+   "tree": true
+  },
+  {
+   "kind": "dead_b",
+   "pos": [
+    -75.45,
+    0,
+    -10.08
+   ],
+   "scale": 1.357,
+   "tree": true
+  },
+  {
+   "kind": "conifer_broken",
+   "pos": [
+    -63.36,
+    0,
+    -49.62
+   ],
+   "scale": 0.995,
+   "tree": true
+  },
+  {
+   "kind": "conifer_wide",
+   "pos": [
+    -63.82,
+    0,
+    -196.31
+   ],
+   "scale": 1.168,
+   "tree": true
+  },
+  {
+   "kind": "conifer_narrow",
+   "pos": [
+    -74.41,
+    0,
+    -47.89
+   ],
+   "scale": 1.035,
+   "tree": true
+  },
+  {
+   "kind": "broadleaf_a",
+   "pos": [
+    -46.08,
+    0,
+    -197.53
+   ],
+   "scale": 1.085,
+   "tree": true
+  },
+  {
+   "kind": "conifer_tall",
+   "pos": [
+    -105.54,
+    0,
+    -121.09
+   ],
+   "scale": 1.154,
+   "tree": true
+  },
+  {
+   "kind": "dead_a",
+   "pos": [
+    -48.1,
+    0,
+    -61.17
+   ],
+   "scale": 1.389,
+   "tree": true
+  },
+  {
+   "kind": "conifer_wide",
+   "pos": [
+    -85.55,
+    0,
+    -139.02
+   ],
+   "scale": 1.198,
+   "tree": true
+  },
+  {
+   "kind": "dead_b",
+   "pos": [
+    70.18,
+    0,
+    -185.45
+   ],
+   "scale": 1.196,
+   "tree": true
+  },
+  {
+   "kind": "conifer_tall",
+   "pos": [
+    98.31,
+    0,
+    -175.27
+   ],
+   "scale": 0.926,
+   "tree": true
+  },
+  {
+   "kind": "conifer_wide",
+   "pos": [
+    107.21,
+    0,
+    24.51
+   ],
+   "scale": 0.932,
+   "tree": true
+  },
+  {
+   "kind": "conifer_narrow",
+   "pos": [
+    64.33,
+    0,
+    1.97
+   ],
+   "scale": 0.924,
+   "tree": true
+  },
+  {
+   "kind": "conifer_narrow",
+   "pos": [
+    74.48,
+    0,
+    -10.37
+   ],
+   "scale": 0.979,
+   "tree": true
+  },
+  {
+   "kind": "dead_a",
+   "pos": [
+    70.01,
+    0,
+    -92.85
+   ],
+   "scale": 1.101,
+   "tree": true
+  },
+  {
+   "kind": "dead_a",
+   "pos": [
+    102.97,
+    0,
+    -137.04
+   ],
+   "scale": 1.112,
+   "tree": true
+  },
+  {
+   "kind": "conifer_narrow",
+   "pos": [
+    71.64,
+    0,
+    0.24
+   ],
+   "scale": 1.139,
+   "tree": true
+  },
+  {
+   "kind": "conifer_broken",
+   "pos": [
+    45.35,
+    0,
+    -84.52
+   ],
+   "scale": 0.806,
+   "tree": true
+  },
+  {
+   "kind": "broadleaf_a",
+   "pos": [
+    57.88,
+    0,
+    -187.26
+   ],
+   "scale": 0.809,
+   "tree": true
+  },
+  {
+   "kind": "conifer_tall",
+   "pos": [
+    63.05,
+    0,
+    7.53
+   ],
+   "scale": 1.017,
+   "tree": true
+  },
+  {
+   "kind": "conifer_tall",
+   "pos": [
+    81.97,
+    0,
+    12.6
+   ],
+   "scale": 1.013,
+   "tree": true
+  },
+  {
+   "kind": "conifer_narrow",
+   "pos": [
+    80.68,
+    0,
+    -123.26
+   ],
+   "scale": 1.117,
+   "tree": true
+  },
+  {
+   "kind": "conifer_narrow",
+   "pos": [
+    104.62,
+    0,
+    24.06
+   ],
+   "scale": 1.105,
+   "tree": true
+  },
+  {
+   "kind": "conifer_tall",
+   "pos": [
+    71.21,
+    0,
+    -51.32
+   ],
+   "scale": 0.895,
+   "tree": true
+  },
+  {
+   "kind": "conifer_broken",
+   "pos": [
+    58.35,
+    0,
+    -167.07
+   ],
+   "scale": 0.833,
+   "tree": true
+  },
+  {
+   "kind": "dead_a",
+   "pos": [
+    104.4,
+    0,
+    -48.9
+   ],
+   "scale": 1.019,
+   "tree": true
+  },
+  {
+   "kind": "conifer_wide",
+   "pos": [
+    109.01,
+    0,
+    -186.95
+   ],
+   "scale": 1.092,
+   "tree": true
+  },
+  {
+   "kind": "conifer_tall",
+   "pos": [
+    101.49,
+    0,
+    -14.67
+   ],
+   "scale": 0.951,
+   "tree": true
+  },
+  {
+   "kind": "conifer_wide",
+   "pos": [
+    85.3,
+    0,
+    16.5
+   ],
+   "scale": 1.163,
+   "tree": true
+  },
+  {
+   "kind": "conifer_broken",
+   "pos": [
+    96.78,
+    0,
+    -17.74
+   ],
+   "scale": 0.899,
+   "tree": true
+  },
+  {
+   "kind": "conifer_tall",
+   "pos": [
+    67.5,
+    0,
+    -17.64
+   ],
+   "scale": 0.97,
+   "tree": true
+  },
+  {
+   "kind": "conifer_tall",
+   "pos": [
+    70.03,
+    0,
+    -3.61
+   ],
+   "scale": 0.869,
+   "tree": true
+  },
+  {
+   "kind": "conifer_tall",
+   "pos": [
+    59.76,
+    0,
+    -171.26
+   ],
+   "scale": 1.128,
+   "tree": true
+  },
+  {
+   "kind": "conifer_tall",
+   "pos": [
+    78.3,
+    0,
+    -129.87
+   ],
+   "scale": 1.337,
+   "tree": true
+  },
+  {
+   "kind": "dead_a",
+   "pos": [
+    93.98,
+    0,
+    -21.29
+   ],
+   "scale": 1.036,
+   "tree": true
+  },
+  {
+   "kind": "dead_a",
+   "pos": [
+    -1.87,
+    0,
+    45.61
+   ],
+   "scale": 1.384,
+   "tree": true
+  },
+  {
+   "kind": "conifer_wide",
+   "pos": [
+    -44.22,
+    0,
+    62.33
+   ],
+   "scale": 1.233,
+   "tree": true
+  },
+  {
+   "kind": "conifer_tall",
+   "pos": [
+    -18.35,
+    0,
+    51.65
+   ],
+   "scale": 1.074,
+   "tree": true
+  },
+  {
+   "kind": "conifer_wide",
+   "pos": [
+    57.86,
+    0,
+    45.14
+   ],
+   "scale": 1.38,
+   "tree": true
+  },
+  {
+   "kind": "conifer_tall",
+   "pos": [
+    29.97,
+    0,
+    52.65
+   ],
+   "scale": 1.099,
+   "tree": true
+  },
+  {
+   "kind": "conifer_wide",
+   "pos": [
+    -6.63,
+    0,
+    65.51
+   ],
+   "scale": 1.141,
+   "tree": true
+  },
+  {
+   "kind": "dead_a",
+   "pos": [
+    -30.91,
+    0,
+    52.91
+   ],
+   "scale": 1.049,
+   "tree": true
+  },
+  {
+   "kind": "conifer_tall",
+   "pos": [
+    -16.77,
+    0,
+    47.55
+   ],
+   "scale": 0.917,
+   "tree": true
+  },
+  {
+   "kind": "dead_a",
+   "pos": [
+    3.19,
+    0,
+    63.76
+   ],
+   "scale": 1.051,
+   "tree": true
+  },
+  {
+   "kind": "conifer_tall",
+   "pos": [
+    -15.79,
+    0,
+    42.96
+   ],
+   "scale": 1.177,
+   "tree": true
+  }
+ ]
+}

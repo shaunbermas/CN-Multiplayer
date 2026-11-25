@@ -85,7 +85,11 @@ try {
     const matte = JSON.parse(readFileSync(`${root}blender/exports/stage01/matte/STAGE_01_MATTE_LAYERS.json`, 'utf8'));
     if (a.surroundings.layers !== matte.layers.length || a.surroundings.cutouts !== 0 || a.surroundings.problems.length)
       errors.push(`${q}: surroundings ${JSON.stringify(a.surroundings)}; expected ${matte.layers.length} layers, 0 cutouts`);
-    if (a.midground.trees !== 0) errors.push(`${q}: midground trees ${a.midground.trees}; expected 0`);
+    // Decision 037: cutout props and cutout trees in the middle distance (no 3D trees), all from the props manifest.
+    const mid = JSON.parse(readFileSync(`${root}blender/exports/stage01/props/STG01_MIDGROUND_PROPS.json`, 'utf8'));
+    const wantProps = mid.placements.filter((p) => !p.tree).length, wantTrees = mid.placements.length - wantProps;
+    if (a.midground.props !== wantProps || a.midground.trees !== wantTrees || a.midground.problems.length || !(a.midground.glows > 0))
+      errors.push(`${q}: midground ${JSON.stringify(a.midground)}; expected ${wantProps} props, ${wantTrees} trees, lamp glows`);
     // Phase 05: Watcher materials upgraded at runtime (geometry untouched), three signal lens materials driven.
     if (!(a.watcherLook?.upgraded?.length >= 6) || a.watcherLook?.lensMaterials !== 3) errors.push(`${q}: watcher look ${JSON.stringify(a.watcherLook)}`);
     if (a.environmentMap !== (q !== 'low')) errors.push(`${q}: sky environment map ${a.environmentMap}; expected ${q !== 'low'} (off on Low)`);

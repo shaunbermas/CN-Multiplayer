@@ -20,18 +20,18 @@ describe('signal schedule (spec §3)', () => {
       const s = a[i], len = s.end - s.start;
       if (i > 0) expect(s.start).toBeCloseTo(a[i - 1].end, 6);
       if (s.signal === 'green') { expect(len).toBeGreaterThanOrEqual(ROUND.greenMinS); expect(len).toBeLessThanOrEqual(ROUND.greenMaxS); }
-      if (s.signal === 'warning') expect(len).toBeCloseTo(ROUND.warningS, 6);
+      expect(s.signal).not.toBe('warning'); // decision 037: no warning segment
       if (s.signal === 'red') { expect(len).toBeGreaterThanOrEqual(ROUND.redMinS); expect(len).toBeLessThanOrEqual(ROUND.redMaxS); }
-      // every red comes straight after a warning
-      if (s.signal === 'red') expect(a[i - 1].signal).toBe('warning');
+      // every red comes straight after a green, with no warning in between (decision 037)
+      if (s.signal === 'red') expect(a[i - 1].signal).toBe('green');
     }
     expect(a[a.length - 1].end).toBeGreaterThanOrEqual(ROUND.roundS);
   });
 
-  it('grace window is 0.3 s plus latency, capped at 0.5 s', () => {
-    expect(graceFor(0)).toBeCloseTo(0.3);
-    expect(graceFor(0.1)).toBeCloseTo(0.4);
-    expect(graceFor(2)).toBeCloseTo(0.5);
+  it('grace window is 0.4 s plus latency, capped at 0.6 s (decision 037)', () => {
+    expect(graceFor(0)).toBeCloseTo(0.4);
+    expect(graceFor(0.1)).toBeCloseTo(0.5);
+    expect(graceFor(2)).toBeCloseTo(0.6);
   });
 
   it('shuffles rows deterministically per seed', () => {

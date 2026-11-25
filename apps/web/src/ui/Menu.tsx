@@ -6,11 +6,12 @@ import { applyGraphicsSetting } from '../game/qualityStore.ts';
 import { updateSettings, useSettings, type GraphicsSetting } from './settings.ts';
 import { applyVolume, setMuted } from '../game/audio.ts';
 
+/** The CN TRIAL wordmark (decision 037: no eye logo; a heavy condensed display face, slanted, with a red slash). */
 export function Brand({ small = false }: { small?: boolean }) {
   return (
     <div className={`brand${small ? ' small' : ''}`} aria-label="CN TRIAL">
-      <span className="lens" aria-hidden="true" />
       <span className="brand-word">CN TRIAL</span>
+      <span className="brand-slash" aria-hidden="true">//</span>
     </div>
   );
 }
@@ -32,8 +33,7 @@ export function HowToPlay({ onClose }: { onClose: () => void }) {
     <Modal title="How to play" onClose={onClose} testid="howto">
       <ol className="howto">
         <li><b>Green light: move.</b> Walk toward the finish line at the far end of the yard.</li>
-        <li><b>Amber: get ready.</b> The Watcher is turning back. Stop before it faces you.</li>
-        <li><b>Red light: freeze.</b> Anyone still moving after a short grace moment is spotted and eliminated. Eliminated players spectate.</li>
+        <li><b>Red light: freeze.</b> There is no warning: red can come at any moment. Anyone still moving a split second after it turns red is spotted and eliminated.</li>
         <li><b>Finish</b> before the timer runs out. Once the first player finishes, everyone else has 30 seconds.</li>
         <li><b>Points.</b> First to finish a stage: 2 points. Every other finisher: 1. Spotted or out of time: 0. A match has several stages; everyone plays every stage, and the most points wins.</li>
         <li><b>Bumping into someone</b> knocks you both over for a moment. Falling never eliminates you, but it costs time.</li>
@@ -103,8 +103,11 @@ export function MainMenu({ initialName, inviteCode, busy, error, onJoin }: {
     <main className="menu" data-testid="menu">
       <div className="menu-art" aria-hidden="true" />
       <section className="menu-col">
-        <Brand />
-        <p className="menu-sub">Red Light, Green Light for up to {MAX_PLAYERS} players. Make a private room and send the link.</p>
+        <div className="menu-title">
+          <Brand />
+          <div className="menu-stage"><b>Stage 01</b><span>Red Light, Green Light</span></div>
+        </div>
+        <p className="menu-sub">Move on green. Freeze on red. The Watcher sees everything. Up to {MAX_PLAYERS} players in a private room.</p>
         <label className="name-field">Your nickname
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Guest nickname" maxLength={16} autoFocus={!inviteCode} data-testid="nickname" />
         </label>
@@ -129,7 +132,6 @@ export function MainMenu({ initialName, inviteCode, busy, error, onJoin }: {
         </div>
         {busy && <p className="muted" role="status">Connecting…</p>}
         {error && <p className="error" role="alert" data-testid="menu-error">{error}</p>}
-        <p className="menu-foot">Stage 01 · Red Light, Green Light</p>
       </section>
       {panel === 'howto' && <HowToPlay onClose={() => setPanel('none')} />}
       {panel === 'settings' && <SettingsPanel onClose={() => setPanel('none')} />}

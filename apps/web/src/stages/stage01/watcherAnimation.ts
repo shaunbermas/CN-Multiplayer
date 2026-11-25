@@ -6,8 +6,8 @@
 // lobby, briefing, countdown           Watcher_Idle (loop)           neutral
 // GREEN, first 1.5 s                   Watcher_TurnAway (once)       neutral -> green
 // GREEN                                Watcher_GreenSignal (loop)    green
-// WARNING (0.8 s)                      Watcher_TurnToField, sped up to end exactly as RED starts
-// RED, first 1 s                       Watcher_FocusLock (once)      neutral -> red
+// RED, first 0.35 s                    Watcher_TurnToField, sped up: a sudden snap (no warning; decision 037)
+// RED, next 1 s                        Watcher_FocusLock (once)      neutral -> red
 // RED                                  Watcher_RedSignal / Watcher_ScanSweep (alternating reds, loop)
 // RED, a player was just spotted       Watcher_Detect (once, 1.67 s) red
 // results                              Watcher_ReturnNeutral (once), then Watcher_Idle
@@ -21,6 +21,9 @@ export type WatcherClip = (typeof WATCHER_CLIPS)[number];
 export const CLIP_FPS = 24;
 
 /** Clip lengths in seconds, from the asset manifest's frame ranges (checked against the GLB when it loads). */
+/** Seconds The Watcher takes to whip round to the field when RED starts (no warning; decision 037). */
+export const RED_SNAP_S = 0.35;
+
 export const CLIP_SECONDS = Object.fromEntries(
   manifest.animations.map((a) => [a.name, (a.frame_end - a.frame_start) / CLIP_FPS]),
 ) as Record<WatcherClip, number>;
@@ -29,6 +32,9 @@ export const CLIP_SECONDS = Object.fromEntries(
 export const MISSING_FROM_MANIFEST = WATCHER_CLIPS.filter((c) => !(c in CLIP_SECONDS));
 
 export interface WatcherInputs {
+  /** Key of the clip playing now and seconds since it started (sequencing the red snap into the lock). */
+  currentKey?: string;
+  sinceCurrent?: number;
   phase: string;
   /** Client view of the server signal: none | green | warning | red. */
   signal: string;
@@ -75,7 +81,13 @@ export function chooseWatcherClip(s: WatcherInputs): WatcherChoice {
     case 'warning':
       return once('Watcher_TurnToField', seg, CLIP_SECONDS.Watcher_TurnToField / Math.max(0.1, s.segmentLength));
     case 'red':
-      if (opening < CLIP_SECONDS.Watcher_FocusLock) return once('Watcher_FocusLock', seg);
+      // Decision 037: no warning before RED, so The Watcher snaps round in the first RED_SNAP_S (a sharp,
+      // sudden turn), then locks focus. Old rooms that still send a warning keep the slower turn above.
+      if (opening < RED_SNAP_S) return once('Watcher_TurnToField', `snap:${seg}`, CLIP_SECONDS.Watcher_TurnToField / RED_SNAP_S);
+      // The lock always follows the snap and plays in full, even when a slow frame jumps past its window.
+      if (s.currentKey === `Watcher_TurnToField@snap:${seg}`) return once('Watcher_FocusLock', seg);
+      if (s.currentKey === `Watcher_FocusLock@${seg}` && (s.sinceCurrent ?? Infinity) < CLIP_SECONDS.Watcher_FocusLock) return once('Watcher_FocusLock', seg);
+      if (opening < RED_SNAP_S + CLIP_SECONDS.Watcher_FocusLock) return once('Watcher_FocusLock', seg);
       return loop(s.redIndex % 2 === 0 ? 'Watcher_RedSignal' : 'Watcher_ScanSweep', seg);
     default:
       return loop('Watcher_Idle', s.phase);
