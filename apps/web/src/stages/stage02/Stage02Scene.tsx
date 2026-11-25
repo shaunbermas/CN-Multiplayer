@@ -61,6 +61,43 @@ function Walls() {
   return <>{meshes.map((m) => <primitive key={m.name} object={m} />)}</>;
 }
 
+/** Instanced helper: one draw call for many copies of a box or plane (optimisation pass, 25 Nov 2026). */
+function useInstanced(make: () => THREE.InstancedMesh, deps: unknown[]) {
+  const mesh = useMemo(make, deps); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => () => { mesh.geometry.dispose(); (mesh.material as THREE.Material).dispose(); mesh.dispose(); }, [mesh]);
+  return mesh;
+}
+
+/** Yellow floor marks in front of every hiding place, in one draw call. */
+function HideMarks() {
+  const mesh = useInstanced(() => {
+    const m = new THREE.InstancedMesh(new THREE.PlaneGeometry(1.1, 1.1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#b8901f', transparent: true, opacity: 0.22, depthWrite: false }), layout.hideSpots.length);
+    const mat = new THREE.Matrix4();
+    layout.hideSpots.forEach((s, i) => m.setMatrixAt(i, mat.makeTranslation(s.fx, 0.01, s.fz)));
+    m.name = 'S02_HIDE_MARKS';
+    m.computeBoundingSphere();
+    return m;
+  }, []);
+  return <primitive object={mesh} />;
+}
+
+/** Lamp fittings (emissive boxes), one draw call per lamp colour. */
+function LampFittings() {
+  const meshes = useMemo(() => (['cold', 'amber', 'red'] as const).map((c) => {
+    const list = layout.lamps.filter((l) => l.color === c);
+    const geo = new THREE.BoxGeometry(c === 'red' ? 0.3 : 1.2, 0.12, 0.3);
+    const m = new THREE.InstancedMesh(geo, new THREE.MeshBasicMaterial({ color: LAMP[c], toneMapped: false }), Math.max(1, list.length));
+    const mat = new THREE.Matrix4();
+    list.forEach((l, i) => m.setMatrixAt(i, mat.makeTranslation(l.x, l.y, l.z)));
+    m.count = list.length;
+    m.name = `S02_LAMP_FITTINGS_${c.toUpperCase()}`;
+    m.computeBoundingSphere();
+    return m;
+  }), []);
+  useEffect(() => () => { for (const m of meshes) { m.geometry.dispose(); (m.material as THREE.Material).dispose(); m.dispose(); } }, [meshes]);
+  return <>{meshes.map((m) => <primitive key={m.name} object={m} />)}</>;
+}
+
 /** Floor per room (slightly different concrete tones), hazard stripes at doors are left to final art. */
 function Floors() {
   const tone: Record<string, string> = { A: '#4a5056', B: '#4d5154', C: '#474d53', D: '#4b5055', E: '#434a50', F: '#504f4b', G: '#40454a', H: '#555a5e', R: '#553a38' };
@@ -74,9 +111,7 @@ function Floors() {
         </mesh>
       ))}
       {/* Hiding places: a worn yellow floor marking in front of each one (shows where, never whether it is occupied). */}
-      {layout.hideSpots.map((s) => (
-        <mesh key={s.id} rotation={[-Math.PI / 2, 0, 0]} position={[s.fx, 0.01, s.fz]}><planeGeometry args={[1.1, 1.1]} /><meshBasicMaterial color="#b8901f" transparent opacity={0.22} /></mesh>
-      ))}
+      <HideMarks />
     </group>
   );
 }
@@ -100,25 +135,52 @@ function Gates({ room }: { room: TrialRoom }) {
   );
 }
 
-/** Lamps: emissive fittings everywhere; real point lights for the strongest few (by quality tier). */
+/**
+ * Lamps: emissive fittings everywhere; a fixed pool of real point lights that follows the camera onto the nearest
+ * lamps (optimisation pass, 25 Nov 2026). Every lit pixel pays for every light, so a pool of 8 near lights looks
+ * the same as 12 fixed ones across the facility at a fraction of the cost. The light count never changes during
+ * play, so no shader recompiles.
+ */
+export const LAMP_POOL: Record<'low' | 'medium' | 'high', number> = { low: 0, medium: 5, high: 8 };
 function Lamps() {
   const quality = useQuality();
-  const { scene } = useThree();
-  const budget = quality === 'high' ? 14 : quality === 'medium' ? 8 : 0;
-  const lit = useMemo(() => [...layout.lamps].sort((a, b) => b.intensity - a.intensity).slice(0, budget), [budget]);
+  const { scene, camera } = useThree();
+  const budget = LAMP_POOL[quality];
+  const refs = useRef<(THREE.PointLight | null)[]>([]);
+  const assigned = useRef<number[]>([]);
   useEffect(() => {
-    stage02Assets.lights = lit.length;
+    stage02Assets.lights = budget;
+    assigned.current = [];
     const hemi = new THREE.HemisphereLight('#9fb6d0', '#3a3f44', quality === 'low' ? 3.2 : 2.4);
     hemi.name = 'LGT_STG02_Ambient';
     scene.add(hemi);
     return () => { scene.remove(hemi); hemi.dispose(); };
-  }, [scene, quality, lit.length]);
+  }, [scene, quality, budget]);
+  const tick = useRef(0);
+  useFrame(() => {
+    if (!budget || ++tick.current % 6 !== 1) return; // ten times a second is plenty for walking speed
+    const c = camera.position;
+    const score = (i: number) => { const l = layout.lamps[i]; return Math.hypot(l.x - c.x, l.z - c.z) / (0.6 + l.intensity) - (assigned.current.includes(i) ? 2 : 0); };
+    const want = layout.lamps.map((_, i) => i).sort((a, b) => score(a) - score(b)).slice(0, budget);
+    if (want.every((i) => assigned.current.includes(i)) && want.length === assigned.current.length) return;
+    const lights = refs.current.filter(Boolean) as THREE.PointLight[];
+    const free = lights.filter((l) => !want.includes(l.userData.lamp));
+    for (const i of want) {
+      if (lights.some((l) => l.userData.lamp === i)) continue;
+      const l = free.shift(); if (!l) break;
+      const lp = layout.lamps[i];
+      l.userData.lamp = i;
+      l.position.set(lp.x, lp.y - 0.3, lp.z);
+      l.color.set(LAMP[lp.color]);
+      l.intensity = lp.intensity * (lp.color === 'cold' ? 140 : 80);
+      l.distance = lp.color === 'cold' ? 28 : 16;
+    }
+    assigned.current = want;
+  });
   return (
     <group name="S02_LAMPS">
-      {layout.lamps.map((l, i) => (
-        <mesh key={`f${i}`} position={[l.x, l.y, l.z]}><boxGeometry args={[l.color === 'red' ? 0.3 : 1.2, 0.12, 0.3]} /><meshBasicMaterial color={LAMP[l.color]} toneMapped={false} /></mesh>
-      ))}
-      {lit.map((l, i) => <pointLight key={`l${i}`} position={[l.x, l.y - 0.3, l.z]} color={LAMP[l.color]} intensity={l.intensity * (l.color === 'cold' ? 140 : 80)} distance={l.color === 'cold' ? 28 : 16} decay={1.4} />)}
+      <LampFittings />
+      {Array.from({ length: budget }, (_, i) => <pointLight key={`l${quality}${i}`} ref={(r) => { refs.current[i] = r; }} intensity={0} decay={1.4} />)}
     </group>
   );
 }

@@ -62,7 +62,7 @@ try {
   await waitFor(async () => pageA.evaluate(() => !!window.__cn), 'Alpha joined first (host)');
   await pageB.goto(url('Beta'));
   await waitFor(async () => (await pageA.evaluate(() => !!window.__cn)) && (await pageB.evaluate(() => !!window.__cn)), 'both pages joined');
-  await waitFor(async () => (await players(pageA)).length === 2 && (await players(pageB)).length === 2, 'both see 2 players');
+  await waitFor(async () => (await players(pageA)).length === 2 && (await players(pageB)).length === 2, 'both see 2 players', 90_000); // each evaluate on the throttled page waits for a software-rendered frame
   const assets = (page) => page.evaluate(() => window.__cn.assets());
   await waitFor(async () => { const a = await assets(pageA), b = await assets(pageB);
     return a.environment === 'ready' && a.watcher === 'ready' && b.environment === 'ready' && b.watcher === 'ready'; }, 'Stage 01 assets loaded in both browsers', 90_000);

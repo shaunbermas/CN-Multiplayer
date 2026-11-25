@@ -42,7 +42,7 @@ export const stage01Assets = {
   clipHistory: [] as [string, number][],
   quality: 'high' as Quality,
   /** What the current tier turned on, for tests: light ids, shadow casters, dust count, haze. */
-  effects: { lights: [] as string[], shadows: [] as string[], dust: 0, haze: false },
+  effects: { lights: [] as string[], shadows: [] as string[], dust: 0, haze: false, realLights: 0, floodsLit: [] as string[] },
   /** Stage 1.5 painted surroundings: matte layers and tree cutouts drawn, and load problems. */
   surroundings: surroundingsStatus,
   /** Decision 037: cutout props and trees in the middle distance (counts, glows, load problems). */
@@ -116,8 +116,40 @@ function dispose(root: THREE.Object3D) {
 }
 
 // ------------------------------------------------------------------------------------------ lighting
+interface FloodDef { id: string; color: THREE.Color; position: THREE.Vector3; direction: THREE.Vector3; angle: number; penumbra: number }
+interface FloodPool { floods: FloodDef[]; pool: THREE.SpotLight[]; assigned: string[] }
+/** Real flood spot lights per tier (the three / two tower pairs nearest the camera). */
+export const FLOOD_POOL: Record<Quality, number> = { low: 0, medium: 4, high: 6 };
+
+/**
+ * Moves the pooled spot lights onto the floods nearest the camera. A flood keeps its light until another one is
+ * 8 m closer (hysteresis), so lights do not flick back and forth when the camera sits halfway between towers.
+ */
+function assignFloods(fp: FloodPool | null, cam: THREE.Vector3): void {
+  if (!fp || !fp.pool.length) return;
+  const d = (f: FloodDef) => Math.hypot(f.position.x - cam.x, (f.position.z - cam.z) * 1.0) - (fp.assigned.includes(f.id) ? 8 : 0);
+  const want = [...fp.floods].sort((a, b) => d(a) - d(b)).slice(0, fp.pool.length);
+  const ids = want.map((f) => f.id);
+  if (ids.length === fp.assigned.length && ids.every((id) => fp.assigned.includes(id))) return;
+  // keep lights that stay on the same flood; move the others
+  const free = fp.pool.filter((l) => !ids.includes(l.userData.flood));
+  for (const f of want) {
+    if (fp.pool.some((l) => l.userData.flood === f.id)) continue;
+    const l = free.shift()!;
+    l.userData.flood = f.id;
+    l.color.copy(f.color);
+    l.position.copy(f.position);
+    l.target.position.copy(f.position).addScaledVector(f.direction, 10);
+    l.angle = f.angle; l.penumbra = f.penumbra;
+    l.updateMatrixWorld(); l.target.updateMatrixWorld();
+  }
+  fp.assigned = ids;
+  stage01Assets.effects.floodsLit = [...ids].sort();
+}
+
 function Lighting({ quality }: { quality: Quality }) {
   const { scene } = useThree();
+  const floodPool = useRef<FloodPool | null>(null);
   const L = lighting;
   const lights = useMemo(() => {
     const out: THREE.Object3D[] = [];
@@ -129,8 +161,19 @@ function Lighting({ quality }: { quality: Quality }) {
     const tier = tierOf(quality);
     const casters = shadowLights(quality);
     const wanted = (id: string) => tier.dynamicLights === 'all' || (tier.dynamicLights as string[]).some((p) => (p.endsWith('*') ? id.startsWith(p.slice(0, -1)) : id === p));
+    const logical: string[] = ['LGT_STG01_Ambient'];
+    const floods: FloodDef[] = [];
     for (const l of L.lights) {
       if (!wanted(l.id) || retiredLight(l)) continue;
+      logical.push(l.id);
+      // Optimisation pass (owner, 25 Nov 2026): the ten floodlights are streamed. Every lit pixel pays for every
+      // light, so only the pairs nearest the camera are real spot lights (FLOOD_POOL); the far pools are deep in
+      // the fog (47 % at 100 m) and their towers keep their glowing lamps and light cones.
+      if (l.type === 'spot' && l.id.startsWith('LGT_STG01_Flood_')) {
+        floods.push({ id: l.id, color: new THREE.Color(...(l.color as [number, number, number])), position: new THREE.Vector3(...(l.position as [number, number, number])),
+          direction: new THREE.Vector3(...(l.direction as [number, number, number])), angle: THREE.MathUtils.degToRad(l.angleDeg ?? 40), penumbra: l.penumbra ?? 0.5 });
+        continue;
+      }
       const col = new THREE.Color(...(l.color as [number, number, number]));
       let o: THREE.Light | null = null;
       if (l.type === 'directional') o = new THREE.DirectionalLight(col, 0.6);
@@ -163,11 +206,32 @@ function Lighting({ quality }: { quality: Quality }) {
       }
       out.push(o);
     }
-    stage01Assets.effects.lights = out.filter((o) => (o as THREE.Light).isLight).map((o) => o.name).filter(Boolean);
+    // The streamed flood pool: a fixed number of spot lights (a constant light count, so no shader recompiles).
+    const pool: THREE.SpotLight[] = [];
+    const n = Math.min(floods.length, FLOOD_POOL[quality]);
+    for (let i = 0; i < n; i++) {
+      const f = floods[i];
+      const o = new THREE.SpotLight(f.color, 1700, 110, f.angle, f.penumbra, 1.5);
+      o.name = `LGT_STG01_FloodPool_${i}`;
+      pool.push(o);
+      out.push(o.target, o);
+    }
+    floodPool.current = { floods, pool, assigned: [] };
+    stage01Assets.effects.lights = logical;
+    stage01Assets.effects.realLights = out.filter((o) => (o as THREE.Light).isLight).length;
     stage01Assets.effects.shadows = out.filter((o) => (o as THREE.Light).castShadow).map((o) => o.name);
     return out;
-  }, [quality, L]);
+  }, [quality, L]); // eslint-disable-line react-hooks/exhaustive-deps
+  const camera = useThree((st) => st.camera);
   const gl = useThree((st) => st.gl);
+  // Optimisation pass (25 Nov 2026): the moon's shadow map (the whole yard, The Watcher and the crowd) is redrawn
+  // every second frame instead of every frame. Shadows still move at 30 Hz; the depth pass costs half as much.
+  useEffect(() => { gl.shadowMap.autoUpdate = false; gl.shadowMap.needsUpdate = true; return () => { gl.shadowMap.autoUpdate = true; }; }, [gl]);
+  const shadowFrame = useRef(0);
+  useFrame(() => {
+    assignFloods(floodPool.current, camera.position);
+    if (++shadowFrame.current % 2 === 0) gl.shadowMap.needsUpdate = true;
+  });
   useEffect(() => {
     // Low tier: no environment map. Measured as the biggest Low-tier cost (6x CPU-throttled software WebGL:
     // 1.49 fps with it, 2.48 without), and Low exists for weak machines (Prompt 08).

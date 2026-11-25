@@ -353,7 +353,11 @@ const GradeShader = {
 function PostFX() {
   const { gl, scene, camera, size } = useThree();
   const composer = useMemo(() => {
-    const c = new EffectComposer(gl);
+    // Optimisation pass (25 Nov 2026): the composer's targets are multisampled. Before, the scene went through an
+    // un-antialiased target whenever bloom was on (High), so High looked more jagged than Medium. 4x MSAA is
+    // cheap on tile-based GPUs (Apple M-series) and replaces the canvas' own MSAA, which a composer bypasses.
+    const rt = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 });
+    const c = new EffectComposer(gl, rt);
     c.addPass(new RenderPass(scene, camera));
     // Only bright emissive lamps, signal lights and the moon bloom; the threshold keeps contestants crisp.
     // Phase 10 (refinement): gentler bloom so lamps and the red eye glow without smearing (was 0.42 / 0.4 / 0.93).
