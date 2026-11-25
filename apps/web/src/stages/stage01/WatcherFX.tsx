@@ -90,7 +90,7 @@ export function WatcherFX({ room, root, search, eyeLight }: { room: TrialRoom; r
     fx.glare.material.map?.dispose(); fx.glare.material.dispose();
   }, [fx]);
 
-  const tmp = useMemo(() => ({ l: new THREE.Vector3(), a: new THREE.Vector3(), b: new THREE.Vector3(), d: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0) }), []);
+  const tmp = useMemo(() => ({ l: new THREE.Vector3(), a: new THREE.Vector3(), b: new THREE.Vector3(), d: new THREE.Vector3(), f: new THREE.Vector3(), v: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0) }), []);
   const seen = useMemo(() => ({ key: '', at: 0 }), []);
   useFrame((state) => {
     const lens = root?.getObjectByName('Watcher_OpticalOrigin');
@@ -126,18 +126,23 @@ export function WatcherFX({ room, root, search, eyeLight }: { room: TrialRoom; r
     const t = state.clock.elapsedTime;
     const eye = p ? 'flare' : phase === 'active' && (sig === 'red' || sig === 'warning') ? 'red' : 'dim';
     watcherFxStatus.eye = eye;
-    fx.glare.visible = true;
+    // decision 041: hide the glares while the eyes face away (the doll's hair has gaps the glow would shine through)
+    const fwd = root?.getObjectByName('Watcher_DetectionForward');
+    let facing = true;
+    if (fwd) { fwd.getWorldPosition(tmp.f).sub(tmp.a); tmp.v.subVectors(state.camera.position, tmp.a); facing = tmp.f.dot(tmp.v) > 0; }
+    fx.glare.visible = facing;
     fx.glare.position.copy(tmp.a);
     const pulse = 0.85 + 0.15 * Math.sin(t * (eye === 'red' ? 6 : 2));
-    const size = eye === 'flare' ? 11 + Math.sin(t * 30) * 1.5 : eye === 'red' ? 6.5 * pulse : 2.2 * pulse;
+    const size = eye === 'flare' ? 5 + Math.sin(t * 30) * 0.8 : eye === 'red' ? 2.8 * pulse : 1.2 * pulse;  // decision 041: sized to the doll's irises
     fx.glare.scale.set(size, size, 1);
     fx.glare.material.opacity = eye === 'dim' ? 0.45 : 1;
     const lensL = root?.getObjectByName('Watcher_OpticalOrigin_L');
-    fx.glareL.visible = !!lensL;
+    fx.glareL.visible = !!lensL && facing;
     if (lensL) { lensL.getWorldPosition(tmp.l); fx.glareL.position.copy(tmp.l); fx.glareL.scale.set(size, size, 1); }
-    // decision 038: weaker and further forward, so the red reads on the eye and the beam instead of flooding the face
-    fx.light.intensity = THREE.MathUtils.lerp(fx.light.intensity, eye === 'flare' ? 480 : eye === 'red' ? 170 * pulse : 0, 0.2);
-    fx.light.position.copy(tmp.a).add(new THREE.Vector3(0, -2.5, 6));
+    // decision 038: weaker and further forward, so the red reads on the eye and the beam instead of flooding the face.
+    // Decision 041: the doll is pale, so the light sits well out in front and lower: it reds the yard, not the doll.
+    fx.light.intensity = THREE.MathUtils.lerp(fx.light.intensity, eye === 'flare' ? 380 : eye === 'red' ? 120 * pulse : 0, 0.2);
+    fx.light.position.copy(tmp.a).add(new THREE.Vector3(0, -10, 16));
     watcherFxStatus.eyeLight = eyeLight && fx.light.intensity > 1;
     // Searchlight sweep during red (presentation only; detection is not line-of-sight, decision E9).
     const sweeping = search && phase === 'active' && sig === 'red' && !p;

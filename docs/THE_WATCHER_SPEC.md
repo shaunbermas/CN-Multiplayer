@@ -12,6 +12,8 @@ Status: **built, ready for owner review** (21 November 2026). Design direction a
 | Asset manifest | `blender/exports/THE_WATCHER_ASSET_MANIFEST.json` (pack schema) |
 | Validation | `docs/THE_WATCHER_VALIDATION.md` |
 
+> **Decision 041 (owner, 25 Nov 2026):** The Watcher is now the owner's Creepy doll model, look unchanged (decimated to 50k triangles). Built by `blender/scripts/watcher_doll_prepare.py` (from the owner's original file) and `watcher_build.py` (rig, glowing eyes on the doll's irises, clips, anchors). The geometry notes below describe the retired procedural robot and are kept for history; the clip names, anchors, height and facing are unchanged.
+
 > **Decision 040 (owner, 25 Nov 2026):** two doll eyes with glowing signal pupils (no camera lens, no stapled eye), a real 3D nose and lips, and one high ponytail; a second anchor `Watcher_OpticalOrigin_L` marks the left pupil.
 >
 > **Decisions 038-039 (owner, 25 Nov 2026):** the face was resculpted (sockets, brow, nose, cheekbones, parted lips and mouth, a ringed lens, an eye stapled shut with a steel pin, cracks, a broken cheek with fiber-optic lines), the hair is now long and messy to the shoulders with curtains framing the face (no bun), fiber-optic lines show at the neck, elbows and knees, and the runtime finish is rusty, cracked and dirty with a near-black dress. Rig, clips, anchors, proportions and height are unchanged. The tables below describe the original build where they differ.

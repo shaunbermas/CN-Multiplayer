@@ -20,129 +20,49 @@
       "problems": [],
       "height_m": 28.0,
       "bounds_min": [
-        -4.767,
-        -3.536,
+        -10.232,
+        -7.507,
         0.0
       ],
       "bounds_max": [
-        4.767,
-        5.148,
+        10.232,
+        7.507,
         28.0
       ],
       "optical_origin_m": [
-        -1.3,
-        -3.042,
-        23.6
+        -2.52,
+        -5.37,
+        19.55
       ],
       "scale_source": "docs/STAGE_01_SPEC.md L9 (28 m, decision 014)"
     },
     "rig": {
       "pass": true,
       "problems": [],
-      "bones": 33,
+      "bones": 9,
       "root": "Watcher_Root"
     },
     "skin_weights": {
       "pass": true,
       "problems": [],
-      "vertex_groups": 32,
-      "vertices": 25505
+      "vertex_groups": 6,
+      "vertices": 63919
     },
     "geometry_uvs_lod": {
       "pass": true,
       "problems": [],
-      "triangles_lod0": 38408,
-      "triangles_lod1": 19180,
-      "budget": 40000
+      "triangles_lod0": 51390,
+      "triangles_lod1": 25695,
+      "budget": 60000
     },
     "materials": {
       "pass": true,
       "problems": [],
-      "materials": 15,
+      "materials": 4,
       "images": {
-        "T_W_Porcelain_BC.png": [
-          1024,
-          1024
-        ],
-        "T_W_Porcelain_ORM.png": [
-          512,
-          512
-        ],
-        "T_W_Porcelain_N.png": [
-          1024,
-          1024
-        ],
-        "T_W_HairLacquer_BC.png": [
-          512,
-          512
-        ],
-        "T_W_HairLacquer_ORM.png": [
-          256,
-          256
-        ],
-        "T_W_HairLacquer_N.png": [
-          512,
-          512
-        ],
-        "T_W_Rubber_BC.png": [
-          256,
-          256
-        ],
-        "T_W_Rubber_ORM.png": [
-          256,
-          256
-        ],
-        "T_W_Rubber_N.png": [
-          256,
-          256
-        ],
-        "T_W_SteelDark_BC.png": [
-          512,
-          512
-        ],
-        "T_W_SteelDark_ORM.png": [
-          256,
-          256
-        ],
-        "T_W_SteelDark_N.png": [
-          512,
-          512
-        ],
-        "T_W_Brass_BC.png": [
-          512,
-          512
-        ],
-        "T_W_Brass_ORM.png": [
-          256,
-          256
-        ],
-        "T_W_Brass_N.png": [
-          256,
-          256
-        ],
-        "T_W_EnamelTeal_BC.png": [
-          1024,
-          1024
-        ],
-        "T_W_EnamelTeal_ORM.png": [
-          512,
-          512
-        ],
-        "T_W_EnamelTeal_N.png": [
-          512,
-          512
-        ],
-        "T_W_Textile_BC.png": [
-          512,
-          512
-        ],
-        "T_W_Textile_ORM.png": [
-          256,
-          256
-        ],
-        "T_W_Textile_N.png": [
-          512,
-          512
+        "T_W_Doll_BC.jpg": [
+          2048,
+          2048
         ]
       }
     },

@@ -50,19 +50,12 @@ def main() -> None:
     scene = bpy.context.scene
     for o in scene.objects:
         o.select_set(o.users_collection[0].name in EXPORT_COLLECTIONS)
-    import bmesh
-    me = bpy.data.objects["Watcher_Body"].data  # triangulate n-gon caps so tangents export (not saved)
-    bm = bmesh.new()
-    bm.from_mesh(me)
-    bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 4])
-    bm.to_mesh(me)
-    bm.free()
     arm = bpy.data.objects["Watcher_Rig"]
     arm.animation_data.action = None
     bpy.context.view_layer.objects.active = arm
     opts = dict(filepath=str(GLB), export_format="GLB", use_selection=True, export_extras=True, export_yup=True,
                 export_apply=False, export_lights=False, export_cameras=False, export_materials="EXPORT",
-                export_image_format="WEBP", export_image_quality=88, export_tangents=True,
+                export_image_format="WEBP", export_image_quality=88, export_tangents=False,  # decision 041: no normal maps
                 export_animations=True, export_animation_mode="ACTIONS", export_force_sampling=True,
                 export_anim_slide_to_zero=True, export_skins=True, export_def_bones=False,
                 export_reset_pose_bones=True, export_rest_position_armature=True, export_optimize_animation_size=False,

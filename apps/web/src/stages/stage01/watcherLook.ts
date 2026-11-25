@@ -73,6 +73,24 @@ function addGrime(m: THREE.MeshStandardMaterial, amount: number, base: number, h
   m.needsUpdate = true;
 }
 
+/** Decision 041: the coloured signal wash brightens the pale doll but should not dye it red or green. Keeps
+ *  `amount` of the lit result in the material's own colours (light brightness kept, light hue dropped). */
+function keepOwnColours(m: THREE.MeshStandardMaterial, amount: number) {
+  const prev = m.onBeforeCompile;
+  m.onBeforeCompile = (sh, r) => {
+    prev.call(m, sh, r);
+    sh.fragmentShader = sh.fragmentShader.replace('#include <opaque_fragment>', `{
+    const vec3 cnLuma = vec3(0.2126, 0.7152, 0.0722);
+    vec3 cnOwn = diffuseColor.rgb * (dot(outgoingLight, cnLuma) / max(dot(diffuseColor.rgb, cnLuma), 1e-3));
+    outgoingLight = mix(outgoingLight, cnOwn, ${amount.toFixed(2)});
+  }
+  #include <opaque_fragment>`);
+  };
+  const key = m.customProgramCacheKey.bind(m);
+  m.customProgramCacheKey = () => `${key()}-own-${amount}`;
+  m.needsUpdate = true;
+}
+
 /** Swap a standard material for a physical one with the same maps (adds clearcoat / sheen). */
 function toPhysical(m: THREE.MeshStandardMaterial, extra: Partial<THREE.MeshPhysicalMaterialParameters>): THREE.MeshPhysicalMaterial {
   const p = new THREE.MeshPhysicalMaterial();
@@ -100,6 +118,11 @@ export function upgradeWatcherMaterials(root: THREE.Object3D, plinthY: number, h
       if (swapped.has(m)) return swapped.get(m)!;
       let out: THREE.Material = m;
       switch (m.name) {
+        case 'MAT_Watcher_Doll':          // decision 041: the owner's doll, look unchanged; extra dirt and old stains on skin and dress.
+          // A faint glow of its own texture keeps the pale doll readable at night without adding a scene light
+          // (every extra light costs on all materials; the signal wash lights the yard, not the doll).
+          m.emissiveMap = m.map; m.emissive.set('#c8d0e0'); m.emissiveIntensity = 0.18;
+          addGrime(m, 0.6, plinthY, height, 0.35, 0); keepOwnColours(m, 0.8); break;
         case 'MAT_Watcher_Porcelain':     // decision 039: old, dirty, cracked porcelain with rust bleeding from the joints
           out = toPhysical(m, { clearcoat: 0.3, clearcoatRoughness: 0.4 }); (out as THREE.MeshPhysicalMaterial).color.multiplyScalar(0.7);
           addGrime(out as THREE.MeshStandardMaterial, 0.7, plinthY, height, 0.75, 1); break;

@@ -129,7 +129,8 @@ server.close();
 // ---- assertions
 const near = (a, b, tol) => Math.abs(a - b) <= tol;
 if (r.skinned !== 1) errors.push(`${r.skinned} skeletons, expected one shared skeleton`);
-if (r.bones.length !== 33 || !r.bones.every((b) => b.startsWith('Watcher_'))) errors.push(`Skeleton has ${r.bones.length} bones (expected 33 Watcher_ bones)`);
+// decision 041: the owner's doll has a 9-bone rig (root, turn, chest, neck, head, eye, three lens states)
+if (r.bones.length !== 9 || !r.bones.every((b) => b.startsWith('Watcher_'))) errors.push(`Skeleton has ${r.bones.length} bones (expected 9 Watcher_ bones)`);
 const h = r.restBox.max[1] - r.restBox.min[1];
 if (!near(h, 28, 0.15)) errors.push(`Rest height ${h.toFixed(2)} m, expected 28 m`);
 if (!near(r.restBox.min[1], 0, 0.02)) errors.push(`Lowest point at Y ${r.restBox.min[1].toFixed(3)}, expected 0 (feet on the ground)`);
@@ -137,7 +138,7 @@ if (Math.abs((r.restBox.min[0] + r.restBox.max[0]) / 2) > 0.3) errors.push('Not 
 for (const a of ANCHORS) if (!r.anchors[a]) errors.push(`Anchor ${a} missing`);
 const opt = r.anchors.Watcher_OpticalOrigin, fwd = r.anchors.Watcher_DetectionForward;
 if (opt && fwd && !(fwd[2] > opt[2] + 3)) errors.push('Watcher does not face +Z (glTF) / -Y (Blender)');
-if (opt && !near(opt[1], 23.6, 0.2)) errors.push(`Optical origin at Y ${opt[1]}, expected about 23.6 m`);
+if (opt && !near(opt[1], 19.55, 0.2)) errors.push(`Optical origin at Y ${opt[1]}, expected about 19.55 m (the doll's right eye)`);
 for (const [name, [frames, lens]] of Object.entries(CLIPS)) {
   const c = r.clips[name];
   if (!c) { errors.push(`Clip ${name} missing`); continue; }
@@ -150,9 +151,7 @@ for (const [name, [frames, lens]] of Object.entries(CLIPS)) {
   }
 }
 const byName = Object.fromEntries(r.materials.map((m) => [m.name, m]));
-for (const n of ['MAT_Watcher_Porcelain', 'MAT_Watcher_EnamelTeal', 'MAT_Watcher_Brass', 'MAT_Watcher_SteelDark', 'MAT_Watcher_HairLacquer']) {
-  const m = byName[n]; if (!m || !m.map || !m.normal || !m.rough) errors.push(`${n} missing or untextured`);
-}
+{ const m = byName.MAT_Watcher_Doll; if (!m || !m.map) errors.push('MAT_Watcher_Doll missing or untextured'); }
 for (const [n, ch] of [['MAT_Watcher_Lens_Red', 0], ['MAT_Watcher_Lens_Green', 1]]) {
   const m = byName[n]; if (!m || !m.emissive || m.emissive[ch] < 0.5) errors.push(`${n} missing or not emissive`);
 }

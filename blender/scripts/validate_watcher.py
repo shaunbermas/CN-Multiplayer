@@ -1,7 +1,7 @@
 """Validate THE_WATCHER.blend and its exports (Prompt 06), then write THE_WATCHER_ASSET_MANIFEST.json.
 
 Checks: collections; scale (28 m, feet on Z = 0, centred, facing -Y); origins and transforms; rig
-(33 named Watcher_ bones, mirrored L/R, hierarchy); rigid skin weights; UVs and LOD1; materials and
+(the named Watcher_ bones, mirrored L/R where present, hierarchy); skin weights (at most 4, summing to 1); UVs and LOD1; materials and
 textures (glTF-compatible, power of two); clips (nine actions, frame ranges, loops close, every bone
 keyed, exactly one lens state per key); anchors; triangle budget; no game logic in the file; and the
 GLB export and browser check reports. The manifest follows the Prompt 06 pack schema.
@@ -33,6 +33,7 @@ COLLECTIONS = ["WATCHER_CHARACTER", "WATCHER_RIG", "WATCHER_MATERIALS", "WATCHER
                "WATCHER_COLLISION", "WATCHER_EXPORT"]
 ANCHORS = ["Watcher_Root", "Watcher_Facing", "Watcher_OpticalOrigin", "Watcher_DetectionForward", "Watcher_AudioOrigin",
            "Watcher_InteractionBounds"]
+BUDGET = 60000
 NODE_OK = {"OUTPUT_MATERIAL", "BSDF_PRINCIPLED", "TEX_IMAGE", "SEPARATE_COLOR", "NORMAL_MAP"}
 
 
@@ -94,12 +95,12 @@ def main() -> None:
             p.append(f"{b.name} parent is {b.parent.name if b.parent else None}, expected {parents.get(b.name)}")
     check("rig", p, {"bones": len(bones), "root": "Watcher_Root"})
 
-    # rigid weights
+    # skin weights (decision 041: smooth weights so the doll's head bends at the neck without a seam)
     p = []
     gnames = [g.name for g in body.vertex_groups]
-    bad = [v.index for v in body.data.vertices if len(v.groups) != 1 or abs(v.groups[0].weight - 1.0) > 1e-6]
+    bad = [v.index for v in body.data.vertices if not (1 <= len(v.groups) <= 4) or abs(sum(g.weight for g in v.groups) - 1.0) > 0.01]
     if bad:
-        p.append(f"{len(bad)} vertices are not rigidly weighted to exactly one bone")
+        p.append(f"{len(bad)} vertices have no weights, more than 4 influences, or weights that do not sum to 1")
     p += [f"vertex group {g} has no bone" for g in gnames if g not in bones]
     if not any(m.type == "ARMATURE" and m.object == arm for m in body.modifiers):
         p.append("Watcher_Body has no Armature modifier for Watcher_Rig")
@@ -115,13 +116,13 @@ def main() -> None:
         if any(not (abs(d.uv.x) < 1e4 and abs(d.uv.y) < 1e4) for d in uv):
             p.append("invalid UV values")
     t0, t1 = tri(body), tri(lod)
-    if t0 > 40000:
-        p.append(f"LOD0 has {t0} triangles (budget 40,000; raised for the face and hair, decision 039)")
+    if t0 > BUDGET:
+        p.append(f"LOD0 has {t0} triangles (budget {BUDGET:,}: the owner's doll model, decision 041)")
     if not (0.35 < t1 / t0 < 0.65):
         p.append(f"LOD1 is {t1} triangles ({t1 / t0:.0%} of LOD0), expected about half")
     if len(lod.vertex_groups) != len(body.vertex_groups):
         p.append("LOD1 lost vertex groups")
-    check("geometry_uvs_lod", p, {"triangles_lod0": t0, "triangles_lod1": t1, "budget": 40000})
+    check("geometry_uvs_lod", p, {"triangles_lod0": t0, "triangles_lod1": t1, "budget": BUDGET})
 
     # materials
     p, images = [], {}
@@ -145,7 +146,7 @@ def main() -> None:
 
     # clips
     p, clips = [], []
-    for name, (loop, keys) in wb.CLIPS.items():
+    for name, (loop, last, _fn) in wb.CLIPS.items():
         act = bpy.data.actions.get(name)
         if act is None:
             p.append(f"action {name} missing")
@@ -159,7 +160,7 @@ def main() -> None:
             p.append(f"{name}: bones not keyed: {sorted(missing)[:4]}")
         if loop:
             for fc in fcs:
-                if fc.data_path.endswith("rotation_quaternion") and abs(fc.evaluate(f0) - fc.evaluate(f1)) > 1e-4 and "Watcher_Key" not in fc.data_path:
+                if fc.data_path.endswith("rotation_quaternion") and abs(fc.evaluate(f0) - fc.evaluate(f1)) > 1e-4:
                     p.append(f"{name}: loop does not close ({fc.data_path}[{fc.array_index}])")
                     break
         arm.animation_data.action = act

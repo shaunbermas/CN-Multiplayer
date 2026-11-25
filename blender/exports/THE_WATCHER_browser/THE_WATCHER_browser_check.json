@@ -2,71 +2,35 @@
   "result": "PASS",
   "errors": [],
   "glb": "blender/exports/THE_WATCHER.glb",
-  "glb_bytes": 2278516,
+  "glb_bytes": 4496364,
   "gltf_validator": {
     "version": "2.0.0-dev.3.10",
     "errors": 0,
-    "warnings": 7,
-    "infos": 10,
+    "warnings": 1,
+    "infos": 3,
     "messages": [
       {
         "code": "IMAGE_FEATURES_UNSUPPORTED",
         "message": "Image contains unsupported features like non-default colorspace information, non-square pixels, or animation.",
         "severity": 1,
-        "pointer": "/images/1"
-      },
-      {
-        "code": "IMAGE_FEATURES_UNSUPPORTED",
-        "message": "Image contains unsupported features like non-default colorspace information, non-square pixels, or animation.",
-        "severity": 1,
-        "pointer": "/images/4"
-      },
-      {
-        "code": "IMAGE_FEATURES_UNSUPPORTED",
-        "message": "Image contains unsupported features like non-default colorspace information, non-square pixels, or animation.",
-        "severity": 1,
-        "pointer": "/images/7"
-      },
-      {
-        "code": "IMAGE_FEATURES_UNSUPPORTED",
-        "message": "Image contains unsupported features like non-default colorspace information, non-square pixels, or animation.",
-        "severity": 1,
-        "pointer": "/images/10"
-      },
-      {
-        "code": "IMAGE_FEATURES_UNSUPPORTED",
-        "message": "Image contains unsupported features like non-default colorspace information, non-square pixels, or animation.",
-        "severity": 1,
-        "pointer": "/images/13"
-      },
-      {
-        "code": "IMAGE_FEATURES_UNSUPPORTED",
-        "message": "Image contains unsupported features like non-default colorspace information, non-square pixels, or animation.",
-        "severity": 1,
-        "pointer": "/images/16"
-      },
-      {
-        "code": "IMAGE_FEATURES_UNSUPPORTED",
-        "message": "Image contains unsupported features like non-default colorspace information, non-square pixels, or animation.",
-        "severity": 1,
-        "pointer": "/images/19"
+        "pointer": "/images/0"
       }
     ]
   },
   "browser": {
     "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
     "skeletons": 1,
-    "joints": 33,
+    "joints": 9,
     "rest_bounds": {
       "min": [
-        -4.766671034351708,
-        -6.053204579506355e-8,
-        -5.150000095367432
+        -10.232447624206543,
+        0,
+        -7.5067667961120605
       ],
       "max": [
-        4.766671034351708,
-        28,
-        3.469165325164795
+        10.232447624206543,
+        28.00000023841858,
+        7.506767272949219
       ]
     },
     "anchors": {
@@ -81,50 +45,50 @@
         4
       ],
       "Watcher_OpticalOrigin": [
-        -1.2999999889359588,
-        23.600000289785594,
-        3.0417296666789384
+        -2.519999891426723,
+        19.549999582216667,
+        5.3701489724619496
       ],
       "Watcher_DetectionForward": [
-        -1.2999999889359588,
-        23.600000491733976,
-        8.94172932167941
+        -2.519999891426723,
+        19.549999784165056,
+        11.270148865880993
       ],
       "Watcher_AudioOrigin": [
         0,
-        17,
-        2.700000047683716
+        13.000000238418579,
+        2
       ],
       "Watcher_InteractionBounds": [
         0,
         14,
-        0.5
+        0
       ]
     },
     "clips": {
       "Watcher_Detect": {
         "duration": 1.6666666269302368,
-        "tracks": 99,
-        "bonesMoved": 8,
+        "tracks": 27,
+        "bonesMoved": 3,
         "lens": {
-          "Neutral": 0.010000000707805157,
-          "Red": 1.0000001192092896,
-          "Green": 0.010000000707805157
+          "Neutral": 0.009999999776482582,
+          "Red": 1,
+          "Green": 0.009999999776482582
         }
       },
       "Watcher_FocusLock": {
         "duration": 1,
-        "tracks": 99,
-        "bonesMoved": 2,
+        "tracks": 27,
+        "bonesMoved": 3,
         "lens": {
-          "Neutral": 1,
-          "Red": 0.009999999776482582,
-          "Green": 0.009999999776482582
+          "Neutral": 0.009999998845160007,
+          "Red": 0.9999999403953552,
+          "Green": 0.009999998845160007
         }
       },
       "Watcher_GreenSignal": {
         "duration": 2,
-        "tracks": 99,
+        "tracks": 27,
         "bonesMoved": 2,
         "lens": {
           "Neutral": 0.009999999776482582,
@@ -134,7 +98,7 @@
       },
       "Watcher_Idle": {
         "duration": 4,
-        "tracks": 99,
+        "tracks": 27,
         "bonesMoved": 1,
         "lens": {
           "Neutral": 1,
@@ -144,18 +108,18 @@
       },
       "Watcher_RedSignal": {
         "duration": 2,
-        "tracks": 99,
-        "bonesMoved": 6,
+        "tracks": 27,
+        "bonesMoved": 3,
         "lens": {
-          "Neutral": 0.009999999776482582,
-          "Red": 1,
-          "Green": 0.009999999776482582
+          "Neutral": 0.010000000707805157,
+          "Red": 1.0000001192092896,
+          "Green": 0.010000000707805157
         }
       },
       "Watcher_ReturnNeutral": {
         "duration": 1.5,
-        "tracks": 99,
-        "bonesMoved": 4,
+        "tracks": 27,
+        "bonesMoved": 3,
         "lens": {
           "Neutral": 0.009999999776482582,
           "Red": 1,
@@ -164,28 +128,28 @@
       },
       "Watcher_ScanSweep": {
         "duration": 4,
-        "tracks": 99,
+        "tracks": 27,
         "bonesMoved": 3,
         "lens": {
-          "Neutral": 0.009999999776482582,
-          "Red": 1,
-          "Green": 0.009999999776482582
+          "Neutral": 0.009999998845160007,
+          "Red": 0.9999999403953552,
+          "Green": 0.009999998845160007
         }
       },
       "Watcher_TurnAway": {
         "duration": 1.5,
-        "tracks": 99,
-        "bonesMoved": 2,
+        "tracks": 27,
+        "bonesMoved": 3,
         "lens": {
-          "Neutral": 0.9999999403953552,
-          "Red": 0.009999998845160007,
-          "Green": 0.009999998845160007
+          "Neutral": 1,
+          "Red": 0.009999999776482582,
+          "Green": 0.009999999776482582
         }
       },
       "Watcher_TurnToField": {
         "duration": 1.5,
-        "tracks": 99,
-        "bonesMoved": 2,
+        "tracks": 27,
+        "bonesMoved": 3,
         "lens": {
           "Neutral": 0.9999999403953552,
           "Red": 0.009999999776482582,
@@ -196,50 +160,11 @@
   },
   "materials": [
     {
-      "name": "MAT_Watcher_Porcelain",
+      "name": "MAT_Watcher_Doll",
       "type": "MeshStandardMaterial",
       "map": true,
-      "normal": true,
-      "rough": true,
-      "emissive": [
-        0,
-        0,
-        0
-      ],
-      "emissiveIntensity": 1
-    },
-    {
-      "name": "MAT_Watcher_HairLacquer",
-      "type": "MeshStandardMaterial",
-      "map": true,
-      "normal": true,
-      "rough": true,
-      "emissive": [
-        0,
-        0,
-        0
-      ],
-      "emissiveIntensity": 1
-    },
-    {
-      "name": "MAT_Watcher_Brass",
-      "type": "MeshStandardMaterial",
-      "map": true,
-      "normal": true,
-      "rough": true,
-      "emissive": [
-        0,
-        0,
-        0
-      ],
-      "emissiveIntensity": 1
-    },
-    {
-      "name": "MAT_Watcher_SteelDark",
-      "type": "MeshStandardMaterial",
-      "map": true,
-      "normal": true,
-      "rough": true,
+      "normal": false,
+      "rough": false,
       "emissive": [
         0,
         0,
@@ -285,71 +210,6 @@
         0.25
       ],
       "emissiveIntensity": 1.7999999523162842
-    },
-    {
-      "name": "MAT_Watcher_LensGlass",
-      "type": "MeshStandardMaterial",
-      "map": false,
-      "normal": false,
-      "rough": false,
-      "emissive": [
-        0,
-        0,
-        0
-      ],
-      "emissiveIntensity": 1
-    },
-    {
-      "name": "MAT_Watcher_Seam",
-      "type": "MeshStandardMaterial",
-      "map": false,
-      "normal": false,
-      "rough": false,
-      "emissive": [
-        0,
-        0,
-        0
-      ],
-      "emissiveIntensity": 1
-    },
-    {
-      "name": "MAT_Watcher_EnamelTeal",
-      "type": "MeshStandardMaterial",
-      "map": true,
-      "normal": true,
-      "rough": true,
-      "emissive": [
-        0,
-        0,
-        0
-      ],
-      "emissiveIntensity": 1
-    },
-    {
-      "name": "MAT_Watcher_Textile",
-      "type": "MeshStandardMaterial",
-      "map": true,
-      "normal": true,
-      "rough": true,
-      "emissive": [
-        0,
-        0,
-        0
-      ],
-      "emissiveIntensity": 1
-    },
-    {
-      "name": "MAT_Watcher_Rubber",
-      "type": "MeshStandardMaterial",
-      "map": true,
-      "normal": true,
-      "rough": true,
-      "emissive": [
-        0,
-        0,
-        0
-      ],
-      "emissiveIntensity": 1
     }
   ],
   "screenshots": [
