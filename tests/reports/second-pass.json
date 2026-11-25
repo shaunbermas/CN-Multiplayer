@@ -43,7 +43,22 @@
     {
       "name": "walking right moves the contestant",
       "ok": true,
-      "detail": "12.53 m in 2.5 s"
+      "detail": "10.40 m in 2.5 s"
+    },
+    {
+      "name": "perf readout shows FPS and GPU (?perf=1)",
+      "ok": true,
+      "detail": "FPS        2  (1% low 1)"
+    },
+    {
+      "name": "scan hum plays on red",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "scan hum stops after red",
+      "ok": true,
+      "detail": ""
     },
     {
       "name": "no page errors",
@@ -51,5 +66,6 @@
       "detail": ""
     }
   ],
-  "ok": true
+  "ok": true,
+  "perf": "CN TRIAL performance (2026-11-25T03:02:33.820Z), last 10 s\nFPS        2  (1% low 1)\nFrame      622.3 ms avg, 707.7 ms worst\nDraws      99   Tris 97k\nQuality    low  scale 1.00\nPlayers    1   Phase lobby\nScreen     1280×720\nGPU        ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)\nBrowser    (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/158.0.8127.36 Sa"
 }

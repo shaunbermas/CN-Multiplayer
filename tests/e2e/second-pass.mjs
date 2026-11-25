@@ -36,7 +36,7 @@ try {
   await page.getByRole('button', { name: 'Close' }).click();
 
   // Join a room: the first click starts the sound engine.
-  await page.goto(`${base}?room=secondpass&quality=low&testSeed=12345&testRound=120&testBriefing=3&testStages=1`);
+  await page.goto(`${base}?room=secondpass&quality=low&perf=1&testSeed=12345&testRound=120&testBriefing=3&testStages=1`);
   await page.fill('[data-testid=nickname]', 'Walker');
   await page.click('[data-testid=join-invite]');
   await waitFor(() => page.evaluate(() => window.__cn?.assets?.().environment === 'ready'), 'stage loaded', 120_000);
@@ -73,6 +73,19 @@ try {
   await page.keyboard.up('KeyD');
   const moved = samples[samples.length - 1].x - samples[0].x;
   check('walking right moves the contestant', moved > 3, `${moved.toFixed(2)} m in 2.5 s`);
+  await sleep(1200);
+  const perf = await page.evaluate(() => window.__cnPerf?.() ?? '');
+  check('perf readout shows FPS and GPU (?perf=1)', /FPS\s+\d+/.test(perf) && /GPU/.test(perf), perf.split('\n')[1] ?? '');
+  report.perf = perf;
+  // A round: the scan hum runs while the light is red (real server schedule, test seed).
+  await page.click('[data-testid=start]');
+  await waitFor(() => page.evaluate(() => window.__cn.round().phase === 'active'), 'round active', 60_000);
+  await waitFor(() => page.evaluate(() => window.__cn.round().signal === 'red'), 'red light', 60_000);
+  await sleep(300);
+  check('scan hum plays on red', (await page.evaluate(() => window.__cnAudio())).scanning === true);
+  await waitFor(() => page.evaluate(() => window.__cn.round().signal !== 'red'), 'red over', 60_000);
+  await sleep(300);
+  check('scan hum stops after red', (await page.evaluate(() => window.__cnAudio())).scanning === false);
   check('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
   report.ok = true;
 } catch (e) {

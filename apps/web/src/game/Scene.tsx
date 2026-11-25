@@ -11,6 +11,7 @@ import { AdaptiveQuality, quality } from './quality.ts';
 import { attachInput, input } from './input.ts';
 import { Predictor } from './predictor.ts';
 import { sfx } from './audio.ts';
+import { PerfProbe, perfEnabled } from './PerfOverlay.tsx';
 import { STAGE_SCENES } from '../stages/registry.ts';
 import { activeStage } from './stage.ts';
 import { greenTime, obstacleWalls, type Rect } from '@cn-trials/shared';
@@ -418,6 +419,7 @@ export function Scene({ room, onStageError }: { room: TrialRoom; onStageError: (
       <ContestantHooks room={room} />
       <GroundFxLayer />
       <LocalController room={room} predictor={predictor} />
+      {perfEnabled && <PerfProbe room={room} />}
     </Canvas>
   );
 }

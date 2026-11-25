@@ -318,3 +318,8 @@ label.check { display: flex !important; align-items: center; gap: 8px; font: 500
 .last-stage summary { cursor: pointer; list-style: none; padding: 6px 0; }
 .last-stage summary::before { content: '▸ '; }
 .last-stage[open] summary::before { content: '▾ '; }
+
+/* Performance readout (?perf=1, decision 034 D) */
+.perf-overlay { position: fixed; left: 12px; bottom: 56px; z-index: 50; background: rgba(8, 12, 16, 0.82); color: #cfe; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 6px; padding: 8px 10px; font: 12px/1.35 ui-monospace, Menlo, Consolas, monospace; pointer-events: auto; max-width: 440px; }
+.perf-overlay pre { margin: 0 0 6px; white-space: pre-wrap; font: inherit; }
+.perf-overlay .btn { font-size: 11px; padding: 4px 8px; }
