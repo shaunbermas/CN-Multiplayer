@@ -14,7 +14,7 @@ export function stageFor(id: string | undefined): ClientStage {
   let s = cache.get(key);
   if (!s) {
     const def = getStage(key);
-    s = { def, geo: def.geometry, obstacles: def.geometry.bounds ? resolveObstacles(def.geometry) : null };
+    s = { def, geo: def.geometry, obstacles: def.rules === 'red_light_green_light' && def.geometry.bounds ? resolveObstacles(def.geometry) : null };
     cache.set(key, s);
   }
   return s;

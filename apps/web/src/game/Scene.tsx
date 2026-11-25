@@ -14,13 +14,15 @@ import { sfx } from './audio.ts';
 import { PerfProbe, perfEnabled } from './PerfOverlay.tsx';
 import { STAGE_SCENES } from '../stages/registry.ts';
 import { activeStage } from './stage.ts';
-import { greenTime, obstacleWalls, type Rect } from '@cn-trials/shared';
+import { STAGE02, greenTime, obstacleWalls, type Rect } from '@cn-trials/shared';
 import { scheduleFor, signalView } from './roundClock.ts';
 
 
 /** Collision walls for prediction: the same set the server uses (stage walls + obstacle twist in a round). */
 export function wallsFor(room: TrialRoom): Rect[] {
-  const { geo, obstacles } = activeStage(room);
+  const { geo, obstacles, def } = activeStage(room);
+  // Stage 02: the hunter gates are walls until the server opens them (end of the head start).
+  if (def.hunt) return room.round.phase !== 'lobby' && !room.round.hunt?.released ? [...geo.walls, ...def.hunt.layout.gates] : geo.walls;
   if (!room.round.obstacles || !obstacles) return geo.walls;
   const elapsed = room.round.phase === 'active' ? signalView(room).elapsed : 0; // lobby: the gate at rest
   return [...geo.walls, ...obstacleWalls(obstacles, greenTime(scheduleFor(room.round.seed), elapsed))];
@@ -52,11 +54,13 @@ export function canMove(room: TrialRoom): boolean {
   if (!me) return false;
   if (me.down > 0) return false; // knocked down by a collision (server-authoritative): no control until back up
   if (room.round.phase === 'lobby') return true;
+  if (room.hunt && (room.hunt.captured || room.hunt.hide)) return false; // Stage 02: caught, or inside a hiding place
   return room.round.phase === 'active' && (me.status === 'active' || me.status === 'finished');
 }
 
 function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoom; local: boolean; predictor?: React.RefObject<Predictor | null> }) {
   const group = useRef<THREE.Group>(null);
+  const marker = useRef<THREE.Group>(null);
   const { camera } = useThree();
   const [status, setStatus] = useState(room.players.get(id)?.status ?? 'active');
   const p0 = room.players.get(id);
@@ -78,7 +82,14 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
     if (!g || !p) return;
     if (p.status !== status) setStatus(p.status);
     if (p.colorway !== colorway) setColorwayState(p.colorway);
-    const spotted = p.status === 'spotted';
+    const spotted = p.status === 'spotted' || p.status === 'captured';
+    // Stage 02 snapshots leave out players you cannot see (walls, hiding places): their model is hidden too.
+    g.visible = (p.seen || local) && !(status === 'waiting' && local) && !(local && room.hunt?.hide);
+    const hunter = !!room.round.hunt?.hunters.includes(id);
+    if (marker.current) marker.current.visible = hunter && room.round.phase !== 'lobby' && p.status !== 'captured';
+    // Crouch (Stage 02): a lower stance, presentation only (the local player shows their own key at once).
+    const crouching = room.round.hunt && p.status === 'active' && (local ? input.crouch : false);
+    if (inst) inst.root.scale.y += ((crouching ? 0.8 : 1) - inst.root.scale.y) * Math.min(1, dt * 12);
     if (local && predictor?.current && canMove(room)) {
       // Interpolated between fixed steps (LocalController runs first each frame), so no stair-stepping.
       const r = predictor.current.render;
@@ -105,7 +116,7 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
     // Owner feedback (decision 031): contestants turn to face where they move, all the way round (360°),
     // instead of always facing the camera. Facing is presentation only; the server owns positions.
     const faceBefore = a.face;
-    if (a.speed > 0.35 && p.status !== 'spotted') {
+    if (a.speed > 0.35 && !spotted) {
       const target = Math.atan2(-a.vx, -a.vz); // yaw 0 faces -Z
       let d = target - a.face;
       d = Math.atan2(Math.sin(d), Math.cos(d));
@@ -125,7 +136,7 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
       // lobby emotes broadcast by the server (visual only)
       for (const e of room.emotes) if (e.id === id && e.at > a.emoteAt) { a.emoteAt = e.at; inst.emote(e.e); }
       const t0 = performance.now();
-      inst.update(step, { speed: a.speed, status: p.status, greenActive: room.round.phase === 'active' && room.round.signal === 'green', down: p.down, turn: a.turn });
+      inst.update(step, { speed: a.speed, status: p.status === 'captured' ? 'spotted' : p.status, greenActive: room.round.phase === 'active' && room.round.signal === 'green', down: p.down, turn: a.turn });
       cpuAcc.ms += performance.now() - t0;
       const dist = camera.position.distanceTo(g.getWorldPosition(tmp));
       lodDist.set(id, dist);
@@ -142,7 +153,7 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
         const stride = a.speed > 2.2 ? 0.46 : 0.32;
         if (a.stepDist > stride) {
           a.stepDist = 0;
-          if (a.speed > 0.5 && p.status !== 'spotted' && !inst.airborne && (quality.tier === 'low' ? local : dist < 30)) {
+          if (a.speed > 0.5 && !spotted && !inst.airborne && (quality.tier === 'low' ? local : dist < 30)) {
             a.side = -a.side;
             fx.emit('step', g.position.x + Math.cos(a.face) * 0.08 * a.side, g.position.z - Math.sin(a.face) * 0.08 * a.side, dirX, dirZ);
           }
@@ -153,13 +164,18 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
       return;
     }
   });
-  const waiting = status === 'waiting';
   return (
-    <group ref={group} position={[p0?.x ?? 0, 0, p0?.z ?? 0]} visible={!waiting || !local} name={`PLAYER_${id}`}>
+    <group ref={group} position={[p0?.x ?? 0, 0, p0?.z ?? 0]} name={`PLAYER_${id}`}>
       {inst && <primitive object={inst.root} />}
-      {(!local || status === 'spotted') && (
+      {/* Stage 02 hunter marker and Pulse Detector blockout (one shared model; no new character). */}
+      <group ref={marker} visible={false} name="S02_HUNTER_MARKER">
+        <mesh position={[0, 1.95, 0]} rotation={[Math.PI, 0, 0]}><coneGeometry args={[0.12, 0.22, 4]} /><meshBasicMaterial color="#e2332b" /></mesh>
+        <mesh position={[0.32, 0.72, -0.12]} name="S02_PULSE_DETECTOR"><boxGeometry args={[0.1, 0.06, 0.3]} /><meshStandardMaterial color="#2b2f33" metalness={0.6} roughness={0.5} emissive="#ff7a1a" emissiveIntensity={0.25} /></mesh>
+      </group>
+      {(!local || status === 'spotted' || status === 'captured') && (
         <Html position={[0, 1.65, 0]} center distanceFactor={9} zIndexRange={[10, 0]}>
-          <div className={`nametag ${status}`}>{status === 'spotted' ? 'SPOTTED!' : p0?.name}</div>
+          <div className={`nametag ${status === 'captured' ? 'spotted' : status}`} style={room.players.get(id)?.seen === false && !local ? { display: 'none' } : undefined}>
+            {status === 'spotted' ? 'SPOTTED!' : status === 'captured' ? 'CAUGHT' : p0?.name}</div>
         </Html>
       )}
     </group>
@@ -259,6 +275,7 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
   const watch = useRef(0);
   /** Local clock time when we were spotted, for the death cam (decision 037), or null. */
   const spottedAt = useRef<number | null>(null);
+  const capHeld = useRef(false);
 
   useEffect(() => attachInput(gl.domElement), [gl]);
 
@@ -291,6 +308,15 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
       if (phase === 'briefing') room.skipBriefing();
     }
     if (input.cycle) { input.cycle = false; watch.current++; }
+    // Stage 02 actions (the server validates every one): Q pulse, E hide (hider) or hold to capture (hunter).
+    const hp = room.hunt;
+    if (hp && phase === 'active') {
+      if (input.pulse && hp.role === 'hunter') room.pulse();
+      if (input.interactPressed && hp.role === 'hider') room.hide();
+      const holding = hp.role === 'hunter' && input.interact;
+      if (holding !== capHeld.current) { capHeld.current = holding; room.capture(holding); }
+    } else if (capHeld.current) { capHeld.current = false; room.capture(false); }
+    input.pulse = false; input.interactPressed = false;
     pr.reconcile(me);
     if (!mobile) pr.reset({ x: me.x, z: me.z, vx: 0, vz: 0 }); // frozen: the server position is the truth
     // Fixed 30 Hz steps, matching the server simulation. Locked phases still send (zero) inputs so acks flow.
@@ -300,26 +326,33 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
       const mv = mobile ? inputFromKeys(input.forward, input.right, input.yaw) : { mx: 0, mz: 0 };
       if (phase === 'lobby' && firstMove.current === null && (mv.mx || mv.mz)) firstMove.current = clock.current;
       const seq = pr.apply(mv);
-      room.send({ t: 'input', seq, mx: mv.mx, mz: mv.mz, yaw: input.yaw });
+      const k = room.hunt ? (input.crouch ? 1 : 0) | (input.sprint ? 2 : 0) : 0;
+      room.send({ t: 'input', seq, mx: mv.mx, mz: mv.mz, yaw: input.yaw, ...(k ? { k } : {}) });
     }
     const rp = pr.updateRender(acc.current / SIM_DT, dt);
     // Follow ourselves, or spectate an active player once spotted or while waiting (spec §7).
     let fx = me.x, fz = me.z;
     // Spotted (decision 037): first watch your own fall for SPOTTED_HOLD_S, then spectate other players.
-    if (me.status === 'spotted') { if (spottedAt.current === null) spottedAt.current = clock.current; } else spottedAt.current = null;
+    const out = me.status === 'spotted' || me.status === 'captured';
+    if (out) { if (spottedAt.current === null) spottedAt.current = clock.current; } else spottedAt.current = null;
     const deathCam = spottedAt.current !== null ? Math.min(1, (clock.current - spottedAt.current) / SPOTTED_HOLD_S) : -1;
     if (mobile || me.status === 'finished') {
       fx = rp.x; fz = rp.z;
     } else if (deathCam >= 0 && deathCam < 1) {
       fx = me.x; fz = me.z;
       hud.spectating = '';
-    } else if (me.status === 'spotted' || me.status === 'waiting') {
-      const active = [...room.players.values()].filter((p) => p.status === 'active');
+    } else if (out || me.status === 'waiting') {
+      const active = [...room.players.values()].filter((p) => p.status === 'active' && p.seen);
       if (active.length) {
         const t = active[watch.current % active.length];
         fx = t.x; fz = t.z;
         hud.spectating = t.name;
       } else hud.spectating = '';
+    }
+    // Hidden (Stage 02): look out from the hiding place's front.
+    if (room.hunt?.hide) {
+      const spot = activeStage(room).def.hunt?.layout.hideSpots.find((x) => x.id === room.hunt!.hide);
+      if (spot) { fx = spot.fx; fz = spot.fz; }
     }
     // Camera rig: smooth one anchor point, then place the camera and its look target rigidly from it.
     // (Before, the position was smoothed but the look target was not, so every sideways step swung the view.)
@@ -393,21 +426,41 @@ class StageErrorBoundary extends Component<{ children: ReactNode; onError: (msg:
   render() { return this.state.failed ? null : this.props.children; }
 }
 
+/** Re-renders when the server moves the room to another stage (09 A2: the scene module follows round.stage). */
+function useStageId(room: TrialRoom): string {
+  const [id, setId] = useState(room.round.stage || room.stage);
+  useEffect(() => {
+    const t = setInterval(() => { const now = room.round.stage || room.stage; setId((old) => (old === now ? old : now)); }, 200);
+    return () => clearInterval(t);
+  }, [room]);
+  return id;
+}
+
+/** Stage 02 movement speed for prediction: the server's sprint timer, or crouch while C is held. */
+function speedFor(room: TrialRoom): number {
+  const h = room.hunt;
+  if (!h || room.round.phase !== 'active') return 1;
+  if (h.sprintLeft > 0) return STAGE02.sprint.speed;
+  return input.crouch ? STAGE02.crouch.speed : 1;
+}
+
 export function Scene({ room, onStageError }: { room: TrialRoom; onStageError: (msg: string) => void }) {
   const predictor = useRef<Predictor | null>(null);
+  useStageId(room);
   const stage = activeStage(room);
   const stageModule = STAGE_SCENES[stage.def.id] ?? Object.values(STAGE_SCENES)[0];
   if (!predictor.current) {
     const me = room.self;
     const sp = stage.geo.spawns.find((s) => s.index === me?.spawn) ?? stage.geo.spawns[0];
-    predictor.current = new Predictor({ x: me?.x ?? sp.x, z: me?.z ?? sp.z, vx: 0, vz: 0 }, () => wallsFor(room));
+    predictor.current = new Predictor({ x: me?.x ?? sp.x, z: me?.z ?? sp.z, vx: 0, vz: 0 }, () => wallsFor(room), () => speedFor(room));
   }
   useEffect(() => {
     (window as unknown as { __cn: unknown }).__cn = {
       roomId: room.room,
       sessionId: room.id,
       stage: stage.def.id,
-      players: () => [...room.players.values()].map((p) => ({ id: p.id, name: p.name, x: p.x, z: p.z, status: p.status, finishTime: p.finishTime, colorway: p.colorway, bot: p.bot, down: p.down })),
+      players: () => [...room.players.values()].map((p) => ({ id: p.id, name: p.name, x: p.x, z: p.z, status: p.status, finishTime: p.finishTime, colorway: p.colorway, bot: p.bot, down: p.down, seen: p.seen })),
+      hunt: () => (room.hunt ? JSON.parse(JSON.stringify(room.hunt)) : null),
       contestants: () => (window as unknown as { __cnContestants?: () => unknown }).__cnContestants?.() ?? null,
       self: () => predictor.current?.state,
       round: () => ({ ...room.round }),
@@ -432,7 +485,7 @@ export function Scene({ room, onStageError }: { room: TrialRoom; onStageError: (
       <RenderInfo />
       <StageErrorBoundary onError={onStageError}>
         <Suspense fallback={null}>
-          <StageScene room={room} />
+          <StageScene key={stage.def.id} room={room} />
         </Suspense>
       </StageErrorBoundary>
       <Players room={room} predictor={predictor} />

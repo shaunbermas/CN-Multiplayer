@@ -91,6 +91,28 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
   );
 }
 
+/** Stages on the main menu (decision 042). Stage 03 shows but cannot be picked until it is built (owner, 25 Nov 2026). */
+const STAGE_PICKS = [
+  { id: 'STAGE_01_RED_LIGHT', no: '01', name: 'Red Light, Green Light', blurb: 'Move on green. Freeze on red. The Watcher sees everything.', enabled: true },
+  { id: 'STAGE_02_THE_HUNT', no: '02', name: 'The Hunt', blurb: 'Hunters with a Pulse Detector. Hiders with a head start. Stay free until the clock runs out.', enabled: true },
+  { id: 'STAGE_03_NAUGHTY_RUN', no: '03', name: 'The Naughty Run', blurb: '', enabled: false },
+];
+
+/** Where the match starts. The host's pick is used; the background follows the pick. */
+function StagePicker({ value }: { value: string }) {
+  return (
+    <fieldset className="stage-picker" role="radiogroup" aria-label="Choose the stage to start from" data-testid="stage-picker">
+      <legend>Start from</legend>
+      {STAGE_PICKS.map((p) => (
+        <button key={p.id} type="button" role="radio" aria-checked={p.id === value} disabled={!p.enabled} className="stage-opt"
+          onClick={() => updateSettings({ startStage: p.id })} data-testid={`stage-pick-${p.no}`}>
+          <b>STAGE {p.no}</b><span>{p.name}</span>{!p.enabled && <small>Coming soon</small>}
+        </button>
+      ))}
+    </fieldset>
+  );
+}
+
 export function MainMenu({ initialName, inviteCode, busy, error, onJoin }: {
   initialName: string; inviteCode: string | null; busy: boolean; error: string;
   onJoin: (name: string, code: string | null) => void;
@@ -99,15 +121,18 @@ export function MainMenu({ initialName, inviteCode, busy, error, onJoin }: {
   const [code, setCode] = useState(inviteCode ?? '');
   const [panel, setPanel] = useState<'none' | 'join' | 'howto' | 'settings'>(inviteCode ? 'join' : 'none');
   const nameOk = name.trim().length > 0;
+  const s = useSettings();
+  const pick = STAGE_PICKS.find((x) => x.id === s.startStage) ?? STAGE_PICKS[0];
   return (
     <main className="menu" data-testid="menu">
-      <div className="menu-art" aria-hidden="true" />
+      <div className="menu-art" aria-hidden="true" data-stage={pick.id} data-testid="menu-art" />
       <section className="menu-col">
         <div className="menu-title">
           <Brand />
-          <div className="menu-stage"><b>Stage 01</b><span>Red Light, Green Light</span></div>
+          <div className="menu-stage" data-testid="menu-stage"><b>Stage {pick.no}</b><span>{pick.name}</span></div>
         </div>
-        <p className="menu-sub">Move on green. Freeze on red. The Watcher sees everything. Up to {MAX_PLAYERS} players in a private room.</p>
+        <p className="menu-sub">{pick.blurb} Up to {MAX_PLAYERS} players in a private room.</p>
+        <StagePicker value={pick.id} />
         <label className="name-field">Your nickname
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Guest nickname" maxLength={16} autoFocus={!inviteCode} data-testid="nickname" />
         </label>

@@ -43,6 +43,8 @@ export interface BotBrain {
   /** Sidestep direction and until when (room time), when stuck or avoiding someone. */
   dodge: number;
   dodgeUntil: number;
+  /** Stage 02 memory (stage02/huntBots.ts); cleared when a stage starts. */
+  hunt?: import('./stage02/huntBots.ts').HuntBotMemory;
 }
 
 /** A bot with a seeded personality. */
@@ -204,5 +206,5 @@ export const BOT_MAX_SPEED = MOVEMENT.walkSpeed;
 
 /** Clear a bot's per-round memory (called when a stage starts). Personality stays. */
 export function resetBot(b: BotBrain): void {
-  b.segKey = ''; b.lateStop = 0; b.bestZ = Infinity; b.bestAt = 0; b.dodge = 0; b.dodgeUntil = 0;
+  b.segKey = ''; b.lateStop = 0; b.bestZ = Infinity; b.bestAt = 0; b.dodge = 0; b.dodgeUntil = 0; b.hunt = undefined;
 }

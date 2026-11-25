@@ -7,7 +7,8 @@ import { DurableObject } from 'cloudflare:workers';
 import {
   BOT_LIMITS, CLOSE, DEFAULT_STAGE_ID, INPUT_BURST, INPUT_QUEUE_MAX, MATCH, MAX_MESSAGE_BYTES, MAX_PLAYERS, Match, PROBE_MS, PROTOCOL_VERSION, RoundEngine, SIM_DT,
   SIM_HZ, SNAPSHOT_MS, botInput, botNames, downLeft, encodeRow, getStage, insideRect, makeBot, matchOrder, newRoundPlayer, obstacleGapRows,
-  resetBot, resolvePlayerContacts, sanitizeInput, segmentAt,
+  resetBot, resolvePlayerContacts, sanitizeInput, segmentAt, HuntEngine, huntSenses, huntBotInput, CLOSE as CLOSE_CODES,
+  type StageEngine, type HuntBody, type SnapRow,
   EMOTES, dealColorway, sanitizePlayerKey, greenTime, obstacleWalls, resolveObstacles, sanitizeName, step,
   type BotBrain, type ClientMessage, type GapRow, type MatchState, type Rect, type ResolvedObstacles, type RosterEntry, type RoundEvents, type RoundPlayer, type RoundState,
   type ServerMessage, type StageGeometry, type StartRequestOptions,
@@ -22,7 +23,7 @@ interface Player extends RoundPlayer {
   name: string;
   vx: number; vz: number; yaw: number;
   ack: number;
-  queue: { seq: number; mx: number; mz: number; yaw: number }[];
+  queue: { seq: number; mx: number; mz: number; yaw: number; k?: number }[];
   tokens: number;
   /** Lobby practice walk: room time of the first move. */
   firstMoveAt: number | null;
@@ -35,6 +36,12 @@ interface Player extends RoundPlayer {
   lastEmoteAt: number;
   /** Server-side bot brain (no socket), or undefined for a human. */
   bot?: BotBrain;
+  /** The browser's opaque player key (humans), used to give a reconnecting player their seat back (v8). */
+  key?: string;
+  /** Disconnected during a match: the seat, role, captures and points are kept for a reconnect (v8). */
+  away?: boolean;
+  /** Stage 02 bots think at 10 Hz: the last decided move, repeated between decisions. */
+  botMove?: { mx: number; mz: number; yaw: number; k: number };
 }
 
 interface Attachment { room: string; id: string | null }
@@ -48,9 +55,9 @@ export class TrialRoom extends DurableObject<Env> {
   private sockets = new Map<string, WebSocket>();
   /** Per-room stage state (09 A1): geometry, obstacles and the engine are rebuilt for each stage played. */
   private geo: StageGeometry = getStage(DEFAULT_STAGE_ID).geometry;
-  private obstacles: ResolvedObstacles = resolveObstacles(this.geo);
+  private obstacles: ResolvedObstacles | null = resolveObstacles(this.geo);
   private gapRows: GapRow[] = obstacleGapRows(this.obstacles, this.geo);
-  private engine = new RoundEngine(this.geo);
+  private engine: StageEngine = new RoundEngine(this.geo);
   /** The current or last multi-stage match (points and standings); null before the first match. */
   private match: Match | null = null;
   private matchRunning = false;
@@ -85,7 +92,8 @@ export class TrialRoom extends DurableObject<Env> {
     // Hibernation-capable sockets; the room never hibernates while its game loop timers run.
     this.ctx.acceptWebSocket(server);
     server.serializeAttachment({ room, id: null } satisfies Attachment);
-    if (!this.canAdmit()) this.rejectFull(server, room);
+    // A full room still accepts the socket when a seat is kept for a reconnect; the join message decides (v8).
+    if (!this.canAdmit() && ![...this.players.values()].some((p) => p.away)) this.rejectFull(server, room);
     return new Response(null, { status: 101, webSocket: client });
   }
 
@@ -103,9 +111,11 @@ export class TrialRoom extends DurableObject<Env> {
         ws.close(CLOSE.version, 'Old client');
         return;
       }
+      const key = sanitizePlayerKey(msg.key);
+      if (key && this.reclaim(ws, att.room, key)) return; // same browser: back in your own seat (v8)
       if (!this.canAdmit()) return this.rejectFull(ws, att.room);
       if (this.players.size >= MAX_PLAYERS) this.removeBots(1); // a human takes a bot's slot (lobby only)
-      this.join(ws, att.room, msg.name, sanitizePlayerKey(msg.key));
+      this.join(ws, att.room, msg.name, key);
       return;
     }
     const p = att.id ? this.players.get(att.id) : undefined;
@@ -114,8 +124,11 @@ export class TrialRoom extends DurableObject<Env> {
       case 'input':
         if (typeof msg.seq !== 'number' || !Number.isFinite(msg.seq)) return;
         if (p.queue.length >= INPUT_QUEUE_MAX) { this.stats.dropped++; return; }
-        p.queue.push({ seq: msg.seq, mx: msg.mx, mz: msg.mz, yaw: msg.yaw });
+        p.queue.push({ seq: msg.seq, mx: msg.mx, mz: msg.mz, yaw: msg.yaw, k: typeof msg.k === 'number' ? msg.k & 3 : 0 });
         this.stats.accepted++;
+        break;
+      case 'act':
+        this.stageAction(p, msg);
         break;
       case 'respawn':
         if (this.engine.phase === 'lobby') this.respawn(p);
@@ -125,7 +138,7 @@ export class TrialRoom extends DurableObject<Env> {
         break;
       case 'skip':
         // Bots never need to read the briefing: only humans in the round count.
-        this.engine.skip(p.id, this.roundPlayers().filter((x) => !x.bot).map((x) => x.id));
+        this.engine.skip(p.id, this.roundPlayers().filter((x) => !x.bot && !x.away).map((x) => x.id));
         break;
       case 'bots':
         this.manageBots(p, msg);
@@ -182,7 +195,47 @@ export class TrialRoom extends DurableObject<Env> {
   }
 
   private botCount(): number { let n = 0; for (const p of this.players.values()) if (p.bot) n++; return n; }
-  private humanCount(): number { return this.players.size - this.botCount(); }
+  /** Humans with a live connection (players kept for a reconnect do not count). */
+  private humanCount(): number { let n = 0; for (const p of this.players.values()) if (!p.bot && !p.away) n++; return n; }
+
+  /** Stage 02 rules engine, when the room is playing The Hunt. */
+  private hunt(): HuntEngine | null { return this.engine instanceof HuntEngine ? this.engine : null; }
+
+  /**
+   * Reconnect (v8): a browser with the key of a player who dropped out during a match (or who opened a second tab)
+   * gets that same player back: id, role, captures, status and points. Returns false when there is no such player.
+   */
+  private reclaim(ws: WebSocket, room: string, key: string): boolean {
+    const p = [...this.players.values()].find((x) => !x.bot && x.key === key);
+    if (!p) return false;
+    const old = this.sockets.get(p.id);
+    if (old && old !== ws) {
+      old.serializeAttachment({ room, id: null } satisfies Attachment); // its close must not remove the player
+      try { old.close(CLOSE_CODES.replaced, 'Opened elsewhere'); } catch { /* closing */ }
+    }
+    p.away = false;
+    p.queue = [];
+    this.sockets.set(p.id, ws);
+    ws.serializeAttachment({ room, id: p.id } satisfies Attachment);
+    if (!this.hostId) this.hostId = p.id;
+    send(ws, { t: 'welcome', v: PROTOCOL_VERSION, id: p.id, room, stage: this.geo.stage, spawn: p.spawn, roster: this.roster(), round: this.roundState() });
+    if (this.match) send(ws, { t: 'standings', match: this.matchState(), standings: this.match.standings() });
+    this.broadcast({ t: 'roster', roster: this.roster() });
+    this.broadcastSnapshot();
+    this.startLoop();
+    console.log(JSON.stringify({ ev: 'reconnect', room, id: p.id, status: p.status, role: this.hunt()?.roleOf(p.id) ?? null, phase: this.engine.phase }));
+    return true;
+  }
+
+  /** Stage 02 actions (pulse, hide, capture hold), validated by the hunt engine. */
+  private stageAction(p: Player, msg: { a: string; on?: boolean }): void {
+    const h = this.hunt();
+    if (!h || h.phase !== 'active') return;
+    const bodies = this.roundPlayers();
+    if (msg.a === 'pulse') h.pulse(p, bodies);
+    else if (msg.a === 'hide') h.toggleHide(p, bodies);
+    else if (msg.a === 'capture') h.setCapture(p, msg.on === true);
+  }
 
   /** Creates a player (human or bot) on a free spawn with a free colourway. */
   private newPlayer(rawName: unknown, key?: string, bot?: BotBrain): Player {
@@ -203,6 +256,7 @@ export class TrialRoom extends DurableObject<Env> {
 
   private join(ws: WebSocket, room: string, rawName: unknown, key?: string): void {
     const p = this.newPlayer(rawName, key);
+    if (key) p.key = key;
     const id = p.id;
     if (key) {
       this.colorwayByKey.set(key, p.colorway);
@@ -226,9 +280,16 @@ export class TrialRoom extends DurableObject<Env> {
     const att = ws.deserializeAttachment() as Attachment | null;
     try { ws.close(1000, 'Left'); } catch { /* already closed */ }
     if (!att?.id || !this.players.has(att.id)) return;
-    this.players.delete(att.id);
+    const gone = this.players.get(att.id)!;
     this.sockets.delete(att.id);
-    this.match?.markLeft(att.id); // their points stay on the board
+    if (this.matchRunning && this.engine.phase !== 'lobby' && gone.key) {
+      // Mid-match: keep the seat (role, captures, status, points) so the same browser can come back (v8).
+      gone.away = true; gone.queue = []; gone.vx = 0; gone.vz = 0;
+      this.hunt()?.setCapture(gone, false);
+    } else {
+      this.players.delete(att.id);
+      this.match?.markLeft(att.id); // their points stay on the board
+    }
     if (this.humanCount() === 0) {
       // Nobody real is left: bots do not keep a room alive. Reset everything for the next visitor.
       this.players.clear();
@@ -242,7 +303,7 @@ export class TrialRoom extends DurableObject<Env> {
     }
     if (this.hostId === att.id) {
       // Host transfer: the earliest remaining human joiner (GDD §6.2); bots never host.
-      const next = [...this.players.values()].filter((x) => !x.bot).sort((a, b) => a.joinOrder - b.joinOrder)[0];
+      const next = [...this.players.values()].filter((x) => !x.bot && !x.away).sort((a, b) => a.joinOrder - b.joinOrder)[0];
       this.hostId = next?.id ?? '';
     }
     this.broadcast({ t: 'roster', roster: this.roster() });
@@ -300,15 +361,18 @@ export class TrialRoom extends DurableObject<Env> {
   }
 
   private roster(): RosterEntry[] {
-    return [...this.players.values()].map((p) => ({ id: p.id, name: p.name, spawn: p.spawn, ready: p.ready, colorway: p.colorway, ...(p.bot ? { bot: true } : {}) }));
+    return [...this.players.values()].map((p) => ({ id: p.id, name: p.name, spawn: p.spawn, ready: p.ready, colorway: p.colorway, ...(p.bot ? { bot: true } : {}), ...(p.away ? { away: true } : {}) }));
   }
 
   /** Loads one stage's geometry and obstacles into this room and gives it a fresh round engine (09 A1/A2). */
   private loadStage(stageId: string): void {
-    this.geo = getStage(stageId).geometry;
-    this.obstacles = resolveObstacles(this.geo);
+    const def = getStage(stageId);
+    this.geo = def.geometry;
+    // Stage 01's barricades and gate belong to Stage 01 only (intelligence doc 09, F4).
+    this.obstacles = def.rules === 'red_light_green_light' ? resolveObstacles(this.geo) : null;
     this.gapRows = obstacleGapRows(this.obstacles, this.geo);
-    this.engine = new RoundEngine(this.geo);
+    // A new engine per stage: no timer, role, capture or hiding state carries over (09 F2).
+    this.engine = def.rules === 'hide_and_hunt' && def.hunt ? new HuntEngine(def.hunt.layout) : new RoundEngine(this.geo);
     this.engine.now = this.elapsed;
   }
 
@@ -348,7 +412,10 @@ export class TrialRoom extends DurableObject<Env> {
   private beginMatch(opts: StartRequestOptions): void {
     const test = this.env.CN_TEST === '1';
     const stages = test && Number.isInteger(opts?.stages) ? Number(opts.stages) : MATCH.stages;
+    // Players who dropped out of the previous match and never came back leave now.
+    for (const p of [...this.players.values()]) if (p.away) { this.players.delete(p.id); this.match?.markLeft(p.id); }
     this.match = new Match(matchOrder(stages));
+    if (typeof opts?.startStage === 'string') this.match.startAt(opts.startStage);
     for (const p of this.players.values()) this.match.ensure({ ...p, bot: !!p.bot });
     this.matchRunning = true;
     this.matchOpts = opts ?? {};
@@ -363,7 +430,10 @@ export class TrialRoom extends DurableObject<Env> {
     // Each stage gets its own seed; test rooms get seed, seed+1, ... so tests stay deterministic.
     const seed = test && Number.isInteger(opts?.seed) ? Number(opts.seed) + m.index : crypto.getRandomValues(new Uint32Array(1))[0];
     const roundS = test && typeof opts?.roundS === 'number' ? Math.max(5, Math.min(300, opts.roundS)) : undefined;
-    const briefingS = test && typeof opts?.briefingS === 'number' ? Math.max(0, Math.min(15, opts.briefingS)) : (m.index > 0 ? MATCH.nextBriefingS : undefined);
+    // Waiting players (late joiners) play this stage; players kept for a reconnect play it too (they stand still).
+    // A later stage keeps the short briefing only when its rules were already explained (a replay of Stage 01).
+    const seenRules = m.order.slice(0, m.index).includes(m.stageId);
+    const briefingS = test && typeof opts?.briefingS === 'number' ? Math.max(0, Math.min(15, opts.briefingS)) : (seenRules ? MATCH.nextBriefingS : undefined);
     const resultsS = test && typeof opts?.resultsS === 'number' ? Math.max(1, Math.min(60, opts.resultsS)) : (m.isFinal ? MATCH.finalResultsS : MATCH.stageResultsS);
     this.loadStage(m.stageId);
     const players = [...this.players.values()];
@@ -390,6 +460,7 @@ export class TrialRoom extends DurableObject<Env> {
 
   /** Obstacles collide in the lobby and in every round (decision 031), unless a test switched them off. */
   private obstaclesActive(): boolean {
+    if (!this.obstacles) return false;
     return this.engine.phase === 'lobby' ? !this.plainCourse() : this.engine.obstacles;
   }
 
@@ -407,6 +478,7 @@ export class TrialRoom extends DurableObject<Env> {
       target: Number.isFinite(e.target) ? e.target : -1,
       obstacles: this.obstaclesActive(),
       match: this.matchState(),
+      ...(this.hunt() ? { hunt: this.hunt()!.publicState() } : {}),
     };
   }
 
@@ -467,8 +539,11 @@ export class TrialRoom extends DurableObject<Env> {
     // Stage 1.5: the barricades and the sliding gate (at the current green time) collide like walls for every
     // player. In the lobby the gate rests at its start position (no green time yet); in a round it slides on green only.
     const gt = e.phase === 'active' ? greenTime(e.schedule, Math.max(0, this.elapsed - e.goTime)) : 0;
-    const walls: Rect[] = this.obstaclesActive() ? [...this.geo.walls, ...obstacleWalls(this.obstacles, gt)] : this.geo.walls;
-    if (this.botCount() > 0) this.driveBots(gt);
+    const base: Rect[] = this.obstaclesActive() && this.obstacles ? [...this.geo.walls, ...obstacleWalls(this.obstacles, gt)] : this.geo.walls;
+    const extra = e.extraWalls?.() ?? [];
+    const walls: Rect[] = extra.length ? [...base, ...extra] : base;
+    const h = this.hunt();
+    if (this.botCount() > 0) { if (h) this.driveHuntBots(h); else this.driveBots(gt); }
     for (const p of this.players.values()) {
       // Token bucket: one step per tick sustained, so a client cannot move faster than real time.
       p.tokens = Math.min(INPUT_BURST, p.tokens + 1);
@@ -479,7 +554,8 @@ export class TrialRoom extends DurableObject<Env> {
         if (!e.canMove(p)) { p.vx = 0; p.vz = 0; continue; }
         const input = sanitizeInput(m.mx, m.mz);
         const ox = p.x, oz = p.z;
-        const next = step(p, input, SIM_DT, walls);
+        h?.applyFlags(p, m.k ?? 0, input.mx !== 0 || input.mz !== 0);
+        const next = step(p, input, SIM_DT, walls, e.speedScale?.(p) ?? 1);
         p.x = next.x; p.z = next.z; p.vx = next.vx; p.vz = next.vz;
         if (typeof m.yaw === 'number' && Number.isFinite(m.yaw)) p.yaw = m.yaw;
         if (e.phase === 'lobby') this.practiceFinish(p, input);
@@ -489,11 +565,15 @@ export class TrialRoom extends DurableObject<Env> {
     // Player-to-player collisions (server authority, same code for humans and bots). In the lobby everyone on the
     // yard collides; in a round only contestants still racing (finished, spotted and waiting players are out of play).
     const racing = e.phase === 'lobby' ? [...this.players.values()].filter((p) => p.status !== 'waiting')
-      : e.phase === 'active' ? [...this.players.values()].filter((p) => p.status === 'active') : [];
+      : e.phase === 'active' ? [...this.players.values()].filter((p) => p.status === 'active' && !h?.isHidden(p.id)) : [];
     const knocks = racing.length > 1 ? resolvePlayerContacts(racing, this.elapsed, walls) : [];
     const at = Math.round((this.elapsed - e.goTime) * 1000) / 1000;
     for (const id of moveEv.spotted) this.broadcast({ t: 'event', kind: 'spotted', id, at });
     for (const id of moveEv.finished) this.broadcast({ t: 'event', kind: 'finished', id, at });
+    for (const [id, by] of ev.captured ?? []) {
+      this.broadcast({ t: 'event', kind: 'captured', id, other: by, at });
+      console.log(JSON.stringify({ ev: 'captured', room: this.roomCode, round: this.roundId, id, by, at }));
+    }
     for (const k of knocks) {
       this.broadcast({ t: 'event', kind: 'collision', id: k.a, other: k.b, at });
       this.stats.knockdowns++;
@@ -518,6 +598,34 @@ export class TrialRoom extends DurableObject<Env> {
         x: p.x, z: p.z, status: p.status, down: p.downUntil > this.elapsed, others,
       }, this.geo, this.gapRows, this.obstaclesActive() ? this.obstacles : null);
       if (p.queue.length < 4) p.queue.push({ seq: p.ack + p.queue.length + 1, mx: mv.mx, mz: mv.mz, yaw: Math.atan2(-mv.mx, -mv.mz) || 0 });
+    }
+  }
+
+  /**
+   * Stage 02 bots: each thinks at 10 Hz (a third of them per tick) from what it may perceive (huntSenses), sends its
+   * actions through the same engine methods as a human's messages, and queues its move like a human input.
+   */
+  private driveHuntBots(h: HuntEngine): void {
+    const nav = getStage(this.geo.stage).hunt?.nav;
+    if (!nav) return;
+    const bodies = this.roundPlayers();
+    const tickNo = Math.round(this.elapsed * SIM_HZ);
+    let i = 0;
+    for (const p of this.players.values()) {
+      if (!p.bot) continue;
+      i++;
+      if (!p.botMove || (tickNo + i) % 3 === 0) {
+        const priv = h.privateState(p.id);
+        const act = huntBotInput(p.bot, p as HuntBody, priv, huntSenses(h, p as HuntBody, bodies, p.bot.rand), h, nav, this.elapsed);
+        if (h.phase === 'active') {
+          if (act.pulse) h.pulse(p, bodies);
+          if (act.hide) h.toggleHide(p, bodies);
+          h.setCapture(p, !!act.capture);
+        }
+        p.botMove = { mx: act.mx, mz: act.mz, yaw: act.yaw, k: act.flags };
+      }
+      const mv = p.botMove;
+      if (p.queue.length < 4) p.queue.push({ seq: p.ack + p.queue.length + 1, mx: mv.mx, mz: mv.mz, yaw: mv.yaw, k: mv.k });
     }
   }
 
@@ -558,6 +666,8 @@ export class TrialRoom extends DurableObject<Env> {
         return;
       }
       this.matchRunning = false;
+      for (const p of [...this.players.values()]) if (p.away) { this.players.delete(p.id); m?.markLeft(p.id); }
+      if (this.geo.stage !== DEFAULT_STAGE_ID) this.loadStage(DEFAULT_STAGE_ID); // the lobby is always the Stage 01 yard
       for (const p of this.players.values()) this.respawn(p); // waiting players join in for the next match
       this.broadcast({ t: 'roster', roster: this.roster() });
     }
@@ -565,10 +675,28 @@ export class TrialRoom extends DurableObject<Env> {
   }
 
   private broadcastSnapshot(): void {
-    const rows = [...this.players.values()].map((p) => encodeRow(p.id, p, downLeft(p, this.elapsed)));
-    const text = JSON.stringify({ t: 'snap', time: Math.round(this.elapsed * 1000) / 1000, rows, round: this.roundState() } satisfies ServerMessage);
-    this.stats.snaps++; this.stats.snapBytes += text.length;
-    for (const ws of this.sockets.values()) sendRaw(ws, text);
+    const all = [...this.players.values()];
+    const rows = all.map((p) => encodeRow(p.id, p, downLeft(p, this.elapsed)));
+    const time = Math.round(this.elapsed * 1000) / 1000;
+    const round = this.roundState();
+    const h = this.hunt();
+    if (!h || h.phase === 'lobby') {
+      const text = JSON.stringify({ t: 'snap', time, rows, round } satisfies ServerMessage);
+      this.stats.snaps++; this.stats.snapBytes += text.length;
+      for (const ws of this.sockets.values()) sendRaw(ws, text);
+      return;
+    }
+    // Stage 02: each player gets only the rows they may see and their own private state (anti-wallhack, v8).
+    const visible = new Map<string, SnapRow[]>();
+    for (const [pid, ws] of this.sockets) {
+      const viewer = this.players.get(pid);
+      if (!viewer) continue;
+      let mine = visible.get(pid);
+      if (!mine) { mine = []; for (let k = 0; k < all.length; k++) if (h.visibleTo(viewer, all[k])) mine.push(rows[k]); visible.set(pid, mine); }
+      const text = JSON.stringify({ t: 'snap', time, rows: mine, round, me: h.privateState(pid) ?? undefined, all: false } satisfies ServerMessage);
+      this.stats.snaps++; this.stats.snapBytes += text.length;
+      sendRaw(ws, text);
+    }
   }
 
   private broadcast(msg: ServerMessage): void {

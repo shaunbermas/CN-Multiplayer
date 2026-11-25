@@ -245,6 +245,27 @@ export const sfx = {
     tone(LOW.A1 * 2.4, 0, 2.2, { type: 'sine', gain: 0.1 });
     tone(LOW.A1 * 3.9, 0, 1.4, { type: 'sine', gain: 0.05 });
   },
+  // ---- Stage 02 · The Hunt (same synth, same thriller palette)
+  /** Pulse Detector: a rising charge, then a sonar ping whose pitch and repeats follow the signal strength. */
+  pulse(strength: number): void {
+    tone(220, 0, 0.35, { type: 'sine', to: 880, gain: 0.08, attack: 0.2 });
+    for (let i = 0; i < Math.max(1, strength); i++) tone(strength ? 520 + strength * 140 : 300, 0.38 + i * 0.16, 0.5, { type: 'sine', gain: strength ? 0.16 : 0.07, vibrato: 4, vibratoHz: 9 });
+    if (!strength) noise(0.38, 0.4, { type: 'bandpass', freq: 900, q: 3, gain: 0.05 });
+  },
+  /** The gates open: a heavy metal shutter and a low klaxon. */
+  gates(): void {
+    noise(0, 1.2, { type: 'lowpass', freq: 900, to: 200, gain: 0.3, attack: 0.05 });
+    tone(LOW.E2, 0.1, 1.4, { type: 'sawtooth', gain: 0.18, filter: 900, filterTo: 300, distort: true });
+    tone(LOW.F2, 0.1, 1.4, { type: 'sawtooth', gain: 0.12, filter: 900, filterTo: 300 });
+  },
+  /** Locker / crate door: a short metal thunk. */
+  hide(): void {
+    tone(160, 0, 0.18, { type: 'square', to: 90, gain: 0.12, filter: 900 });
+    noise(0, 0.1, { type: 'bandpass', freq: 1300, q: 3, gain: 0.12 });
+  },
+  /** Captured (you): the same heavy hit as being spotted. Caught someone: a hard metal clamp. */
+  caught(): void { sfx.spottedMe(); },
+  captureMade(): void { impact(0, 0.7); tone(LOW.A2 * 2, 0.02, 0.6, { type: 'square', gain: 0.06, filter: 1600 }); },
   uiClick(): void {
     noise(0, 0.03, { type: 'bandpass', freq: 1400, q: 5, gain: 0.12, bus: 'ui' });
   },

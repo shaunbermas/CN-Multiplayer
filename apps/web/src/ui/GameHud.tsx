@@ -14,6 +14,8 @@ import { STAGE_SCENES } from '../stages/registry.ts';
 import { Brand, HowToPlay, SettingsPanel } from './Menu.tsx';
 import { useSettings } from './settings.ts';
 import { setMuted } from '../game/audio.ts';
+import { settings } from './settings.ts';
+import { HuntBriefingRole, HuntPanel, HuntRoleChip, HuntTop, captureText } from './HuntHud.tsx';
 
 // Decision 037 (owner, 25 Nov 2026): the HUD shows only GREEN LIGHT or RED LIGHT. No time-left bar, no
 // "get ready" warning and no hint text: knowing when red comes is part of the challenge.
@@ -33,6 +35,8 @@ function startOptions() {
   // (the server honours these only in test mode).
   const q = new URLSearchParams(location.search);
   const test: Record<string, unknown> = q.get('obstacles') === '0' ? { obstacles: false } : {};
+  // The stage picked on the main menu (decision 042). ?startStage=… overrides it (tests).
+  test.startStage = q.get('startStage') ?? settings.startStage;
   if (q.get('testStages')) test.stages = Number(q.get('testStages'));
   if (q.get('testResults')) test.resultsS = Number(q.get('testResults'));
   if (!q.get('testSeed')) return test;
@@ -128,7 +132,7 @@ function Lobby({ room }: { room: TrialRoom }) {
         {me && <div className="my-contestant" data-testid="my-contestant" title="Colours are dealt at random and kept if you rejoin; nobody in the room shares yours">
           <Swatch colorway={me.colorway} />You are <b>{coat(me.colorway)?.displayName ?? 'a contestant'}</b></div>}
         <p className="lobby-hint">{room.isHost
-          ? `${MATCH.stages} stages · first finisher 2 points, every finisher 1. Most points wins. Walk around to practise.`
+          ? `${settings.startStage === 'STAGE_02_THE_HUNT' ? 'Starts at Stage 02 · The Hunt (picked on the main menu). ' : `${MATCH.stages} stages, starting with Red Light. `}Points add up across stages; most points wins. Walk around to practise.`
           : 'Waiting for the host to start. Walk around to practise.'}</p>
       </aside>
     </section>
@@ -193,6 +197,8 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
   const ui = r.phase === 'active' && sig.signal !== 'none' ? SIGNAL_UI[sig.signal] : null;
   const closing = r.phase === 'active' && finished > 0;
   const iWonStage = recentFinish && firstFinisherId(room) === room.id;
+  const isHunt = stage.rules === 'hide_and_hunt';
+  const recentCaught = room.events.find((e) => e.kind === 'captured' && e.id === room.id && now - e.at < 3000);
   const leaderProgress = Math.max(0, ...inRound.filter((p) => p.id !== room.id).map((p) => {
     const g = activeStage(room).geo;
     return Math.max(0, Math.min(1, (p.z - g.startZ) / (g.finishZ - g.startZ)));
@@ -216,6 +222,7 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
           {r.phase === 'lobby'
             ? <div className="chip stage-chip"><b>LOBBY</b><span>Practice walk is open</span></div>
             : <div className="chip stage-chip" data-testid="stage-chip"><b>{stageNo}{inMatch && <i> / {pad2(m.total)}</i>}</b><span>{m.final && inMatch ? 'Final stage' : stage.name}</span></div>}
+          {isHunt && <HuntRoleChip room={room} />}
           {inMatch && me && (
             <div className="chip me-chip" data-testid="my-points"><Swatch colorway={me.colorway} />{me.name}
               <span className="pts">{myStanding?.points ?? 0} PTS</span>{myStanding && <span className="muted">#{myStanding.rank}</span>}</div>
@@ -230,9 +237,9 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
           )}
         </div>
         <div className="hud-right">
-          {r.phase === 'active' ? <div className={`timer num${closing ? ' closing' : ''}`} data-testid="timer">{closing && <small>Finish closes</small>}{fmtClock(remaining)}</div>
+          {isHunt && r.phase === 'active' ? <HuntTop room={room} /> : r.phase === 'active' ? <div className={`timer num${closing ? ' closing' : ''}`} data-testid="timer">{closing && <small>Finish closes</small>}{fmtClock(remaining)}</div>
             : r.phase === 'lobby' ? <div className="timer num" data-testid="timer">{hud.walkTime.toFixed(1)} s</div> : null}
-          {(r.phase === 'active' || r.phase === 'results' || r.phase === 'countdown') && (
+          {!isHunt && (r.phase === 'active' || r.phase === 'results' || r.phase === 'countdown') && (
             <div className="counts num" data-testid="round-counts">
               <span title="Still racing">IN {alive}/{inRound.length}</span><span className="out" title="Spotted">✕ {eliminated}</span><span className="in" title="Finished">✓ {finished}</span>
             </div>
@@ -256,7 +263,8 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
               <span className="eyebrow">Next stage</span>
               <div className="stage-of" data-testid="next-stage-intro">Stage {pad2(m.stage)} <i>/ {pad2(m.total)}</i></div>
               <p className="rule">{stage.briefing.rule}</p>
-              <p className="muted">{m.final ? 'Last stage. ' : ''}Everyone plays, including anyone spotted before. First finisher +2, every finisher +1.</p>
+              {isHunt ? <HuntBriefingRole room={room} />
+                : <p className="muted">{m.final ? 'Last stage. ' : ''}Everyone plays, including anyone spotted or caught before. First finisher +2, every finisher +1.</p>}
               <ul className="mini-standings">
                 {room.standings.slice(0, 3).map((x) => <li key={x.id}><b>{x.rank}</b><span>{x.name}</span><span className="num">{x.points} pts</span></li>)}
               </ul>
@@ -265,7 +273,8 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
             <>
               <span className="eyebrow">Stage {pad2(m.stage || 1)} of {pad2(m.total || 1)} · {stage.name}</span>
               <p className="rule" style={{ marginTop: 8 }}>{stage.briefing.rule}</p>
-              <p className="muted">{stage.briefing.detail} First to finish scores 2 points, every other finisher 1. Bumping into someone knocks you both over.{r.obstacles ? ' Weave through the barricade gaps; the gate slides only on green.' : ''}</p>
+              {isHunt && <HuntBriefingRole room={room} />}
+              <p className="muted">{stage.briefing.detail} {isHunt ? '' : 'First to finish scores 2 points'}, {isHunt ? '' : 'every other finisher 1. '}Bumping into someone knocks you both over.{r.obstacles ? ' Weave through the barricade gaps; the gate slides only on green.' : ''}</p>
             </>
           )}
           <footer className="card-foot">
@@ -291,6 +300,10 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
         <div className="banner finished" data-testid="finished-banner"><b>{iWonStage ? 'Finished 1st' : 'Finished'}</b>
           <span>{me ? `${me.finishTime.toFixed(2)} s` : ''}</span><span className="pts">+{iWonStage ? MATCH.points.first : MATCH.points.finished} {iWonStage ? 'POINTS' : 'POINT'}</span></div>
       )}
+      {recentCaught && r.phase === 'active' && (
+        <div className="banner spotted" data-testid="caught-banner"><b>Caught</b><span>{captureText(room, room.id, recentCaught.other)}. You keep your {myStanding?.points ?? 0} points and play the next stage.</span></div>
+      )}
+      {isHunt && <HuntPanel room={room} />}
       {hud.down > 0 && !recentSpot && (
         <div className="banner down" data-testid="knocked-down"><b>Knocked over</b><span>Back on your feet in a moment</span></div>
       )}
@@ -299,6 +312,7 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
           const p = room.players.get(e.id);
           const o = e.other ? room.players.get(e.other) : undefined;
           const text = e.kind === 'spotted' ? `${p?.name ?? 'Player'} was spotted`
+            : e.kind === 'captured' ? captureText(room, e.id, e.other)
             : e.kind === 'finished' ? `${p?.name ?? 'Player'} finished${firstFinisherId(room) === e.id ? ' first · +2' : ' · +1'}`
             : `${p?.name ?? 'Player'} and ${o?.name ?? 'someone'} collided`;
           return <div key={`${e.kind}${e.id}${e.at}`} className={`toast ${e.kind}`}>{text}</div>;
@@ -319,7 +333,7 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
 
       <div className="hud-lower">
         {r.phase === 'lobby' && <div className="objective">{hud.status === 'finished' ? `Practice: finished in ${hud.finishTime.toFixed(2)} s` : 'Practice: walk to the finish line'}</div>}
-        {(r.phase === 'lobby' || r.phase === 'active') && (
+        {(r.phase === 'lobby' || (r.phase === 'active' && !isHunt)) && (
           <div className="track" aria-label="Progress to the finish">
             <div className="fill" style={{ width: `${(hud.progress * 100).toFixed(1)}%` }} />
             {r.phase === 'active' && leaderProgress > 0 && <span className="pip" style={{ left: `${(leaderProgress * 100).toFixed(1)}%` }} title="Furthest rival" />}
@@ -327,8 +341,8 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
         )}
       </div>
       <div className="hud-bottom">
-        <span className="num">{hud.distance.toFixed(0)} m to go</span>
-        <span className="keys-hint"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move · mouse look{me?.status === 'spotted' ? ' · Tab switch' : ''}{r.phase === 'lobby' ? ' · R respawn' : ''}</span>
+        <span className="num">{isHunt && r.phase !== 'lobby' ? '' : `${hud.distance.toFixed(0)} m to go`}</span>
+        <span className="keys-hint"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move · mouse look{isHunt && r.phase === 'active' ? (room.hunt?.role === 'hunter' ? ' · Q pulse · hold E capture · Shift sprint' : ' · E hide · Shift sprint · C crouch') : ''}{me?.status === 'spotted' ? ' · Tab switch' : ''}{r.phase === 'lobby' ? ' · R respawn' : ''}</span>
         <span>room {room.room.toUpperCase()}</span>
       </div>
 
@@ -353,7 +367,8 @@ function StageResults({ room, remaining, onLeave }: { room: TrialRoom; remaining
       <div className="results-head">
         <div><span className="eyebrow">Stage results</span><h2>Stage {pad2(m.stage)} <i>/ {pad2(m.total)}</i></h2></div>
         <div className="first-finisher" data-testid="winner">
-          {first ? <><Swatch colorway={firstPlayer?.colorway} /><div><small>First to finish · +2</small><b>{first.name}</b> <span className="muted num">{first.finishTime.toFixed(2)} s</span></div></>
+          {rows.some((x) => x.role) ? <div><small>The Hunt</small><b>{rows.filter((x) => x.role === 'hider' && x.status !== 'captured').length} hiders survived</b> <span className="muted num">{rows.filter((x) => x.status === 'captured').length} caught</span></div>
+            : first ? <><Swatch colorway={firstPlayer?.colorway} /><div><small>First to finish · +2</small><b>{first.name}</b> <span className="muted num">{first.finishTime.toFixed(2)} s</span></div></>
             : <div><small>First to finish</small><b>Nobody finished</b></div>}
         </div>
       </div>
@@ -368,7 +383,7 @@ function StageResults({ room, remaining, onLeave }: { room: TrialRoom; remaining
         </div>
       </div>
       <footer className="card-foot">
-        <span className="next-line">Stage {pad2(m.stage + 1)} starts in {Math.ceil(remaining)} s · spotted players play it too</span>
+        <span className="next-line">Stage {pad2(m.stage + 1)} starts in {Math.ceil(remaining)} s · spotted and caught players play it too</span>
         <div style={{ display: 'flex', gap: 8 }}>
           <button className="btn" onClick={onLeave} data-testid="exit">Exit to menu</button>
           {room.isHost && <button className="btn go" onClick={() => room.nextStage()} data-testid="next-stage">Start stage {pad2(m.stage + 1)} now</button>}
@@ -388,8 +403,10 @@ function StageBoard({ room }: { room: TrialRoom }) {
         {rows.map((p) => (
           <tr key={p.id} className={p.id === room.id ? 'me' : ''}>
             <td className="place">{p.place}</td>
-            <td className="name">{p.name}{p.bot && <span className="tag bot">bot</span>}{p.status === 'spotted' && <span className="tag out">spotted</span>}</td>
-            <td className="muted">{p.status === 'finished' ? `${p.finishTime.toFixed(2)} s` : p.status === 'spotted' ? 'Spotted' : `${Math.round(p.progress * 100)}% of the way`}</td>
+            <td className="name">{p.name}{p.bot && <span className="tag bot">bot</span>}{p.status === 'spotted' && <span className="tag out">spotted</span>}{p.status === 'captured' && <span className="tag out">caught</span>}</td>
+            <td className="muted">{p.role === 'hunter' ? `Hunter · ${p.captures ?? 0} ${p.captures === 1 ? 'capture' : 'captures'}`
+              : p.role === 'hider' ? (p.status === 'captured' ? 'Hider · caught' : 'Hider · survived')
+              : p.status === 'finished' ? `${p.finishTime.toFixed(2)} s` : p.status === 'spotted' ? 'Spotted' : `${Math.round(p.progress * 100)}% of the way`}</td>
             <td className={`r gain${p.points ? '' : ' zero'}`}>+{p.points}</td>
           </tr>
         ))}

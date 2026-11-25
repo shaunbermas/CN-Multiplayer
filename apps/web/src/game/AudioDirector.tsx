@@ -20,6 +20,7 @@ export function AudioDirector({ room }: { room: TrialRoom }) {
     let count = -1;
     let lastEventAt = Date.now();
     let lastOther = 0;
+    let released = false, pulseN = -1, wasHidden = false;
     const tick = () => {
       startAmbience(); // no-op until sound is allowed and unmuted, or once running
       const r = room.round;
@@ -30,12 +31,24 @@ export function AudioDirector({ room }: { room: TrialRoom }) {
       }
       if (r.phase !== phase) {
         if (phase === 'countdown' && r.phase === 'active') sfx.count(0);
-        if (phase === 'active') { stopScan(); stopHeartbeat(); signal = 'none'; }
+        if (phase === 'active') { stopScan(); stopHeartbeat(); signal = 'none'; released = false; pulseN = -1; wasHidden = false; }
         if (r.phase === 'results') sfx.stageEnd();
         if (r.phase !== 'countdown') count = -1;
         phase = r.phase;
       }
-      if (r.phase === 'active') {
+      if (r.phase === 'active' && r.hunt) {
+        // Stage 02: heartbeat follows the hider's threat level; the hunter's is steady. Gates, pulses, hiding.
+        startHeartbeat();
+        const h = room.hunt;
+        if (!h || h.captured) setHeartbeat(64, 0.25);
+        else if (h.role === 'hider') setHeartbeat(h.threat === 2 ? 160 : h.threat === 1 ? 128 : 92, h.threat ? 0.9 : 0.4);
+        else setHeartbeat(100, 0.35);
+        if (r.hunt.released && !released) sfx.gates();
+        released = r.hunt.released;
+        if (h?.pulse && h.pulse.n !== pulseN) { sfx.pulse(h.pulse.strength); pulseN = h.pulse.n; }
+        const hidden = !!h?.hide;
+        if (hidden !== wasHidden) { sfx.hide(); wasHidden = hidden; }
+      } else if (r.phase === 'active') {
         // Heartbeat (decision 037): races on green while you are still in it, pounds on red; calm once you are out.
         startHeartbeat();
         const me = room.self;
@@ -65,6 +78,10 @@ export function AudioDirector({ room }: { room: TrialRoom }) {
         } else if (e.kind === 'finished') {
           if (e.id === room.id) sfx.finishMe();
           else if (now - lastOther > 150) { sfx.finishOther(); lastOther = now; }
+        } else if (e.kind === 'captured') {
+          if (e.id === room.id) sfx.caught();
+          else if (e.other === room.id) sfx.captureMade();
+          else if (now - lastOther > 150) { sfx.spottedOther(); lastOther = now; }
         } else if (e.kind === 'collision') {
           if (mine) sfx.bump(true);
           else if (now - lastOther > 150) { sfx.bump(false); lastOther = now; }

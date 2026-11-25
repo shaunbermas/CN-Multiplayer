@@ -21,8 +21,8 @@ describe('stage points', () => {
 });
 
 describe('match', () => {
-  it('plays the configured number of stages (Stage 01 repeats until other stages exist)', () => {
-    expect(matchOrder(3)).toEqual(['STAGE_01_RED_LIGHT', 'STAGE_01_RED_LIGHT', 'STAGE_01_RED_LIGHT']);
+  it('plays Stage 01, Stage 02, then Stage 01 again as the stand-in for Stage 03 (decision 042)', () => {
+    expect(matchOrder(3)).toEqual(['STAGE_01_RED_LIGHT', 'STAGE_02_THE_HUNT', 'STAGE_01_RED_LIGHT']);
     expect(matchOrder(3, ['S1', 'S2'])).toEqual(['S1', 'S2', 'S1']);
     const m = new Match(['S1', 'S2']);
     expect(m.isFinal).toBe(false);
