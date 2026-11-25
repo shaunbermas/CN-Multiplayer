@@ -150,6 +150,12 @@ jobs:
           SKIP_BUILD: "1"
           WRANGLER_SEND_METRICS: "false"
 
+      - name: Stage 03 · The Hunt with 30 players and a reconnect
+        run: npm run test:hunt
+        env:
+          SKIP_BUILD: "1"
+          WRANGLER_SEND_METRICS: "false"
+
       - name: Two browsers in one room
         run: npm run test:e2e
         env:

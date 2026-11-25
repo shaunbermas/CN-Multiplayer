@@ -10,6 +10,8 @@ built sound with mute (row 21), the sideways-walking smoothing fix, the walk fee
 branch stacked on PR #24 (`docs/second-pass/SECOND_PASS_NOTES.md`). Row statuses change when it merges. Earlier trackers stay where they are: `docs/stage15/STAGE_1_5_PRODUCTION_TRACKER.md`,
 `CN_TRIAL_STAGE_1_5_FINAL_DELIVERABLES/`.
 
+> **Update 25 Nov 2026 (later, decision 045):** stage order is now 01 Red Light, 02 Agawan Base, 03 The Hunt; The Hunt moved to Stage 03 unchanged (`docs/STAGE_03_THE_HUNT.md`).
+>
 > **Update 25 Nov 2026:** Stage 02 · THE HUNT greybox and full game logic built (decision 042, `docs/STAGE_02_THE_HUNT.md`); landing stage picker added. Awaiting owner review; Prompts 2–3 not started.
 
 ## 1. Evidence gathered in this audit (real runs, 24 Nov 2026)

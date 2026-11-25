@@ -1,13 +1,15 @@
 // Stage registry shared by the server (rules, geometry) and the client (scene module, HUD text).
 // Each stage is defined once: its approved metadata (Blender export), its rule set and its player-facing
-// text. Adding Stage 02 means adding one entry here plus a client scene module (apps/web/src/stages/).
+// text. A new stage = one entry here, its place in OFFICIAL_ORDER, plus a client scene module (apps/web/src/stages/).
+// Stage order (decision 045, owner 25 Nov 2026): 01 Red Light, Green Light, 02 Agawan Base, 03 The Hunt.
 import stage01Metadata from '../../../blender/exports/STAGE_01_METADATA.json';
 import watcherManifest from '../../../blender/exports/THE_WATCHER_ASSET_MANIFEST.json';
 import { geometryFromMetadata, parseStageMetadata, type StageMetadata } from './stage-metadata.ts';
 import type { StageGeometry } from './stage.ts';
-import { buildHuntLayout, huntGeometry, type HuntLayout } from './stage02/layout.ts';
-import { buildNavGrid, type NavGrid } from './stage02/nav.ts';
-import { STAGE02 } from './stage02/config.ts';
+import { buildHuntLayout, huntGeometry, type HuntLayout } from './hunt/layout.ts';
+import { buildNavGrid, type NavGrid } from './hunt/nav.ts';
+import { HUNT } from './hunt/config.ts';
+import { AGAWAN_ENABLED } from './constants.ts';
 
 export type StageRuleSet = 'red_light_green_light' | 'hide_and_hunt';
 
@@ -20,10 +22,10 @@ export interface StageDefinition {
   briefing: { rule: string; detail: string };
   /** The stage's enemy / figure, for HUD text. */
   figure: string;
-  /** Stage 01: approved Blender metadata. Stage 02 is a code greybox (no Blender export yet). */
+  /** Stage 01: approved Blender metadata. The Hunt is a code greybox (no Blender export). */
   metadata: StageMetadata | null;
   geometry: StageGeometry;
-  /** Stage 02 only: the greybox layout and the bots' navigation grid (immutable, shared by every room). */
+  /** The Hunt only: the greybox layout and the bots' navigation grid (immutable, shared by every room). */
   hunt?: { layout: HuntLayout; nav: NavGrid };
 }
 
@@ -31,7 +33,7 @@ function stage01(): StageDefinition {
   const metadata = parseStageMetadata(stage01Metadata);
   return {
     id: metadata.stageId,
-    number: 1,
+    number: stageNumber(metadata.stageId),
     name: metadata.stageName,
     rules: 'red_light_green_light',
     briefing: { rule: 'Move on GO. Freeze when The Watcher turns.', detail: 'Reach the finish line before time runs out. Moving while it watches gets you spotted.' },
@@ -41,11 +43,11 @@ function stage01(): StageDefinition {
   };
 }
 
-function stage02(): StageDefinition {
+function theHunt(): StageDefinition {
   const layout = buildHuntLayout();
   return {
-    id: STAGE02.id,
-    number: 2,
+    id: HUNT.id,
+    number: stageNumber(HUNT.id),
     name: 'The Hunt',
     rules: 'hide_and_hunt',
     briefing: {
@@ -59,20 +61,35 @@ function stage02(): StageDefinition {
   };
 }
 
-export const STAGES: Record<string, StageDefinition> = Object.fromEntries([stage01(), stage02()].map((s) => [s.id, s]));
+/** Stage 01's registry id (from its approved Blender metadata). */
 export const DEFAULT_STAGE_ID = 'STAGE_01_RED_LIGHT';
+/** Stage 02 · AGAWAN BASE: registered once it is built and switched on (AGAWAN_ENABLED). */
+export const AGAWAN_STAGE_ID = 'STAGE_02_AGAWAN_BASE';
 /**
- * The match (decision 042, owner 25 Nov 2026): 01 Red Light, Green Light -> 02 The Hunt -> 03 The Naughty Run.
- * Until Stage 03 is built the third slot replays Stage 01 (owner's choice, 25 Nov 2026).
+ * The official stage order (decision 045, owner 25 Nov 2026). A stage's player-facing number is its place here, so
+ * numbers never drift from the order: 01 Red Light, Green Light, 02 Agawan Base, 03 The Hunt.
  */
-export const MATCH_ORDER: string[] = [DEFAULT_STAGE_ID, STAGE02.id, DEFAULT_STAGE_ID];
-/** Stages a host may start a match from (landing page picker). */
-export const STARTABLE_STAGES: string[] = [DEFAULT_STAGE_ID, STAGE02.id];
+export const OFFICIAL_ORDER: string[] = [DEFAULT_STAGE_ID, AGAWAN_STAGE_ID, HUNT.id];
+/** Player-facing stage number (1-based) of a stage id. */
+export function stageNumber(id: string): number { return OFFICIAL_ORDER.indexOf(resolveStageId(id)) + 1; }
+
+/**
+ * Ids used before decision 045 (The Hunt was Stage 02). A browser's saved menu pick or a request from an older page
+ * may still send them; they resolve to the stage's current id.
+ */
+export const LEGACY_STAGE_IDS: Record<string, string> = { STAGE_02_THE_HUNT: HUNT.id };
+export function resolveStageId(id: string): string { return LEGACY_STAGE_IDS[id] ?? id; }
+
+export const STAGES: Record<string, StageDefinition> = Object.fromEntries([stage01(), theHunt()].map((s) => [s.id, s]));
+/** The match plays every registered (and switched-on) stage in the official order. */
+export const MATCH_ORDER: string[] = OFFICIAL_ORDER.filter((id) => id in STAGES && (id !== AGAWAN_STAGE_ID || AGAWAN_ENABLED));
+/** Stages a host may start a match from (main menu picker). */
+export const STARTABLE_STAGES: string[] = MATCH_ORDER;
 /** Kept for the older tournament manager (tournament.ts). */
 export const TOURNAMENT_ORDER: string[] = MATCH_ORDER;
 
 export function getStage(id: string = DEFAULT_STAGE_ID): StageDefinition {
-  const s = STAGES[id];
+  const s = STAGES[resolveStageId(id)];
   if (!s) throw new Error(`Unknown stage ${id}`);
   return s;
 }

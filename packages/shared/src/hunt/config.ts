@@ -1,10 +1,10 @@
-// Stage 02 · THE HUNT: every tuning number in one place (owner brief "Prompt 1", 25 Nov 2026, and the design
-// pack docs 02_STAGE_02_THE_HUNT). Server and client both import this file; nothing else hardcodes these values.
+// Stage 03 · THE HUNT: every tuning number in one place (owner brief "Prompt 1", 25 Nov 2026, and the design
+// pack docs 02_STAGE_03_THE_HUNT). Server and client both import this file; nothing else hardcodes these values.
 // They are playtesting defaults: change them here only. Rationale: docs/STAGE_02_CONFIG_REFERENCE.md.
 
-export const STAGE02 = {
+export const HUNT = {
   /** Registry id of the stage. */
-  id: 'STAGE_02_THE_HUNT',
+  id: 'STAGE_03_THE_HUNT',
 
   // ---- roles (server assigns, seeded shuffle; humans and bots alike)
   /** Share of participants who hunt: hunterCount = clamp(round(n * share), 1, n - 1). */
@@ -81,7 +81,7 @@ export const STAGE02 = {
 export type HuntRole = 'hunter' | 'hider';
 
 /** hunterCount = clamp(round(n * share), 1, n - 1); a solo player (n = 1) hides with no hunters. */
-export function hunterCount(n: number, share: number = STAGE02.hunterShare): number {
+export function hunterCount(n: number, share: number = HUNT.hunterShare): number {
   if (n <= 1) return 0;
   return Math.max(1, Math.min(n - 1, Math.round(n * share)));
 }

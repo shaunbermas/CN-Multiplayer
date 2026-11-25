@@ -4,7 +4,7 @@
 // lens, timer, counts) · spotted / finished / knocked-down banners · feed · spectator · stage results with points
 // and overall standings · final winner and leaderboard.
 import { useEffect, useState } from 'react';
-import { BOT_LIMITS, MATCH, MAX_PLAYERS, colorwayById, tieBreakReason, type Standing } from '@cn-trials/shared';
+import { BOT_LIMITS, DEFAULT_STAGE_ID, MATCH, MAX_PLAYERS, OFFICIAL_ORDER, STARTABLE_STAGES, colorwayById, getStage, matchOrder, stageNumber, tieBreakReason, type Standing } from '@cn-trials/shared';
 import type { TrialRoom } from '../net.ts';
 import { inviteLink } from '../net.ts';
 import { hud } from '../game/hudStore.ts';
@@ -28,6 +28,12 @@ const SIGNAL_UI = {
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const coat = (id: string | undefined) => colorwayById(id);
+// Decision 045: a stage keeps its own number everywhere (The Hunt is always Stage 03), whatever its place in the match.
+// "/ 03" counts the official stages; "2 of 2" counts the stages in this match.
+const ALL_STAGES = pad2(OFFICIAL_ORDER.length);
+/** Registry id of the stage at 1-based match position n (the client knows the same order as the server). */
+const stageAt = (total: number, n: number) => matchOrder(total)[n - 1] ?? DEFAULT_STAGE_ID;
+const stageNoAt = (total: number, n: number) => pad2(stageNumber(stageAt(total, n)));
 const ordinal = (n: number) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] ?? 'th'}`;
 const fmtClock = (t: number) => { const c = Math.ceil(Math.max(0, t)); return `${pad2(Math.floor(c / 60))}:${pad2(c % 60)}`; };
 
@@ -126,7 +132,7 @@ function Lobby({ room }: { room: TrialRoom }) {
         {me && <div className="my-contestant" data-testid="my-contestant" title="Colours are dealt at random and kept if you rejoin; nobody in the room shares yours">
           <Swatch colorway={me.colorway} />You are <b>{coat(me.colorway)?.displayName ?? 'a contestant'}</b></div>}
         <p className="lobby-hint">{room.isHost
-          ? `${settings.startStage === 'STAGE_02_THE_HUNT' ? 'Starts at Stage 02 · The Hunt (picked on the main menu). ' : `${MATCH.stages} stages, starting with Red Light. `}Points add up across stages; most points wins. Walk around to practise.`
+          ? `${getStage(settings.startStage).id !== DEFAULT_STAGE_ID && STARTABLE_STAGES.includes(getStage(settings.startStage).id) ? `Starts at Stage ${pad2(getStage(settings.startStage).number)} · ${getStage(settings.startStage).name} (picked on the main menu). ` : `${MATCH.stages} stages, starting with Red Light. `}Points add up across stages; most points wins. Walk around to practise.`
           : 'Waiting for the host to start. Walk around to practise.'}</p>
       </aside>
     </section>
@@ -202,7 +208,7 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
   const feed = room.events.filter((e) => now - e.at < 3500 && e.id !== room.id && e.other !== room.id).slice(-3);
   const myStanding = room.standings.find((x) => x.id === room.id);
   const inMatch = r.phase !== 'lobby' && m.stage > 0;
-  const stageNo = inMatch ? `STAGE ${pad2(m.stage)}` : `STAGE ${pad2(stage.number)}`;
+  const stageNo = `STAGE ${pad2(stage.number)}`;
   const ui = r.phase === 'active' && sig.signal !== 'none' ? SIGNAL_UI[sig.signal] : null;
   const closing = r.phase === 'active' && finished > 0;
   const iWonStage = recentFinish && firstFinisherId(room) === room.id;
@@ -245,7 +251,7 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
         <div className="hud-left">
           {r.phase === 'lobby'
             ? <div className="glass stage-chip"><b>Lobby</b><i className="sep" /><span>Practice walk is open</span></div>
-            : <div className="glass stage-chip" data-testid="stage-chip"><b>{stageNo}{inMatch && <> / {pad2(m.total)}</>}</b><i className="sep" /><span>{stage.name}</span></div>}
+            : <div className="glass stage-chip" data-testid="stage-chip"><b>{stageNo}{inMatch && <> / {ALL_STAGES}</>}</b><i className="sep" /><span>{stage.name}</span></div>}
           {isHunt && <HuntRoleChip room={room} />}
           {inMatch && me && (
             <div className="glass pts-chip" data-testid="my-points"><IconBars size={22} /><span className="pts">{myStanding?.points ?? 0} PTS</span></div>
@@ -296,7 +302,7 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
           {m.stage > 1 ? (
             <>
               <span className="eyebrow">Next stage</span>
-              <div className="stage-of" data-testid="next-stage-intro">Stage {pad2(m.stage)} <i>/ {pad2(m.total)}</i></div>
+              <div className="stage-of" data-testid="next-stage-intro">Stage {pad2(stage.number)} <i>/ {ALL_STAGES}</i></div>
               <p className="rule">{stage.briefing.rule}</p>
               {isHunt ? <HuntBriefingRole room={room} />
                 : <p className="muted">{m.final ? 'Last stage. ' : ''}Everyone plays, including anyone spotted or caught before. First finisher +2, every finisher +1.</p>}
@@ -306,7 +312,7 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
             </>
           ) : (
             <>
-              <span className="eyebrow">Stage {pad2(m.stage || 1)} of {pad2(m.total || 1)} · {stage.name}</span>
+              <span className="eyebrow">Stage {pad2(stage.number)} · {stage.name} · {m.stage || 1} of {m.total || 1}</span>
               <p className="rule" style={{ marginTop: 8 }}>{stage.briefing.rule}</p>
               {isHunt && <HuntBriefingRole room={room} />}
               <p className="muted">{stage.briefing.detail} {isHunt ? '' : 'First to finish scores 2 points'}, {isHunt ? '' : 'every other finisher 1. '}Bumping into someone knocks you both over.{r.obstacles ? ' Weave through the barricade gaps; the gate slides only on green.' : ''}</p>
@@ -380,7 +386,7 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
       </div>
 
       {confirm === 'restart' && (
-        <Confirm title={`Restart stage ${pad2(inMatch ? m.stage : stage.number)}?`} testid="restart-ask" yesId="restart-yes" noId="restart-no" yes="Restart stage"
+        <Confirm title={`Restart stage ${pad2(stage.number)}?`} testid="restart-ask" yesId="restart-yes" noId="restart-no" yes="Restart stage"
           text={r.phase === 'results' ? 'The whole game starts again from stage 1 and points reset.' : 'Everyone goes back to the start of this stage. Points from earlier stages are kept.'}
           onNo={() => setConfirm('none')} onYes={() => { setConfirm('none'); setMenuOpen(false); room.restartStage(); }} />
       )}
@@ -408,7 +414,7 @@ function StageResults({ room, remaining, onLeave }: { room: TrialRoom; remaining
   return (
     <section className="card results" data-testid="results" aria-label="Stage results">
       <div className="results-head">
-        <div><span className="eyebrow">Stage results</span><h2>Stage {pad2(m.stage)} <i>/ {pad2(m.total)}</i></h2></div>
+        <div><span className="eyebrow">Stage results</span><h2>Stage {stageNoAt(m.total, m.stage)} <i>/ {ALL_STAGES}</i></h2></div>
         <div className="first-finisher" data-testid="winner">
           {rows.some((x) => x.role) ? <div><small>The Hunt</small><b>{rows.filter((x) => x.role === 'hider' && x.status !== 'captured').length} hiders survived</b> <span className="muted num">{rows.filter((x) => x.status === 'captured').length} caught</span></div>
             : first ? <><Swatch colorway={firstPlayer?.colorway} /><div><small>First to finish · +2</small><b>{first.name}</b> <span className="muted num">{first.finishTime.toFixed(2)} s</span></div></>
@@ -426,10 +432,10 @@ function StageResults({ room, remaining, onLeave }: { room: TrialRoom; remaining
         </div>
       </div>
       <footer className="card-foot">
-        <span className="next-line">Stage {pad2(m.stage + 1)} starts in {Math.ceil(remaining)} s · spotted and caught players play it too</span>
+        <span className="next-line">Stage {stageNoAt(m.total, m.stage + 1)} starts in {Math.ceil(remaining)} s · spotted and caught players play it too</span>
         <div style={{ display: 'flex', gap: 8 }}>
           <button className="btn" onClick={onLeave} data-testid="exit">Exit to menu</button>
-          {room.isHost && <button className="btn go" onClick={() => room.nextStage()} data-testid="next-stage">Start stage {pad2(m.stage + 1)} now</button>}
+          {room.isHost && <button className="btn go" onClick={() => room.nextStage()} data-testid="next-stage">Start stage {stageNoAt(m.total, m.stage + 1)} now</button>}
         </div>
       </footer>
     </section>
@@ -502,7 +508,7 @@ function FinalResults({ room, remaining, onLeave }: { room: TrialRoom; remaining
       <StandingsTable room={room} standings={st} />
       {room.results.length > 0 && (
         <details className="last-stage" open={m.total <= 1}>
-          <summary className="eyebrow">Stage {pad2(m.stage)} results</summary>
+          <summary className="eyebrow">Stage {stageNoAt(m.total, m.stage)} results</summary>
           <StageBoard room={room} />
         </details>
       )}

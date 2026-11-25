@@ -21,8 +21,9 @@ describe('stage points', () => {
 });
 
 describe('match', () => {
-  it('plays Stage 01, Stage 02, then Stage 01 again as the stand-in for Stage 03 (decision 042)', () => {
-    expect(matchOrder(3)).toEqual(['STAGE_01_RED_LIGHT', 'STAGE_02_THE_HUNT', 'STAGE_01_RED_LIGHT']);
+  it('plays the official order with no stand-in replay (decision 045; Agawan Base switched off for now)', () => {
+    expect(matchOrder()).toEqual(['STAGE_01_RED_LIGHT', 'STAGE_03_THE_HUNT']);
+    expect(MATCH.stages).toBe(2);
     expect(matchOrder(3, ['S1', 'S2'])).toEqual(['S1', 'S2', 'S1']);
     const m = new Match(['S1', 'S2']);
     expect(m.isFinal).toBe(false);

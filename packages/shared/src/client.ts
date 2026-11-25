@@ -7,7 +7,7 @@ import {
 import type { Standing } from './match.ts';
 import type { Emote } from './contestantColorways.ts';
 import type { PlayerStatus } from './round.ts';
-import type { HuntPrivate } from './stage02/hunt.ts';
+import type { HuntPrivate } from './hunt/hunt.ts';
 
 export interface PlayerView {
   id: string; name: string; spawn: number;
@@ -21,7 +21,7 @@ export interface PlayerView {
   bot: boolean;
   /** Seconds of collision knock-down left (0 = standing; v7). */
   down: number;
-  /** In the latest snapshot (Stage 02 snapshots leave out players you cannot see; v8). */
+  /** In the latest snapshot (The Hunt snapshots leave out players you cannot see; v8). */
   seen: boolean;
   /** Disconnected mid-match, seat kept (v8). */
   away: boolean;
@@ -59,7 +59,7 @@ export class RoomClient {
   standings: Standing[] = [];
   standingsMatch: MatchState | null = null;
   /** at = local receive time (ms); roundT = seconds since GO on the server's clock. */
-  /** Your own Stage 02 state (role, timers, pulse reading), or null outside Stage 02 (v8). */
+  /** Your own Hunt state (role, timers, pulse reading), or null outside The Hunt (v8). */
   hunt: HuntPrivate | null = null;
   readonly events: { kind: 'spotted' | 'finished' | 'collision' | 'captured'; id: string; at: number; roundT: number; other?: string }[] = [];
   private ws: WebSocket;
@@ -209,7 +209,7 @@ export class RoomClient {
     for (let i = h.length - 1; i > 0; i--) {
       const a = h[i - 1], b = h[i];
       if (t < a.t) continue;
-      if (b.t - a.t > 0.3) return { x: b.x, z: b.z, vx: b.vx, vz: b.vz }; // a gap (out of sight in Stage 02): no slide
+      if (b.t - a.t > 0.3) return { x: b.x, z: b.z, vx: b.vx, vz: b.vz }; // a gap (out of sight in The Hunt): no slide
       const k = (t - a.t) / (b.t - a.t);
       return { x: a.x + (b.x - a.x) * k, z: a.z + (b.z - a.z) * k, vx: a.vx + (b.vx - a.vx) * k, vz: a.vz + (b.vz - a.vz) * k };
     }
@@ -245,11 +245,11 @@ export class RoomClient {
   /** Host: pause or resume the room for everyone. */
   pause(on: boolean): void { this.send({ t: 'pause', on }); }
 
-  /** Stage 02: fire the Pulse Detector (hunters). */
+  /** The Hunt: fire the Pulse Detector (hunters). */
   pulse(): void { this.send({ t: 'act', a: 'pulse' }); }
-  /** Stage 02: enter or leave a hiding place (hiders). */
+  /** The Hunt: enter or leave a hiding place (hiders). */
   hide(): void { this.send({ t: 'act', a: 'hide' }); }
-  /** Stage 02: hold or release capture (hunters). */
+  /** The Hunt: hold or release capture (hunters). */
   capture(on: boolean): void { this.send({ t: 'act', a: 'capture', on }); }
 
   onClose(h: (code: number, reason: string) => void): void { this.closeHandlers.push(h); }

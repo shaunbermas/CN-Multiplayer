@@ -1,10 +1,10 @@
-// Stage 02 · THE HUNT interface (same design system as Stage 01: panels, chips, banners, display type). Driven only by
+// Stage 03 · THE HUNT interface (same design system as Stage 01: panels, chips, banners, display type). Driven only by
 // the server: the public hunt state (round.hunt) and your own private state (room.hunt). Role-specific:
 //   hunters  role chip, head start / hunt timer, Pulse Detector (ready, cooldown, signal bars, rough direction),
 //            capture ring while holding E, captures count
 //   hiders   role chip, head start / hunt timer, threat warning (no direction), hiding status and cooldown, sprint
 //   captured caught banner, spectating, "you return next stage"
-import { STAGE02 } from '@cn-trials/shared';
+import { HUNT } from '@cn-trials/shared';
 import type { TrialRoom } from '../net.ts';
 import { input } from '../game/input.ts';
 import { hud } from '../game/hudStore.ts';
@@ -45,7 +45,7 @@ export function HuntRoleChip({ room }: { room: TrialRoom }) {
 
 /** Arrow for a pulse sector, relative to where the camera looks (sector 0 = -Z; yaw 0 also faces -Z). */
 function sectorArrow(sector: number): number {
-  const yaw = (sector * Math.PI * 2) / STAGE02.pulse.sectors;
+  const yaw = (sector * Math.PI * 2) / HUNT.pulse.sectors;
   return -(yaw - input.yaw) * (180 / Math.PI); // degrees, clockwise on screen
 }
 
@@ -68,7 +68,7 @@ export function HuntPanel({ room }: { room: TrialRoom }) {
         <div className={`pulse${ready ? ' ready' : ''}`} data-testid="pulse">
           <span className="eyebrow">Pulse Detector <kbd>Q</kbd></span>
           <div className="pulse-body">
-            <div className="pulse-dial" style={{ ['--cd' as string]: `${ready ? 1 : 1 - Math.min(1, me.pulseCd / STAGE02.pulse.cooldownS)}` }}>
+            <div className="pulse-dial" style={{ ['--cd' as string]: `${ready ? 1 : 1 - Math.min(1, me.pulseCd / HUNT.pulse.cooldownS)}` }}>
               {fresh && me.pulse!.sector >= 0
                 ? <i className="pulse-arrow" style={{ transform: `rotate(${sectorArrow(me.pulse!.sector)}deg)` }} aria-hidden="true">▲</i>
                 : <i className="pulse-dot" aria-hidden="true" />}

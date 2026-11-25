@@ -187,8 +187,8 @@ label.check { display: flex !important; align-items: center; gap: 8px; font: 500
 .stage-opt .stage-name { position: relative; white-space: nowrap; font: 700 clamp(20px, 1.6vw, 27px)/1.1 var(--display); letter-spacing: 0.04em; text-transform: uppercase; color: #f3eee6; }
 .stage-opt small { margin-top: 8px; font: 600 clamp(12px, 0.95vw, 16px)/1 var(--display); letter-spacing: 0.1em; text-transform: uppercase; color: #a3a4a9; }
 .stage-opt .stage-ico { position: absolute; color: rgba(150, 150, 156, 0.28); pointer-events: none; }
-.stage-opt[data-testid="stage-pick-02"] .stage-ico { right: 18px; top: 14px; }
-.stage-opt[data-testid="stage-pick-03"] .stage-ico { right: 12px; top: 8px; }
+.stage-opt[data-testid="stage-pick-02"] .stage-ico { right: 12px; top: 8px; }
+.stage-opt[data-testid="stage-pick-03"] .stage-ico { right: 18px; top: 14px; }
 .stage-opt[aria-checked="true"] { border: 2px solid #e1291f; background: rgba(28, 12, 12, 0.85); box-shadow: 0 0 18px rgba(225, 41, 31, 0.35), inset 0 0 22px rgba(225, 41, 31, 0.12); }
 .stage-opt[aria-checked="true"] b { color: #ec3a2e; }
 .stage-opt.soon { cursor: not-allowed; }
@@ -415,7 +415,7 @@ label.check { display: flex !important; align-items: center; gap: 8px; font: 500
 .perf-overlay pre { margin: 0 0 6px; white-space: pre-wrap; font: inherit; }
 .perf-overlay .btn { font-size: 11px; padding: 4px 8px; }
 
-/* ---- Stage 02 · The Hunt (same panels, chips and type as Stage 01; red = hunters, cold steel = hiders) */
+/* ---- Stage 03 · The Hunt (same panels, chips and type as Stage 01; red = hunters, cold steel = hiders) */
 .role-chip b { padding: 2px 8px; letter-spacing: 0.2em; font: 800 calc(14px * var(--hud-scale))/1.2 var(--display); }
 .role-chip.hunter b { background: var(--stop); color: #fff; } .role-chip.hider b { background: #4f7f9c; color: #fff; }
 .role-chip span { color: var(--muted); font: 600 calc(12px * var(--hud-scale))/1 var(--display); letter-spacing: 0.16em; text-transform: uppercase; }

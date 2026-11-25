@@ -22,7 +22,9 @@ INITIAL PRE-PRODUCTION SPECIFICATION
 
 > **STAGE 01 REFINEMENT (24 Nov 2026, decision 033, PROPOSED)** On the refinement branch, Stage 01 plays as a points match (first finisher 2, other finishers 1, others 0; spotted players continue to the next stage) with server bots, player collisions and shorter timings. The approved sections below are unchanged until the owner signs off; see `docs/STAGE_01_REFINEMENT_IMPLEMENTATION.md` and `docs/STAGE_01_SCORING_SYSTEM.md`.
 
-> **STAGE 02 · THE HUNT (25 Nov 2026, decision 042, PROPOSED)** The reference pack sets the lineup as 01 Red Light, Green Light, 02 The Hunt (asymmetric hide-and-hunt), 03 The Naughty Run. The Hunt is built on a branch; the match currently plays Stage 01 → Stage 02 → Stage 01 until Stage 03 exists. The §3 entries for Tug of War and The Factory stay in the content pool until the owner signs off. Rules: `docs/STAGE_02_THE_HUNT.md`.
+> **STAGE ORDER (25 Nov 2026, decision 045, APPROVED)** 01 Red Light, Green Light, 02 Agawan Base (three teams: tag, prison, rescue, base raid on a Philippine Christmas street; in production behind a switch), 03 The Hunt (moved from Stage 02, rules unchanged: `docs/STAGE_03_THE_HUNT.md`). The Naughty Run and the Stage 01 replay stand-in are retired. The overall winner becomes a team champion when Agawan Base is switched on.
+>
+> *(Superseded by 045.)* **STAGE 02 · THE HUNT (25 Nov 2026, decision 042, PROPOSED)** The reference pack sets the lineup as 01 Red Light, Green Light, 02 The Hunt (asymmetric hide-and-hunt), 03 The Naughty Run. The Hunt is built on a branch; the match currently plays Stage 01 → Stage 02 → Stage 01 until Stage 03 exists. The §3 entries for Tug of War and The Factory stay in the content pool until the owner signs off. Rules: `docs/STAGE_03_THE_HUNT.md`.
 
 > **SCOPE NOTE** This document defines the first production baseline. It is not a claim that all systems, stage counts, player counts or performance targets have already been proven in a playable build.
 
@@ -250,7 +252,7 @@ Each stage must have one primary gameplay verb, one clear win/qualification cond
 
 ### STAGE 02 - TUG OF WAR
 
-> Proposed replacement in this slot: **THE HUNT** (decision 042, `docs/STAGE_02_THE_HUNT.md`).
+> Proposed replacement in this slot: **THE HUNT** (decision 042, `docs/STAGE_03_THE_HUNT.md`; now Stage 03 by decision 045, with Agawan Base as Stage 02).
 
 | DESIGN FIELD | SPECIFICATION |
 | --- | --- |

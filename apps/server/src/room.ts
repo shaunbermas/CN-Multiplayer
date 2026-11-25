@@ -40,7 +40,7 @@ interface Player extends RoundPlayer {
   key?: string;
   /** Disconnected during a match: the seat, role, captures and points are kept for a reconnect (v8). */
   away?: boolean;
-  /** Stage 02 bots think at 10 Hz: the last decided move, repeated between decisions. */
+  /** The Hunt bots think at 10 Hz: the last decided move, repeated between decisions. */
   botMove?: { mx: number; mz: number; yaw: number; k: number };
 }
 
@@ -210,7 +210,7 @@ export class TrialRoom extends DurableObject<Env> {
   /** Humans with a live connection (players kept for a reconnect do not count). */
   private humanCount(): number { let n = 0; for (const p of this.players.values()) if (!p.bot && !p.away) n++; return n; }
 
-  /** Stage 02 rules engine, when the room is playing The Hunt. */
+  /** The Hunt rules engine, when the room is playing The Hunt. */
   private hunt(): HuntEngine | null { return this.engine instanceof HuntEngine ? this.engine : null; }
 
   /**
@@ -239,7 +239,7 @@ export class TrialRoom extends DurableObject<Env> {
     return true;
   }
 
-  /** Stage 02 actions (pulse, hide, capture hold), validated by the hunt engine. */
+  /** The Hunt actions (pulse, hide, capture hold), validated by the hunt engine. */
   private stageAction(p: Player, msg: { a: string; on?: boolean }): void {
     const h = this.hunt();
     if (!h || h.phase !== 'active') return;
@@ -644,7 +644,7 @@ export class TrialRoom extends DurableObject<Env> {
   }
 
   /**
-   * Stage 02 bots: each thinks at 10 Hz (a third of them per tick) from what it may perceive (huntSenses), sends its
+   * The Hunt bots: each thinks at 10 Hz (a third of them per tick) from what it may perceive (huntSenses), sends its
    * actions through the same engine methods as a human's messages, and queues its move like a human input.
    */
   private driveHuntBots(h: HuntEngine): void {
@@ -728,7 +728,7 @@ export class TrialRoom extends DurableObject<Env> {
       for (const ws of this.sockets.values()) sendRaw(ws, text);
       return;
     }
-    // Stage 02: each player gets only the rows they may see and their own private state (anti-wallhack, v8).
+    // The Hunt: each player gets only the rows they may see and their own private state (anti-wallhack, v8).
     const visible = new Map<string, SnapRow[]>();
     for (const [pid, ws] of this.sockets) {
       const viewer = this.players.get(pid);

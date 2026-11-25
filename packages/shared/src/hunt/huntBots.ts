@@ -1,15 +1,15 @@
-// Stage 02 bots. They are ordinary room players without a socket (see bots.ts): each tick the room asks for a
+// The Hunt bots. They are ordinary room players without a socket (see bots.ts): each tick the room asks for a
 // move plus the same actions a human can send (pulse, hold capture, hide), and runs them through the same
 // HuntEngine checks, movement, walls, gates and collisions. Bots never read hidden state:
-//   - they see an opponent only with clear line of sight within STAGE02.bots.sightM (huntSenses below);
-//   - hunter bots hear a hider who is walking or sprinting (not crouching) within STAGE02.bots.hearM, with a
+//   - they see an opponent only with clear line of sight within HUNT.bots.sightM (huntSenses below);
+//   - hunter bots hear a hider who is walking or sprinting (not crouching) within HUNT.bots.hearM, with a
 //     position error of about 2 m (sound travels through walls; that is fair, humans hear footsteps too);
 //   - hunter bots use their own Pulse Detector readings (a sector and a strength, like a human);
 //   - hider bots use their own threat level (a distance bucket, like a human);
 //   - they do not know which hiding places are occupied: they try one and learn from the result.
 import { rng } from '../round.ts';
 import type { BotBrain } from '../bots.ts';
-import { STAGE02 } from './config.ts';
+import { HUNT } from './config.ts';
 import type { HuntBody, HuntEngine, HuntPrivate } from './hunt.ts';
 import type { HideSpot, HuntLayout } from './layout.ts';
 import { findPath, type NavGrid } from './nav.ts';
@@ -64,9 +64,9 @@ export function huntSenses(engine: HuntEngine, me: HuntBody, players: HuntBody[]
     const d = Math.hypot(o.x - me.x, o.z - me.z);
     // Hunter bots look where they walk: a 130-degree view cone (a human turns the camera; a bot does not scan).
     const fx = -Math.sin(me.yaw), fz = -Math.cos(me.yaw);
-    const inCone = mine.role !== 'hunter' || d < 2.5 || ((o.x - me.x) * fx + (o.z - me.z) * fz) / Math.max(1e-6, d) > STAGE02.bots.hunterConeCos;
-    if (d <= STAGE02.bots.sightM && inCone && engine.visibleTo(me, o)) { seen.push({ id: o.id, x: o.x, z: o.z, d }); continue; }
-    if (mine.role === 'hunter' && os.noisy && !os.hideId && d <= STAGE02.bots.hearM) {
+    const inCone = mine.role !== 'hunter' || d < 2.5 || ((o.x - me.x) * fx + (o.z - me.z) * fz) / Math.max(1e-6, d) > HUNT.bots.hunterConeCos;
+    if (d <= HUNT.bots.sightM && inCone && engine.visibleTo(me, o)) { seen.push({ id: o.id, x: o.x, z: o.z, d }); continue; }
+    if (mine.role === 'hunter' && os.noisy && !os.hideId && d <= HUNT.bots.hearM) {
       heard.push({ x: o.x + (rand() * 2 - 1) * 2, z: o.z + (rand() * 2 - 1) * 2 });
     }
   }
@@ -86,7 +86,7 @@ function memory(b: BotBrain): HuntBotMemory {
 
 const yawTo = (dx: number, dz: number) => Math.atan2(-dx, -dz);
 
-/** One tick of a Stage 02 bot. */
+/** One tick of a Hunt bot. */
 export function huntBotInput(b: BotBrain, me: HuntBody, priv: HuntPrivate | null, senses: HuntSenses, engine: HuntEngine, nav: NavGrid, now: number): HuntBotAction {
   const m = memory(b);
   const idle: HuntBotAction = { mx: 0, mz: 0, flags: 0, yaw: me.yaw };
@@ -125,7 +125,7 @@ function hiderTick(b: BotBrain, m: HuntBotMemory, me: HuntBody, priv: HuntPrivat
   // At the hiding place: press E (the server says whether there was room).
   if (m.goal?.kind === 'hide' && m.goal.spot) {
     const spot = layout.hideSpots.find((s) => s.id === m.goal!.spot)!;
-    if (Math.hypot(spot.fx - me.x, spot.fz - me.z) < STAGE02.hide.enterDistM * 0.8) {
+    if (Math.hypot(spot.fx - me.x, spot.fz - me.z) < HUNT.hide.enterDistM * 0.8) {
       m.tried.set(spot.id, now); // if it was full we will not try it again for a while
       m.goal = null; m.path = [];
       return { mx: 0, mz: 0, flags: 0, yaw: me.yaw, hide: canHide };
@@ -170,12 +170,12 @@ function hunterTick(b: BotBrain, m: HuntBotMemory, me: HuntBody, priv: HuntPriva
   // A hider in plain sight: chase, face, hold E when in reach.
   if (target) {
     m.lastSeen = { x: target.x, z: target.z, at: now };
-    if (target.d <= STAGE02.capture.distM * 0.95) {
+    if (target.d <= HUNT.capture.distM * 0.95) {
       return { mx: (target.x - me.x) * 0.3, mz: (target.z - me.z) * 0.3, flags: 0, yaw: yawTo(target.x - me.x, target.z - me.z), capture: true };
     }
-    if (m.goal?.kind !== 'chase' || now >= m.repathAt - STAGE02.bots.repathS + 0.4) setGoal(m, me, nav, engine, target.x, target.z, 'chase', now);
+    if (m.goal?.kind !== 'chase' || now >= m.repathAt - HUNT.bots.repathS + 0.4) setGoal(m, me, nav, engine, target.x, target.z, 'chase', now);
     const mv = follow(m, me, nav, engine, now, b.pace);
-    return { ...mv, flags: target.d < 10 && target.d > 2.5 && priv.sprintCd <= 0 ? 2 : 0, capture: target.d < STAGE02.capture.distM + 0.6 };
+    return { ...mv, flags: target.d < 10 && target.d > 2.5 && priv.sprintCd <= 0 ? 2 : 0, capture: target.d < HUNT.capture.distM + 0.6 };
   }
   // Searching a hiding place: stand at its front, face it, hold E. Progress above zero means somebody is inside.
   if (m.goal?.kind === 'check' && m.goal.spot) {
@@ -184,7 +184,7 @@ function hunterTick(b: BotBrain, m: HuntBotMemory, me: HuntBody, priv: HuntPriva
       if (m.holdSince < 0) m.holdSince = now;
       const held = now - m.holdSince;
       if (held > 0.5 && priv.capture <= 0) { m.checked.set(spot.id, now); m.goal = null; m.holdSince = -1; }
-      else if (held > STAGE02.capture.holdS + 0.8) { m.checked.set(spot.id, now); m.goal = null; m.holdSince = -1; }
+      else if (held > HUNT.capture.holdS + 0.8) { m.checked.set(spot.id, now); m.goal = null; m.holdSince = -1; }
       else return { mx: 0, mz: 0, flags: 0, yaw: yawTo(spot.x - me.x, spot.z - me.z), capture: true };
     }
   } else m.holdSince = -1;
@@ -198,7 +198,7 @@ function hunterTick(b: BotBrain, m: HuntBotMemory, me: HuntBody, priv: HuntPriva
   if (priv.pulse && priv.pulse.n !== m.pulseN) {
     m.pulseN = priv.pulse.n;
     if (priv.pulse.strength > 0 && priv.pulse.sector >= 0) {
-      const yaw = (priv.pulse.sector * Math.PI * 2) / STAGE02.pulse.sectors;
+      const yaw = (priv.pulse.sector * Math.PI * 2) / HUNT.pulse.sectors;
       const dist = priv.pulse.strength === 3 ? 4 : priv.pulse.strength === 2 ? 8 : 13;
       setGoal(m, me, nav, engine, me.x - Math.sin(yaw) * dist, me.z - Math.cos(yaw) * dist, 'search', now);
     }
@@ -224,7 +224,7 @@ function hunterTick(b: BotBrain, m: HuntBotMemory, me: HuntBody, priv: HuntPriva
 function setGoal(m: HuntBotMemory, me: HuntBody, nav: NavGrid, engine: HuntEngine, x: number, z: number, kind: NonNullable<HuntBotMemory['goal']>['kind'], now: number, spot?: string): void {
   m.goal = { x, z, kind, ...(spot ? { spot } : {}) };
   m.path = findPath(nav, me.x, me.z, x, z, engine.extraWalls());
-  m.repathAt = now + STAGE02.bots.repathS;
+  m.repathAt = now + HUNT.bots.repathS;
   m.bestD = Infinity; m.bestAt = now;
   if (!m.path.length) m.goal = null;
 }
@@ -232,7 +232,7 @@ function setGoal(m: HuntBotMemory, me: HuntBody, nav: NavGrid, engine: HuntEngin
 function follow(m: HuntBotMemory, me: HuntBody, nav: NavGrid, engine: HuntEngine, now: number, pace: number): Omit<HuntBotAction, 'flags'> {
   if (m.goal && now >= m.repathAt && (m.goal.kind === 'chase' || m.goal.kind === 'flee' || m.path.length === 0)) {
     m.path = findPath(nav, me.x, me.z, m.goal.x, m.goal.z, engine.extraWalls());
-    m.repathAt = now + STAGE02.bots.repathS;
+    m.repathAt = now + HUNT.bots.repathS;
   }
   while (m.path.length && Math.hypot(m.path[0][0] - me.x, m.path[0][1] - me.z) < 0.6) m.path.shift();
   if (!m.path.length) {

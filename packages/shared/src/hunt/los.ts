@@ -1,4 +1,4 @@
-// Line-of-sight and signal paths on the flat greybox (Stage 02). Walls are axis-aligned rectangles, so a segment
+// Line-of-sight and signal paths on the flat greybox (The Hunt). Walls are axis-aligned rectangles, so a segment
 // test is the slab method with a cheap bounding-box reject first. Used by the server (capture, snapshots, Pulse
 // Detector, bot senses) and by tests; never trusted from a client.
 import type { Rect } from '../stage.ts';

@@ -2,6 +2,7 @@
 // guarded, so a private window or blocked storage simply uses the defaults). Second pass (decision 034 B):
 // sound volume and mute.
 import { useSyncExternalStore } from 'react';
+import { resolveStageId } from '@cn-trials/shared';
 
 export type GraphicsSetting = 'auto' | 'high' | 'medium' | 'low';
 
@@ -39,7 +40,8 @@ function load(): Settings {
       edgeFlash: v.edgeFlash !== false,
       muted: v.muted === true,
       volume: typeof v.volume === 'number' && Number.isFinite(v.volume) ? Math.min(1, Math.max(0, v.volume)) : DEFAULT_SETTINGS.volume,
-      startStage: typeof v.startStage === 'string' && /^STAGE_0[12]_[A-Z_]+$/.test(v.startStage) ? v.startStage : DEFAULT_SETTINGS.startStage,
+      // A pick saved before decision 045 (STAGE_02_THE_HUNT) reads as The Hunt's current id.
+      startStage: typeof v.startStage === 'string' && /^STAGE_0[1-9]_[A-Z_]+$/.test(v.startStage) ? resolveStageId(v.startStage) : DEFAULT_SETTINGS.startStage,
     };
   } catch { return { ...DEFAULT_SETTINGS }; }
 }

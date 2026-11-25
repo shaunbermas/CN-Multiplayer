@@ -13,14 +13,14 @@ import { sfx } from './audio.ts';
 import { PerfProbe, perfEnabled } from './PerfOverlay.tsx';
 import { STAGE_SCENES } from '../stages/registry.ts';
 import { activeStage } from './stage.ts';
-import { STAGE02, greenTime, obstacleWalls, type Rect } from '@cn-trials/shared';
+import { HUNT, greenTime, obstacleWalls, type Rect } from '@cn-trials/shared';
 import { scheduleFor, signalView } from './roundClock.ts';
 
 
 /** Collision walls for prediction: the same set the server uses (stage walls + obstacle twist in a round). */
 export function wallsFor(room: TrialRoom): Rect[] {
   const { geo, obstacles, def } = activeStage(room);
-  // Stage 02: the hunter gates are walls until the server opens them (end of the head start).
+  // The Hunt: the hunter gates are walls until the server opens them (end of the head start).
   if (def.hunt) return room.round.phase !== 'lobby' && !room.round.hunt?.released ? [...geo.walls, ...def.hunt.layout.gates] : geo.walls;
   if (!room.round.obstacles || !obstacles) return geo.walls;
   const elapsed = room.round.phase === 'active' ? signalView(room).elapsed : 0; // lobby: the gate at rest
@@ -54,7 +54,7 @@ export function canMove(room: TrialRoom): boolean {
   if (me.down > 0) return false; // knocked down by a collision (server-authoritative): no control until back up
   if (room.round.phase === 'lobby') return true;
   if (room.round.paused) return false; // the host paused the room
-  if (room.hunt && (room.hunt.captured || room.hunt.hide)) return false; // Stage 02: caught, or inside a hiding place
+  if (room.hunt && (room.hunt.captured || room.hunt.hide)) return false; // The Hunt: caught, or inside a hiding place
   return room.round.phase === 'active' && (me.status === 'active' || me.status === 'finished');
 }
 
@@ -83,11 +83,11 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
     if (p.status !== status) setStatus(p.status);
     if (p.colorway !== colorway) setColorwayState(p.colorway);
     const spotted = p.status === 'spotted' || p.status === 'captured';
-    // Stage 02 snapshots leave out players you cannot see (walls, hiding places): their model is hidden too.
+    // The Hunt snapshots leave out players you cannot see (walls, hiding places): their model is hidden too.
     g.visible = (p.seen || local) && !(status === 'waiting' && local) && !(local && room.hunt?.hide);
     const hunter = !!room.round.hunt?.hunters.includes(id);
     if (marker.current) marker.current.visible = hunter && room.round.phase !== 'lobby' && p.status !== 'captured';
-    // Crouch (Stage 02): a lower stance, presentation only (the local player shows their own key at once).
+    // Crouch (The Hunt): a lower stance, presentation only (the local player shows their own key at once).
     const crouching = room.round.hunt && p.status === 'active' && (local ? input.crouch : false);
     if (inst) inst.root.scale.y += ((crouching ? 0.8 : 1) - inst.root.scale.y) * Math.min(1, dt * 12);
     if (local && predictor?.current && canMove(room)) {
@@ -176,7 +176,7 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
   return (
     <group ref={group} position={[p0?.x ?? 0, 0, p0?.z ?? 0]} name={`PLAYER_${id}`}>
       {inst && <primitive object={inst.root} />}
-      {/* Stage 02 hunter marker and Pulse Detector blockout (one shared model; no new character). */}
+      {/* The Hunt hunter marker and Pulse Detector blockout (one shared model; no new character). */}
       <group ref={marker} visible={false} name="S02_HUNTER_MARKER">
         <mesh position={[0, 1.95, 0]} rotation={[Math.PI, 0, 0]}><coneGeometry args={[0.12, 0.22, 4]} /><meshBasicMaterial color="#e2332b" /></mesh>
         <mesh position={[0.32, 0.72, -0.12]} name="S02_PULSE_DETECTOR"><boxGeometry args={[0.1, 0.06, 0.3]} /><meshStandardMaterial color="#2b2f33" metalness={0.6} roughness={0.5} emissive="#ff7a1a" emissiveIntensity={0.25} /></mesh>
@@ -375,7 +375,7 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
       if (phase === 'briefing') room.skipBriefing();
     }
     if (input.cycle) { input.cycle = false; watch.current++; }
-    // Stage 02 actions (the server validates every one): Q pulse, E hide (hider) or hold to capture (hunter).
+    // The Hunt actions (the server validates every one): Q pulse, E hide (hider) or hold to capture (hunter).
     const hp = room.hunt;
     if (hp && phase === 'active') {
       if (input.pulse && hp.role === 'hunter') room.pulse();
@@ -416,7 +416,7 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
         hud.spectating = t.name;
       } else hud.spectating = '';
     }
-    // Hidden (Stage 02): look out from the hiding place's front.
+    // Hidden (The Hunt): look out from the hiding place's front.
     if (room.hunt?.hide) {
       const spot = activeStage(room).def.hunt?.layout.hideSpots.find((x) => x.id === room.hunt!.hide);
       if (spot) { fx = spot.fx; fz = spot.fz; }
@@ -503,12 +503,12 @@ function useStageId(room: TrialRoom): string {
   return id;
 }
 
-/** Stage 02 movement speed for prediction: the server's sprint timer, or crouch while C is held. */
+/** The Hunt movement speed for prediction: the server's sprint timer, or crouch while C is held. */
 function speedFor(room: TrialRoom): number {
   const h = room.hunt;
   if (!h || room.round.phase !== 'active') return 1;
-  if (h.sprintLeft > 0) return STAGE02.sprint.speed;
-  return input.crouch ? STAGE02.crouch.speed : 1;
+  if (h.sprintLeft > 0) return HUNT.sprint.speed;
+  return input.crouch ? HUNT.crouch.speed : 1;
 }
 
 export function Scene({ room, onStageError }: { room: TrialRoom; onStageError: (msg: string) => void }) {

@@ -8,6 +8,8 @@ Stage 1.5 (merged and live): painted surroundings, night atmosphere, optional ob
 
 Status: Stage 01 Red Light, Green Light is playable in the browser with the final environment and The Watcher: lobby practice walk, host-started rounds (Standup or tournament rules), server-side signals, spotting and qualification, spectating and results. See `docs/STAGE_01_BROWSER_INTEGRATION_REPORT.md`.
 
+Stages (decision 045, 25 Nov 2026): 01 Red Light, Green Light; 02 Agawan Base (three-team tag, prison, rescue and base raid on a Philippine Christmas street, in production behind `AGAWAN_ENABLED`); 03 The Hunt (`docs/STAGE_03_THE_HUNT.md`).
+
 Stage 01 refinement (branch `claude/project-thread-8jwd5y`, awaiting review, decision 033): a 3-stage points match, server bots to fill the room to 30, player collisions, varied obstacles, painted matte backgrounds with no 3D trees, a polished Watcher (geometry unchanged), shorter timings and a redesigned UI. See `docs/STAGE_01_REFINEMENT_IMPLEMENTATION.md`.
 
 | Read | For |
