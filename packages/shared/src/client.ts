@@ -7,6 +7,7 @@ import {
 import type { Standing } from './match.ts';
 import type { Emote } from './contestantColorways.ts';
 import type { PlayerStatus } from './round.ts';
+import type { HuntPrivate } from './stage02/hunt.ts';
 
 export interface PlayerView {
   id: string; name: string; spawn: number;
@@ -20,6 +21,10 @@ export interface PlayerView {
   bot: boolean;
   /** Seconds of collision knock-down left (0 = standing; v7). */
   down: number;
+  /** In the latest snapshot (Stage 02 snapshots leave out players you cannot see; v8). */
+  seen: boolean;
+  /** Disconnected mid-match, seat kept (v8). */
+  away: boolean;
 }
 
 export type ResultRow = ResultPlacing;
@@ -47,7 +52,9 @@ export class RoomClient {
   standings: Standing[] = [];
   standingsMatch: MatchState | null = null;
   /** at = local receive time (ms); roundT = seconds since GO on the server's clock. */
-  readonly events: { kind: 'spotted' | 'finished' | 'collision'; id: string; at: number; roundT: number; other?: string }[] = [];
+  /** Your own Stage 02 state (role, timers, pulse reading), or null outside Stage 02 (v8). */
+  hunt: HuntPrivate | null = null;
+  readonly events: { kind: 'spotted' | 'finished' | 'collision' | 'captured'; id: string; at: number; roundT: number; other?: string }[] = [];
   private ws: WebSocket;
   private closeHandlers: ((code: number, reason: string) => void)[] = [];
   private snapHandlers: (() => void)[] = [];
@@ -94,9 +101,12 @@ export class RoomClient {
             c.time = msg.time;
             c.snapshots++;
             c.setRound(msg.round);
+            c.hunt = msg.me ?? null;
+            if (msg.all !== false) for (const p of c.players.values()) p.seen = true;
+            else for (const p of c.players.values()) p.seen = false;
             for (const [id, x, z, vx, vz, yaw, ack, st, ft, down] of msg.rows) {
               const p = c.players.get(id);
-              if (p) Object.assign(p, { x, z, vx, vz, yaw, ack, status: STATUS_OF[st] ?? 'active', finishTime: ft, down: down ?? 0 });
+              if (p) Object.assign(p, { x, z, vx, vz, yaw, ack, status: STATUS_OF[st] ?? 'active', finishTime: ft, down: down ?? 0, seen: true });
             }
             for (const h of c.snapHandlers) h();
             break;
@@ -142,10 +152,10 @@ export class RoomClient {
     for (const id of [...this.players.keys()]) if (!ids.has(id)) this.players.delete(id);
     for (const r of roster) {
       const p = this.players.get(r.id);
-      if (p) { p.name = r.name; p.spawn = r.spawn; p.ready = !!r.ready; p.colorway = r.colorway; p.bot = !!r.bot; continue; }
+      if (p) { p.name = r.name; p.spawn = r.spawn; p.ready = !!r.ready; p.colorway = r.colorway; p.bot = !!r.bot; p.away = !!r.away; continue; }
       this.players.set(r.id, {
         id: r.id, name: r.name, spawn: r.spawn, x: 0, z: 0, vx: 0, vz: 0, yaw: 0, ack: 0, status: 'active', finishTime: -1, ready: !!r.ready, colorway: r.colorway,
-        bot: !!r.bot, down: 0,
+        bot: !!r.bot, down: 0, seen: true, away: !!r.away,
       });
     }
   }
@@ -180,6 +190,13 @@ export class RoomClient {
   nextStage(): void { this.send({ t: 'next' }); }
   /** Host: restart the match from stage 1 (points reset, everyone plays, random players kept). */
   restart(): void { this.send({ t: 'restart' }); }
+
+  /** Stage 02: fire the Pulse Detector (hunters). */
+  pulse(): void { this.send({ t: 'act', a: 'pulse' }); }
+  /** Stage 02: enter or leave a hiding place (hiders). */
+  hide(): void { this.send({ t: 'act', a: 'hide' }); }
+  /** Stage 02: hold or release capture (hunters). */
+  capture(on: boolean): void { this.send({ t: 'act', a: 'capture', on }); }
 
   onClose(h: (code: number, reason: string) => void): void { this.closeHandlers.push(h); }
   onSnapshot(h: () => void): void { this.snapHandlers.push(h); }

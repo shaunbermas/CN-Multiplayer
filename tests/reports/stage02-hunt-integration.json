@@ -1,0 +1,106 @@
+{
+  "scenarios": {
+    "A": {
+      "players": 30,
+      "hunters": 6,
+      "hiders": 24,
+      "personRoles": [
+        "hunter",
+        "hider",
+        "hider"
+      ]
+    },
+    "visibility": {
+      "minRowsSeenByAPerson": 6,
+      "hiddenLeak": 0,
+      "personHiddenSamples": 0
+    },
+    "D": {
+      "before": {
+        "id": "p3",
+        "role": "hider",
+        "status": "active",
+        "captured": false
+      },
+      "after": {
+        "id": "p3",
+        "role": "hider",
+        "status": "active",
+        "captured": false
+      }
+    },
+    "BC": {
+      "caught": 0,
+      "captures": 0,
+      "survivors": 24,
+      "hunterPoints": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "totalPoints": 48
+    },
+    "next": {
+      "stage": "STAGE_01_RED_LIGHT",
+      "everyoneActive": true,
+      "players": 30
+    },
+    "F": {
+      "room2Phase": "active",
+      "room2Stage": 3,
+      "room2Results": 0
+    }
+  },
+  "health": {
+    "ok": true,
+    "room": "hunt-it-a",
+    "players": 30,
+    "humans": 3,
+    "bots": 27,
+    "running": true,
+    "phase": "briefing",
+    "match": {
+      "stage": 3,
+      "total": 3,
+      "final": true
+    },
+    "knockdowns": 12,
+    "snapshot": {
+      "count": 2026,
+      "avgBytes": 1407
+    },
+    "ticks": 1045,
+    "tickMs": {
+      "avg": 0.535,
+      "p95": 1,
+      "max": 9
+    },
+    "inputs": {
+      "accepted": 0,
+      "dropped": 0
+    }
+  },
+  "errors": [],
+  "passed": true
+}

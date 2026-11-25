@@ -1,12 +1,12 @@
 {
   "result": "PASS",
   "errors": [],
-  "date": "2026-11-25T04:59:02.672Z",
+  "date": "2026-11-25T11:21:50.623Z",
   "server": "Cloudflare Worker + Durable Object (wrangler dev, local)",
   "clients": 30,
   "join_ms": {
-    "avg": 13.1,
-    "max": 31.8
+    "avg": 11.1,
+    "max": 30
   },
   "every_client_sees": 30,
   "unique_colorways": 30,
@@ -14,11 +14,11 @@
     "rejected": true,
     "message": "Room plain-load-test-30 is full (30 players)"
   },
-  "load_seconds": 42.8,
+  "load_seconds": 42.5,
   "rtt_ms": {
     "median": 6,
-    "p95": 11,
-    "max": 11
+    "p95": 13,
+    "max": 13
   },
   "room": {
     "ok": true,
@@ -33,30 +33,30 @@
       "total": 0,
       "final": false
     },
-    "knockdowns": 46,
+    "knockdowns": 41,
     "snapshot": {
-      "count": 822,
-      "avgBytes": 1610
+      "count": 824,
+      "avgBytes": 1612
     },
-    "ticks": 1284,
+    "ticks": 1276,
     "tickMs": {
-      "avg": 0.167,
+      "avg": 0.112,
       "p95": 1,
       "max": 1
     },
     "inputs": {
-      "accepted": 36870,
+      "accepted": 36660,
       "dropped": 0
     }
   },
   "snapshots_per_client_per_s": {
-    "min": 19.2,
-    "avg": 19.2
+    "min": 19.4,
+    "avg": 19.4
   },
   "walk_test": {
     "from": "spawn 1 (front row, centre)",
     "distance_m": 162,
-    "server_finish_time_s": 40.47,
+    "server_finish_time_s": 40.5,
     "projected_with_signals_s": 64.3,
     "note": "Projection assumes the average signal cycle in STAGE_01_SPEC.md §3 and a player who never hesitates."
   }

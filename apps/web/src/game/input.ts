@@ -1,11 +1,18 @@
 // Keyboard + pointer-lock mouse look. Camera yaw 0 faces -Z (the course).
 import { settings } from '../ui/settings.ts';
-export const input = { forward: 0, right: 0, yaw: 0, pitch: -0.12, respawn: false, skip: false, cycle: false, emote: null as null | 'jump' | 'dive' };
+export const input = {
+  forward: 0, right: 0, yaw: 0, pitch: -0.12, respawn: false, skip: false, cycle: false, emote: null as null | 'jump' | 'dive',
+  /** Stage 02: E held (capture hold / hide toggle on press), Q pressed (pulse), Shift held (sprint), C held (crouch). */
+  interact: false, interactPressed: false, pulse: false, sprint: false, crouch: false,
+};
 
 const held = new Set<string>();
 function update() {
   input.forward = (held.has('KeyW') || held.has('ArrowUp') ? 1 : 0) - (held.has('KeyS') || held.has('ArrowDown') ? 1 : 0);
   input.right = (held.has('KeyD') || held.has('ArrowRight') ? 1 : 0) - (held.has('KeyA') || held.has('ArrowLeft') ? 1 : 0);
+  input.interact = held.has('KeyE');
+  input.sprint = held.has('ShiftLeft') || held.has('ShiftRight');
+  input.crouch = held.has('KeyC') || held.has('ControlLeft');
 }
 
 export function attachInput(canvas: HTMLElement): () => void {
@@ -15,7 +22,8 @@ export function attachInput(canvas: HTMLElement): () => void {
     if (e.code === 'KeyR') input.respawn = true;
     if (e.code === 'Space' || e.code === 'Enter') input.skip = true;
     if (e.code === 'Space' && !e.repeat) input.emote = 'jump'; // lobby emotes (visual only)
-    if (e.code === 'KeyE' && !e.repeat) input.emote = 'dive';
+    if (e.code === 'KeyE' && !e.repeat) { input.emote = 'dive'; input.interactPressed = true; }
+    if ((e.code === 'KeyQ' || e.code === 'KeyF') && !e.repeat) input.pulse = true;
     if (e.code === 'Tab' || e.code === 'KeyT') { input.cycle = true; e.preventDefault(); }
     update();
   };

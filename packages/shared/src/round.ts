@@ -6,7 +6,8 @@ import type { Mode } from './tournament.ts';
 
 export type Phase = 'lobby' | 'briefing' | 'countdown' | 'active' | 'results';
 export type Signal = 'none' | 'green' | 'warning' | 'red';
-export type PlayerStatus = 'active' | 'finished' | 'spotted' | 'waiting';
+/** 'captured' is Stage 02 only (caught by a hunter: spectates until the next stage). */
+export type PlayerStatus = 'active' | 'finished' | 'spotted' | 'waiting' | 'captured';
 
 /**
  * Round timing and detection: the ONE place these numbers live (server and client both import it).
@@ -115,7 +116,14 @@ export function graceFor(latencyS: number): number {
   return Math.min(ROUND.graceMaxS, ROUND.graceBaseS + Math.max(0, latencyS));
 }
 
-export interface Placing { id: string; place: number; status: PlayerStatus; finishTime: number; progress: number; qualified: boolean }
+export interface Placing {
+  id: string; place: number; status: PlayerStatus; finishTime: number; progress: number; qualified: boolean;
+  /** Points decided by the stage's own rules (Stage 02); when absent, match.ts scores by finish order. */
+  points?: number;
+  /** Stage 02: the player's role and successful captures (hunters). */
+  role?: 'hunter' | 'hider';
+  captures?: number;
+}
 
 /** Spec R3: qualifier target for a full tournament; 30 starters -> 22. Standup Quick has no target. */
 export function qualifierTarget(mode: Mode, starters: number): number {
@@ -159,6 +167,8 @@ export interface RoundEvents {
   phase?: Phase;
   spotted: string[];
   finished: string[];
+  /** Stage 02: [hider, hunter] for each capture this tick. */
+  captured?: [string, string][];
   results?: Placing[];
 }
 
@@ -172,6 +182,7 @@ export interface StartOptions { seed: number; roundS?: number; briefingS?: numbe
  *  - tick(now) once per simulation tick (transitions)
  */
 export class RoundEngine {
+  readonly rules = 'red_light_green_light' as const;
   phase: Phase = 'lobby';
   phaseStart = 0;
   phaseEnd = Infinity;

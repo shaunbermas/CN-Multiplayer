@@ -18,7 +18,7 @@ export class Predictor {
   /** State before the latest fixed step, for interpolation. */
   private prev: MoveState;
   seq = 0;
-  private history: { seq: number; input: MoveInput }[] = [];
+  private history: { seq: number; input: MoveInput; speed: number }[] = [];
   private lastAck = -1;
   /** Visual offset left by a reconciliation correction; decays to zero. */
   private errX = 0;
@@ -27,7 +27,7 @@ export class Predictor {
   readonly render = { x: 0, z: 0 };
 
   /** Walls for the next step: the stage walls, plus the obstacle twist when a round uses it (Stage 1.5). */
-  constructor(start: MoveState, private walls: Rect[] | (() => Rect[])) {
+  constructor(start: MoveState, private walls: Rect[] | (() => Rect[]), private speed: () => number = () => 1) {
     this.state = { ...start };
     this.prev = { ...start };
     this.render.x = start.x;
@@ -37,10 +37,10 @@ export class Predictor {
   /** Apply one fixed step locally; returns the sequence number to send. */
   apply(input: MoveInput): number {
     this.seq += 1;
-    this.history.push({ seq: this.seq, input });
+    this.history.push({ seq: this.seq, input, speed: this.speed() });
     if (this.history.length > 300) this.history.shift();
     this.prev = this.state;
-    this.state = step(this.state, input, SIM_DT, this.wallsNow());
+    this.state = step(this.state, input, SIM_DT, this.wallsNow(), this.speed());
     return this.seq;
   }
 
@@ -51,7 +51,7 @@ export class Predictor {
     this.history = this.history.filter((h) => h.seq > server.ack);
     let s: MoveState = { x: server.x, z: server.z, vx: server.vx, vz: server.vz };
     const walls = this.wallsNow();
-    for (const h of this.history) s = step(s, h.input, SIM_DT, walls);
+    for (const h of this.history) s = step(s, h.input, SIM_DT, walls, h.speed);
     const dx = s.x - this.state.x, dz = s.z - this.state.z;
     if (dx !== 0 || dz !== 0) {
       // Shift the interpolation pair with the correction, and keep the old picture as a fading offset.

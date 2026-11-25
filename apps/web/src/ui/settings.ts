@@ -19,10 +19,12 @@ export interface Settings {
   muted: boolean;
   /** Master volume 0..1. */
   volume: number;
+  /** Stage the match starts at, picked on the main menu (decision 042); the host's choice is the one used. */
+  startStage: string;
 }
 
 const KEY = 'cn-trial-settings-v1';
-export const DEFAULT_SETTINGS: Settings = { graphics: 'auto', sensitivity: 1, invertY: false, hudScale: 1, edgeFlash: true, muted: false, volume: 0.7 };
+export const DEFAULT_SETTINGS: Settings = { graphics: 'auto', sensitivity: 1, invertY: false, hudScale: 1, edgeFlash: true, muted: false, volume: 0.7, startStage: 'STAGE_01_RED_LIGHT' };
 
 function load(): Settings {
   try {
@@ -37,6 +39,7 @@ function load(): Settings {
       edgeFlash: v.edgeFlash !== false,
       muted: v.muted === true,
       volume: typeof v.volume === 'number' && Number.isFinite(v.volume) ? Math.min(1, Math.max(0, v.volume)) : DEFAULT_SETTINGS.volume,
+      startStage: typeof v.startStage === 'string' && /^STAGE_0[12]_[A-Z_]+$/.test(v.startStage) ? v.startStage : DEFAULT_SETTINGS.startStage,
     };
   } catch { return { ...DEFAULT_SETTINGS }; }
 }

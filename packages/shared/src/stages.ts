@@ -5,8 +5,11 @@ import stage01Metadata from '../../../blender/exports/STAGE_01_METADATA.json';
 import watcherManifest from '../../../blender/exports/THE_WATCHER_ASSET_MANIFEST.json';
 import { geometryFromMetadata, parseStageMetadata, type StageMetadata } from './stage-metadata.ts';
 import type { StageGeometry } from './stage.ts';
+import { buildHuntLayout, huntGeometry, type HuntLayout } from './stage02/layout.ts';
+import { buildNavGrid, type NavGrid } from './stage02/nav.ts';
+import { STAGE02 } from './stage02/config.ts';
 
-export type StageRuleSet = 'red_light_green_light';
+export type StageRuleSet = 'red_light_green_light' | 'hide_and_hunt';
 
 export interface StageDefinition {
   id: string;
@@ -17,8 +20,11 @@ export interface StageDefinition {
   briefing: { rule: string; detail: string };
   /** The stage's enemy / figure, for HUD text. */
   figure: string;
-  metadata: StageMetadata;
+  /** Stage 01: approved Blender metadata. Stage 02 is a code greybox (no Blender export yet). */
+  metadata: StageMetadata | null;
   geometry: StageGeometry;
+  /** Stage 02 only: the greybox layout and the bots' navigation grid (immutable, shared by every room). */
+  hunt?: { layout: HuntLayout; nav: NavGrid };
 }
 
 function stage01(): StageDefinition {
@@ -35,10 +41,35 @@ function stage01(): StageDefinition {
   };
 }
 
-export const STAGES: Record<string, StageDefinition> = Object.fromEntries([stage01()].map((s) => [s.id, s]));
+function stage02(): StageDefinition {
+  const layout = buildHuntLayout();
+  return {
+    id: STAGE02.id,
+    number: 2,
+    name: 'The Hunt',
+    rules: 'hide_and_hunt',
+    briefing: {
+      rule: 'Hunters find the hiders. Hiders stay free until the time runs out.',
+      detail: 'Hiders get a 15 s head start. Hunters scan with the Pulse Detector (Q) and hold E to capture. Hiders hide with E, sprint with Shift and crouch with C.',
+    },
+    figure: 'The hunters',
+    metadata: null,
+    geometry: huntGeometry(layout),
+    hunt: { layout, nav: buildNavGrid(layout.walls, layout.bounds) },
+  };
+}
+
+export const STAGES: Record<string, StageDefinition> = Object.fromEntries([stage01(), stage02()].map((s) => [s.id, s]));
 export const DEFAULT_STAGE_ID = 'STAGE_01_RED_LIGHT';
-/** Stage order for a full tournament (GDD §3); only Stage 01 exists so far. */
-export const TOURNAMENT_ORDER: string[] = [DEFAULT_STAGE_ID];
+/**
+ * The match (decision 042, owner 25 Nov 2026): 01 Red Light, Green Light -> 02 The Hunt -> 03 The Naughty Run.
+ * Until Stage 03 is built the third slot replays Stage 01 (owner's choice, 25 Nov 2026).
+ */
+export const MATCH_ORDER: string[] = [DEFAULT_STAGE_ID, STAGE02.id, DEFAULT_STAGE_ID];
+/** Stages a host may start a match from (landing page picker). */
+export const STARTABLE_STAGES: string[] = [DEFAULT_STAGE_ID, STAGE02.id];
+/** Kept for the older tournament manager (tournament.ts). */
+export const TOURNAMENT_ORDER: string[] = MATCH_ORDER;
 
 export function getStage(id: string = DEFAULT_STAGE_ID): StageDefinition {
   const s = STAGES[id];

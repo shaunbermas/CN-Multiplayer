@@ -41,7 +41,7 @@ export function signalView(room: TrialRoom): SignalView {
     const into = (Date.now() - hold.since) / 1000;
     return { signal: hold.signal, progress: Math.min(1, into / 6), into, elapsed: into, segStart: hold.since / 1000, segLength: 6, redIndex: 0 };
   }
-  if (r.phase !== 'active') return none;
+  if (r.phase !== 'active' || r.hunt) return none; // Stage 02 has no lights
   const elapsed = r.elapsed + (Date.now() - room.roundAt) / 1000;
   const sched = scheduleFor(r.seed);
   const seg = segmentAt(sched, elapsed);

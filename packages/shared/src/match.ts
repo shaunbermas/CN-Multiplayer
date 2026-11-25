@@ -16,7 +16,7 @@
 //   5. better place in the last stage played
 //   6. earlier to join the room (deterministic last resort, so there is always exactly one winner)
 import { ROUND, type Placing } from './round.ts';
-import { DEFAULT_STAGE_ID } from './stages.ts';
+import { DEFAULT_STAGE_ID, MATCH_ORDER } from './stages.ts';
 
 export const MATCH = {
   /**
@@ -31,8 +31,8 @@ export const MATCH = {
   nextBriefingS: ROUND.nextBriefingS,
 } as const;
 
-/** Stage order for a match of `n` stages: the registered stages in order, repeating while only Stage 01 exists. */
-export function matchOrder(n: number = MATCH.stages, available: string[] = [DEFAULT_STAGE_ID]): string[] {
+/** Stage order for a match of `n` stages: the given stages in order, repeating when n is longer. */
+export function matchOrder(n: number = MATCH.stages, available: string[] = MATCH_ORDER): string[] {
   const count = Math.max(1, Math.min(10, Math.floor(n)));
   return Array.from({ length: count }, (_, i) => available[i % available.length]);
 }
@@ -54,6 +54,10 @@ export function scoreStage(placings: Placing[]): StageScore[] {
   let firstId: string | null = null;
   let best = Infinity;
   for (const p of placings) if (p.status === 'finished' && p.finishTime < best) { best = p.finishTime; firstId = p.id; }
+  // Stage 02 (and later stages with their own scoring) hand over points already decided by their rules.
+  if (placings.some((p) => typeof p.points === 'number')) {
+    return placings.map((p) => ({ id: p.id, place: p.place, status: p.status, finishTime: p.finishTime, points: Math.max(0, Math.min(MATCH.points.first, p.points ?? 0)), first: false }));
+  }
   return placings.map((p) => {
     const first = p.id === firstId;
     const points = p.status === 'finished' ? (first ? MATCH.points.first : MATCH.points.finished)
@@ -103,6 +107,12 @@ export class Match {
 
   constructor(order: string[] = matchOrder()) { this.order = order.length ? order : matchOrder(); }
 
+  /** Start the match at a later stage (landing page picker); earlier stages are not played (null points). */
+  startAt(stageId: string): void {
+    const i = this.order.indexOf(stageId);
+    if (i > 0) this.index = i;
+  }
+
   get stageId(): string { return this.order[Math.min(this.index, this.order.length - 1)]; }
   get total(): number { return this.order.length; }
   /** The stage being played (or just finished) is the last one. */
@@ -143,7 +153,7 @@ export class Match {
       e.stagesPlayed++;
       e.lastPlace = s.place;
       if (s.first) e.wins++;
-      if (s.status === 'finished') { e.finishes++; e.timeSum += s.finishTime; }
+      if (s.status === 'finished') { e.finishes++; if (s.finishTime >= 0) e.timeSum += s.finishTime; }
     }
     this.stageScores[stageNo] = scores;
     return scores;
