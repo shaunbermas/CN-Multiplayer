@@ -5,7 +5,9 @@ Audit date 24 Nov 2026, `main` @ `7ccb1ba`. Labels: see 01. This file holds the 
 recommended production sequence. **Update 24 Nov 2026 (decision 032):** the owner confirmed that the first Stage 1.5
 pass is implemented and deployed and that the next milestone is the Stage 1.5 second pass (polish, quality,
 validation). Its roadmap, specs and architecture findings are in `09_CN_TRIAL_NEXT_MILESTONE_PLAN.md` (PROPOSED,
-awaiting owner approval). Earlier trackers stay where they are: `docs/stage15/STAGE_1_5_PRODUCTION_TRACKER.md`,
+awaiting owner approval). **Update 25 Nov 2026 (decision 034):** the owner answered 09 §8; the second pass
+built sound with mute (row 21), the sideways-walking smoothing fix, the walk feel layer and a `?perf=1` readout, on a
+branch stacked on PR #24 (`docs/second-pass/SECOND_PASS_NOTES.md`). Row statuses change when it merges. Earlier trackers stay where they are: `docs/stage15/STAGE_1_5_PRODUCTION_TRACKER.md`,
 `CN_TRIAL_STAGE_1_5_FINAL_DELIVERABLES/`.
 
 ## 1. Evidence gathered in this audit (real runs, 24 Nov 2026)
