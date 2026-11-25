@@ -31,4 +31,4 @@ art/stage01/** -filter -diff -merge
 blender/exports/stage01/** -filter -diff -merge
 docs/refinement/** -filter -diff -merge
 docs/ui/mockup/** -filter -diff -merge
-docs/second-pass/** -filter -diff -merge
+docs/second-pass/*.webp -filter -diff -merge
