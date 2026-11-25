@@ -468,70 +468,12 @@ function Watcher({ room, search }: { room: TrialRoom; search: boolean }) {
   );
 }
 
-// ------------------------------------------------------------------------------------------ dust
-const DUST_BOX = new THREE.Vector3(40, 16, 40);
-const dustVertex = /* glsl */ `
-uniform float uTime; uniform vec3 uCam; uniform vec3 uBox; uniform float uSize; uniform float uScale;
-attribute float aSeed;
-varying float vAlpha;
-void main() {
-  vec3 p = position + vec3(uTime * 0.15 + sin(uTime * 0.13 + aSeed * 6.283) * 0.6,
-                           uTime * 0.05 * (0.4 + aSeed) + sin(uTime * 0.2 + aSeed * 9.0) * 0.3,
-                           cos(uTime * 0.11 + aSeed * 3.14) * 0.6);
-  p = mod(p - uCam + uBox * 0.5, uBox) + uCam - uBox * 0.5;   // wrap in a box that follows the camera
-  vec4 mv = modelViewMatrix * vec4(p, 1.0);
-  gl_Position = projectionMatrix * mv;
-  float d = max(-mv.z, 0.1);
-  gl_PointSize = uSize * uScale / d;
-  vAlpha = (1.0 - smoothstep(8.0, 19.0, d)) * smoothstep(0.8, 2.5, d);
-}`;
-const dustFragment = /* glsl */ `
-uniform vec3 uColor;
-varying float vAlpha;
-void main() {
-  float r = length(gl_PointCoord - 0.5);
-  gl_FragColor = vec4(uColor, (1.0 - smoothstep(0.0, 0.5, r)) * vAlpha * 0.55);
-}`;
-
-/** Drifting dust motes around the camera (tier dust count; one draw call, animated on the GPU). */
-function Dust({ count }: { count: number }) {
-  const { camera, size, viewport } = useThree();
-  const points = useMemo(() => {
-    const pos = new Float32Array(count * 3);
-    const seed = new Float32Array(count);
-    for (let i = 0; i < count; i++) {
-      pos[i * 3] = Math.random() * DUST_BOX.x; pos[i * 3 + 1] = Math.random() * DUST_BOX.y; pos[i * 3 + 2] = Math.random() * DUST_BOX.z;
-      seed[i] = Math.random();
-    }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    geo.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
-    const c = lighting.particles.dust.color as [number, number, number];
-    const mat = new THREE.ShaderMaterial({
-      vertexShader: dustVertex, fragmentShader: dustFragment, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-      uniforms: { uTime: { value: 0 }, uCam: { value: new THREE.Vector3() }, uBox: { value: DUST_BOX }, uSize: { value: 0.06 }, uScale: { value: 1 }, uColor: { value: new THREE.Color(...c) } },
-    });
-    const p = new THREE.Points(geo, mat);
-    p.frustumCulled = false;
-    p.name = 'VFX_Dust';
-    return p;
-  }, [count]);
-  useEffect(() => () => { points.geometry.dispose(); (points.material as THREE.Material).dispose(); }, [points]);
-  useFrame((state) => {
-    const u = (points.material as THREE.ShaderMaterial).uniforms;
-    u.uTime.value = state.clock.elapsedTime;
-    u.uCam.value.copy(camera.position);
-    // Pixels per metre at 1 m for the current resolution and field of view.
-    u.uScale.value = (size.height * viewport.dpr) / (2 * Math.tan(THREE.MathUtils.degToRad((camera as THREE.PerspectiveCamera).fov / 2)));
-  });
-  return <primitive object={points} />;
-}
 
 export function Stage01Scene({ room }: { room: TrialRoom }) {
   const quality = useQuality();
   stage01Assets.quality = quality;
-  const dust = tierOf(quality).dust ?? 0;
-  stage01Assets.effects.dust = dust;
+  // Owner (25 Nov 2026): no floating particles, the fog is enough. The dust motes are gone on every tier.
+  stage01Assets.effects.dust = 0;
   return (
     <>
       <Lighting quality={quality} />
@@ -541,7 +483,6 @@ export function Stage01Scene({ room }: { room: TrialRoom }) {
       <Surroundings quality={quality} />
       <MidgroundProps quality={quality} />
       <Obstacles room={room} shadows={shadowLights(quality).length > 0} />
-      {dust > 0 && <Dust count={dust} />}
     </>
   );
 }

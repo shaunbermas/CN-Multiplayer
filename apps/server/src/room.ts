@@ -73,6 +73,8 @@ export class TrialRoom extends DurableObject<Env> {
   private stats = newStats();
   private nextId = 1;
   private hostId = '';
+  /** The host paused the room (owner, 25 Nov 2026): the simulation, timers and bots stand still. */
+  private paused = false;
   private roomCode = 'default';
   private roundId = 0;
 
@@ -148,7 +150,17 @@ export class TrialRoom extends DurableObject<Env> {
         if (p.id === this.hostId && this.engine.phase === 'results') this.engine.phaseEnd = Math.min(this.engine.phaseEnd, this.engine.now);
         break;
       case 'restart':
-        this.restartMatch(p);
+        if (msg.stage) this.restartStage(p);
+        else this.restartMatch(p);
+        break;
+      case 'pause':
+        // Host only, and only while a stage is being played (briefing, countdown or active).
+        if (p.id === this.hostId && ['briefing', 'countdown', 'active'].includes(this.engine.phase)) {
+          this.paused = !!msg.on;
+          if (this.paused) for (const q of this.players.values()) { q.vx = 0; q.vz = 0; } // everyone stands still
+          console.log(JSON.stringify({ ev: this.paused ? 'pause' : 'resume', room: this.roomCode, round: this.roundId, phase: this.engine.phase }));
+          this.broadcastSnapshot();
+        }
         break;
       case 'probe_ack': {
         const sent = p.probeSentAt.get(msg.id);
@@ -298,10 +310,12 @@ export class TrialRoom extends DurableObject<Env> {
       this.loadStage(DEFAULT_STAGE_ID);
       this.match = null;
       this.matchRunning = false;
+      this.paused = false;
       console.log(JSON.stringify({ ev: 'leave', room: att.room, id: att.id, n: 0, reset: true }));
       return;
     }
     if (this.hostId === att.id) {
+      this.paused = false; // only the host can resume, so a leaving host never leaves the room frozen
       // Host transfer: the earliest remaining human joiner (GDD §6.2); bots never host.
       const next = [...this.players.values()].filter((x) => !x.bot && !x.away).sort((a, b) => a.joinOrder - b.joinOrder)[0];
       this.hostId = next?.id ?? '';
@@ -409,6 +423,23 @@ export class TrialRoom extends DurableObject<Env> {
     this.beginMatch(this.matchOpts);
   }
 
+  /**
+   * Host restarts the stage in progress (owner, 25 Nov 2026: "on stage 2, restart should restart stage 2"). Points
+   * from earlier stages stay; this stage's points are only added when it ends, so nothing is counted twice. From
+   * the stage results the whole match restarts instead (that stage's points are already in).
+   */
+  private restartStage(by: Player): void {
+    if (by.id !== this.hostId) {
+      const ws = this.sockets.get(by.id);
+      if (ws) send(ws, { t: 'error', code: 'not_host', message: 'Only the host can restart the stage' });
+      return;
+    }
+    if (!this.match || !['briefing', 'countdown', 'active'].includes(this.engine.phase)) { this.restartMatch(by); return; }
+    console.log(JSON.stringify({ ev: 'restart_stage', room: this.roomCode, round: this.roundId, phase: this.engine.phase, match: this.matchState() }));
+    for (const p of this.players.values()) this.respawn(p);
+    this.startStage();
+  }
+
   private beginMatch(opts: StartRequestOptions): void {
     const test = this.env.CN_TEST === '1';
     const stages = test && Number.isInteger(opts?.stages) ? Number(opts.stages) : MATCH.stages;
@@ -424,6 +455,7 @@ export class TrialRoom extends DurableObject<Env> {
 
   /** Starts the match's current stage with every player in the room (late joiners included). */
   private startStage(): void {
+    this.paused = false;
     const m = this.match!;
     const opts = this.matchOpts;
     const test = this.env.CN_TEST === '1';
@@ -478,6 +510,7 @@ export class TrialRoom extends DurableObject<Env> {
       target: Number.isFinite(e.target) ? e.target : -1,
       obstacles: this.obstaclesActive(),
       match: this.matchState(),
+      ...(this.paused ? { paused: true } : {}),
       ...(this.hunt() ? { hunt: this.hunt()!.publicState() } : {}),
     };
   }
@@ -520,6 +553,15 @@ export class TrialRoom extends DurableObject<Env> {
     if (!this.lastTickAt) this.lastTickAt = now - 1000 / SIM_HZ;
     this.acc = Math.min(this.acc + (now - this.lastTickAt) / 1000, 0.25);
     this.lastTickAt = now;
+    if (this.paused) {
+      // Paused: nothing runs. Inputs sent meanwhile are acknowledged and dropped, so nobody moves on resume.
+      if (this.engine.phase === 'lobby' || this.engine.phase === 'results') this.paused = false;
+      else {
+        this.acc = 0;
+        for (const p of this.players.values()) if (p.queue.length) { p.ack = p.queue[p.queue.length - 1].seq; p.queue = []; }
+        return;
+      }
+    }
     let steps = 0;
     while (this.acc >= SIM_DT && steps < 8) {
       this.acc -= SIM_DT;

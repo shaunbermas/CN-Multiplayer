@@ -71,7 +71,7 @@ try {
     if (want.join() !== got.join()) errors.push(`${q}: lights ${got.join(', ')}; expected ${want.join(', ')}`);
     const wantShadows = Array.isArray(tier.shadows) ? tier.shadows : [];
     if (a.effects.shadows.join() !== wantShadows.join()) errors.push(`${q}: shadow casters ${a.effects.shadows.join(', ') || 'none'}; expected ${wantShadows.join(', ') || 'none'}`);
-    if (a.effects.dust !== (tier.dust ?? 0)) errors.push(`${q}: dust ${a.effects.dust}; expected ${tier.dust}`);
+    if (a.effects.dust !== 0) errors.push(`${q}: dust ${a.effects.dust}; expected 0 (owner: no floating particles)`);
     if (a.effects.haze !== !!tier.hazeCards) errors.push(`${q}: haze ${a.effects.haze}; expected ${!!tier.hazeCards}`);
     if (a.problems.length) errors.push(`${q}: asset problems ${a.problems.join('; ')}`);
     // Stage 1.5: atmosphere, painted surroundings, midground trees and the sky environment map per tier.

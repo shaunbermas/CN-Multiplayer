@@ -59,8 +59,8 @@ export function WatcherFX({ room, root, search, eyeLight }: { room: TrialRoom; r
       fragmentShader: `uniform vec3 uColor; uniform float uStrength; uniform float uTime; varying float vAlong; varying vec3 vN; varying vec3 vView;
         void main() { float facing = abs(dot(normalize(vN), normalize(vView)));
           float edge = smoothstep(0.15, 1.0, facing); edge *= edge * edge;
-          float fall = pow(1.0 - vAlong, 2.6) * smoothstep(0.0, 0.06, vAlong);
-          float haze = 0.7 + 0.18 * sin(vAlong * 23.0 - uTime * 1.7) + 0.12 * sin(vAlong * 57.0 + uTime * 2.9);
+          float a = clamp(vAlong, 0.0, 1.0); float fall = pow(1.0 - a, 2.6) * smoothstep(0.0, 0.06, a); // clamped: pow of a negative base is NaN on Apple GPUs, and one NaN pixel spread by the bloom blacked out the screen on red
+          float haze = 0.7 + 0.18 * sin(a * 23.0 - uTime * 1.7) + 0.12 * sin(a * 57.0 + uTime * 2.9);
           gl_FragColor = vec4(uColor * edge * fall * haze * uStrength, 1.0);
           #include <colorspace_fragment>
         }`,

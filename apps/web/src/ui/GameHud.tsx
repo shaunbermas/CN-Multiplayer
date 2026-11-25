@@ -13,22 +13,22 @@ import { activeStage } from '../game/stage.ts';
 import { STAGE_SCENES } from '../stages/registry.ts';
 import { Brand, HowToPlay, SettingsPanel } from './Menu.tsx';
 import { useSettings } from './settings.ts';
-import { setMuted } from '../game/audio.ts';
 import { settings } from './settings.ts';
+import { IconBars, IconCheck, IconFlag, IconGear, IconHome, IconMouse, IconPause, IconPin, IconPlay, IconRestart, IconRestartCcw, IconUsers, IconX } from './icons.tsx';
 import { HuntBriefingRole, HuntPanel, HuntRoleChip, HuntTop, captureText } from './HuntHud.tsx';
 
-// Decision 037 (owner, 25 Nov 2026): the HUD shows only GREEN LIGHT or RED LIGHT. No time-left bar, no
-// "get ready" warning and no hint text: knowing when red comes is part of the challenge.
+// Decision 037: no time-left bar, no "get ready" warning and no hint text: knowing when red comes is part of the
+// challenge. Owner's HUD design (25 Nov 2026): the signal reads GO or STOP, with no lens icon.
 const SIGNAL_UI = {
-  green: { word: 'GREEN LIGHT', cls: 'go', lens: 'go' },
-  warning: { word: 'GREEN LIGHT', cls: 'go', lens: 'go' },
-  red: { word: 'RED LIGHT', cls: 'stop', lens: 'stop' },
+  green: { word: 'GO', cls: 'go' },
+  warning: { word: 'GO', cls: 'go' },
+  red: { word: 'STOP', cls: 'stop' },
 } as const;
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const coat = (id: string | undefined) => colorwayById(id);
 const ordinal = (n: number) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] ?? 'th'}`;
-const fmtClock = (t: number) => `${Math.floor(Math.max(0, t) / 60)}:${pad2(Math.ceil(Math.max(0, t)) % 60)}`;
+const fmtClock = (t: number) => { const c = Math.ceil(Math.max(0, t)); return `${pad2(Math.floor(c / 60))}:${pad2(c % 60)}`; };
 
 function startOptions() {
   // Obstacles are always on (decision 031). Test hooks: ?testSeed=…&testRound=…&testBriefing=…&testStages=…&obstacles=0
@@ -46,13 +46,6 @@ function startOptions() {
 function useTick(ms: number) {
   const [, tick] = useState(0);
   useEffect(() => { const t = setInterval(() => tick((n) => n + 1), ms); return () => clearInterval(t); }, [ms]);
-}
-
-function ConnectionBadge({ room }: { room: TrialRoom }) {
-  useEffect(() => { room.ping(); const t = setInterval(() => room.ping(), 2000); return () => clearInterval(t); }, [room]);
-  const ms = room.rttMs;
-  const q = ms < 0 ? 'unknown' : ms < 120 ? 'good' : ms < 250 ? 'fair' : 'poor';
-  return <span className={`conn ${q}`} data-testid="connection" title="Connection to the room"><i aria-hidden="true" />{ms < 0 ? 'Connecting' : `${ms} ms`}</span>;
 }
 
 function Swatch({ colorway }: { colorway: string | undefined }) {
@@ -139,26 +132,39 @@ function Lobby({ room }: { room: TrialRoom }) {
   );
 }
 
-/**
- * Host only, during a match: restart from stage 1 with everyone in the room (owner request, 25 Nov 2026).
- * Asks once inline, because a restart throws away the stage in progress and everyone's points.
- */
-function RestartControl({ room }: { room: TrialRoom }) {
-  const [asking, setAsking] = useState(false);
-  useEffect(() => {
-    if (!asking) return;
-    const t = setTimeout(() => setAsking(false), 8000);
-    return () => clearTimeout(t);
-  }, [asking]);
-  if (!asking) {
-    return <button className="btn restart-btn" onClick={() => setAsking(true)} title="Restart the game from stage 1" data-testid="restart">↻ Restart</button>;
-  }
+/** A centred confirm pop-up (owner, 25 Nov 2026: restart asks in a pop-up, not a small inline prompt). */
+function Confirm({ title, text, yes, onYes, onNo, testid, yesId, noId }: {
+  title: string; text: string; yes: string; onYes: () => void; onNo: () => void; testid: string; yesId: string; noId: string;
+}) {
   return (
-    <span className="restart-ask" role="group" aria-label="Restart the game?" data-testid="restart-ask">
-      <span>Restart from stage 1? Points reset.</span>
-      <button className="btn go" onClick={() => { setAsking(false); room.restart(); }} data-testid="restart-yes">Restart</button>
-      <button className="btn ghost" onClick={() => setAsking(false)} data-testid="restart-no">Cancel</button>
-    </span>
+    <div className="modal-backdrop" role="alertdialog" aria-modal="true" aria-label={title} data-testid={testid} onKeyDown={(e) => { if (e.key === 'Escape') onNo(); }}>
+      <section className="glass-card confirm">
+        <h2>{title}</h2>
+        <p>{text}</p>
+        <div className="confirm-row">
+          <button className="pause-btn" onClick={onNo} data-testid={noId} autoFocus>Cancel</button>
+          <button className="pause-btn danger" onClick={onYes} data-testid={yesId}>{yes}</button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+/**
+ * Pause panel (owner's HUD design, 25 Nov 2026): Resume, Restart stage, Main menu. The host's pause freezes the whole
+ * room for everyone; anyone else gets the same menu while the game keeps running.
+ */
+function PausePanel({ room, onResume, onRestart, onMenu }: { room: TrialRoom; onResume: () => void; onRestart: () => void; onMenu: () => void }) {
+  const paused = !!room.round.paused;
+  const host = room.isHost;
+  return (
+    <section className="glass-card pause-panel" data-testid="pause-menu" aria-label="Paused">
+      <h2>Paused</h2>
+      {!host && <p className="pause-note">{paused ? 'The host paused the game.' : 'Only the host can pause. The game keeps running.'}</p>}
+      {(host || !paused) && <button className="pause-btn" onClick={onResume} data-testid="resume" autoFocus><IconPlay size={24} /><span>Resume</span></button>}
+      {host && <button className="pause-btn" onClick={onRestart} data-testid="pause-restart"><IconRestartCcw size={26} /><span>Restart stage</span></button>}
+      <button className="pause-btn" onClick={onMenu} data-testid="main-menu"><IconHome size={26} /><span>Main menu</span></button>
+    </section>
   );
 }
 
@@ -173,6 +179,8 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
   useTick(100);
   const s = useSettings();
   const [overlay, setOverlay] = useState<'none' | 'settings' | 'howto'>('none');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [confirm, setConfirm] = useState<'none' | 'restart' | 'leave'>('none');
   const stage = activeStage(room).def;
   const scene = STAGE_SCENES[stage.id] ?? Object.values(STAGE_SCENES)[0];
   const assets = scene.assets as { environment?: string; watcher?: string; problems: string[] };
@@ -203,7 +211,22 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
     const g = activeStage(room).geo;
     return Math.max(0, Math.min(1, (p.z - g.startZ) / (g.finishZ - g.startZ)));
   }));
-  const spotSeen = room.events.some((e) => e.kind === 'spotted' && now - e.at < 1200);
+  const playing = r.phase === 'briefing' || r.phase === 'countdown' || r.phase === 'active';
+  const paused = !!r.paused;
+  // The host's pause menu is the room's pause: opening it pauses everyone, Resume carries on.
+  const openMenu = () => { setMenuOpen(true); if (room.isHost && playing && !paused) room.pause(true); };
+  const resume = () => { setMenuOpen(false); if (room.isHost && paused) room.pause(false); };
+  useEffect(() => { if (!playing) setMenuOpen(false); }, [playing]);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code !== 'KeyP' || e.repeat || (e.target as HTMLElement)?.tagName === 'INPUT') return;
+      if (!playing) return;
+      if (menuOpen || paused) resume(); else openMenu();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
+  const showPause = playing && (menuOpen || paused);
 
   return (
     <div className="hud" style={{ ['--hud-scale' as string]: s.hudScale }} data-testid="hud" data-phase={r.phase} data-signal={r.phase === 'active' ? sig.signal : 'none'} data-status={me?.status}
@@ -220,39 +243,45 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
       <div className="hud-top">
         <div className="hud-left">
           {r.phase === 'lobby'
-            ? <div className="chip stage-chip"><b>LOBBY</b><span>Practice walk is open</span></div>
-            : <div className="chip stage-chip" data-testid="stage-chip"><b>{stageNo}{inMatch && <i> / {pad2(m.total)}</i>}</b><span>{m.final && inMatch ? 'Final stage' : stage.name}</span></div>}
+            ? <div className="glass stage-chip"><b>Lobby</b><i className="sep" /><span>Practice walk is open</span></div>
+            : <div className="glass stage-chip" data-testid="stage-chip"><b>{stageNo}{inMatch && <> / {pad2(m.total)}</>}</b><i className="sep" /><span>{stage.name}</span></div>}
           {isHunt && <HuntRoleChip room={room} />}
           {inMatch && me && (
-            <div className="chip me-chip" data-testid="my-points"><Swatch colorway={me.colorway} />{me.name}
-              <span className="pts">{myStanding?.points ?? 0} PTS</span>{myStanding && <span className="muted">#{myStanding.rank}</span>}</div>
+            <div className="glass pts-chip" data-testid="my-points"><IconBars size={22} /><span className="pts">{myStanding?.points ?? 0} PTS</span></div>
           )}
         </div>
         <div className="hud-centre">
           {ui && (
-            <div className={`signal ${ui.cls}`} data-testid="signal" aria-live="assertive">
-              <span className={`lens ${sig.signal === 'red' && spotSeen ? 'detect' : ui.lens}`} aria-hidden="true" />
+            <div className={`glass signal ${ui.cls}`} data-testid="signal" aria-live="assertive">
               <span className="word">{ui.word}</span>
             </div>
           )}
         </div>
         <div className="hud-right">
-          {isHunt && r.phase === 'active' ? <HuntTop room={room} /> : r.phase === 'active' ? <div className={`timer num${closing ? ' closing' : ''}`} data-testid="timer">{closing && <small>Finish closes</small>}{fmtClock(remaining)}</div>
-            : r.phase === 'lobby' ? <div className="timer num" data-testid="timer">{hud.walkTime.toFixed(1)} s</div> : null}
+          {isHunt && r.phase === 'active' ? <HuntTop room={room} /> : r.phase === 'active' ? <div className={`glass timer num${closing ? ' closing' : ''}`} data-testid="timer">{closing && <small>Finish closes</small>}{fmtClock(remaining)}</div>
+            : r.phase === 'lobby' ? <div className="glass timer num" data-testid="timer">{hud.walkTime.toFixed(1)} s</div> : null}
           {!isHunt && (r.phase === 'active' || r.phase === 'results' || r.phase === 'countdown') && (
-            <div className="counts num" data-testid="round-counts">
-              <span title="Still racing">IN {alive}/{inRound.length}</span><span className="out" title="Spotted">✕ {eliminated}</span><span className="in" title="Finished">✓ {finished}</span>
+            <div className="glass counts num" data-testid="round-counts">
+              <span title="Still racing"><IconUsers size={22} />{alive} / {inRound.length}</span><i className="sep" />
+              <span className="in" title="Finished"><IconCheck size={22} />{finished}</span><i className="sep" />
+              <span className="out" title="Spotted"><IconX size={20} />{eliminated}</span>
             </div>
           )}
           <div className="hud-tools">
-            {room.isHost && r.phase !== 'lobby' && <RestartControl room={room} />}
-            <ConnectionBadge room={room} />
-            <button className="icon-btn" onClick={() => setOverlay('howto')} aria-label="How to play">?</button>
-            <button className="icon-btn" onClick={() => setMuted(!s.muted)} aria-label={s.muted ? 'Unmute sound (M)' : 'Mute sound (M)'} aria-pressed={s.muted} title={s.muted ? 'Sound off (M)' : 'Sound on (M)'} data-testid="mute">{s.muted ? '🔇' : '🔊'}</button>
-            <button className="icon-btn" onClick={() => setOverlay('settings')} aria-label="Settings" data-testid="open-settings">⚙</button>
+            {room.isHost && r.phase !== 'lobby' && (
+              <button className="tool-btn" onClick={() => setConfirm('restart')} aria-label="Restart stage" title="Restart stage" data-testid="restart"><IconRestart size={30} /></button>
+            )}
+            {playing && (
+              <button className="tool-btn" onClick={() => (showPause ? resume() : openMenu())} aria-label={showPause ? 'Resume (P)' : 'Pause (P)'} title={showPause ? 'Resume (P)' : 'Pause (P)'}
+                aria-pressed={showPause} data-testid="pause">{showPause ? <IconPlay size={28} /> : <IconPause size={28} />}</button>
+            )}
+            {r.phase === 'lobby' && <button className="tool-btn" onClick={() => setConfirm('leave')} aria-label="Main menu" title="Main menu" data-testid="lobby-menu"><IconHome size={28} /></button>}
+            <button className="tool-btn" onClick={() => setOverlay('settings')} aria-label="Settings" title="Settings" data-testid="open-settings"><IconGear size={30} /></button>
           </div>
+          {showPause && <PausePanel room={room} onResume={resume} onRestart={() => setConfirm('restart')} onMenu={() => setConfirm('leave')} />}
         </div>
       </div>
+      {paused && !showPause && <div className="glass paused-tag" data-testid="paused">Paused</div>}
 
       {r.phase === 'lobby' && <Lobby room={room} />}
 
@@ -332,20 +361,29 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
         : <StageResults room={room} remaining={remaining} onLeave={onLeave} />)}
 
       <div className="hud-lower">
-        {r.phase === 'lobby' && <div className="objective">{hud.status === 'finished' ? `Practice: finished in ${hud.finishTime.toFixed(2)} s` : 'Practice: walk to the finish line'}</div>}
-        {(r.phase === 'lobby' || (r.phase === 'active' && !isHunt)) && (
-          <div className="track" aria-label="Progress to the finish">
-            <div className="fill" style={{ width: `${(hud.progress * 100).toFixed(1)}%` }} />
-            {r.phase === 'active' && leaderProgress > 0 && <span className="pip" style={{ left: `${(leaderProgress * 100).toFixed(1)}%` }} title="Furthest rival" />}
-          </div>
-        )}
+        {r.phase === 'lobby' && <div className="glass objective">{hud.status === 'finished' ? `Practice: finished in ${hud.finishTime.toFixed(2)} s` : 'Practice: walk to the finish line'}</div>}
       </div>
-      <div className="hud-bottom">
-        <span className="num">{isHunt && r.phase !== 'lobby' ? '' : `${hud.distance.toFixed(0)} m to go`}</span>
-        <span className="keys-hint"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move · mouse look{isHunt && r.phase === 'active' ? (room.hunt?.role === 'hunter' ? ' · Q pulse · hold E capture · Shift sprint' : ' · E hide · Shift sprint · C crouch') : ''}{me?.status === 'spotted' ? ' · Tab switch' : ''}{r.phase === 'lobby' ? ' · R respawn' : ''}</span>
-        <span>room {room.room.toUpperCase()}</span>
+      <div className="glass hud-bottom">
+        <span className="hb-cell hb-dist num">{isHunt && r.phase !== 'lobby' ? <>{room.hunt?.role === 'hunter' ? 'Hunter' : room.hunt?.role === 'hider' ? 'Hider' : 'The Hunt'}</> : <><IconPin size={24} /><span><b>{hud.distance.toFixed(0)}</b> m to go</span></>}</span>
+        <i className="sep" />
+        <span className="hb-cell hb-keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><em>Move</em><span className="dot" aria-hidden="true">•</span><IconMouse size={26} /><em>Look</em>
+          {isHunt && r.phase === 'active' && <em className="extra">{room.hunt?.role === 'hunter' ? 'Q pulse · hold E capture · Shift sprint' : 'E hide · Shift sprint · C crouch'}</em>}
+          {me?.status === 'spotted' && <em className="extra">Tab switch</em>}{r.phase === 'lobby' && <em className="extra">R respawn</em>}<em className="extra">P pause</em></span>
+        <i className="sep" />
+        {!(isHunt && r.phase !== 'lobby') && <><span className="hb-cell hb-finish"><IconFlag size={28} /><b>Finish</b></span><i className="sep" /></>}
+        <span className="hb-cell hb-room">Room <b>{room.room.toUpperCase()}</b></span>
       </div>
 
+      {confirm === 'restart' && (
+        <Confirm title={`Restart stage ${pad2(inMatch ? m.stage : stage.number)}?`} testid="restart-ask" yesId="restart-yes" noId="restart-no" yes="Restart stage"
+          text={r.phase === 'results' ? 'The whole game starts again from stage 1 and points reset.' : 'Everyone goes back to the start of this stage. Points from earlier stages are kept.'}
+          onNo={() => setConfirm('none')} onYes={() => { setConfirm('none'); setMenuOpen(false); room.restartStage(); }} />
+      )}
+      {confirm === 'leave' && (
+        <Confirm title="Back to the main menu?" testid="leave-ask" yesId="leave-yes" noId="leave-no" yes="Main menu"
+          text={r.phase === 'lobby' ? 'You leave this room. Your friends can still play.' : 'You leave the game in progress. If you come back with the same invite link, you get your seat and points back.'}
+          onNo={() => setConfirm('none')} onYes={() => { setConfirm('none'); resume(); onLeave(); }} />
+      )}
       {overlay === 'settings' && <SettingsPanel onClose={() => setOverlay('none')} />}
       {overlay === 'howto' && <HowToPlay onClose={() => setOverlay('none')} />}
     </div>

@@ -47,13 +47,12 @@ try {
   await waitFor(async () => (await page.evaluate(() => window.__cnAudio?.()))?.ambience, 'ambience started', 5000);
   check('ambience playing in the lobby', true);
 
-  // M mutes, the HUD button unmutes.
+  // M mutes and M again unmutes (the owner's HUD design has no mute button; mute is also in Settings).
   await page.keyboard.press('KeyM');
   check('M mutes', (await page.evaluate(() => window.__cnAudio())).muted === true);
-  check('HUD shows muted', (await page.locator('[data-testid=mute]').getAttribute('aria-pressed')) === 'true');
   await page.screenshot({ path: `${shots}/02_hud_muted.png` });
-  await page.click('[data-testid=mute]');
-  check('HUD button unmutes', (await page.evaluate(() => window.__cnAudio())).muted === false);
+  await page.keyboard.press('KeyM');
+  check('M again unmutes', (await page.evaluate(() => window.__cnAudio())).muted === false);
   const persisted = await page.evaluate(() => JSON.parse(localStorage.getItem('cn-trial-settings-v1') ?? '{}'));
   check('mute choice remembered', persisted.muted === false && persisted.volume === 0.5);
 

@@ -135,8 +135,11 @@ export class GroundFx {
   private ringA = new Float32Array(MAX_RIPPLES);
   private ringNext = 0;
   private m = new THREE.Matrix4();
-  /** 0..1: Low tier emits fewer particles. */
-  density = 1;
+  /**
+   * 0..1 particles per ground contact. Owner (25 Nov 2026): no particles, the fog is enough, so puffs and splash
+   * droplets are off (0); the ripples in the puddles stay.
+   */
+  density = 0;
 
   constructor() {
     const g = new THREE.BufferGeometry();

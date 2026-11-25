@@ -1,7 +1,8 @@
 // Out-of-game screens and shared panels. Stage 01 refinement redesign (24 Nov 2026): visual reference
 // docs/ui/STAGE_01_UI_MOCKUP.html, which uses the same stylesheet (styles.css).
 import { useState, type ReactNode } from 'react';
-import { MAX_PLAYERS } from '@cn-trials/shared';
+import { MATCH, MAX_PLAYERS } from '@cn-trials/shared';
+import { IconArrowRight, IconBook, IconClaws, IconCode, IconGear, IconGift, IconUser, IconUsers } from './icons.tsx';
 import { applyGraphicsSetting } from '../game/qualityStore.ts';
 import { updateSettings, useSettings, type GraphicsSetting } from './settings.ts';
 import { applyVolume, setMuted } from '../game/audio.ts';
@@ -68,7 +69,7 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
             <option value="auto">Auto (High, lowers itself if the game stutters)</option>
             <option value="high">High</option>
             <option value="medium">Medium</option>
-            <option value="low">Low (weak or older computers)</option>
+            <option value="low">Low</option>
           </select>
         </label>
         <label>Mouse sensitivity <output>{s.sensitivity.toFixed(1)}×</output>
@@ -85,7 +86,7 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
         <label>Volume <output>{Math.round(s.volume * 100)} %</output>
           <input type="range" min={0} max={1} step={0.05} value={s.volume} disabled={s.muted} onChange={(e) => { updateSettings({ volume: Number(e.target.value) }); applyVolume(); }} data-testid="volume" />
         </label>
-        <p className="muted">Signals always show a word and the lens shape as well as a colour, and each one also has its own sound, so the game works with the sound off.</p>
+        <p className="muted">Signals always show a word as well as a colour, and each one also has its own sound, so the game works with the sound off.</p>
       </div>
     </Modal>
   );
@@ -93,23 +94,26 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
 
 /** Stages on the main menu (decision 042). Stage 03 shows but cannot be picked until it is built (owner, 25 Nov 2026). */
 const STAGE_PICKS = [
-  { id: 'STAGE_01_RED_LIGHT', no: '01', name: 'Red Light, Green Light', blurb: 'Move on green. Freeze on red. The Watcher sees everything.', enabled: true },
-  { id: 'STAGE_02_THE_HUNT', no: '02', name: 'The Hunt', blurb: 'Hunters with a Pulse Detector. Hiders with a head start. Stay free until the clock runs out.', enabled: true },
-  { id: 'STAGE_03_NAUGHTY_RUN', no: '03', name: 'The Naughty Run', blurb: '', enabled: false },
+  { id: 'STAGE_01_RED_LIGHT', no: '01', name: 'Red Light, Green Light', sub: '', icon: null, enabled: true },
+  { id: 'STAGE_02_THE_HUNT', no: '02', name: 'The Hunt', sub: '', icon: <IconClaws size={64} />, enabled: true },
+  { id: 'STAGE_03_NAUGHTY_RUN', no: '03', name: 'The Naughty Run', sub: "Santa's final delivery", icon: <IconGift size={40} />, enabled: false },
 ];
 
-/** Where the match starts. The host's pick is used; the background follows the pick. */
+/** Where the match starts. The host's pick is used. Owner's menu design (25 Nov 2026): three stage cards. */
 function StagePicker({ value }: { value: string }) {
   return (
-    <fieldset className="stage-picker" role="radiogroup" aria-label="Choose the stage to start from" data-testid="stage-picker">
-      <legend>Start from</legend>
+    <div className="stage-pick-wrap">
+    <span className="menu-label" id="stage-pick-label">Select stage</span>
+    <div className="stage-picker" role="radiogroup" aria-labelledby="stage-pick-label" data-testid="stage-picker">
       {STAGE_PICKS.map((p) => (
-        <button key={p.id} type="button" role="radio" aria-checked={p.id === value} disabled={!p.enabled} className="stage-opt"
-          onClick={() => updateSettings({ startStage: p.id })} data-testid={`stage-pick-${p.no}`}>
-          <b>STAGE {p.no}</b><span>{p.name}</span>{!p.enabled && <small>Coming soon</small>}
+        <button key={p.id} type="button" role="radio" aria-checked={p.id === value} aria-disabled={!p.enabled} className={`stage-opt${p.enabled ? '' : ' soon'}`}
+          onClick={() => { if (p.enabled) updateSettings({ startStage: p.id }); }} title={p.enabled ? undefined : 'Coming soon'} data-testid={`stage-pick-${p.no}`}>
+          {p.icon && <span className="stage-ico" aria-hidden="true">{p.icon}</span>}
+          <b>Stage {p.no}</b><span className="stage-name">{p.name.split(', ').map((w, i, all) => <span key={i}>{w}{i < all.length - 1 ? ',' : ''}<br hidden={i === all.length - 1} /></span>)}</span>{p.sub && <small>{p.sub}</small>}
         </button>
       ))}
-    </fieldset>
+    </div>
+    </div>
   );
 }
 
@@ -119,41 +123,45 @@ export function MainMenu({ initialName, inviteCode, busy, error, onJoin }: {
 }) {
   const [name, setName] = useState(initialName);
   const [code, setCode] = useState(inviteCode ?? '');
-  const [panel, setPanel] = useState<'none' | 'join' | 'howto' | 'settings'>(inviteCode ? 'join' : 'none');
+  const [panel, setPanel] = useState<'none' | 'join' | 'howto' | 'settings'>('none');
   const nameOk = name.trim().length > 0;
   const s = useSettings();
-  const pick = STAGE_PICKS.find((x) => x.id === s.startStage) ?? STAGE_PICKS[0];
+  const pick = STAGE_PICKS.find((x) => x.id === s.startStage && x.enabled) ?? STAGE_PICKS[0];
   return (
     <main className="menu" data-testid="menu">
       <div className="menu-art" aria-hidden="true" data-stage={pick.id} data-testid="menu-art" />
       <section className="menu-col">
         <div className="menu-title">
           <Brand />
-          <div className="menu-stage" data-testid="menu-stage"><b>Stage {pick.no}</b><span>{pick.name}</span></div>
+          <p className="menu-tagline">{MATCH.stages} stages. {MAX_PLAYERS} players. 1 champion.</p>
+          <span className="menu-rule" aria-hidden="true" />
         </div>
-        <p className="menu-sub">{pick.blurb} Up to {MAX_PLAYERS} players in a private room.</p>
         <StagePicker value={pick.id} />
-        <label className="name-field">Your nickname
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Guest nickname" maxLength={16} autoFocus={!inviteCode} data-testid="nickname" />
+        <label className="name-field"><span className="menu-label">Your nickname</span>
+          <span className="field-box"><IconUser size={22} />
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Guest nickname" maxLength={16} autoFocus={!inviteCode} data-testid="nickname" /></span>
         </label>
-        {inviteCode && <p className="notice" data-testid="invite-notice">You were invited to room <b>{inviteCode.toUpperCase()}</b>.</p>}
+        {inviteCode && <p className="notice invite" data-testid="invite-notice"><IconUsers size={24} /><span>You were invited to room <b>{inviteCode.toUpperCase()}</b>.</span></p>}
         <div className="menu-actions">
           {inviteCode ? (
-            <button className="btn primary big wide" disabled={!nameOk || busy} onClick={() => onJoin(name.trim(), inviteCode)} data-testid="join-invite">Join room {inviteCode.toUpperCase()}</button>
+            <button className="btn red big wide" disabled={!nameOk || busy} onClick={() => onJoin(name.trim(), inviteCode)} data-testid="join-invite">
+              <span>Join room {inviteCode.toUpperCase()}</span><IconArrowRight size={26} /></button>
           ) : (
-            <button className="btn primary big wide" disabled={!nameOk || busy} onClick={() => onJoin(name.trim(), null)} data-testid="create-room">Create private room</button>
+            <button className="btn red big wide" disabled={!nameOk || busy} onClick={() => onJoin(name.trim(), null)} data-testid="create-room">
+              <span>Create private room</span><IconArrowRight size={26} /></button>
           )}
           <div className="menu-row">
-            <button className="btn" onClick={() => setPanel(panel === 'join' ? 'none' : 'join')} aria-expanded={panel === 'join'}>Join with a code</button>
-            <button className="btn" onClick={() => setPanel('howto')}>How to play</button>
+            <button className="btn outline" onClick={() => setPanel(panel === 'join' ? 'none' : 'join')} aria-expanded={panel === 'join'}><IconCode size={22} />Join with a code</button>
+            <button className="btn outline" onClick={() => setPanel('howto')}><IconBook size={24} />How to play</button>
           </div>
           {panel === 'join' && (
             <form className="join-row" onSubmit={(e) => { e.preventDefault(); if (nameOk && code.trim()) onJoin(name.trim(), code.trim().toLowerCase()); }}>
-              <input value={code} onChange={(e) => setCode(e.target.value.replace(/[^a-zA-Z0-9-]/g, '').slice(0, 32))} placeholder="Room code" aria-label="Room code" data-testid="room-code" />
-              <button className="btn primary" disabled={!nameOk || !code.trim() || busy} data-testid="join-code">Join</button>
+              <input value={code} onChange={(e) => setCode(e.target.value.replace(/[^a-zA-Z0-9-]/g, '').slice(0, 32))} placeholder="Room code" aria-label="Room code" data-testid="room-code" autoFocus />
+              <button className="btn red" disabled={!nameOk || !code.trim() || busy} data-testid="join-code">Join</button>
             </form>
           )}
-          <button className="btn ghost" onClick={() => setPanel('settings')}>Settings</button>
+          <span className="menu-divider" aria-hidden="true" />
+          <button className="btn settings-link" onClick={() => setPanel('settings')}><IconGear size={26} />Settings</button>
         </div>
         {busy && <p className="muted" role="status">Connecting…</p>}
         {error && <p className="error" role="alert" data-testid="menu-error">{error}</p>}

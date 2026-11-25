@@ -220,6 +220,7 @@ export class RoomClient {
   /** Seconds left in the current phase, smoothed with the local clock between snapshots. */
   remaining(): number {
     if (this.round.remaining < 0) return -1;
+    if (this.round.paused) return this.round.remaining; // frozen while the host has the room paused
     return Math.max(0, this.round.remaining - (Date.now() - this.roundAt) / 1000);
   }
 
@@ -239,6 +240,10 @@ export class RoomClient {
   nextStage(): void { this.send({ t: 'next' }); }
   /** Host: restart the match from stage 1 (points reset, everyone plays, random players kept). */
   restart(): void { this.send({ t: 'restart' }); }
+  /** Host: restart the stage in progress; earlier stages' points are kept (owner, 25 Nov 2026). */
+  restartStage(): void { this.send({ t: 'restart', stage: true }); }
+  /** Host: pause or resume the room for everyone. */
+  pause(on: boolean): void { this.send({ t: 'pause', on }); }
 
   /** Stage 02: fire the Pulse Detector (hunters). */
   pulse(): void { this.send({ t: 'act', a: 'pulse' }); }
