@@ -1,7 +1,7 @@
 // The Watcher clip adapter (server public state -> Prompt 06 clip) and the browser asset manifest.
 import { readFileSync, existsSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { CLIP_SECONDS, MISSING_FROM_MANIFEST, WATCHER_CLIPS, chooseWatcherClip, type WatcherInputs } from '../src/stages/stage01/watcherAnimation.ts';
+import { CLIP_SECONDS, MISSING_FROM_MANIFEST, RED_SNAP_S, WATCHER_CLIPS, chooseWatcherClip, type WatcherInputs } from '../src/stages/stage01/watcherAnimation.ts';
 
 const base: WatcherInputs = { phase: 'active', signal: 'green', into: 0, segmentLength: 5, segmentStart: 0, redIndex: 0, sinceSpotted: Infinity, sinceResults: Infinity };
 const pick = (o: Partial<WatcherInputs>) => chooseWatcherClip({ ...base, ...o });
@@ -28,8 +28,22 @@ describe('Watcher clip adapter', () => {
     expect(warn.timeScale).toBeCloseTo(1.5 / 0.8, 6);
   });
 
+  it('snaps round at the start of red (no warning, decision 037), timed to RED_SNAP_S', () => {
+    const snap = pick({ signal: 'red', into: 0.1 });
+    expect(snap.clip).toBe('Watcher_TurnToField');
+    expect(snap.timeScale).toBeCloseTo(CLIP_SECONDS.Watcher_TurnToField / RED_SNAP_S, 6);
+  });
+
+  it('always follows the snap with the full focus lock, even after a long slow frame', () => {
+    const snapKey = pick({ signal: 'red', into: 0.1 }).key;
+    expect(pick({ signal: 'red', into: 2.5, currentKey: snapKey }).clip).toBe('Watcher_FocusLock');
+    const lockKey = pick({ signal: 'red', into: 2.5, currentKey: snapKey }).key;
+    expect(pick({ signal: 'red', into: 3.0, currentKey: lockKey, sinceCurrent: 0.5 }).clip).toBe('Watcher_FocusLock');
+    expect(pick({ signal: 'red', into: 3.6, currentKey: lockKey, sinceCurrent: 1.1, redIndex: 0 }).clip).toBe('Watcher_RedSignal');
+  });
+
   it('locks focus at red, then holds or scans; detects when the server spots someone', () => {
-    expect(pick({ signal: 'red', into: 0.4 }).clip).toBe('Watcher_FocusLock');
+    expect(pick({ signal: 'red', into: RED_SNAP_S + 0.2 }).clip).toBe('Watcher_FocusLock');
     expect(pick({ signal: 'red', into: 2, redIndex: 0 }).clip).toBe('Watcher_RedSignal');
     expect(pick({ signal: 'red', into: 2, redIndex: 1 }).clip).toBe('Watcher_ScanSweep');
     expect(pick({ signal: 'red', into: 2, sinceSpotted: 0.3 }).clip).toBe('Watcher_Detect');
@@ -37,8 +51,9 @@ describe('Watcher clip adapter', () => {
   });
 
   it('plays the opening clip in full on a slow client that first draws a segment late', () => {
-    expect(pick({ signal: 'red', into: 1.6, sinceSegmentSeen: 0 }).clip).toBe('Watcher_FocusLock');
-    expect(pick({ signal: 'red', into: 2.8, sinceSegmentSeen: 1.2 }).clip).toBe('Watcher_RedSignal');
+    expect(pick({ signal: 'red', into: 1.6, sinceSegmentSeen: 0 }).clip).toBe('Watcher_TurnToField');
+    expect(pick({ signal: 'red', into: 1.9, sinceSegmentSeen: 0.5 }).clip).toBe('Watcher_FocusLock');
+    expect(pick({ signal: 'red', into: 2.8, sinceSegmentSeen: 1.6 }).clip).toBe('Watcher_RedSignal');
     expect(pick({ signal: 'green', into: 2, sinceSegmentSeen: 0.1 }).clip).toBe('Watcher_TurnAway');
   });
 

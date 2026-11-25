@@ -9,6 +9,8 @@
 @font-face { font-family: "Barlow Condensed"; font-weight: 600; font-display: swap; src: url("./assets/fonts/barlow-condensed-latin-600-normal.woff2") format("woff2"); }
 @font-face { font-family: "Barlow Condensed"; font-weight: 700; font-display: swap; src: url("./assets/fonts/barlow-condensed-latin-700-normal.woff2") format("woff2"); }
 @font-face { font-family: "Barlow Condensed"; font-weight: 800; font-display: swap; src: url("./assets/fonts/barlow-condensed-latin-800-normal.woff2") format("woff2"); }
+/* Decision 037: Anton (SIL OFL 1.1, assets/fonts/OFL-Anton.txt) for the CN TRIAL wordmark only. */
+@font-face { font-family: "Anton"; font-weight: 400; font-display: swap; src: url("./assets/fonts/anton-latin-400-normal.woff2") format("woff2"); }
 @font-face { font-family: "Barlow"; font-weight: 400; font-display: swap; src: url("./assets/fonts/barlow-latin-400-normal.woff2") format("woff2"); }
 @font-face { font-family: "Barlow"; font-weight: 500; font-display: swap; src: url("./assets/fonts/barlow-latin-500-normal.woff2") format("woff2"); }
 @font-face { font-family: "Barlow"; font-weight: 600; font-display: swap; src: url("./assets/fonts/barlow-latin-600-normal.woff2") format("woff2"); }
@@ -58,14 +60,16 @@ kbd { display: inline-block; min-width: 1.7em; padding: 0 5px; border: 1px solid
 .lens.detect { --c: var(--stop); animation: lens-detect 0.5s steps(2, start) infinite; }
 @keyframes lens-detect { 50% { box-shadow: 0 0 0 2px #05080a, 0 0 0 3px var(--stop), 0 0 40px var(--stop); } }
 
-/* ---------- brand ---------- */
-.brand { display: inline-flex; align-items: center; gap: 14px; user-select: none; }
-.brand-word { font: 800 76px/0.9 var(--display); letter-spacing: 0.01em; color: var(--porcelain); text-transform: uppercase; }
-.brand .lens { --s: 54px; --c: var(--stop); }
-.brand.small { gap: 8px; }
-.brand.small .brand-word { font-size: 24px; letter-spacing: 0.04em; }
-.brand.small .lens { --s: 18px; box-shadow: 0 0 0 1px #05080a, 0 0 0 2px var(--line-strong); }
-.brand.small .lens::after { display: none; }
+/* ---------- brand (decision 037: wordmark only, no eye logo) ---------- */
+.brand { display: inline-flex; align-items: baseline; gap: 0.12em; user-select: none; --brand-size: 92px; }
+.brand-word { font: 400 var(--brand-size)/0.9 "Anton", var(--display); letter-spacing: 0.015em; text-transform: uppercase; transform: skewX(-8deg);
+  background: linear-gradient(180deg, #fbf6ec 0%, #e6ddcd 52%, #9d968a 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.55)) drop-shadow(0 0 22px rgba(239, 59, 45, 0.18)); }
+.brand-slash { font: 400 calc(var(--brand-size) * 0.92)/0.9 "Anton", var(--display); color: var(--stop); transform: skewX(-8deg); letter-spacing: -0.12em;
+  text-shadow: 0 0 18px rgba(239, 59, 45, 0.55); }
+.brand.small { --brand-size: 26px; }
+.brand.small .brand-word { filter: none; }
+.brand.small .brand-slash { text-shadow: none; }
 
 /* ---------- panels: stamped steel tags with one notched corner ---------- */
 .card { pointer-events: auto; position: relative; background: var(--panel); border: 1px solid var(--line); padding: 18px 20px;
@@ -119,19 +123,23 @@ label.check { display: flex !important; align-items: center; gap: 8px; font: 500
 
 /* ---------- main menu ---------- */
 .menu { position: relative; height: 100%; display: grid; grid-template-columns: minmax(0, 1fr); align-items: center; overflow: auto; }
-.menu-art { position: fixed; inset: 0; background:
-  radial-gradient(ellipse 40% 30% at 72% 34%, rgba(239, 59, 45, 0.18), transparent 70%),
-  radial-gradient(ellipse 70% 50% at 70% 100%, rgba(60, 120, 120, 0.22), transparent 70%),
-  linear-gradient(180deg, #050a0d 0%, #0c1a1f 46%, #183238 74%, #0a1114 100%); }
-.menu-art::before { /* distant factory skyline, flat silhouette */ content: ""; position: absolute; left: 0; right: 0; bottom: 18%; height: 30%; opacity: 0.85; background:
-  linear-gradient(0deg, #091216 0 30%, transparent 30%),
-  linear-gradient(90deg, transparent 0 6%, #0b161a 6% 9%, transparent 9% 14%, #0b161a 14% 22%, transparent 22% 31%, #0b161a 31% 33%, transparent 33% 52%, #0b161a 52% 63%, transparent 63% 71%, #0b161a 71% 74%, transparent 74% 84%, #0b161a 84% 95%, transparent 95%) bottom / 100% 62% no-repeat,
-  linear-gradient(90deg, transparent 0 16%, #0b161a 16% 16.8%, transparent 16.8% 56%, #0b161a 56% 56.7%, transparent 56.7% 58%, #0b161a 58% 58.7%, transparent 58.7%) bottom / 100% 100% no-repeat; }
-.menu-art::after { /* yard fence and ground */ content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 22%; background:
-  repeating-linear-gradient(90deg, transparent 0 46px, rgba(5, 9, 11, 0.9) 46px 48px),
-  linear-gradient(0deg, #05090b 0 55%, rgba(5, 9, 11, 0.6) 100%); }
+/* Decision 037: the background is a render of the real Stage 01 yard and The Watcher on red (no players),
+   darkened toward the left so the menu reads, with a slow push-in. */
+.menu-art { position: fixed; inset: 0; overflow: hidden; background: #05090b; }
+.menu-art::before { content: ""; position: absolute; inset: -3%; background: url("./assets/landing/STG01_Landing_Watcher.webp") 62% 40% / cover no-repeat, #05090b;
+  animation: menu-push 40s ease-in-out infinite alternate; }
+.menu-art::after { content: ""; position: absolute; inset: 0; background:
+  linear-gradient(90deg, rgba(4, 8, 10, 0.94) 0%, rgba(4, 8, 10, 0.82) 30%, rgba(4, 8, 10, 0.35) 55%, rgba(4, 8, 10, 0.05) 75%, rgba(4, 8, 10, 0.25) 100%),
+  linear-gradient(0deg, rgba(4, 8, 10, 0.85) 0%, transparent 28%),
+  radial-gradient(ellipse 120% 90% at 60% 45%, transparent 55%, rgba(0, 0, 0, 0.55) 100%); }
+@keyframes menu-push { from { transform: scale(1); } to { transform: scale(1.06) translate(-0.6%, 0.4%); } }
+@media (max-width: 720px) { .menu-art::before { background-image: url("./assets/landing/STG01_Landing_Watcher_small.webp"); background-position: 64% 40%; } }
+@media (prefers-reduced-motion: reduce) { .menu-art::before { animation: none; } }
+.menu-title { display: grid; gap: 10px; margin-bottom: 4px; }
+.menu-stage { display: inline-flex; align-items: center; gap: 10px; font: 700 13px/1 var(--display); letter-spacing: 0.24em; text-transform: uppercase; color: #c9d3d4; }
+.menu-stage b { background: var(--stop); color: #fff; padding: 4px 8px; letter-spacing: 0.2em; }
 .menu-col { position: relative; z-index: 1; display: grid; gap: 16px; justify-items: start; width: min(460px, 100% - 32px); margin-left: clamp(16px, 9vw, 140px); padding: 32px 0; }
-.menu-sub { margin: -4px 0 10px; font: 600 15px/1.35 var(--body); color: #b8c6c9; max-width: 34ch; }
+.menu-sub { margin: -2px 0 10px; font: 500 16px/1.4 var(--body); color: #c3cfd1; max-width: 36ch; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6); }
 .name-field { display: grid; gap: 6px; width: 100%; font: 700 12px/1 var(--display); letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
 .name-field input { width: 100%; font: 500 18px/1.2 var(--body); padding: 12px 14px; }
 .menu-actions { display: grid; gap: 10px; width: 100%; }

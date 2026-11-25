@@ -81,8 +81,8 @@ try {
   const minRate = Math.min(...rates);
   if (minRate < 12) errors.push(`A client received only ${minRate.toFixed(1)} snapshots per second`);
 
-  // Moving fraction with signals (spec §3): green 3-6 s + warning 0.8 s vs red 3-5 s.
-  const movingFraction = (4.5 + 0.8) / (4.5 + 0.8 + 4.0);
+  // Moving fraction with signals (spec §3, decision 037): green 3-5.5 s (mean 4.25) vs red 1.8-3.2 s (mean 2.5), no warning.
+  const movingFraction = 4.25 / (4.25 + 2.5);
   const report = {
     result: errors.length ? 'FAIL' : 'PASS',
     errors,

@@ -1,11 +1,11 @@
 {
   "result": "PASS",
   "errors": [],
-  "date": "2026-11-25T04:06:31.482Z",
+  "date": "2026-11-25T04:56:53.463Z",
   "seed": 12345,
   "round_s": 25,
-  "first_red_s": 6.27,
-  "reckless_spotted_at_s": 6.63,
+  "first_red_s": 5.47,
+  "reckless_spotted_at_s": 5.93,
   "placings": [
     "1. Careful (active)",
     "2. Statue (active)",
@@ -18,7 +18,6 @@
   ],
   "signals_seen": [
     "green",
-    "warning",
     "red",
     "none"
   ],
@@ -71,12 +70,12 @@
       "players": 3
     },
     "names_sample": [
-      "Willow",
-      "Cinder",
-      "Zephyr",
-      "Gizmo",
-      "Dash",
-      "Ember"
+      "Sprout",
+      "Comet",
+      "Maple",
+      "Domino",
+      "Vesper",
+      "Dash"
     ]
   }
 }

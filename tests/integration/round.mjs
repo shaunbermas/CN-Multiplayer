@@ -1,6 +1,6 @@
 // Red Light, Green Light round against the Worker + Durable Object (wrangler dev), with seeded bots.
 //  - the host starts a seeded round (test-only short briefing and 25 s round)
-//  - "Careful" walks only on green and stops at the warning; "Reckless" never stops; "Statue" never moves
+//  - "Careful" walks only on green and stops just before red (no warning since decision 037); "Reckless" never stops; "Statue" never moves
 //  - expected: Reckless is spotted at the first red after the grace window; Careful and Statue are not;
 //    results order Careful, Statue, Reckless; spawns are shuffled and distinct; a late joiner waits on the
 //    bench and joins in when the room returns to the lobby
@@ -68,7 +68,7 @@ try {
     signalsSeen.add(careful.round.signal);
     for (const b of bots) {
       let mz = 0;
-      if (b === careful) mz = seg?.signal === 'green' && seg.end - t > 0.15 ? -1 : 0; // stop just before the warning
+      if (b === careful) mz = seg?.signal === 'green' && seg.end - t > 0.15 ? -1 : 0; // stop just before red (no warning, decision 037)
       if (b === reckless) mz = -1;
       b.send({ t: 'input', seq: seq.set(b, seq.get(b) + 1).get(b), mx: 0, mz, yaw: 0 });
     }
@@ -90,7 +90,8 @@ try {
   if (!(spottedAt >= firstRed.start + 0.3 && spottedAt <= firstRed.start + 1.2)) {
     errors.push(`Reckless spotted at ${spottedAt.toFixed(2)} s; first red starts at ${firstRed.start} s (expected just after the 0.3-0.5 s grace)`);
   }
-  for (const s of ['green', 'warning', 'red']) if (!signalsSeen.has(s)) errors.push(`Never saw the ${s} signal`);
+  for (const s of ['green', 'red']) if (!signalsSeen.has(s)) errors.push(`Never saw the ${s} signal`);
+  if (signalsSeen.has('warning')) errors.push('Saw a warning signal (decision 037 removed it)');
 
   if (careful.resultsMeta?.roundId !== 1 || careful.resultsMeta?.stage !== 'STAGE_01_RED_LIGHT')
     errors.push(`Results meta ${JSON.stringify(careful.resultsMeta)}`);

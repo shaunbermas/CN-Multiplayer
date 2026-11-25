@@ -3,7 +3,7 @@
 // human input, so bots use the same movement, walls, obstacles, collisions, red-light detection and scoring.
 // No browser clients are created. Pure apart from the seeded random generator each bot carries.
 //
-// Behaviour (docs/STAGE_01_BOT_SYSTEM.md): move on green, stop on the warning after a personal reaction time,
+// Behaviour (docs/STAGE_01_BOT_SYSTEM.md): move on green, stop on red after a personal reaction time (no warning since decision 037),
 // sometimes stop too late (and get spotted), walk at a personal pace within the approved walk speed, weave
 // through the barricade gaps and around the sliding gate, sidestep players ahead (not always), and carry on
 // after being knocked down.
@@ -23,7 +23,7 @@ export interface BotBrain {
   seed: number;
   /** Input magnitude 0.72–1.0: walk pace within the approved 4 m/s walk speed. */
   pace: number;
-  /** Seconds after the warning starts before this bot reacts and stops (0.08–0.5). */
+  /** Seconds after RED starts before this bot reacts and stops (0.12–0.32, inside the 0.4 s grace; decision 037). */
   reaction: number;
   /** Chance per red light of stopping too late (0.008–0.05; over a stage of about ten reds that spots roughly one bot in four). */
   recklessness: number;
@@ -52,7 +52,7 @@ export function makeBot(seed: number): BotBrain {
   return {
     seed,
     pace: between(0.72, 1.0),
-    reaction: between(0.08, 0.5),
+    reaction: between(0.12, 0.32),
     recklessness: between(0.008, 0.05),
     courtesy: between(0.4, 0.95),
     lane: between(-0.35, 0.35),
@@ -137,15 +137,16 @@ export function botInput(b: BotBrain, v: BotView, geo: StageGeometry, rows: GapR
   const key = `${v.signal}:${v.segStart}`;
   if (key !== b.segKey) {
     b.segKey = key;
-    if (v.signal === 'warning') {
-      // Roll once per light: does this bot stop too late this time? Late means past the detection grace.
-      b.lateStop = b.rand() < b.recklessness ? 0.45 + b.rand() * 0.6 : 0;
+    if (v.signal === 'red') {
+      // Roll once per light: does this bot stop too late this time? Late means past the detection grace
+      // (decision 037: there is no warning, so bots react to RED itself, like players).
+      b.lateStop = b.rand() < b.recklessness ? 0.65 + b.rand() * 0.6 : 0;
     }
   }
   let go = false;
   if (v.signal === 'green') go = true;
-  else if (v.signal === 'warning') go = v.into < b.reaction || b.lateStop > 0;
-  else if (v.signal === 'red') go = b.lateStop > 0 && v.into < b.lateStop;
+  else if (v.signal === 'warning') go = true;
+  else if (v.signal === 'red') go = v.into < b.reaction || (b.lateStop > 0 && v.into < b.lateStop);
   if (!go) { b.bestAt = v.now; return still; }
 
   // ---- where to go: toward the finish, through the next barricade gap, around the gate

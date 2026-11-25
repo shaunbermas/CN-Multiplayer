@@ -16,6 +16,7 @@ import type { TrialRoom } from '../../net.ts';
 import { useQuality, type Quality } from '../../game/quality.ts';
 import { signalView } from '../../game/roundClock.ts';
 import { stageGeo } from '../../game/stage.ts';
+import { MidgroundProps, midgroundPropsStatus } from './MidgroundProps.tsx';
 import { Surroundings, surroundingsStatus } from './Surroundings.tsx';
 import { buildSkyEnvironment } from './skyModel.ts';
 import { Atmosphere, atmosphereStatus } from './Atmosphere.tsx';
@@ -44,8 +45,8 @@ export const stage01Assets = {
   effects: { lights: [] as string[], shadows: [] as string[], dust: 0, haze: false },
   /** Stage 1.5 painted surroundings: matte layers and tree cutouts drawn, and load problems. */
   surroundings: surroundingsStatus,
-  /** Midground trees are retired (Phase 04: no 3D trees); kept at 0 so older test reports still parse. */
-  midground: { trees: 0 },
+  /** Decision 037: cutout props and trees in the middle distance (counts, glows, load problems). */
+  midground: midgroundPropsStatus,
   /** Cone-tree triangles removed from ENV_VISUAL_FOLIAGE (grass tufts kept), and whether the sky env map is set. */
   foliageTrianglesRemoved: 0,
   /** Stage 1.5 atmosphere (sky, light cones, mist, signal wash, post-processing) for the current tier. */
@@ -307,6 +308,7 @@ function Watcher({ room, search }: { room: TrialRoom; search: boolean }) {
   const group = useRef<THREE.Group>(null);
   const { actions } = useAnimations(gltf.animations, group);
   const current = useRef<WatcherChoice | null>(null);
+  const currentAt = useRef(0);
   const resultsAt = useRef<number | null>(null);
   const segSeen = useRef<{ key: string; at: number }>({ key: '', at: 0 });
   const spotSeen = useRef<{ key: string; at: number }>({ key: '', at: 0 });
@@ -372,6 +374,7 @@ function Watcher({ room, search }: { room: TrialRoom; search: boolean }) {
       phase, signal: v.signal, into: v.into, sinceSegmentSeen: (Date.now() - segSeen.current.at) / 1000, segmentLength: v.segLength, segmentStart: v.segStart, redIndex: v.redIndex,
       sinceSpotted: thisRoundSpot ? (Date.now() - spotSeen.current.at) / 1000 : Infinity,
       sinceResults: resultsAt.current === null ? Infinity : (Date.now() - resultsAt.current) / 1000,
+      currentKey: current.current?.key, sinceCurrent: (Date.now() - currentAt.current) / 1000,
     });
     if (current.current?.key === choice.key) return;
     const next = actions[choice.clip];
@@ -384,6 +387,7 @@ function Watcher({ room, search }: { room: TrialRoom; search: boolean }) {
     next.play();
     if (prev && prev !== next) next.crossFadeFrom(prev, 0.2, false);
     current.current = choice;
+    currentAt.current = Date.now();
     stage01Assets.watcherClip = choice.clip;
     stage01Assets.clipHistory.push([choice.clip, Date.now()]);
     if (stage01Assets.clipHistory.length > 60) stage01Assets.clipHistory.shift();
@@ -471,6 +475,7 @@ export function Stage01Scene({ room }: { room: TrialRoom }) {
       <Watcher room={room} search={quality !== 'low'} />
       <Atmosphere room={room} quality={quality} />
       <Surroundings quality={quality} />
+      <MidgroundProps quality={quality} />
       <Obstacles room={room} shadows={shadowLights(quality).length > 0} />
       {dust > 0 && <Dust count={dust} />}
     </>

@@ -302,11 +302,12 @@ export class ContestantInstance {
   }
 
   /** Plays a one-shot clip over the locomotion layer (fades in and out); `hold` keeps its last pose. */
-  play(name: string, opts: { hold?: boolean; next?: Chain[]; dur?: number } = {}): void {
+  play(name: string, opts: { hold?: boolean; next?: Chain[]; dur?: number; speed?: number } = {}): void {
     const a = this.actions.get(name);
     if (!a) return;
     if (this.shot && this.shot.action !== a) { this.shot.action.stop(); this.shot.action.setEffectiveWeight(0); }
     a.reset();
+    a.timeScale = opts.speed ?? 1;
     a.play();
     this.shot = { name, action: a, t: 0, dur: opts.dur ?? a.getClip().duration, hold: !!opts.hold, w: this.shot?.w ?? 0, next: opts.next ?? [] };
     this.shotEvent = '';
@@ -328,7 +329,9 @@ export class ContestantInstance {
     this.clock += dt;
     // status-driven one-shots
     if (d.status !== this.lastStatus) {
-      if (d.status === 'spotted') this.play('Eliminated', { hold: true });
+      // Spotted (decision 037): drop to the ground and stay down, slowed a little so the fall reads; the local
+      // camera holds on it for SPOTTED_HOLD_S before spectating. (Was the comic Eliminated hop-and-flop.)
+      if (d.status === 'spotted') this.play('Fall', { hold: true, speed: 0.72 });
       else if (this.lastStatus === 'spotted') this.play('Recover');
       if (d.status === 'finished') this.play('Victory', { hold: true });
       else if (this.lastStatus === 'finished' && this.shot?.name === 'Victory') this.shot.hold = false;
