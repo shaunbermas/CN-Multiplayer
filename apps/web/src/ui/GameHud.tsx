@@ -322,9 +322,8 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
       )}
 
       {r.phase === 'countdown' && (
-        <div className="countdown" data-testid="countdown">
-          <div className="dial"><span className="lens" aria-hidden="true" /><span className="cd-num">{Math.max(1, Math.ceil(remaining))}</span></div>
-          <span className="cd-label">Get ready</span>
+        <div className="countdown" data-testid="countdown" aria-live="assertive">
+          <span className="cd-num" data-n={Math.max(1, Math.ceil(remaining))}>{Math.max(1, Math.ceil(remaining))}</span>
         </div>
       )}
 
