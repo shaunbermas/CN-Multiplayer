@@ -69,7 +69,7 @@ turnaround renders):
 
 The game model's hood is about 20 % narrower from the front and about 30 % shallower from the side than the
 reference, and comes to more of a point. The reference has a rounder, bigger, more chibi head over shorter legs.
-**PROPOSED, needs the owner's approval:** widen and round the hood (scale the head and hood about 1.2× wide and
+**Outcome (decision 035):** this rounder hood was built and shown on 25 Nov 2026, and the owner preferred the original, so it was reverted. The approved model is unchanged. The original proposal was: widen and round the hood (scale the head and hood about 1.2× wide and
 deep, keeping its height) in the Blender build script, then re-export, keeping the same rig, clips, LODs and
 colourways. Nothing has been changed.
 
