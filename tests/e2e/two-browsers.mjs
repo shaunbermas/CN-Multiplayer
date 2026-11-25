@@ -78,8 +78,18 @@ try {
   const idA = await pageA.evaluate(() => window.__cn.sessionId);
   const zBefore = (await players(pageB)).find((p) => p.id === idA).z;
   await pageA.bringToFront();
+  // Hold W until the server has A at least 8 m forward (cap 15 s). A fixed 4 s hold measured the runner, not the game:
+  // inputs are sampled once per rendered frame, and on the 6x-throttled software-rendered page a frame can take
+  // hundreds of ms, so 4 s of wall time sometimes carried only ~2 s of walking (7.94 m on GitHub's runner).
   await pageA.keyboard.down('KeyW');
-  await sleep(4000);
+  const holdStart = Date.now();
+  await sleep(2000);
+  while (Date.now() - holdStart < 15_000) {
+    const me = (await players(pageA)).find((p) => p.id === idA);
+    if (me && zBefore - me.z >= 8.5) break;
+    await sleep(250);
+  }
+  const heldS = (Date.now() - holdStart) / 1000;
   await pageA.keyboard.up('KeyW');
   await sleep(800);
   // After stopping, the server finishes applying queued inputs; prediction and server must then agree.
@@ -93,7 +103,9 @@ try {
   } while (Date.now() - settleStart < 5000);
   const fromB = (await players(pageB)).find((p) => p.id === idA);
   const moved = zBefore - fromB.z;
-  if (!(moved > 8)) errors.push(`Player A moved only ${moved.toFixed(2)} m as seen by B (expected > 8 m in 4 s)`);
+  if (!(moved > 8)) errors.push(`Player A moved only ${moved.toFixed(2)} m as seen by B after holding W ${heldS.toFixed(1)} s (expected > 8 m)`);
+  const seenGap = Math.hypot(fromB.x - serverA.x, fromB.z - serverA.z);
+  if (!(seenGap <= 0.5)) errors.push(`B sees A ${seenGap.toFixed(2)} m away from where A's server state has it (expected <= 0.5 m)`);
   const predictionError = Math.hypot(predicted.x - serverA.x, predicted.z - serverA.z);
   if (predictionError > 0.5) errors.push(`Prediction differs from the server by ${predictionError.toFixed(2)} m after stopping`);
   await pageA.screenshot({ path: `${shots}/s1-3_after_walk.png`, timeout: 120_000 });
@@ -186,7 +198,7 @@ try {
     date: new Date().toISOString(),
     same_room: roomA === roomB,
     both_see_players: 2,
-    walk_4s: { moved_m_seen_by_other_browser: +moved.toFixed(2), prediction_error_m: +predictionError.toFixed(3) },
+    walk_4s: { moved_m_seen_by_other_browser: +moved.toFixed(2), held_w_s: +heldS.toFixed(1), seen_gap_m: +seenGap.toFixed(3), prediction_error_m: +predictionError.toFixed(3) },
     round: { results: 'Alpha (stood still) 1st, Beta (walked into red) spotted', watcher_clips: { green: greenClip, red: redClip }, beta_spotted_during: sigAtSpot },
     assets: { watcher_height_m: assetA.watcherHeight, clips: assetA.watcherClips.length, quality: assetA.quality, problems: assetA.problems },
     screenshots: ['s1-3_start_view.png', 's1-3_after_walk.png', 's1-3_other_player_view.png', 's1-4_green_view.png', 's1-4_red_view.png', 's1-4_spotted_view.png', 's1-4_results_view.png'].map((f) => `tests/reports/screenshots/${f}`),
