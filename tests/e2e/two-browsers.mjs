@@ -19,7 +19,9 @@ const { chromium } = require('playwright');
 const PORT = Number(process.env.E2E_PORT ?? 8797);
 // Test round length (test mode only). Long enough that a slow 2-core CI runner, where each check of the
 // software-rendered pages takes seconds, still finishes the in-round checks before the round ends.
-const ROUND_S = 75;
+// 110 s (was 75): on GitHub's runner the software-rendered screenshots after the spot take ~30 s each, and a
+// 75 s round could end before the spectator check ran. The checks themselves are unchanged.
+const ROUND_S = 110;
 const shots = `${root}tests/reports/screenshots`;
 mkdirSync(shots, { recursive: true });
 if (process.env.SKIP_BUILD !== '1') execSync('npm run build', { cwd: root, stdio: 'ignore' });
