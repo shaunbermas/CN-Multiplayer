@@ -4,6 +4,9 @@ CN Trials is the Creative Nomads team's browser multiplayer game: a quick icebre
 seven-round tournament for team events (up to 30 players). It is a separate project from `shaun-game`:
 do not copy code or assets between them unless the owner asks.
 
+Stage order (decision 045): 01 Red Light, Green Light, 02 Agawan Base, 03 The Hunt. Stage numbers come from
+`OFFICIAL_ORDER` in `packages/shared/src/stages.ts`; code folders are named after the game (`hunt/`, `agawan/`).
+
 Start with `README.md`, `docs/DECISIONS.md` (what is decided and what is open) and
 `docs/GAME_DESIGN_DOCUMENT.md` (the canonical rules). Never change an APPROVED item in the GDD without
 the owner's decision, recorded in `docs/DECISIONS.md`.

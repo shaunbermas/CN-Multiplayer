@@ -56,7 +56,7 @@ function resolveRect(x: number, z: number, r: number, w: Rect): [number, number,
 
 /** One fixed simulation step. Pure function: same inputs, same result on server and client. */
 export function step(s: MoveState, input: MoveInput, dt: number, walls: Rect[], speedScale = 1): MoveState {
-  // speedScale: Stage 02 sprint and crouch (1 everywhere else, so Stage 01 movement is unchanged).
+  // speedScale: The Hunt sprint and crouch (1 everywhere else, so Stage 01 movement is unchanged).
   const tx = input.mx * MOVEMENT.walkSpeed * speedScale;
   const tz = input.mz * MOVEMENT.walkSpeed * speedScale;
   const moving = input.mx !== 0 || input.mz !== 0;

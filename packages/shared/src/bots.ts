@@ -43,8 +43,8 @@ export interface BotBrain {
   /** Sidestep direction and until when (room time), when stuck or avoiding someone. */
   dodge: number;
   dodgeUntil: number;
-  /** Stage 02 memory (stage02/huntBots.ts); cleared when a stage starts. */
-  hunt?: import('./stage02/huntBots.ts').HuntBotMemory;
+  /** Hunt memory (hunt/huntBots.ts); cleared when a stage starts. */
+  hunt?: import('./hunt/huntBots.ts').HuntBotMemory;
 }
 
 /** A bot with a seeded personality. */

@@ -1,4 +1,4 @@
-// Stage 02 · THE HUNT rules engine (asymmetrical hide-and-hunt). Pure and deterministic for a seed, owned by the
+// Stage 03 · THE HUNT rules engine (asymmetrical hide-and-hunt). Pure and deterministic for a seed, owned by the
 // room (server authority), unit tested here. The room calls the same methods for humans and bots:
 //   start(players, opts)          roles (seeded), spawns, briefing
 //   applyFlags(p, flags)          crouch / sprint request from the player's input
@@ -11,7 +11,7 @@ import { insideRect, type Rect } from '../stage.ts';
 import { rng, shuffled, ROUND, type Phase, type Placing, type RoundEvents, type RoundPlayer, type Signal, type SignalSegment, type StartOptions } from '../round.ts';
 import type { Mode } from '../tournament.ts';
 import type { StageEngine } from '../engine.ts';
-import { STAGE02, hunterCount, type HuntRole } from './config.ts';
+import { HUNT, hunterCount, type HuntRole } from './config.ts';
 import { lineOfSight, pathAttenuation } from './los.ts';
 import type { HideSpot, HuntLayout, HuntWall } from './layout.ts';
 
@@ -98,8 +98,8 @@ export class HuntEngine implements StageEngine {
   lastResults: Placing[] = [];
   skipped = new Set<string>();
   resultsS: number = ROUND.resultsS;
-  headStartS: number = STAGE02.headStartS;
-  huntS: number = STAGE02.huntS;
+  headStartS: number = HUNT.headStartS;
+  huntS: number = HUNT.huntS;
   /** Per-player stage state, kept by id (a reconnecting player gets theirs back). */
   readonly state = new Map<string, HuntState>();
   private lastNow = 0;
@@ -133,8 +133,8 @@ export class HuntEngine implements StageEngine {
     this.resultsS = opts.resultsS ?? ROUND.resultsS;
     // Test rooms may shorten the stage: roundS is the active phase (head start + hunt), scaled proportionally.
     if (typeof opts.roundS === 'number') {
-      const total = STAGE02.headStartS + STAGE02.huntS;
-      this.headStartS = Math.max(1, Math.round((STAGE02.headStartS * opts.roundS) / total * 10) / 10);
+      const total = HUNT.headStartS + HUNT.huntS;
+      this.headStartS = Math.max(1, Math.round((HUNT.headStartS * opts.roundS) / total * 10) / 10);
       this.huntS = Math.max(2, opts.roundS - this.headStartS);
     }
     this.mode = opts.mode === 'tournament' ? 'tournament' : 'standup';
@@ -183,8 +183,8 @@ export class HuntEngine implements StageEngine {
   speedScale(p: RoundPlayer): number {
     const s = this.state.get(p.id);
     if (!s || this.phase !== 'active') return 1;
-    if (s.sprintUntil > this.now) return STAGE02.sprint.speed;
-    if (s.crouch) return STAGE02.crouch.speed;
+    if (s.sprintUntil > this.now) return HUNT.sprint.speed;
+    if (s.crouch) return HUNT.crouch.speed;
     return 1;
   }
 
@@ -194,8 +194,8 @@ export class HuntEngine implements StageEngine {
     if (!s || this.phase !== 'active' || s.captured) return;
     s.crouch = (flags & 1) === 1;
     if ((flags & 2) && this.now >= s.sprintCdUntil && !s.hideId && moving) {
-      s.sprintUntil = this.now + STAGE02.sprint.burstS;
-      s.sprintCdUntil = this.now + STAGE02.sprint.burstS + STAGE02.sprint.cooldownS;
+      s.sprintUntil = this.now + HUNT.sprint.burstS;
+      s.sprintCdUntil = this.now + HUNT.sprint.burstS + HUNT.sprint.cooldownS;
     }
     s.noisy = moving && !s.crouch;
   }
@@ -210,7 +210,7 @@ export class HuntEngine implements StageEngine {
   pulse(p: HuntBody, players: HuntBody[]): PulseReading | null {
     const s = this.state.get(p.id);
     if (!s || s.role !== 'hunter' || !this.released || this.now < s.pulseCdUntil || p.downUntil > this.now) return null;
-    const cfg = STAGE02.pulse;
+    const cfg = HUNT.pulse;
     s.pulseCdUntil = this.now + cfg.cooldownS;
     const walls = this.wallsNow();
     let best = 0, bx = 0, bz = 0;
@@ -223,7 +223,7 @@ export class HuntEngine implements StageEngine {
       const spot = t.hideId ? this.spotById.get(t.hideId) : undefined;
       const sx = spot ? spot.fx : o.x, sz = spot ? spot.fz : o.z;
       const att = pathAttenuation(p.x, p.z, sx, sz, walls, cfg.maxWalls).factor;
-      const sig = (1 - d / cfg.rangeM) * att * (t.hideId ? cfg.hiddenFactor : 1) * (t.crouch ? STAGE02.crouch.pulseFactor : 1);
+      const sig = (1 - d / cfg.rangeM) * att * (t.hideId ? cfg.hiddenFactor : 1) * (t.crouch ? HUNT.crouch.pulseFactor : 1);
       if (sig > best) { best = sig; bx = o.x; bz = o.z; }
     }
     const strength: PulseReading['strength'] = best >= cfg.strong ? 3 : best >= cfg.medium ? 2 : best >= cfg.weak ? 1 : 0;
@@ -251,7 +251,7 @@ export class HuntEngine implements StageEngine {
     if (!s || s.role !== 'hider' || s.captured || this.phase !== 'active') return null;
     if (s.hideId) { this.leaveHide(p, s); return 'left'; }
     if (this.now < s.hideCdUntil || p.downUntil > this.now || p.status !== 'active') return null;
-    let best: HideSpot | null = null, bd: number = STAGE02.hide.enterDistM;
+    let best: HideSpot | null = null, bd: number = HUNT.hide.enterDistM;
     for (const spot of this.layout.hideSpots) {
       const d = Math.hypot(spot.fx - p.x, spot.fz - p.z);
       if (d > bd) continue;
@@ -260,7 +260,7 @@ export class HuntEngine implements StageEngine {
     }
     if (!best) return null;
     s.hideId = best.id;
-    s.hideUntil = this.now + STAGE02.hide.maxS;
+    s.hideUntil = this.now + HUNT.hide.maxS;
     s.sprintUntil = 0;
     Object.assign(p, { x: best.x, z: best.z, vx: 0, vz: 0 });
     void players;
@@ -276,7 +276,7 @@ export class HuntEngine implements StageEngine {
   private leaveHide(p: RoundPlayer, s: HuntState): void {
     const spot = s.hideId ? this.spotById.get(s.hideId) : undefined;
     s.hideId = null;
-    s.hideCdUntil = this.now + STAGE02.hide.cooldownS;
+    s.hideCdUntil = this.now + HUNT.hide.cooldownS;
     if (spot) Object.assign(p, { x: spot.fx, z: spot.fz, vx: 0, vz: 0 });
   }
 
@@ -316,7 +316,7 @@ export class HuntEngine implements StageEngine {
       const target = this.captureTarget(h, players, walls);
       if (!target) { s.capTarget = null; s.capProgress = 0; continue; }
       if (target !== s.capTarget) { s.capTarget = target; s.capProgress = 0; }
-      s.capProgress += dt / STAGE02.capture.holdS;
+      s.capProgress += dt / HUNT.capture.holdS;
       if (s.capProgress >= 1 - 1e-6) {
         const v = byId.get(target)!;
         const vs = this.state.get(target)!;
@@ -338,7 +338,7 @@ export class HuntEngine implements StageEngine {
       if (!released || s.captured) { s.threat = 0; continue; }
       let d = Infinity;
       for (const h of hunters) d = Math.min(d, Math.hypot(h.x - p.x, h.z - p.z));
-      s.threat = d < STAGE02.threat.dangerM ? 2 : d < STAGE02.threat.nearM ? 1 : 0;
+      s.threat = d < HUNT.threat.dangerM ? 2 : d < HUNT.threat.nearM ? 1 : 0;
     }
     // Early end: every hider has been captured (only once there were hiders to catch).
     const hiders = [...this.state.values()].filter((s) => s.role === 'hider');
@@ -351,7 +351,7 @@ export class HuntEngine implements StageEngine {
    * locker), measured to the front point.
    */
   captureTarget(h: HuntBody, players: HuntBody[], walls: readonly HuntWall[] = this.wallsNow()): string | null {
-    const c = STAGE02.capture;
+    const c = HUNT.capture;
     const fx = -Math.sin(h.yaw), fz = -Math.cos(h.yaw);
     const cosMax = Math.cos((c.facingDeg * Math.PI) / 180);
     let best: string | null = null, bd: number = c.distM;
@@ -373,7 +373,7 @@ export class HuntEngine implements StageEngine {
     return best;
   }
 
-  /** Placings and Stage 02 points (spec §9): survivors 2; captured 0; hunters 1 for one capture, 2 for two or more. */
+  /** Placings and Hunt points (spec §9): survivors 2; captured 0; hunters 1 for one capture, 2 for two or more. */
   results(players: HuntBody[]): Placing[] {
     type Row = { id: string; role: HuntRole; captured: boolean; capturedAt: number; captures: number; joinOrder: number };
     const rows: Row[] = [];
@@ -437,7 +437,7 @@ export class HuntEngine implements StageEngine {
     if (vs.role === vo.role) return true; // teammates
     if (vo.captured) return true;         // a captured hider is out of play
     const d = Math.hypot(other.x - viewer.x, other.z - viewer.z);
-    if (d > STAGE02.sightM) return false;
+    if (d > HUNT.sightM) return false;
     return lineOfSight(viewer.x, viewer.z, other.x, other.z, this.wallsNow());
   }
 

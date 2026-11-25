@@ -1,12 +1,12 @@
-// Stage 02 · THE HUNT: roles, head start, Pulse Detector, capture, hiding, scoring, visibility and a full-room bot
+// Stage 03 · THE HUNT: roles, head start, Pulse Detector, capture, hiding, scoring, visibility and a full-room bot
 // simulation that runs the real engine, movement, collisions and bot code the room uses (no network).
 import { describe, expect, it } from 'vitest';
 import {
-  HuntEngine, MATCH, Match, RoundEngine, SIM_DT, STAGE02, buildHuntLayout, findPath, getStage, huntBotInput, huntSenses, hunterCount,
+  HuntEngine, MATCH, Match, RoundEngine, SIM_DT, HUNT, buildHuntLayout, findPath, getStage, huntBotInput, huntSenses, hunterCount,
   lineOfSight, makeBot, newRoundPlayer, pathAttenuation, resolvePlayerContacts, sanitizeInput, step, type HuntBody, type BotBrain,
 } from '../src/index.ts';
 
-const def = getStage(STAGE02.id);
+const def = getStage(HUNT.id);
 const layout = def.hunt!.layout;
 const nav = def.hunt!.nav;
 
@@ -75,7 +75,7 @@ describe('timing and the head start', () => {
   it('15 s head start then 180 s of hunting; the gates are walls until release', () => {
     const players = makePlayers(10);
     const { e, t } = startHunt(players, 5);
-    expect(e.remaining()).toBeCloseTo(STAGE02.headStartS + STAGE02.huntS, 1);
+    expect(e.remaining()).toBeCloseTo(HUNT.headStartS + HUNT.huntS, 1);
     expect(e.released).toBe(false);
     expect(e.extraWalls()).toHaveLength(2);
     // A hunter walking at the gate cannot get out.
@@ -86,11 +86,11 @@ describe('timing and the head start', () => {
     expect(s.x).toBeGreaterThan(54.6);
     // No pulse and no capture before release.
     expect(e.pulse(h, players)).toBeNull();
-    const t2 = advance(e, players, t, STAGE02.headStartS + 0.05);
+    const t2 = advance(e, players, t, HUNT.headStartS + 0.05);
     expect(e.released).toBe(true);
     expect(e.extraWalls()).toHaveLength(0);
     expect(e.publicState().headStartLeft).toBe(0);
-    const t3 = advance(e, players, t2, STAGE02.huntS - 0.2);
+    const t3 = advance(e, players, t2, HUNT.huntS - 0.2);
     expect(e.phase).toBe('active');
     advance(e, players, t3, 0.4);
     expect(e.phase).toBe('results');
@@ -101,10 +101,10 @@ describe('Pulse Detector', () => {
   function pulseSetup() {
     const players = makePlayers(3);
     const { e, t } = startHunt(players, 11);
-    advance(e, players, t, STAGE02.headStartS + 0.1);
+    advance(e, players, t, HUNT.headStartS + 0.1);
     const [h] = role(e, 'hunter', players);
     const hiders = role(e, 'hider', players);
-    return { e, h, hiders, players, t: t + STAGE02.headStartS + 0.1 };
+    return { e, h, hiders, players, t: t + HUNT.headStartS + 0.1 };
   }
 
   it('respects the cooldown and range, and reports only a strength bucket and a sector', () => {
@@ -118,7 +118,7 @@ describe('Pulse Detector', () => {
     expect(Object.keys(r).sort()).toEqual(['at', 'n', 'sector', 'strength']);
     expect([3, 4, 5]).toContain(r.sector); // south = sector 4, +/- jitter
     expect(e.pulse(h, players)).toBeNull(); // cooling down
-    let t2 = advance(e, players, t, STAGE02.pulse.cooldownS - 0.2);
+    let t2 = advance(e, players, t, HUNT.pulse.cooldownS - 0.2);
     expect(e.pulse(h, players)).toBeNull();
     t2 = advance(e, players, t2, 0.3);
     Object.assign(hiders[0], { x: 40, z: 30 });
@@ -146,7 +146,7 @@ describe('capture', () => {
   function captureSetup() {
     const players = makePlayers(3);
     const { e, t } = startHunt(players, 13);
-    const t1 = advance(e, players, t, STAGE02.headStartS + 0.1);
+    const t1 = advance(e, players, t, HUNT.headStartS + 0.1);
     const [h] = role(e, 'hunter', players);
     const [v, w] = role(e, 'hider', players);
     Object.assign(w, { x: 40, z: 30 });
@@ -224,14 +224,14 @@ describe('hiding', () => {
     expect(e.privateState(hiders[0].id)!.hide).toBe(locker.id);
     expect(JSON.stringify(e.publicState())).not.toContain(locker.id);
     // Pushed out after 10 s, then 15 s before hiding again.
-    let t2 = advance(e, players, t, STAGE02.hide.maxS + 0.1);
+    let t2 = advance(e, players, t, HUNT.hide.maxS + 0.1);
     expect(e.isHidden(hiders[0].id)).toBe(false);
     expect(Math.hypot(hiders[0].x - locker.fx, hiders[0].z - locker.fz)).toBeLessThan(0.01);
     expect(e.toggleHide(hiders[0], players)).toBeNull();
-    t2 = advance(e, players, t2, STAGE02.hide.cooldownS);
+    t2 = advance(e, players, t2, HUNT.hide.cooldownS);
     // Search: a released hunter holding E at the locker front captures the hider inside.
     expect(e.toggleHide(hiders[0], players)).toBe('entered');
-    t2 = advance(e, players, t2, Math.max(0, STAGE02.headStartS - (t2 - t)) + 0.1);
+    t2 = advance(e, players, t2, Math.max(0, HUNT.headStartS - (t2 - t)) + 0.1);
     Object.assign(h, { x: locker.fx, z: locker.fz + (locker.fz > locker.z ? 0.8 : -0.8), yaw: Math.atan2(-(locker.x - locker.fx), -(locker.z - (locker.fz + (locker.fz > locker.z ? 0.8 : -0.8)))) });
     if (e.isHidden(hiders[0].id)) {
       e.setCapture(h, true);
@@ -259,7 +259,7 @@ describe('scoring and the end of the stage', () => {
     const { e, t } = startHunt(players, 23);
     const [h] = role(e, 'hunter', players);
     const hiders = role(e, 'hider', players);
-    let t2 = advance(e, players, t, STAGE02.headStartS + 0.1);
+    let t2 = advance(e, players, t, HUNT.headStartS + 0.1);
     for (const v of hiders) {
       for (const o of hiders) if (o.status === 'active' && o !== v) Object.assign(o, { x: 40, z: 30 });
       Object.assign(h, { x: -6, z: -24, yaw: Math.PI });
@@ -291,7 +291,7 @@ describe('scoring and the end of the stage', () => {
     const { e, t } = startHunt(players, 29);
     const [h] = role(e, 'hunter', players);
     const [v] = role(e, 'hider', players);
-    let t2 = advance(e, players, t, STAGE02.headStartS + 0.1);
+    let t2 = advance(e, players, t, HUNT.headStartS + 0.1);
     Object.assign(h, { x: -6, z: -24, yaw: Math.PI });
     Object.assign(v, { x: -6, z: -22.8 });
     e.setCapture(h, true);

@@ -1,7 +1,7 @@
 // The contract between the room (apps/server/src/room.ts) and a stage's rules engine (intelligence doc 09, A3).
-// Stage 01's RoundEngine (Red Light, Green Light) and Stage 02's HuntEngine (The Hunt) both implement it, and the
+// Stage 01's RoundEngine (Red Light, Green Light) and Stage 03's HuntEngine (The Hunt) both implement it, and the
 // room builds a NEW engine for every stage it starts (loadStage), so no timer, role or capture survives a stage
-// change. Stage 03 adds a third implementation.
+// change. Stage 02 (Agawan Base) adds a third implementation.
 import type { Phase, Placing, RoundEvents, RoundPlayer, Signal, SignalSegment, StartOptions } from './round.ts';
 import type { Mode } from './tournament.ts';
 import type { Rect } from './stage.ts';
@@ -28,6 +28,6 @@ export interface StageEngine {
   remaining(): number;
   /** Speed multiplier for a player's next movement step (sprint, crouch); 1 by default. */
   speedScale?(p: RoundPlayer): number;
-  /** Extra collision walls right now (Stage 02: the hunter gates during the head start). */
+  /** Extra collision walls right now (The Hunt: the hunter gates during the head start). */
   extraWalls?(): Rect[];
 }

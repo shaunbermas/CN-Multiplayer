@@ -5,10 +5,10 @@ import type { Phase, Placing, PlayerStatus, Signal } from './round.ts';
 import type { Mode } from './tournament.ts';
 import type { Emote } from './contestantColorways.ts';
 import type { Standing } from './match.ts';
-import type { HuntPrivate, HuntPublic } from './stage02/hunt.ts';
+import type { HuntPrivate, HuntPublic } from './hunt/hunt.ts';
 
 /** v7 (Stage 01 refinement): bots, collisions (knock-down timer in snapshots), multi-stage match with points.
- *  v8 (Stage 02): input flags, stage actions, per-player Stage 02 state, filtered snapshots, reconnect by key, start stage. */
+ *  v8 (The Hunt): input flags, stage actions, per-player Hunt state, filtered snapshots, reconnect by key, start stage. */
 export const PROTOCOL_VERSION = 8;
 
 export interface StartRequestOptions {
@@ -32,9 +32,9 @@ export type BotAction = { t: 'bots'; action: 'add'; count?: number } | { t: 'bot
 export type ClientMessage =
   /** key: the browser's opaque player key, so a returning player keeps their colourway (protocol v6). */
   | { t: 'join'; v: number; name: string; key?: string }
-  /** k: flags (Stage 02): 1 crouch held, 2 sprint requested. */
+  /** k: flags (The Hunt): 1 crouch held, 2 sprint requested. */
   | { t: 'input'; seq: number; mx: number; mz: number; yaw: number; k?: number }
-  /** Stage 02 actions: Pulse Detector (hunter), hold/release capture (hunter), enter/leave a hiding place (hider). */
+  /** The Hunt actions: Pulse Detector (hunter), hold/release capture (hunter), enter/leave a hiding place (hider). */
   | { t: 'act'; a: 'pulse' | 'hide' }
   | { t: 'act'; a: 'capture'; on: boolean }
   | { t: 'respawn' }
@@ -92,7 +92,7 @@ export interface RoundState {
   obstacles: boolean;
   /** Multi-stage match progress (v7); stage 0 in the lobby before the first match. */
   match: MatchState;
-  /** Stage 02 public state (v8): head start, hunter ids, hider counts. Never a hider's position. */
+  /** The Hunt public state (v8): head start, hunter ids, hider counts. Never a hider's position. */
   hunt?: HuntPublic;
   /** The host paused the room: nothing moves and no timer runs (owner, 25 Nov 2026). */
   paused?: boolean;
@@ -105,7 +105,7 @@ export type ServerMessage =
   | { t: 'welcome'; v: number; id: string; room: string; stage: string; spawn: number; roster: RosterEntry[]; round: RoundState }
   | { t: 'roster'; roster: RosterEntry[] }
   /**
-   * Stage 02 snapshots are made per player (v8): rows only for players the receiver may see (line of sight,
+   * The Hunt snapshots are made per player (v8): rows only for players the receiver may see (line of sight,
    * nobody hidden), and `me` with the receiver's own private stage state. `all` = rows are complete (Stage 01).
    */
   | { t: 'snap'; time: number; rows: SnapRow[]; round: RoundState; me?: HuntPrivate; all?: boolean }

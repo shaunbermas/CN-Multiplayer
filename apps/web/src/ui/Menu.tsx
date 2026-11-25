@@ -1,8 +1,8 @@
 // Out-of-game screens and shared panels. Stage 01 refinement redesign (24 Nov 2026): visual reference
 // docs/ui/STAGE_01_UI_MOCKUP.html, which uses the same stylesheet (styles.css).
 import { useState, type ReactNode } from 'react';
-import { MATCH, MAX_PLAYERS } from '@cn-trials/shared';
-import { IconArrowRight, IconBook, IconClaws, IconCode, IconGear, IconGift, IconUser, IconUsers } from './icons.tsx';
+import { AGAWAN_ENABLED, AGAWAN_STAGE_ID, DEFAULT_STAGE_ID, HUNT, MATCH, MAX_PLAYERS, STARTABLE_STAGES, stageNumber } from '@cn-trials/shared';
+import { IconArrowRight, IconBook, IconClaws, IconCode, IconGear, IconParol, IconUser, IconUsers } from './icons.tsx';
 import { applyGraphicsSetting } from '../game/qualityStore.ts';
 import { updateSettings, useSettings, type GraphicsSetting } from './settings.ts';
 import { applyVolume, setMuted } from '../game/audio.ts';
@@ -92,12 +92,15 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
   );
 }
 
-/** Stages on the main menu (decision 042). Stage 03 shows but cannot be picked until it is built (owner, 25 Nov 2026). */
+/**
+ * Stages on the main menu, in the official order (decision 045): 01 Red Light, Green Light, 02 Agawan Base, 03 The Hunt.
+ * Agawan Base shows as "Coming soon" and cannot be picked until it is built and switched on (AGAWAN_ENABLED).
+ */
 const STAGE_PICKS = [
-  { id: 'STAGE_01_RED_LIGHT', no: '01', name: 'Red Light, Green Light', sub: '', icon: null, enabled: true },
-  { id: 'STAGE_02_THE_HUNT', no: '02', name: 'The Hunt', sub: '', icon: <IconClaws size={64} />, enabled: true },
-  { id: 'STAGE_03_NAUGHTY_RUN', no: '03', name: 'The Naughty Run', sub: "Santa's final delivery", icon: <IconGift size={40} />, enabled: false },
-];
+  { id: DEFAULT_STAGE_ID, name: 'Red Light, Green Light', sub: '', icon: null },
+  { id: AGAWAN_STAGE_ID, name: 'Agawan Base', sub: AGAWAN_ENABLED ? '' : 'Coming soon', icon: <IconParol size={44} /> },
+  { id: HUNT.id, name: 'The Hunt', sub: '', icon: <IconClaws size={64} /> },
+].map((p) => ({ ...p, no: String(stageNumber(p.id)).padStart(2, '0'), enabled: STARTABLE_STAGES.includes(p.id) }));
 
 /** Where the match starts. The host's pick is used. Owner's menu design (25 Nov 2026): three stage cards. */
 function StagePicker({ value }: { value: string }) {

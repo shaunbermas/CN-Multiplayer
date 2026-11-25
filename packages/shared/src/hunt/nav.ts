@@ -1,4 +1,4 @@
-// Navigation for Stage 02 bots: a 1 m walkability grid over the facility and A* with an octile heuristic.
+// Navigation for The Hunt bots: a 1 m walkability grid over the facility and A* with an octile heuristic.
 // Built once per layout (immutable afterwards) and shared by every room; bots then follow the path with the
 // same movement code as humans, so they respect walls, gates and other players. No knowledge of other players
 // lives here: a path only says how to walk from A to B.

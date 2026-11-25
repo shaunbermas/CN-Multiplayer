@@ -2,7 +2,7 @@
 import { settings } from '../ui/settings.ts';
 export const input = {
   forward: 0, right: 0, yaw: 0, pitch: -0.12, respawn: false, skip: false, cycle: false, emote: null as null | 'jump' | 'dive',
-  /** Stage 02: E held (capture hold / hide toggle on press), Q pressed (pulse), Shift held (sprint), C held (crouch). */
+  /** The Hunt: E held (capture hold / hide toggle on press), Q pressed (pulse), Shift held (sprint), C held (crouch). */
   interact: false, interactPressed: false, pulse: false, sprint: false, crouch: false,
 };
 

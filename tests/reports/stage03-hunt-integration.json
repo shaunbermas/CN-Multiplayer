@@ -30,13 +30,13 @@
       }
     },
     "BC": {
-      "caught": 0,
-      "captures": 0,
-      "survivors": 24,
+      "caught": 1,
+      "captures": 1,
+      "survivors": 23,
       "hunterPoints": [
         [
-          0,
-          0
+          1,
+          1
         ],
         [
           0,
@@ -59,7 +59,7 @@
           0
         ]
       ],
-      "totalPoints": 48
+      "totalPoints": 47
     },
     "next": {
       "stage": "STAGE_01_RED_LIGHT",
@@ -85,16 +85,16 @@
       "total": 3,
       "final": true
     },
-    "knockdowns": 12,
+    "knockdowns": 25,
     "snapshot": {
-      "count": 2026,
-      "avgBytes": 1407
+      "count": 2020,
+      "avgBytes": 1403
     },
     "ticks": 1045,
     "tickMs": {
-      "avg": 0.535,
-      "p95": 1,
-      "max": 9
+      "avg": 0.676,
+      "p95": 2,
+      "max": 8
     },
     "inputs": {
       "accepted": 0,

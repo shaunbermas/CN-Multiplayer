@@ -1,3 +1,5 @@
+> **Now Stage 03 (decision 045, 25 Nov 2026).** The Hunt moved from Stage 02 to Stage 03 without rule changes; Stage 02 is Agawan Base. Registry id `STAGE_03_THE_HUNT` (the old id `STAGE_02_THE_HUNT` still resolves). Code: `packages/shared/src/hunt/`, `apps/web/src/stages/hunt/`. References below to "Stage 02" describe the stage before the move.
+
 # Stage 02 · THE HUNT
 
 Status: **PROPOSED, built on branch `claude/project-thread-xyllg2` (25 Nov 2026), not merged.** Decision 042.

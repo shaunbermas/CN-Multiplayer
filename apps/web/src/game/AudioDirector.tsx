@@ -37,7 +37,7 @@ export function AudioDirector({ room }: { room: TrialRoom }) {
         phase = r.phase;
       }
       if (r.phase === 'active' && r.hunt) {
-        // Stage 02: heartbeat follows the hider's threat level; the hunter's is steady. Gates, pulses, hiding.
+        // The Hunt: heartbeat follows the hider's threat level; the hunter's is steady. Gates, pulses, hiding.
         startHeartbeat();
         const h = room.hunt;
         if (!h || h.captured) setHeartbeat(64, 0.25);

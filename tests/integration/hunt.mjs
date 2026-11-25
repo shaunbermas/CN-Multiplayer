@@ -1,10 +1,10 @@
-// Stage 02 · THE HUNT multiplayer integration test, against the real Worker + Durable Object rooms under `wrangler dev`.
+// Stage 03 · THE HUNT multiplayer integration test, against the real Worker + Durable Object rooms under `wrangler dev`.
 // Real WebSocket clients plus server-side bots in a full room of 30:
 //  A  30 participants (3 people + 27 bots): 6 hunters and 24 hiders; every client agrees on the hunter list
 //  -  snapshots are filtered per player (a hunter never receives a hidden hider; rows < 30 once the hunt runs)
 //  D  a person disconnects mid-hunt and reconnects with the same browser key: same id, role, status and points
 //  B/C the stage ends (timeout or everyone caught), points match the rules and are recorded once
-//  -  the next stage (stage 3 = Stage 01 stand-in) starts with EVERY participant active again, captured ones included
+//  -  the next stage (a 3-stage test match, so Stage 01 follows) starts with EVERY participant active again, captured ones included
 //  F  a second room runs at the same time with its own roles, timers and results
 // Usage: npm run test:hunt   (NODE_PATH=$(npm root -g) in the cloud container is not needed: no browser)
 import { execSync } from 'node:child_process';
@@ -41,14 +41,16 @@ try {
   other.addBots(5);
   await waitFor(() => other.players.size === 6, 5000, '6 players in room 2');
 
-  // Stage 02 directly (landing picker), a short test stage: 30 s active (head start scales to about 2.3 s), 1 s briefing.
-  const opts = { startStage: 'STAGE_02_THE_HUNT', seed: 4242, roundS: 30, briefingS: 1, resultsS: 3 };
+  // Stage 03 directly (landing picker), a short test stage: 30 s active (head start scales to about 2.3 s), 1 s briefing.
+  // stages: 3 makes the test match Stage 01, The Hunt, Stage 01, so a stage still follows The Hunt (decision 045 made
+  // The Hunt the last stage of a real match). The old id STAGE_02_THE_HUNT must still start The Hunt.
+  const opts = { startStage: 'STAGE_02_THE_HUNT', stages: 3, seed: 4242, roundS: 30, briefingS: 1, resultsS: 3 };
   host.start(opts);
   other.start({ ...opts, seed: 99, roundS: 20 });
   await waitFor(() => host.round.phase === 'active' && host.round.hunt, 15_000, 'hunt active');
   await sleep(300);
   const pub = host.round.hunt;
-  check(host.round.stage === 'STAGE_02_THE_HUNT', `stage is ${host.round.stage}`);
+  check(host.round.stage === 'STAGE_03_THE_HUNT', `stage is ${host.round.stage}`);
   check(pub.hunters.length === 6 && pub.hiders === 24, `roles ${pub.hunters.length}/${pub.hiders}, expected 6/24`);
   const sameList = [p2, p3].every((c) => JSON.stringify(c.round.hunt.hunters) === JSON.stringify(pub.hunters));
   check(sameList, 'clients disagree on the hunter list');
@@ -107,7 +109,7 @@ try {
   const standings = host.standings;
   const sum = (a) => a.reduce((x, y) => x + y, 0);
   check(sum(standings.map((s) => s.points)) === sum(res.map((r) => r.points)), 'standings do not equal the stage points (duplicate or missing award)');
-  check(standings.every((s) => s.perStage[0] === null), 'stage 1 should be unplayed when starting at Stage 02');
+  check(standings.every((s) => s.perStage[0] === null), 'stage 1 should be unplayed when starting at Stage 03');
   report.scenarios.BC = { caught, captures: caps, survivors: res.filter((r) => r.role === 'hider' && r.status !== 'captured').length,
     hunterPoints: res.filter((r) => r.role === 'hunter').map((r) => [r.captures, r.points]), totalPoints: sum(res.map((r) => r.points)) };
 
@@ -115,11 +117,11 @@ try {
   host.nextStage();
   await waitFor(() => host.round.phase === 'briefing' && host.round.match.stage === 3, 15_000, 'stage 3 briefing');
   await sleep(300);
-  check(host.round.stage === 'STAGE_01_RED_LIGHT', `stage 3 stand-in is ${host.round.stage}`);
+  check(host.round.stage === 'STAGE_01_RED_LIGHT', `stage after The Hunt is ${host.round.stage}`);
   const statuses = [...host.players.values()].map((p) => p.status);
   check(statuses.every((s) => s === 'active'), `not everyone is active in stage 3: ${[...new Set(statuses)]}`);
   check(host.players.size === 30, `roster changed: ${host.players.size}`);
-  check(!host.round.hunt && !host.hunt, 'Stage 02 state leaked into stage 3');
+  check(!host.round.hunt && !host.hunt, 'Hunt state leaked into the next stage');
   const st3 = host.standings;
   check(sum(st3.map((s) => s.points)) === report.scenarios.BC.totalPoints, 'points changed between stages');
   report.scenarios.next = { stage: host.round.stage, everyoneActive: statuses.every((s) => s === 'active'), players: host.players.size };
@@ -140,6 +142,6 @@ try {
 }
 report.errors = errors;
 report.passed = errors.length === 0;
-writeReport('stage02-hunt-integration.json', report);
+writeReport('stage03-hunt-integration.json', report);
 console.log(JSON.stringify(report, null, 2));
 process.exit(errors.length ? 1 : 0);

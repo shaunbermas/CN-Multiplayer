@@ -1,20 +1,20 @@
-// Stage 02 · THE HUNT scene module: a greybox (blockout) of the industrial facility, drawn from the same layout the
-// server simulates (packages/shared/src/stage02/layout.ts), so what you see is exactly what collides. Art direction
-// from the design pack (02_STAGE_02_THE_HUNT): charcoal and cold steel blue, restrained red warning lamps, small
+// Stage 03 · THE HUNT scene module: a greybox (blockout) of the industrial facility, drawn from the same layout the
+// server simulates (packages/shared/src/hunt/layout.ts), so what you see is exactly what collides. Art direction
+// from the design pack (02_STAGE_03_THE_HUNT): charcoal and cold steel blue, restrained red warning lamps, small
 // amber practicals, haze but no opaque fog on routes. Final art replaces these boxes later; gameplay stays.
 // Presentation only: the gates open when the server's public state says the head start is over.
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import { getStage, STAGE02, type HuntWall, type WallKind } from '@cn-trials/shared';
+import { getStage, HUNT, type HuntWall, type WallKind } from '@cn-trials/shared';
 import type { TrialRoom } from '../../net.ts';
 import { useQuality } from '../../game/quality.ts';
 
-const def = getStage(STAGE02.id);
+const def = getStage(HUNT.id);
 const layout = def.hunt!.layout;
 
 /** Load status for tests and the HUD's loading screen (a greybox has nothing to download). */
-export const stage02Assets = {
+export const huntAssets = {
   environment: 'ready' as const,
   watcher: 'ready' as const,
   problems: [] as string[],
@@ -149,7 +149,7 @@ function Lamps() {
   const refs = useRef<(THREE.PointLight | null)[]>([]);
   const assigned = useRef<number[]>([]);
   useEffect(() => {
-    stage02Assets.lights = budget;
+    huntAssets.lights = budget;
     assigned.current = [];
     const hemi = new THREE.HemisphereLight('#9fb6d0', '#3a3f44', quality === 'low' ? 3.2 : 2.4);
     hemi.name = 'LGT_STG02_Ambient';
@@ -195,11 +195,11 @@ function Haze() {
     gl.toneMappingExposure = 1.25;
     return () => { scene.fog = prevFog; scene.background = prevBg; gl.toneMappingExposure = prevExp; };
   }, [scene, gl]);
-  useFrame(({ gl: r }) => { stage02Assets.drawCalls = r.info.render.calls; });
+  useFrame(({ gl: r }) => { huntAssets.drawCalls = r.info.render.calls; });
   return null;
 }
 
-export function Stage02Scene({ room }: { room: TrialRoom }) {
+export function HuntScene({ room }: { room: TrialRoom }) {
   return (
     <group name="STG02_THE_HUNT">
       <Haze />
@@ -211,4 +211,4 @@ export function Stage02Scene({ room }: { room: TrialRoom }) {
   );
 }
 
-export function preloadStage02() { /* greybox: nothing to download */ }
+export function preloadHunt() { /* greybox: nothing to download */ }

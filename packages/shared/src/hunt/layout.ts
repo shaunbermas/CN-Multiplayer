@@ -1,8 +1,8 @@
-// Stage 02 · THE HUNT greybox layout: an abandoned industrial facility (design pack 02_STAGE_02_THE_HUNT, floor plan
+// Stage 03 · THE HUNT greybox layout: an abandoned industrial facility (design pack 02_STAGE_02_THE_HUNT, floor plan
 // STAGE_02_FACILITY_FLOORPLAN.png). The pack's plan is a relationship diagram, not coordinates, so this file is the
 // greybox: room rectangles, partition walls with door gaps, props (cover and hiding places), spawns and lamps.
 // Everything gameplay reads (walls, hiding places, spawns, the hunter gates) comes from here, for the server, the
-// bots and the client alike. Visual meshes are drawn from the same data by the client (apps/web/src/stages/stage02).
+// bots and the client alike. Visual meshes are drawn from the same data by the client (apps/web/src/stages/hunt).
 //
 // Game coordinates: metres, X to the right, Z "down" the floor plan (north = -Z). Flat floor (ADR 0001): the
 // upper catwalk is a gallery on the same level, fenced from the warehouse by see-through rails.
@@ -266,7 +266,7 @@ function grid(x: number, z: number, n: number, m: number): [number, number][] {
 /** StageGeometry view of the layout (walls, spawns, bounds) for the shared room code. */
 export function huntGeometry(l: HuntLayout): StageGeometry {
   return {
-    stage: 'STAGE_02_THE_HUNT',
+    stage: 'STAGE_03_THE_HUNT',
     walls: l.walls,
     start: null, finish: null, safe: null,
     bounds: l.bounds,

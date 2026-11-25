@@ -50,3 +50,10 @@ export const BOT_LIMITS = {
   /** Most bots one "add random players" press adds. */
   addStep: 5,
 } as const;
+
+/**
+ * Stage 02 · AGAWAN BASE switch (decision 045). Off until the stage is built and the owner approves it: while off, the
+ * menu shows Stage 02 as "Coming soon" and a match plays Stage 01 then Stage 03 (The Hunt). One constant, so turning
+ * it off again is also the rollback.
+ */
+export const AGAWAN_ENABLED = false;

@@ -6,7 +6,7 @@ import type { Mode } from './tournament.ts';
 
 export type Phase = 'lobby' | 'briefing' | 'countdown' | 'active' | 'results';
 export type Signal = 'none' | 'green' | 'warning' | 'red';
-/** 'captured' is Stage 02 only (caught by a hunter: spectates until the next stage). */
+/** 'captured' is The Hunt only (caught by a hunter: spectates until the next stage). */
 export type PlayerStatus = 'active' | 'finished' | 'spotted' | 'waiting' | 'captured';
 
 /**
@@ -118,9 +118,9 @@ export function graceFor(latencyS: number): number {
 
 export interface Placing {
   id: string; place: number; status: PlayerStatus; finishTime: number; progress: number; qualified: boolean;
-  /** Points decided by the stage's own rules (Stage 02); when absent, match.ts scores by finish order. */
+  /** Points decided by the stage's own rules (The Hunt); when absent, match.ts scores by finish order. */
   points?: number;
-  /** Stage 02: the player's role and successful captures (hunters). */
+  /** The Hunt: the player's role and successful captures (hunters). */
   role?: 'hunter' | 'hider';
   captures?: number;
 }
@@ -167,7 +167,7 @@ export interface RoundEvents {
   phase?: Phase;
   spotted: string[];
   finished: string[];
-  /** Stage 02: [hider, hunter] for each capture this tick. */
+  /** The Hunt: [hider, hunter] for each capture this tick. */
   captured?: [string, string][];
   results?: Placing[];
 }

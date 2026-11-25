@@ -16,14 +16,14 @@
 //   5. better place in the last stage played
 //   6. earlier to join the room (deterministic last resort, so there is always exactly one winner)
 import { ROUND, type Placing } from './round.ts';
-import { DEFAULT_STAGE_ID, MATCH_ORDER } from './stages.ts';
+import { DEFAULT_STAGE_ID, MATCH_ORDER, resolveStageId } from './stages.ts';
 
 export const MATCH = {
   /**
-   * Stages in one match. Only Stage 01 exists (Stage 02 is not started), so a match plays Stage 01 this many
-   * times; when Stage 02+ exist, MATCH_ORDER lists them instead. Configurable here only.
+   * Stages in one match: every stage in MATCH_ORDER once (decision 045: 01 Red Light, 02 Agawan Base, 03 The Hunt;
+   * while Agawan Base is switched off, Stage 01 then The Hunt). No stage is replayed as a stand-in.
    */
-  stages: 3,
+  stages: MATCH_ORDER.length,
   points: { first: 2, finished: 1, eliminated: 0, unfinished: 0 },
   /** Timings come from ROUND (round.ts), the one block where every game length is tuned. */
   stageResultsS: ROUND.stageResultsS,
@@ -109,7 +109,7 @@ export class Match {
 
   /** Start the match at a later stage (landing page picker); earlier stages are not played (null points). */
   startAt(stageId: string): void {
-    const i = this.order.indexOf(stageId);
+    const i = this.order.indexOf(resolveStageId(stageId));
     if (i > 0) this.index = i;
   }
 

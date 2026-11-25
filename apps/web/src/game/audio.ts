@@ -245,7 +245,7 @@ export const sfx = {
     tone(LOW.A1 * 2.4, 0, 2.2, { type: 'sine', gain: 0.1 });
     tone(LOW.A1 * 3.9, 0, 1.4, { type: 'sine', gain: 0.05 });
   },
-  // ---- Stage 02 · The Hunt (same synth, same thriller palette)
+  // ---- Stage 03 · The Hunt (same synth, same thriller palette)
   /** Pulse Detector: a rising charge, then a sonar ping whose pitch and repeats follow the signal strength. */
   pulse(strength: number): void {
     tone(220, 0, 0.35, { type: 'sine', to: 880, gain: 0.08, attack: 0.2 });
