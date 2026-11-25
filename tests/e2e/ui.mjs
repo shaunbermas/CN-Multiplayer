@@ -124,7 +124,9 @@ try {
   await page.keyboard.down('KeyW');
   await step(page, '13_you_were_spotted', async () => { await waitFor(() => seen('spotted'), 'spotted stamp', 60_000); await shotIfShowing('spotted'); });
   await page.keyboard.up('KeyW');
-  await step(page, '14_spectator', async () => { await waitFor(() => visible(page, '[data-testid=spectating]'), 'spectator', 15_000); });
+  // The spectator bar appears 3 s after the spot (death cam). On a slow CI runner the spotted screenshot alone can
+  // take longer than that, so like the other transient screens this asserts that it appeared (observer above).
+  await step(page, '14_spectator', async () => { await waitFor(() => seen('spectating'), 'spectator', 45_000); await shotIfShowing('spectating'); });
 
   // 15: results (round ends; the remaining bots never finish)
   await step(page, '15_results', async () => { await waitFor(() => seen('results'), 'results', 150_000); await shotIfShowing('results'); });
