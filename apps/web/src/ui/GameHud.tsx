@@ -14,7 +14,8 @@ import { STAGE_SCENES } from '../stages/registry.ts';
 import { Brand, HowToPlay, SettingsPanel } from './Menu.tsx';
 import { useSettings } from './settings.ts';
 import { settings } from './settings.ts';
-import { IconBars, IconCheck, IconFlag, IconGear, IconHome, IconMouse, IconPause, IconPin, IconPlay, IconRestart, IconRestartCcw, IconUsers, IconX } from './icons.tsx';
+import { IconBars, IconCheck, IconFlag, IconGear, IconHome, IconMouse, IconPause, IconPin, IconPlay, IconRestart, IconRestartCcw, IconUsers, IconVolume, IconVolumeOff, IconX } from './icons.tsx';
+import { setMuted } from '../game/audio.ts';
 import { HuntBriefingRole, HuntPanel, HuntRoleChip, HuntTop, captureText } from './HuntHud.tsx';
 
 // Decision 037: no time-left bar, no "get ready" warning and no hint text: knowing when red comes is part of the
@@ -229,7 +230,7 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
   const showPause = playing && (menuOpen || paused);
 
   return (
-    <div className="hud" style={{ ['--hud-scale' as string]: s.hudScale }} data-testid="hud" data-phase={r.phase} data-signal={r.phase === 'active' ? sig.signal : 'none'} data-status={me?.status}
+    <div className="hud" style={{ ['--hud-user' as string]: s.hudScale }} data-testid="hud" data-phase={r.phase} data-signal={r.phase === 'active' ? sig.signal : 'none'} data-status={me?.status}
       data-stage={m.stage} data-stages={m.total}>
       {stageError && (
         <div className="card error-panel" role="alert" data-testid="stage-error">
@@ -260,6 +261,8 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
         <div className="hud-right">
           {isHunt && r.phase === 'active' ? <HuntTop room={room} /> : r.phase === 'active' ? <div className={`glass timer num${closing ? ' closing' : ''}`} data-testid="timer">{closing && <small>Finish closes</small>}{fmtClock(remaining)}</div>
             : r.phase === 'lobby' ? <div className="glass timer num" data-testid="timer">{hud.walkTime.toFixed(1)} s</div> : null}
+          {/* Owner (25 Nov 2026): the button row is as wide as the counts panel above it. */}
+          <div className="hud-stack">
           {!isHunt && (r.phase === 'active' || r.phase === 'results' || r.phase === 'countdown') && (
             <div className="glass counts num" data-testid="round-counts">
               <span title="Still racing"><IconUsers size={22} />{alive} / {inRound.length}</span><i className="sep" />
@@ -276,7 +279,10 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
                 aria-pressed={showPause} data-testid="pause">{showPause ? <IconPlay size={28} /> : <IconPause size={28} />}</button>
             )}
             {r.phase === 'lobby' && <button className="tool-btn" onClick={() => setConfirm('leave')} aria-label="Main menu" title="Main menu" data-testid="lobby-menu"><IconHome size={28} /></button>}
+            <button className="tool-btn" onClick={() => setMuted(!s.muted)} aria-label={s.muted ? 'Unmute sound (M)' : 'Mute sound (M)'} aria-pressed={s.muted}
+              title={s.muted ? 'Sound off (M)' : 'Sound on (M)'} data-testid="mute">{s.muted ? <IconVolumeOff size={30} /> : <IconVolume size={30} />}</button>
             <button className="tool-btn" onClick={() => setOverlay('settings')} aria-label="Settings" title="Settings" data-testid="open-settings"><IconGear size={30} /></button>
+          </div>
           </div>
           {showPause && <PausePanel room={room} onResume={resume} onRestart={() => setConfirm('restart')} onMenu={() => setConfirm('leave')} />}
         </div>

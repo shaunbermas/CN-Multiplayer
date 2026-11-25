@@ -334,6 +334,26 @@ function SignalWash({ room }: { room: TrialRoom }) {
 }
 
 // ------------------------------------------------------------------------------------------ post FX
+/**
+ * Owner (25 Nov 2026): on red light the screen went fully black on Windows and macOS (Chrome, High tier). The bloom
+ * blurs its input down to a few pixels and back up, so a single NaN or Inf pixel from any shader (e.g. pow() of a
+ * slightly negative base, or a hot highlight overflowing the half-float target) spreads over the whole frame. This
+ * pass runs right after the scene render and before the bloom: it turns any NaN or Inf pixel black and caps
+ * extreme highlights, so one bad pixel can never take the screen down again, whatever produced it.
+ */
+const SanitizeShader = {
+  uniforms: { tDiffuse: { value: null } },
+  vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: /* glsl */ `
+    uniform sampler2D tDiffuse; varying vec2 vUv;
+    void main() {
+      vec4 c = texture2D(tDiffuse, vUv);
+      bool bad = any(isnan(c)) || any(isinf(c)) || !(c.r >= 0.0 || c.r < 0.0) || !(c.g >= 0.0 || c.g < 0.0) || !(c.b >= 0.0 || c.b < 0.0);
+      c = bad ? vec4(0.0, 0.0, 0.0, 1.0) : vec4(clamp(c.rgb, 0.0, 64.0), clamp(c.a, 0.0, 1.0));
+      gl_FragColor = c;
+    }`,
+};
+
 const GradeShader = {
   uniforms: { tDiffuse: { value: null }, uLift: { value: new THREE.Vector3(0.0, 0.012, 0.022) }, uGain: { value: new THREE.Vector3(1.04, 1.0, 0.95) }, uVignette: { value: 0.32 }, uSat: { value: 0.92 } },
   vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
@@ -359,6 +379,7 @@ function PostFX() {
     const rt = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 });
     const c = new EffectComposer(gl, rt);
     c.addPass(new RenderPass(scene, camera));
+    c.addPass(new ShaderPass(SanitizeShader)); // before the bloom: one NaN pixel must never black out the frame
     // Only bright emissive lamps, signal lights and the moon bloom; the threshold keeps contestants crisp.
     // Phase 10 (refinement): gentler bloom so lamps and the red eye glow without smearing (was 0.42 / 0.4 / 0.93).
     c.addPass(new UnrealBloomPass(new THREE.Vector2(size.width / 2, size.height / 2), 0.26, 0.3, 0.95));

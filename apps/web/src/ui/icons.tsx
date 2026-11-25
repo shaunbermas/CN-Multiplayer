@@ -38,3 +38,7 @@ export const IconX = (p: { size?: number }) => <Svg {...p}><path d="M5 5l14 14" 
 export const IconClaws = (p: { size?: number }) => <Svg {...p}><path d="M8 3L4 21" /><path d="M13 2l-4 20" /><path d="M18 3l-4 18" /><path d="M2.5 13.5l17-3" /></Svg>;
 /** A gift box (Stage 03 card). */
 export const IconGift = (p: { size?: number }) => <Svg {...p}><rect x="3" y="9" width="18" height="12" /><path d="M2 6h20v3H2z" /><path d="M12 6v15" /><path d="M12 6C10 2 6 2 6.5 4.5 7 6 12 6 12 6zM12 6c2-4 6-4 5.5-1.5C17 6 12 6 12 6z" /></Svg>;
+/** Speaker with sound waves (HUD mute button, sound on). */
+export const IconVolume = (p: { size?: number }) => <Svg {...p}><path d="M3 9.5h4l5-4.5v14l-5-4.5H3z" fill="currentColor" /><path d="M15.5 8.5a5 5 0 0 1 0 7" /><path d="M18.5 5.5a9 9 0 0 1 0 13" /></Svg>;
+/** Speaker with a cross (HUD mute button, sound off). */
+export const IconVolumeOff = (p: { size?: number }) => <Svg {...p}><path d="M3 9.5h4l5-4.5v14l-5-4.5H3z" fill="currentColor" /><path d="M16 9l6 6" /><path d="M22 9l-6 6" /></Svg>;
