@@ -25,7 +25,8 @@
     "test:round": "tsx tests/integration/round.mjs",
     "test:colorways": "tsx tests/integration/colorways.mjs",
     "test:contestant-perf": "tsx tests/e2e/contestant-perf.mjs",
-    "test:measure": "tsx tests/e2e/refinement-measure.mjs"
+    "test:measure": "tsx tests/e2e/refinement-measure.mjs",
+    "test:second-pass": "tsx tests/e2e/second-pass.mjs"
   },
   "devDependencies": {
     "@types/node": "22.20.5",

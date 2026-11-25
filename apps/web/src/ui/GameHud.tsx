@@ -13,6 +13,7 @@ import { activeStage } from '../game/stage.ts';
 import { STAGE_SCENES } from '../stages/registry.ts';
 import { Brand, HowToPlay, SettingsPanel } from './Menu.tsx';
 import { useSettings } from './settings.ts';
+import { setMuted } from '../game/audio.ts';
 
 const SIGNAL_UI = {
   green: { word: 'GREEN LIGHT', cls: 'go', lens: 'go', sub: 'Move' },
@@ -216,6 +217,7 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
           <div className="hud-tools">
             <ConnectionBadge room={room} />
             <button className="icon-btn" onClick={() => setOverlay('howto')} aria-label="How to play">?</button>
+            <button className="icon-btn" onClick={() => setMuted(!s.muted)} aria-label={s.muted ? 'Unmute sound (M)' : 'Mute sound (M)'} aria-pressed={s.muted} title={s.muted ? 'Sound off (M)' : 'Sound on (M)'} data-testid="mute">{s.muted ? '🔇' : '🔊'}</button>
             <button className="icon-btn" onClick={() => setOverlay('settings')} aria-label="Settings" data-testid="open-settings">⚙</button>
           </div>
         </div>

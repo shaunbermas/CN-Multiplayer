@@ -1,0 +1,55 @@
+{
+  "steps": [
+    {
+      "name": "settings has a sound toggle",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "sound engine running after the first click",
+      "ok": true,
+      "detail": "{\"state\":\"running\",\"muted\":false,\"volume\":0.5,\"ambience\":true,\"scanning\":false}"
+    },
+    {
+      "name": "volume setting kept",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "ambience playing in the lobby",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "M mutes",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "HUD shows muted",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "HUD button unmutes",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mute choice remembered",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "walking right moves the contestant",
+      "ok": true,
+      "detail": "12.53 m in 2.5 s"
+    },
+    {
+      "name": "no page errors",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "ok": true
+}

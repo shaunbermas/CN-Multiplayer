@@ -10,6 +10,7 @@ import { hud } from './hudStore.ts';
 import { AdaptiveQuality, quality } from './quality.ts';
 import { attachInput, input } from './input.ts';
 import { Predictor } from './predictor.ts';
+import { sfx } from './audio.ts';
 import { STAGE_SCENES } from '../stages/registry.ts';
 import { activeStage } from './stage.ts';
 import { greenTime, obstacleWalls, type Rect } from '@cn-trials/shared';
@@ -65,7 +66,7 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
     return () => { contestantInstances.delete(id); lodDist.delete(id); inst.dispose(); };
   }, [inst, id]);
   useEffect(() => { if (inst && colorway) setColorway(inst.material, colorway); }, [inst, colorway]);
-  const anim = useRef({ speed: 0, vx: 0, vz: 0, face: p0?.yaw ?? 0, lastX: p0?.x ?? 0, lastZ: p0?.z ?? 0, fall: 0, emoteAt: Date.now(), stepDist: 0, side: 1 });
+  const anim = useRef({ speed: 0, vx: 0, vz: 0, face: p0?.yaw ?? 0, lastX: p0?.x ?? 0, lastZ: p0?.z ?? 0, fall: 0, emoteAt: Date.now(), stepDist: 0, side: 1, audioDist: 0, turn: 0 });
   const tmp = useMemo(() => new THREE.Vector3(), []);
   useFrame((_, dt) => {
     const g = group.current;
@@ -99,21 +100,28 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
     a.speed = Math.min(8, Math.hypot(a.vx, a.vz));
     // Owner feedback (decision 031): contestants turn to face where they move, all the way round (360°),
     // instead of always facing the camera. Facing is presentation only; the server owns positions.
+    const faceBefore = a.face;
     if (a.speed > 0.35 && p.status !== 'spotted') {
       const target = Math.atan2(-a.vx, -a.vz); // yaw 0 faces -Z
       let d = target - a.face;
       d = Math.atan2(Math.sin(d), Math.cos(d));
       a.face += d * (1 - Math.exp(-step * 12));
     }
+    a.turn += ((step > 0 ? (a.face - faceBefore) / step : 0) - a.turn) * (1 - Math.exp(-step * 10));
     g.rotation.y = a.face;
     a.stepDist += Math.hypot(dx, dz);
+    // Your own footsteps (sound, decision 034 B): one soft scuff per stride while you walk.
+    if (local && inst && !inst.airborne && a.speed > 0.8 && p.status === 'active') {
+      a.audioDist += Math.hypot(dx, dz);
+      if (a.audioDist > 0.62) { a.audioDist = 0; sfx.footstep(); }
+    }
     a.fall += ((spotted ? 1 : 0) - a.fall) * (1 - Math.exp(-step * 6));
     const tint = 1 - a.fall * 0.5; // spotted contestants grey out (playful, no harm: spec §7)
     if (inst) {
       // lobby emotes broadcast by the server (visual only)
       for (const e of room.emotes) if (e.id === id && e.at > a.emoteAt) { a.emoteAt = e.at; inst.emote(e.e); }
       const t0 = performance.now();
-      inst.update(step, { speed: a.speed, status: p.status, greenActive: room.round.phase === 'active' && room.round.signal === 'green', down: p.down });
+      inst.update(step, { speed: a.speed, status: p.status, greenActive: room.round.phase === 'active' && room.round.signal === 'green', down: p.down, turn: a.turn });
       cpuAcc.ms += performance.now() - t0;
       const dist = camera.position.distanceTo(g.getWorldPosition(tmp));
       lodDist.set(id, dist);

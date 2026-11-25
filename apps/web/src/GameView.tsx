@@ -3,9 +3,10 @@
 import type { TrialRoom } from './net.ts';
 import { Scene } from './game/Scene.tsx';
 import { GameHud } from './ui/GameHud.tsx';
+import { AudioDirector } from './game/AudioDirector.tsx';
 
 export default function GameView({ room, stageError, onStageError, onLeave }: {
   room: TrialRoom; stageError: string; onStageError: (msg: string) => void; onLeave: () => void;
 }) {
-  return (<><Scene room={room} onStageError={onStageError} /><GameHud room={room} stageError={stageError} onLeave={onLeave} /></>);
+  return (<><Scene room={room} onStageError={onStageError} /><GameHud room={room} stageError={stageError} onLeave={onLeave} /><AudioDirector room={room} /></>);
 }

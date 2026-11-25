@@ -4,6 +4,7 @@ import { useState, type ReactNode } from 'react';
 import { MAX_PLAYERS } from '@cn-trials/shared';
 import { applyGraphicsSetting } from '../game/qualityStore.ts';
 import { updateSettings, useSettings, type GraphicsSetting } from './settings.ts';
+import { applyVolume, setMuted } from '../game/audio.ts';
 
 export function Brand({ small = false }: { small?: boolean }) {
   return (
@@ -47,6 +48,7 @@ export function HowToPlay({ onClose }: { onClose: () => void }) {
           <tr><td><kbd>E</kbd></td><td>Dive (lobby, just for show)</td></tr>
           <tr><td><kbd>Tab</kbd></td><td>Switch the player you spectate</td></tr>
           <tr><td><kbd>R</kbd></td><td>Respawn (lobby practice only)</td></tr>
+          <tr><td><kbd>M</kbd></td><td>Mute or unmute the sound</td></tr>
           <tr><td><kbd>Esc</kbd></td><td>Release the mouse</td></tr>
         </tbody>
       </table>
@@ -79,7 +81,11 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
           </select>
         </label>
         <label className="check"><input type="checkbox" checked={s.edgeFlash} onChange={(e) => updateSettings({ edgeFlash: e.target.checked })} /> Red screen-edge pulse on red light</label>
-        <p className="muted">Signals always show a word and the lens shape as well as a colour. There is no sound yet, so there are no audio settings.</p>
+        <label className="check"><input type="checkbox" checked={!s.muted} onChange={(e) => setMuted(!e.target.checked)} data-testid="sound-on" /> Sound on <span className="muted">(<kbd>M</kbd> in a game)</span></label>
+        <label>Volume <output>{Math.round(s.volume * 100)} %</output>
+          <input type="range" min={0} max={1} step={0.05} value={s.volume} disabled={s.muted} onChange={(e) => { updateSettings({ volume: Number(e.target.value) }); applyVolume(); }} data-testid="volume" />
+        </label>
+        <p className="muted">Signals always show a word and the lens shape as well as a colour, and each one also has its own sound, so the game works with the sound off.</p>
       </div>
     </Modal>
   );
