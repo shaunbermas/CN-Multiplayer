@@ -90,8 +90,9 @@ try {
     const wantProps = mid.placements.filter((p) => !p.tree).length, wantTrees = mid.placements.length - wantProps;
     if (a.midground.props !== wantProps || a.midground.trees !== wantTrees || a.midground.problems.length || !(a.midground.glows > 0))
       errors.push(`${q}: midground ${JSON.stringify(a.midground)}; expected ${wantProps} props, ${wantTrees} trees, lamp glows`);
-    // Phase 05: Watcher materials upgraded at runtime (geometry untouched), three signal lens materials driven.
-    if (!(a.watcherLook?.upgraded?.length >= 6) || a.watcherLook?.lensMaterials !== 3) errors.push(`${q}: watcher look ${JSON.stringify(a.watcherLook)}`);
+    // Phase 05: Watcher materials upgraded at runtime, three signal lens materials driven (decision 041: the
+    // doll has one body material plus the three eye-state materials).
+    if (!(a.watcherLook?.upgraded?.length >= 4) || a.watcherLook?.lensMaterials !== 3) errors.push(`${q}: watcher look ${JSON.stringify(a.watcherLook)}`);
     if (a.environmentMap !== (q !== 'low')) errors.push(`${q}: sky environment map ${a.environmentMap}; expected ${q !== 'low'} (off on Low)`);
     if (!(a.foliageTrianglesRemoved > 2000)) errors.push(`${q}: cone trees were not stripped (${a.foliageTrianglesRemoved} triangles removed)`);
     const fps = await fpsOver(page, 3000);

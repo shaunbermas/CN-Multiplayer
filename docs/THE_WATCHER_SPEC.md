@@ -12,6 +12,12 @@ Status: **built, ready for owner review** (21 November 2026). Design direction a
 | Asset manifest | `blender/exports/THE_WATCHER_ASSET_MANIFEST.json` (pack schema) |
 | Validation | `docs/THE_WATCHER_VALIDATION.md` |
 
+> **Decision 041 (owner, 25 Nov 2026):** The Watcher is now the owner's Creepy doll model, look unchanged (decimated to 50k triangles). Built by `blender/scripts/watcher_doll_prepare.py` (from the owner's original file) and `watcher_build.py` (rig, glowing eyes on the doll's irises, clips, anchors). The geometry notes below describe the retired procedural robot and are kept for history; the clip names, anchors, height and facing are unchanged.
+
+> **Decision 040 (owner, 25 Nov 2026):** two doll eyes with glowing signal pupils (no camera lens, no stapled eye), a real 3D nose and lips, and one high ponytail; a second anchor `Watcher_OpticalOrigin_L` marks the left pupil.
+>
+> **Decisions 038-039 (owner, 25 Nov 2026):** the face was resculpted (sockets, brow, nose, cheekbones, parted lips and mouth, a ringed lens, an eye stapled shut with a steel pin, cracks, a broken cheek with fiber-optic lines), the hair is now long and messy to the shoulders with curtains framing the face (no bun), fiber-optic lines show at the neck, elbows and knees, and the runtime finish is rusty, cracked and dirty with a near-black dress. Rig, clips, anchors, proportions and height are unchanged. The tables below describe the original build where they differ.
+
 ## 1. Concept
 
 The Watcher is an antique wind-up toy automaton built at monument scale: the yard's old night
@@ -29,7 +35,7 @@ television character") and conflict C5 in `docs/REFERENCE_MANIFEST.md`.
 |-------------------------------------------|-------------|
 | Black bob with a fringe and two pigtails | Swept-back lacquered hair, no fringe, one bun with a brass band |
 | Yellow collared top over an orange pinafore dress | Deep-teal enamel coat with a high charcoal collar, double brass buttons and a sash; no yellow or orange |
-| Two large round doll eyes | One recessed camera-lens eye; the other eye is sealed shut (a painted seam) |
+| Two large round doll eyes | One camera-lens eye in a riveted steel socket; the other eye is stapled shut (decision 038) |
 | Mary-Jane strap shoes and socks | Heavy riveted iron boots with brass cuffs; porcelain shins with knee guards |
 | Fixed upright pose; the head turns | The upper body turns on a visible steel waist turret; a brass wind-up key turns in its back |
 | Smooth face | Porcelain face-plate seams, fine cracks and grime |
@@ -52,8 +58,8 @@ mechanical pieces move like hinged parts with no rubbery deformation.
 
 | Group | Parts |
 |-------|-------|
-| Head | Porcelain shell; face-plate seams; nose; seam mouth; sealed left eye; lacquered hair shell with a rolled hairline; bun and brass band; rear control housing with vents and three status lights per signal state |
-| Optical eye | Steel barrel, brass bezel, dark glass, inner aperture ring, three emitter discs (neutral, red, green) |
+| Head | Porcelain shell; faceplate seam; angled brow plates; hairline crack; nose ridge with vents; marionette jaw and porcelain-toothed mouth grille; left eye stapled shut (face reworked in decision 038); lacquered hair shell with a rolled hairline; bun and brass band; rear control housing with vents and three status lights per signal state |
+| Optical eye | Riveted steel socket, steel barrel, brass bezel, dark glass, six-blade shutter iris, inner aperture ring, three emitter discs (neutral, red, green) |
 | Neck | Stacked steel turret with a brass ring |
 | Torso | Enamel coat shell, high textile collar, placket seam, eight brass buttons, charcoal sash with a brass buckle |
 | Waist | Steel turret ring (the upper body turns here); pleated enamel coat skirt with a brass hem |

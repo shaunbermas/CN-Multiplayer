@@ -35,3 +35,15 @@ docs/second-pass/*.webp -filter -diff -merge
 
 # Decision 037: the landing background (one render of the real stage) is a small normal git file.
 apps/web/src/assets/landing/*.webp -filter -diff -merge
+
+# Decisions 038-039: The Watcher's face and hair rework was made in a cloud session that cannot upload new LFS
+# objects, so the rebuilt Watcher files are normal git files (about 4 MB). Migrate later with `git lfs migrate`.
+blender/scenes/THE_WATCHER.blend -filter -diff -merge
+blender/exports/THE_WATCHER.glb -filter -diff -merge
+blender/exports/stage15/THE_WATCHER.meshopt.glb -filter -diff -merge
+
+# Decision 041: the owner's Creepy doll (decimated source mesh and its texture), made in a cloud session that cannot
+# upload new LFS objects, so these are normal git files (about 4 MB). Migrate later with `git lfs migrate`.
+blender/source/THE_WATCHER_DOLL.glb -filter -diff -merge
+blender/textures/WATCHER/T_W_Doll_BC.jpg -filter -diff -merge
+blender/exports/THE_WATCHER_browser/*.png -filter -diff -merge
