@@ -91,6 +91,9 @@ kbd { display: inline-block; min-width: 1.7em; padding: 0 5px; border: 1px solid
 .btn.on { background: rgba(57, 217, 138, 0.16); border-color: var(--go); color: var(--go); }
 .btn .k { font: 600 12px/1 var(--body); letter-spacing: 0; text-transform: none; opacity: 0.7; }
 .icon-btn { pointer-events: auto; width: 32px; height: 32px; border: 1px solid var(--line-strong); background: var(--panel); cursor: pointer; font: 700 15px/1 var(--display); }
+.restart-btn { pointer-events: auto; min-height: 32px; padding: 4px 10px; font-size: 13px; }
+.restart-ask { pointer-events: auto; display: inline-flex; align-items: center; gap: 6px; padding: 3px 4px 3px 10px; background: var(--panel); border: 1px solid var(--line-strong); font: 600 13px/1.2 var(--body); }
+.restart-ask .btn { min-height: 28px; padding: 4px 10px; font-size: 13px; }
 .seg { display: inline-flex; }
 .seg .btn { min-height: 34px; padding: 6px 12px; font-size: 13px; }
 .seg .btn + .btn { border-left: none; }

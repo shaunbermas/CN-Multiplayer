@@ -134,6 +134,9 @@ export class TrialRoom extends DurableObject<Env> {
         // Host: leave the stage results now (next stage, or the lobby after the final leaderboard).
         if (p.id === this.hostId && this.engine.phase === 'results') this.engine.phaseEnd = Math.min(this.engine.phaseEnd, this.engine.now);
         break;
+      case 'restart':
+        this.restartMatch(p);
+        break;
       case 'probe_ack': {
         const sent = p.probeSentAt.get(msg.id);
         if (sent !== undefined) {
@@ -323,6 +326,26 @@ export class TrialRoom extends DurableObject<Env> {
       return;
     }
     if (this.engine.phase !== 'lobby') return;
+    this.beginMatch(opts);
+  }
+
+  /**
+   * Host restarts the match while it is running or from the final results (owner request, 25 Nov 2026):
+   * a fresh match from stage 1, points reset, every player in the room plays (spectators too), bots kept.
+   */
+  private restartMatch(by: Player): void {
+    if (by.id !== this.hostId) {
+      const ws = this.sockets.get(by.id);
+      if (ws) send(ws, { t: 'error', code: 'not_host', message: 'Only the host can restart the game' });
+      return;
+    }
+    if (this.engine.phase === 'lobby') return;
+    console.log(JSON.stringify({ ev: 'restart', room: this.roomCode, round: this.roundId, phase: this.engine.phase, match: this.matchState() }));
+    for (const p of this.players.values()) this.respawn(p);
+    this.beginMatch(this.matchOpts);
+  }
+
+  private beginMatch(opts: StartRequestOptions): void {
     const test = this.env.CN_TEST === '1';
     const stages = test && Number.isInteger(opts?.stages) ? Number(opts.stages) : MATCH.stages;
     this.match = new Match(matchOrder(stages));

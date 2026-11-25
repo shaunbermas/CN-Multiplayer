@@ -27,3 +27,4 @@ renders/watcher/_parts/
 
 # Second-pass browser check screenshots (regenerated each run; LFS uploads are blocked in cloud sessions)
 tests/reports/screenshots/second-pass/
+tests/reports/screenshots/restart/
