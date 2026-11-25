@@ -25,7 +25,12 @@ export interface PlayerView {
   seen: boolean;
   /** Disconnected mid-match, seat kept (v8). */
   away: boolean;
+  /** Recent snapshot positions on the server's clock, newest last (client-side interpolation buffer). */
+  hist?: { t: number; x: number; z: number; vx: number; vz: number }[];
 }
+
+/** How far behind the newest snapshot other players are drawn (s): two 20 Hz snapshots, so a late one is covered. */
+export const INTERP_DELAY_S = 0.1;
 
 export type ResultRow = ResultPlacing;
 
@@ -42,6 +47,8 @@ export class RoomClient {
   stage = '';
   time = 0;
   snapshots = 0;
+  /** Server clock minus local clock (s), tracked from snapshot arrivals (the earliest arrivals set it). */
+  private clockOffset: number | null = null;
   round: RoundState = { ...LOBBY };
   /** Local clock (ms) when the last snapshot arrived, to smooth timers between snapshots. */
   roundAt = 0;
@@ -104,9 +111,15 @@ export class RoomClient {
             c.hunt = msg.me ?? null;
             if (msg.all !== false) for (const p of c.players.values()) p.seen = true;
             else for (const p of c.players.values()) p.seen = false;
+            c.trackClock(msg.time);
             for (const [id, x, z, vx, vz, yaw, ack, st, ft, down] of msg.rows) {
               const p = c.players.get(id);
-              if (p) Object.assign(p, { x, z, vx, vz, yaw, ack, status: STATUS_OF[st] ?? 'active', finishTime: ft, down: down ?? 0, seen: true });
+              if (!p) continue;
+              Object.assign(p, { x, z, vx, vz, yaw, ack, status: STATUS_OF[st] ?? 'active', finishTime: ft, down: down ?? 0, seen: true });
+              const h = (p.hist ??= []);
+              if (h.length && msg.time <= h[h.length - 1].t) h.length = 0; // a new room clock (stage change): start over
+              h.push({ t: msg.time, x, z, vx, vz });
+              if (h.length > 10) h.shift();
             }
             for (const h of c.snapHandlers) h();
             break;
@@ -167,6 +180,42 @@ export class RoomClient {
 
   get self(): PlayerView | undefined { return this.players.get(this.id); }
   get isHost(): boolean { return this.round.host === this.id; }
+
+  private trackClock(serverT: number): void {
+    const est = serverT - performance.now() / 1000;
+    // A snapshot that arrives quickly gives the best estimate; slow ones only nudge it (network jitter), and a
+    // big jump (the server's clock restarted) resets it.
+    if (this.clockOffset === null || est > this.clockOffset || Math.abs(est - this.clockOffset) > 2) this.clockOffset = est;
+    else this.clockOffset += (est - this.clockOffset) * 0.02;
+  }
+
+  /** The server's clock now (s), estimated from snapshot arrivals. */
+  serverNow(): number { return performance.now() / 1000 + (this.clockOffset ?? 0); }
+
+  /**
+   * Where to draw another player now: interpolated between the two snapshots around (server now - delay), so
+   * remote players move smoothly at the server's real speed even when snapshots arrive unevenly. Past the newest
+   * snapshot it extrapolates along the velocity for at most 0.15 s. Returns null without history.
+   */
+  sample(id: string, delay = INTERP_DELAY_S): { x: number; z: number; vx: number; vz: number } | null {
+    const h = this.players.get(id)?.hist;
+    if (!h?.length) return null;
+    const t = this.serverNow() - delay;
+    const last = h[h.length - 1];
+    if (t >= last.t) {
+      const ahead = Math.min(0.15, t - last.t);
+      return { x: last.x + last.vx * ahead, z: last.z + last.vz * ahead, vx: last.vx, vz: last.vz };
+    }
+    for (let i = h.length - 1; i > 0; i--) {
+      const a = h[i - 1], b = h[i];
+      if (t < a.t) continue;
+      if (b.t - a.t > 0.3) return { x: b.x, z: b.z, vx: b.vx, vz: b.vz }; // a gap (out of sight in Stage 02): no slide
+      const k = (t - a.t) / (b.t - a.t);
+      return { x: a.x + (b.x - a.x) * k, z: a.z + (b.z - a.z) * k, vx: a.vx + (b.vx - a.vx) * k, vz: a.vz + (b.vz - a.vz) * k };
+    }
+    const first = h[0];
+    return { x: first.x, z: first.z, vx: first.vx, vz: first.vz };
+  }
 
   /** Seconds left in the current phase, smoothed with the local clock between snapshots. */
   remaining(): number {

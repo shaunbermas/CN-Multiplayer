@@ -10,13 +10,16 @@ export type Quality = 'low' | 'medium' | 'high';
 export const QUALITY_ORDER: Quality[] = ['low', 'medium', 'high'];
 
 /** Average frame rate below which the monitor lowers quality. */
-export const MIN_FPS = 45;
+export const MIN_FPS = 50;
 /** Seconds ignored after a start or a change (shader compiles, texture uploads). */
 export const WARMUP_S = 2.5;
 /** Seconds of frames averaged per decision. */
 export const WINDOW_S = 2;
-/** Highest render resolution multiplier; 1.5 looks sharp on high-DPI screens at a much lower cost than 2. */
-const MAX_DPR = 1.5;
+/**
+ * Highest render resolution multiplier. Optimisation pass (25 Nov 2026): 1.25 (was 1.5). With 4x MSAA now on the
+ * High path it looks at least as clean as 1.5 without it did, and a Retina laptop shades about 30 % fewer pixels.
+ */
+const MAX_DPR = 1.25;
 
 export interface QualityChange { at: number; from: string; to: string; fps: number }
 
@@ -31,8 +34,10 @@ const deviceDpr = typeof window === 'undefined' ? 1 : window.devicePixelRatio ||
 
 export const quality = {
   tier: (pinned ?? 'high') as Quality,
-  /** True when the URL chose the tier: the adaptive monitor then leaves it alone. */
+  /** True when the URL or Settings chose the tier: the adaptive monitor then never changes the tier. */
   pinned: pinned !== null,
+  /** True when the URL chose it (tests, support links): the monitor then leaves the resolution alone too. */
+  urlPinned: pinnedFromUrl() !== null,
   dpr: Math.min(deviceDpr, MAX_DPR),
   /** Last measured average frame rate (0 until the first window completes). */
   fps: 0,
@@ -61,10 +66,33 @@ export function useQuality(): Quality {
   return useSyncExternalStore(subscribe, () => quality.tier, () => quality.tier);
 }
 
-/** The next lower step for the monitor, or null at the bottom. */
-export function nextStepDown(tier: Quality, dpr: number): { tier: Quality; dpr: number } | null {
-  if (dpr > 1) return { tier, dpr: 1 };
+/**
+ * Render-resolution steps the monitor uses before it touches the tier (optimisation pass, 25 Nov 2026): a slow
+ * frame first costs a little sharpness, never the High effects. The top step is the device's own ratio, capped.
+ */
+export function dprSteps(device = deviceDpr): number[] {
+  const top = Math.min(device, MAX_DPR);
+  const steps = [top, 1.25, 1, 0.85].filter((d) => d <= top + 1e-6);
+  return [...new Set(steps.map((d) => +d.toFixed(2)))].sort((a, b) => b - a);
+}
+/** Average frame rate above which the monitor gives sharpness back (one step at a time, resolution only). */
+export const RECOVER_FPS = 57;
+/** Frame rate below which the monitor may step the tier down once the resolution is at its lowest step. */
+export const TIER_FPS = 40;
+
+/** The next lower step for the monitor, or null at the bottom: resolution steps first, then the tier. */
+export function nextStepDown(tier: Quality, dpr: number, fps = 0): { tier: Quality; dpr: number } | null {
+  const steps = dprSteps();
+  const lower = steps.find((d) => d < dpr - 1e-6);
+  if (lower !== undefined) return { tier, dpr: lower };
+  if (fps >= TIER_FPS) return null; // a little under target: stay on this tier at the lowest resolution
   const i = QUALITY_ORDER.indexOf(tier);
   return i > 0 ? { tier: QUALITY_ORDER[i - 1], dpr } : null;
+}
+
+/** The next sharper resolution step (never a higher tier), or null at the top. */
+export function nextStepUp(dpr: number): number | null {
+  const higher = dprSteps().filter((d) => d > dpr + 1e-6);
+  return higher.length ? higher[higher.length - 1] : null;
 }
 

@@ -1,4 +1,3 @@
-import { Html } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { inputFromKeys, MOVEMENT, progress, SIM_DT } from '@cn-trials/shared';
 import { Component, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -74,7 +73,7 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
     return () => { contestantInstances.delete(id); lodDist.delete(id); inst.dispose(); };
   }, [inst, id]);
   useEffect(() => { if (inst && colorway) setColorway(inst.material, colorway); }, [inst, colorway]);
-  const anim = useRef({ speed: 0, vx: 0, vz: 0, face: p0?.yaw ?? 0, lastX: p0?.x ?? 0, lastZ: p0?.z ?? 0, fall: 0, emoteAt: Date.now(), stepDist: 0, side: 1, audioDist: 0, turn: 0 });
+  const anim = useRef({ speed: 0, vx: 0, vz: 0, face: p0?.yaw ?? 0, lastX: p0?.x ?? 0, lastZ: p0?.z ?? 0, fall: 0, emoteAt: Date.now(), stepDist: 0, side: 1, audioDist: 0, turn: 0, animDt: 0, animN: 0, animStatus: p0?.status ?? 'active' });
   const tmp = useMemo(() => new THREE.Vector3(), []);
   useFrame((_, dt) => {
     const g = group.current;
@@ -95,13 +94,13 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
       const r = predictor.current.render;
       g.position.set(r.x, 0, r.z);
     } else {
-      // Remote players (and a frozen local player): snapshots arrive at 20 Hz. Extrapolate each one along its
-      // server velocity for up to 0.1 s, then smooth toward that, so walkers glide instead of hopping every
-      // 50 ms (second pass). A frozen or knocked-down player has zero velocity, so nothing overshoots.
-      const ahead = Math.min(0.1, Math.max(0, (Date.now() - room.roundAt) / 1000));
-      const tx = p.x + (p.down ? 0 : p.vx * ahead), tz = p.z + (p.down ? 0 : p.vz * ahead);
+      // Remote players (and a frozen local player): snapshots arrive at 20 Hz. Optimisation pass (25 Nov 2026):
+      // drawn from an interpolation buffer 0.1 s behind the server (room.sample), so they move at their real speed
+      // without the stutter of extrapolate-and-correct. A light smoothing pass removes any remaining step.
+      const sm = room.sample(id);
+      const tx = sm ? sm.x : p.x, tz = sm ? sm.z : p.z;
       if (Math.hypot(tx - g.position.x, tz - g.position.z) > 6) g.position.set(tx, 0, tz); // respawn: cut
-      const k = 1 - Math.exp(-dt * 12);
+      const k = 1 - Math.exp(-dt * 30);
       g.position.x += (tx - g.position.x) * k;
       g.position.z += (tz - g.position.z) * k;
     }
@@ -135,9 +134,18 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
     if (inst) {
       // lobby emotes broadcast by the server (visual only)
       for (const e of room.emotes) if (e.id === id && e.at > a.emoteAt) { a.emoteAt = e.at; inst.emote(e.e); }
-      const t0 = performance.now();
-      inst.update(step, { speed: a.speed, status: p.status === 'captured' ? 'spotted' : p.status, greenActive: room.round.phase === 'active' && room.round.signal === 'green', down: p.down, turn: a.turn });
-      cpuAcc.ms += performance.now() - t0;
+      // Optimisation pass (25 Nov 2026): far crowd members (lowest LOD) animate every 2nd frame, very far ones every
+      // 3rd, with the skipped time added in, so they keep their pace; near ones and you update every frame.
+      const prevDist = lodDist.get(id) ?? 0;
+      const every = local || inst.lod < 2 ? 1 : prevDist > 45 ? 3 : 2;
+      a.animDt += step;
+      if (++a.animN % every === 0 || p.status !== a.animStatus) {
+        const t0 = performance.now();
+        inst.update(a.animDt, { speed: a.speed, status: p.status === 'captured' ? 'spotted' : p.status, greenActive: room.round.phase === 'active' && room.round.signal === 'green', down: p.down, turn: a.turn });
+        cpuAcc.ms += performance.now() - t0;
+        a.animDt = 0;
+        a.animStatus = p.status;
+      }
       const dist = camera.position.distanceTo(g.getWorldPosition(tmp));
       lodDist.set(id, dist);
       // Ground effects (decision 031): dust on dry concrete, splashes in puddles.
@@ -172,14 +180,70 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
         <mesh position={[0, 1.95, 0]} rotation={[Math.PI, 0, 0]}><coneGeometry args={[0.12, 0.22, 4]} /><meshBasicMaterial color="#e2332b" /></mesh>
         <mesh position={[0.32, 0.72, -0.12]} name="S02_PULSE_DETECTOR"><boxGeometry args={[0.1, 0.06, 0.3]} /><meshStandardMaterial color="#2b2f33" metalness={0.6} roughness={0.5} emissive="#ff7a1a" emissiveIntensity={0.25} /></mesh>
       </group>
-      {(!local || status === 'spotted' || status === 'captured') && (
-        <Html position={[0, 1.65, 0]} center distanceFactor={9} zIndexRange={[10, 0]}>
-          <div className={`nametag ${status === 'captured' ? 'spotted' : status}`} style={room.players.get(id)?.seen === false && !local ? { display: 'none' } : undefined}>
-            {status === 'spotted' ? 'SPOTTED!' : status === 'captured' ? 'CAUGHT' : p0?.name}</div>
-        </Html>
-      )}
     </group>
   );
+}
+
+
+/**
+ * Name tags for every contestant in ONE overlay (optimisation pass, 25 Nov 2026). Before, each contestant had its
+ * own drei <Html>, which projected, measured and restyled 30 DOM nodes every frame. Here one pass projects them,
+ * hides the ones behind the camera, too far to read (over 45 m) or not visible to us, and touches the DOM only
+ * when a value changes. Same look: the tag scales with distance like Html's distanceFactor 9 did.
+ */
+const TAG_MAX_DIST = 45;
+function NameTags({ room }: { room: TrialRoom }) {
+  const { gl, camera, size } = useThree();
+  const layer = useMemo(() => {
+    const d = document.createElement('div');
+    d.className = 'nametags';
+    d.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:1';
+    return d;
+  }, []);
+  const tags = useRef(new Map<string, { el: HTMLDivElement; text: string; cls: string; shown: boolean; tf: string }>());
+  useEffect(() => {
+    const parent = gl.domElement.parentElement;
+    parent?.appendChild(layer);
+    return () => { layer.remove(); tags.current.clear(); };
+  }, [gl, layer]);
+  const v = useMemo(() => new THREE.Vector3(), []);
+  useFrame(() => {
+    const cam = camera as THREE.PerspectiveCamera;
+    const k = 9 / (2 * Math.tan((cam.fov * Math.PI) / 360));
+    const seenIds = new Set<string>();
+    for (const [id, p] of room.players) {
+      const out = p.status === 'spotted' || p.status === 'captured';
+      if (id === room.id && !out) continue;
+      seenIds.add(id);
+      let t = tags.current.get(id);
+      if (!t) {
+        const el = document.createElement('div');
+        el.style.cssText = 'position:absolute;left:0;top:0;will-change:transform';
+        layer.appendChild(el);
+        t = { el, text: '', cls: '', shown: true, tf: '' };
+        tags.current.set(id, t);
+      }
+      const obj = contestantInstances.get(id)?.root.parent ?? null; // the PLAYER_<id> group (drawn position)
+      const x = obj ? obj.position.x : p.x, z = obj ? obj.position.z : p.z;
+      v.set(x, 1.65, z);
+      const dist = v.distanceTo(cam.position);
+      v.project(cam);
+      const show = (p.seen !== false || id === room.id) && v.z < 1 && dist < TAG_MAX_DIST && Math.abs(v.x) < 1.2 && Math.abs(v.y) < 1.2;
+      if (show !== t.shown) { t.el.style.display = show ? '' : 'none'; t.shown = show; }
+      if (!show) continue;
+      const text = p.status === 'spotted' ? 'SPOTTED!' : p.status === 'captured' ? 'CAUGHT' : p.name;
+      const cls = `nametag ${out ? 'spotted' : p.status}`;
+      if (text !== t.text) { t.el.textContent = text; t.text = text; }
+      if (cls !== t.cls) { t.el.className = cls; t.cls = cls; }
+      const sx = ((v.x + 1) / 2) * size.width, sy = ((1 - v.y) / 2) * size.height;
+      const sc = Math.min(2, k / Math.max(dist, 0.5));
+      const tf = `translate3d(${sx.toFixed(1)}px,${sy.toFixed(1)}px,0) translate(-50%,-50%) scale(${sc.toFixed(3)})`;
+      if (tf !== t.tf) { t.el.style.transform = tf; t.tf = tf; }
+      t.el.style.zIndex = String(Math.round(1000 - dist * 10));
+    }
+    for (const [id, t] of tags.current) if (!seenIds.has(id)) { t.el.remove(); tags.current.delete(id); }
+  });
+  return null;
 }
 
 /** Contestant statistics for tests (window.__cn.contestants()). */
@@ -259,7 +323,9 @@ function ContestantHooks({ room }: { room: TrialRoom }) {
     w.__cnPlayClip = (playerId: string, clip: string) => { contestantInstances.get(playerId)?.play(clip); return contestantInstances.get(playerId)?.currentShot ?? null; };
     // Test hook: render one frame and read it back in the same task (independent of page compositing).
     w.__cnSnapshot = (type = 'image/jpeg') => { gl.render(scene, camera); return gl.domElement.toDataURL(type, 0.9); };
-    return () => { delete w.__cnContestants; delete w.__cnGroundFx; delete w.__cnFacing; delete w.__cnNearestWet; delete w.__cnEmitGround; delete w.__cnPlayClip; delete w.__cnSnapshot; };
+    // Test hook for performance measurements (tests and profiling scripts only).
+    w.__cnThree = { scene, gl, camera, THREE };
+    return () => { delete w.__cnContestants; delete w.__cnGroundFx; delete w.__cnFacing; delete w.__cnNearestWet; delete w.__cnEmitGround; delete w.__cnPlayClip; delete w.__cnSnapshot; delete w.__cnThree; };
   }, [scene, room, gl, camera]);
   return null;
 }
@@ -489,6 +555,7 @@ export function Scene({ room, onStageError }: { room: TrialRoom; onStageError: (
         </Suspense>
       </StageErrorBoundary>
       <Players room={room} predictor={predictor} />
+      <NameTags room={room} />
       <ContestantHooks room={room} />
       <GroundFxLayer />
       <LocalController room={room} predictor={predictor} />
