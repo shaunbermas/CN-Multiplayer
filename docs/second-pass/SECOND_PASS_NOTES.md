@@ -69,21 +69,9 @@ turnaround renders):
 
 The game model's hood is about 20 % narrower from the front and about 30 % shallower from the side than the
 reference, and comes to more of a point. The reference has a rounder, bigger, more chibi head over shorter legs.
-**Done (decision 035, owner "Yes match it"):** `contestant_geometry.py` widens the hood about 19 % and deepens it
-about 25 % at the same height, and scales the faceplate and emblem to fill the larger opening. The `.blend`, master
-GLB, runtime meshopt GLB and manifest were rebuilt and pass `validate_contestant.py`. The rig, clips, UVs, textures,
-LOD budgets and the 30 colourways are unchanged.
-
-![Hood before and after](CONTESTANT_HOOD_BEFORE_AFTER.webp)
-
-| View | Reference | Before | After |
-|---|---|---|---|
-| Front | 53 % | 43 % | 51 % |
-| Side | 47 % | 32 % | 40 % |
-
-The width stays a little under the reference so that two contestants touching (0.3 m player capsules) don't push their
-hoods deep into each other. The turnaround PNGs in `docs/stage15/screenshots/contestant/` still show the old hood,
-because new LFS images could not be uploaded from this session; the before and after image above is current.
+**PROPOSED, needs the owner's approval:** widen and round the hood (scale the head and hood about 1.2× wide and
+deep, keeping its height) in the Blender build script, then re-export, keeping the same rig, clips, LODs and
+colourways. Nothing has been changed.
 
 ## Validation (cloud container, software WebGL)
 

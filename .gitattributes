@@ -32,8 +32,3 @@ blender/exports/stage01/** -filter -diff -merge
 docs/refinement/** -filter -diff -merge
 docs/ui/mockup/** -filter -diff -merge
 docs/second-pass/*.webp -filter -diff -merge
-# Second pass hood change (decision 035, 25 Nov 2026): the cloud session could not upload to Git LFS either, so the
-# rebuilt contestant files are normal git files (about 4.8 MB). Migrate back to LFS later with `git lfs migrate`.
-blender/scenes/CNTRIAL_CONTESTANT_MASTER.blend -filter -diff -merge
-blender/exports/contestant/CNTRIAL_CONTESTANT_MASTER.glb -filter -diff -merge
-blender/exports/contestant/CNTRIAL_CONTESTANT_MASTER.meshopt.glb -filter -diff -merge

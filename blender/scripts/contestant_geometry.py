@@ -38,14 +38,10 @@ SHOULDER = (0.165, 0.0, 0.665)
 ELBOW = (0.212, -0.012, 0.528)
 WRIST = (0.236, -0.024, 0.418)
 HIP_X = 0.078
-# Hood (second pass, decision 035, owner 25 Nov 2026 "Yes match it"): rounder and fuller to match the turnaround
-# reference, whose hood is about 53 % of the figure's height wide from the front (was 43 %). Wider (x 1.19, kept inside the 0.3 m player capsule plus the cloth) and
-# deeper (y 1.25) with the same height; the extra depth goes mostly to the back so the face opening stays put.
-# Was HOOD_C = (0.0, 0.012, 0.985), HOOD_R = (0.27, 0.26, 0.25), FACE_R = (0.212, 0.155, 0.205).
-HOOD_C = (0.0, 0.051, 0.985)
-HOOD_R = (0.32, 0.325, 0.25)
+HOOD_C = (0.0, 0.012, 0.985)
+HOOD_R = (0.27, 0.26, 0.25)
 FACE_C = (0.0, 0.03, 0.972)
-FACE_R = (0.245, 0.158, 0.214)
+FACE_R = (0.212, 0.155, 0.205)
 
 
 def smooth(e0, e1, x):
@@ -757,7 +753,7 @@ def face_y(x, z, lift=0.0):
     return cy - ry * math.sqrt(max(k, 0.0)) - lift
 
 
-EMBLEM = {"half_diagonal": 0.108, "stroke": 0.0130, "corner_radius": 0.022, "centre_z": 0.976, "chevron_apex": 0.0, "relief": 0.0035}
+EMBLEM = {"half_diagonal": 0.094, "stroke": 0.0118, "corner_radius": 0.020, "centre_z": 0.976, "chevron_apex": 0.0, "relief": 0.0035}
 
 
 def emblem(res):

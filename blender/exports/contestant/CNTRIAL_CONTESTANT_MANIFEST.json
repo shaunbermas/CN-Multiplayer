@@ -6,8 +6,8 @@
   "glb": "blender/exports/contestant/CNTRIAL_CONTESTANT_MASTER.glb",
   "runtime_glb": "blender/exports/contestant/CNTRIAL_CONTESTANT_MASTER.meshopt.glb",
   "bytes": {
-    "glb": 2415920,
-    "runtime_glb": 765896,
+    "glb": 2404868,
+    "runtime_glb": 763692,
     "CNT_Detail.webp": 119330,
     "CNT_Normal.webp": 42286
   },
@@ -23,7 +23,7 @@
   "lods": [
     {
       "node": "CNT_Contestant_LOD0",
-      "triangles": 22510,
+      "triangles": 22414,
       "primitives": 1,
       "attributes": [
         "COLOR_0",
@@ -37,7 +37,7 @@
     },
     {
       "node": "CNT_Contestant_LOD1",
-      "triangles": 8542,
+      "triangles": 8482,
       "primitives": 1,
       "attributes": [
         "COLOR_0",
@@ -51,7 +51,7 @@
     },
     {
       "node": "CNT_Contestant_LOD2",
-      "triangles": 3566,
+      "triangles": 3554,
       "primitives": 1,
       "attributes": [
         "COLOR_0",
@@ -390,9 +390,9 @@
   "material": "one shared material; per-player colour parameters only (no per-player textures)",
   "colorways": "packages/shared/src/contestant-colorways.json (30 records)",
   "emblem": {
-    "half_diagonal": 0.108,
-    "stroke": 0.013,
-    "corner_radius": 0.022,
+    "half_diagonal": 0.094,
+    "stroke": 0.0118,
+    "corner_radius": 0.02,
     "centre_z": 0.976,
     "chevron_apex": 0.0,
     "relief": 0.0035,
