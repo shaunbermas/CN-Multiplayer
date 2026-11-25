@@ -1,0 +1,45 @@
+{
+  "steps": [
+    {
+      "name": "no restart button in the lobby",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "host sees Restart during the match",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "restart asks first",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "cancel keeps playing",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "confirming restarts at the briefing of stage 1",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "final results offer Restart game",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Restart game on the final results starts a new match",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "no page errors",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "ok": true
+}

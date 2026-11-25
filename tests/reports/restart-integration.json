@@ -1,0 +1,45 @@
+{
+  "steps": [
+    [
+      "late joiner waits on the bench (got waiting)",
+      true
+    ],
+    [
+      "a non-host restart is ignored (phase active)",
+      true
+    ],
+    [
+      "restart goes straight to the briefing, no lobby in between",
+      true
+    ],
+    [
+      "restart begins at stage 1 (got 1)",
+      true
+    ],
+    [
+      "late joiner plays after the restart (got active)",
+      true
+    ],
+    [
+      "random players kept",
+      true
+    ],
+    [
+      "final standings list every player (got 6)",
+      true
+    ],
+    [
+      "restart from the final results begins a new match at stage 1",
+      true
+    ],
+    [
+      "old standings cleared on the client",
+      true
+    ],
+    [
+      "the new match counts only its own stage (stagesPlayed 1, 2 would mean old points carried over)",
+      true
+    ]
+  ],
+  "errors": []
+}

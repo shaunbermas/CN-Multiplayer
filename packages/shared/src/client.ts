@@ -178,6 +178,8 @@ export class RoomClient {
   clearBots(): void { this.send({ t: 'bots', action: 'clear' }); }
   /** Host: start the next stage now instead of waiting out the results (v7). */
   nextStage(): void { this.send({ t: 'next' }); }
+  /** Host: restart the match from stage 1 (points reset, everyone plays, random players kept). */
+  restart(): void { this.send({ t: 'restart' }); }
 
   onClose(h: (code: number, reason: string) => void): void { this.closeHandlers.push(h); }
   onSnapshot(h: () => void): void { this.snapHandlers.push(h); }

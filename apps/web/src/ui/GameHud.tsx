@@ -133,6 +133,29 @@ function Lobby({ room }: { room: TrialRoom }) {
   );
 }
 
+/**
+ * Host only, during a match: restart from stage 1 with everyone in the room (owner request, 25 Nov 2026).
+ * Asks once inline, because a restart throws away the stage in progress and everyone's points.
+ */
+function RestartControl({ room }: { room: TrialRoom }) {
+  const [asking, setAsking] = useState(false);
+  useEffect(() => {
+    if (!asking) return;
+    const t = setTimeout(() => setAsking(false), 8000);
+    return () => clearTimeout(t);
+  }, [asking]);
+  if (!asking) {
+    return <button className="btn restart-btn" onClick={() => setAsking(true)} title="Restart the game from stage 1" data-testid="restart">↻ Restart</button>;
+  }
+  return (
+    <span className="restart-ask" role="group" aria-label="Restart the game?" data-testid="restart-ask">
+      <span>Restart from stage 1? Points reset.</span>
+      <button className="btn go" onClick={() => { setAsking(false); room.restart(); }} data-testid="restart-yes">Restart</button>
+      <button className="btn ghost" onClick={() => setAsking(false)} data-testid="restart-no">Cancel</button>
+    </span>
+  );
+}
+
 /** First finisher of the current round (server finish times), if any. */
 function firstFinisherId(room: TrialRoom): string | null {
   let best: string | null = null, t = Infinity;
@@ -215,6 +238,7 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
             </div>
           )}
           <div className="hud-tools">
+            {room.isHost && r.phase !== 'lobby' && <RestartControl room={room} />}
             <ConnectionBadge room={room} />
             <button className="icon-btn" onClick={() => setOverlay('howto')} aria-label="How to play">?</button>
             <button className="icon-btn" onClick={() => setMuted(!s.muted)} aria-label={s.muted ? 'Unmute sound (M)' : 'Mute sound (M)'} aria-pressed={s.muted} title={s.muted ? 'Sound off (M)' : 'Sound on (M)'} data-testid="mute">{s.muted ? '🔇' : '🔊'}</button>
@@ -426,7 +450,8 @@ function FinalResults({ room, remaining, onLeave }: { room: TrialRoom; remaining
         <span className="next-line">Back to the lobby in {Math.ceil(remaining)} s · ties: points, then stage wins, finishes, total time</span>
         <div style={{ display: 'flex', gap: 8 }}>
           <button className="btn" onClick={onLeave} data-testid="exit">Exit to menu</button>
-          {room.isHost && <button className="btn primary" onClick={() => room.nextStage()} data-testid="back-to-lobby">Back to lobby</button>}
+          {room.isHost && <button className="btn" onClick={() => room.nextStage()} data-testid="back-to-lobby">Back to lobby</button>}
+          {room.isHost && <button className="btn go" onClick={() => room.restart()} data-testid="play-again">↻ Restart game</button>}
         </div>
       </footer>
     </section>

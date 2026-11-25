@@ -1,12 +1,12 @@
 {
   "result": "PASS",
   "errors": [],
-  "date": "2026-11-24T21:36:50.941Z",
+  "date": "2026-11-25T04:10:50.538Z",
   "server": "Cloudflare Worker + Durable Object (wrangler dev, local)",
   "clients": 30,
   "join_ms": {
-    "avg": 13.4,
-    "max": 28.8
+    "avg": 19.9,
+    "max": 147.2
   },
   "every_client_sees": 30,
   "unique_colorways": 30,
@@ -14,11 +14,11 @@
     "rejected": true,
     "message": "Room plain-load-test-30 is full (30 players)"
   },
-  "load_seconds": 42.5,
+  "load_seconds": 42.8,
   "rtt_ms": {
-    "median": 6,
+    "median": 7,
     "p95": 9,
-    "max": 9
+    "max": 10
   },
   "room": {
     "ok": true,
@@ -33,25 +33,25 @@
       "total": 0,
       "final": false
     },
-    "knockdowns": 42,
+    "knockdowns": 40,
     "snapshot": {
-      "count": 823,
-      "avgBytes": 1611
+      "count": 819,
+      "avgBytes": 1615
     },
-    "ticks": 1277,
+    "ticks": 1285,
     "tickMs": {
-      "avg": 0.042,
-      "p95": 0,
+      "avg": 0.161,
+      "p95": 1,
       "max": 1
     },
     "inputs": {
-      "accepted": 36660,
+      "accepted": 36840,
       "dropped": 0
     }
   },
   "snapshots_per_client_per_s": {
-    "min": 19.3,
-    "avg": 19.3
+    "min": 19.1,
+    "avg": 19.1
   },
   "walk_test": {
     "from": "spawn 1 (front row, centre)",

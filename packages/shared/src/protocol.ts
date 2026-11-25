@@ -41,7 +41,9 @@ export type ClientMessage =
   /** Host: add / fill / clear bots (lobby only, v7). */
   | BotAction
   /** Host: skip the rest of the stage results and start the next stage now (v7). */
-  | { t: 'next' };
+  | { t: 'next' }
+  /** Host: restart the match from stage 1 with everyone in the room, during play or from the final results. */
+  | { t: 'restart' };
 
 // ---- server -> client
 export interface RosterEntry { id: string; name: string; spawn: number; /** Ready in the lobby (Stage 1.5). */ ready?: boolean; /** Colourway of the shared contestant, unique in the room and kept on reconnect (CW01–CW30; protocol v6). */ colorway: string; /** Server-side bot (v7). */ bot?: boolean }

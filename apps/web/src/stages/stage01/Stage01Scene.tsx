@@ -206,7 +206,11 @@ function stripConeTrees(root: THREE.Object3D): number {
     const mat = mesh.material as THREE.Material;
     const g = mesh.geometry;
     if (mat.name === 'MAT_Wood_Weathered') { removed += (g.index ? g.index.count : g.attributes.position.count) / 3; mesh.visible = false; return; }
-    if (mat.name !== 'MAT_Foliage' || !g.index || g.userData.stripped) return;
+    if (mat.name !== 'MAT_Foliage' || !g.index) return;
+    // The environment GLB is cached, so a remounted scene finds its foliage already stripped: count what was
+    // removed the first time, or the status reads as if the cone trees were never stripped (quality test).
+    if (g.userData.stripped) { removed += g.userData.strippedTriangles ?? 0; return; }
+    let cut = 0;
     // Height in world metres. The GLB is quantised (KHR_mesh_quantization): local positions are normalised
     // shorts scaled up by the node, so the old local-space test kept every triangle and the cone trees stayed
     // visible in every Stage 1.5 build (found in the Stage 01 refinement, Phase 04).
@@ -217,10 +221,12 @@ function stripConeTrees(root: THREE.Object3D): number {
     const keep: number[] = [];
     for (let i = 0; i < src.length; i += 3) {
       if (Math.max(wy(src[i]), wy(src[i + 1]), wy(src[i + 2])) < 1.0) keep.push(src[i], src[i + 1], src[i + 2]);
-      else removed++;
+      else cut++;
     }
     g.setIndex(keep);
     g.userData.stripped = true;
+    g.userData.strippedTriangles = cut;
+    removed += cut;
     g.computeBoundingSphere();
   });
   return removed;

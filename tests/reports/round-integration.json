@@ -1,7 +1,7 @@
 {
   "result": "PASS",
   "errors": [],
-  "date": "2026-11-24T21:34:38.225Z",
+  "date": "2026-11-25T04:06:31.482Z",
   "seed": 12345,
   "round_s": 25,
   "first_red_s": 6.27,
@@ -71,12 +71,12 @@
       "players": 3
     },
     "names_sample": [
-      "Waffle",
-      "Vesper",
-      "Comet",
-      "Button",
-      "Echo",
-      "Yarrow"
+      "Willow",
+      "Cinder",
+      "Zephyr",
+      "Gizmo",
+      "Dash",
+      "Ember"
     ]
   }
 }
