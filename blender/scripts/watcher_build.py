@@ -49,6 +49,9 @@ MATS = {
     "MAT_Watcher_LensGlass": (None, 1.0, {"colour": (0.004, 0.006, 0.008), "rough": 0.05, "metal": 0.0}),
     "MAT_Watcher_Seam": (None, 1.0, {"colour": (0.02, 0.016, 0.012), "rough": 0.9, "metal": 0.0}),
     "MAT_Watcher_FiberOptic": (None, 1.0, {"colour": (0.03, 0.05, 0.07), "emit": (0.25, 0.6, 1.0), "strength": 0.55, "rough": 0.3}),
+    "MAT_Watcher_EyeWhite": (None, 1.0, {"colour": (0.72, 0.7, 0.64), "rough": 0.12}),
+    "MAT_Watcher_Iris": (None, 1.0, {"colour": (0.05, 0.035, 0.03), "rough": 0.15}),
+    "MAT_Watcher_LipPaint": (None, 1.0, {"colour": (0.36, 0.16, 0.14), "rough": 0.55}),
     "MAT_Watcher_Lens_Neutral": (None, 1.0, {"colour": (0.3, 0.33, 0.35), "emit": (0.75, 0.85, 0.9), "strength": 1.2, "rough": 0.1}),
     "MAT_Watcher_Lens_Red": (None, 1.0, {"colour": (0.4, 0.02, 0.02), "emit": (1.0, 0.02, 0.01), "strength": 2.0, "rough": 0.1}),
     "MAT_Watcher_Lens_Green": (None, 1.0, {"colour": (0.02, 0.35, 0.08), "emit": (0.05, 1.0, 0.25), "strength": 1.8, "rough": 0.1}),
@@ -318,18 +321,33 @@ def face_disp(x, z):
     """Forward relief of the sculpted doll face, in metres (decision 039)."""
     d = 0.0
     for s in (-1, 1):
-        d -= (0.1 if s * EYE_R_X > 0 else 0.3) * _g(x, z, s * 1.3, 23.55, 0.85, 0.62)   # eye sockets (shallow round the lens)
+        d -= 0.3 * _g(x, z, s * 1.3, 23.58, 0.9, 0.62)                                      # eye sockets
+        d -= 0.07 * _g(x, z, s * 0.55, 23.45, 0.22, 0.3)                                    # inner corners beside the bridge
+        d += 0.06 * _g(x, z, s * 1.35, 22.95, 0.6, 0.16)                                    # lower lid
         d += 0.17 * _g(x, z, s * 1.3, 24.4, 1.05, 0.32)                                    # brow ridge
         d += 0.17 * _g(x, z, s * 1.9, 22.85, 0.6, 0.45)                                     # cheekbones
         d -= 0.11 * _g(x, z, s * 1.55, 21.85, 0.5, 0.45)                                    # cheek hollows
         d += 0.09 * _g(x, z, s * 0.3, 22.72, 0.2, 0.16)                                     # nostril wings
         d -= 0.06 * _g(x, z, s * 0.62, 21.95, 0.16, 0.2)                                    # mouth corners
-    d += 0.44 * _g(x, z, 0, 22.95, 0.27, 0.48) + 0.12 * _g(x, z, 0, 23.65, 0.22, 0.5)       # nose and bridge
+    d += 0.2 * _g(x, z, 0, 22.95, 0.3, 0.5) + 0.08 * _g(x, z, 0, 23.65, 0.24, 0.5)        # base under the nose mesh
     d += 0.17 * _g(x, z, 0, 22.17, 0.55, 0.14)                                               # upper lip
     d += 0.2 * _g(x, z, 0, 21.72, 0.45, 0.15)                                                # lower lip
     d -= 0.12 * _g(x, z, 0, 21.93, 0.5, 0.06)                                                # parting of the lips
     d += 0.22 * _g(x, z, 0, 20.95, 0.55, 0.36)                                               # chin
     return d
+
+
+EYE_HOLE = (0.62, 0.36)   # half width and half height of each eye opening (decision 040)
+EYE_BALL = 0.66
+
+
+def in_eye_hole(c) -> bool:
+    if c.y > -1.0:
+        return False
+    for ex in (EYE_R_X, -EYE_R_X):
+        if ((c.x - ex) / EYE_HOLE[0]) ** 2 + ((c.z - EYE_Z) / EYE_HOLE[1]) ** 2 < 1.0:
+            return True
+    return False
 
 
 def _front(x, z):
@@ -418,6 +436,39 @@ def hair_strands(b: Body, mat):
         if f.normal.dot(cc - Vector((c.x, c.y, cc.z))) < 0:
             f.normal_flip()
 
+def ponytail(b: Body, mat):
+    """One high ponytail tied at the back of the crown and swept down beside the rear control housing
+    (decision 040). A single tail on purpose: not twin pigtails."""
+    ctrl = [Vector(p) for p in ((0.35, 3.35, 26.75), (0.9, 4.05, 26.0), (1.45, 4.3, 24.6), (1.8, 4.15, 22.9), (1.95, 3.85, 21.3), (2.05, 3.45, 19.9), (2.25, 3.25, 19.0))]
+
+    def cr(t):  # Catmull-Rom through the control points
+        n = len(ctrl) - 1
+        u = min(n - 1e-6, max(0.0, t * n))
+        i = int(u)
+        f = u - i
+        p0, p1, p2, p3 = ctrl[max(0, i - 1)], ctrl[i], ctrl[i + 1], ctrl[min(n, i + 2)]
+        return 0.5 * ((2 * p1) + (-p0 + p2) * f + (2 * p0 - 5 * p1 + 4 * p2 - p3) * f * f + (-p0 + 3 * p1 - 3 * p2 + p3) * f ** 3)
+
+    # the tie: a dark band round the gathered hair
+    t0 = (cr(0.06) - cr(0.0)).normalized()
+    b.lathe(cr(0.02) - t0 * 0.12, t0, [(0, 0.42), (0.1, 0.46), (0.24, 0.46), (0.34, 0.42)], "MAT_Watcher_Rubber", "Watcher_Head", seg=16)
+    for k in range(30):
+        a = 2 * math.pi * k / 30 + hash01(700 + k)
+        rr = 0.1 + 0.22 * hash01(710 + k)
+        pts = []
+        for j in range(17):
+            t = j / 16
+            c = cr(t)
+            tan = (cr(min(1, t + 0.02)) - cr(max(0, t - 0.02))).normalized()
+            s1 = tan.cross(Vector((0, 0, 1))).normalized() if abs(tan.z) < 0.95 else Vector((1, 0, 0))
+            s2 = tan.cross(s1).normalized()
+            spread = rr * (0.9 + 2.2 * math.sin(math.pi * min(1.0, t * 1.15)) * (1 - 0.6 * t)) + 0.04
+            wob = 0.06 * math.sin(t * 9 + k)
+            pts.append(c + s1 * math.cos(a) * (spread + wob) + s2 * math.sin(a) * (spread + wob) * 0.8)
+        for j, (p0, p1) in enumerate(zip(pts, pts[1:])):
+            r = 0.17 * (1 - 0.8 * (j / 16) ** 1.3) + 0.02
+            b.cyl(p0, p1, r, mat, "Watcher_Head", seg=5, caps=False)
+
 def hair_shell(b: Body, mat, seg=48, rows=10):
     rx, ry, rz = HEAD_R[0] + 0.18, HEAD_R[1] + 0.2, HEAD_R[2] + 0.2
     c = HEAD_C + Vector((0, 0.05, HEIGHT - HEAD_C.z - HEAD_R[2] - 0.2))
@@ -469,13 +520,14 @@ def build_body(b: Body, side_parts=True):
     # porcelain doll face (sockets, brow, nose, cheekbones, parted lips, chin) on the same head ellipsoid, long messy
     # hair that covers the sides of the face, a stapled-shut eye with a steel pin, a ringed camera-lens eye, cracks,
     # and exposed fiber-optic lines in a broken cheek and at the neck. Rear control housing and status lights unchanged.
-    head = b.ellipsoid(HEAD_C, HEAD_R, P, "Watcher_Head", seg=72, rings=52)
+    head = b.ellipsoid(HEAD_C, HEAD_R, P, "Watcher_Head", seg=72, rings=52, keep=lambda c: not in_eye_hole(c))
     hv = {v for f in head for v in f.verts}
     for v in hv:
         if v.co.y < 0:
             v.co.y = face_y(v.co.x, v.co.z) if v.co.y < -0.05 else v.co.y
     hair_shell(b, HR)
     hair_strands(b, HR)
+    ponytail(b, HR)
     b.box((-1.2, 3.05, 22.4), (1.2, 3.45, 23.6), ST, "Watcher_Head")
     for k in range(4):
         b.box((-1.0, 3.45, 22.6 + 0.22 * k), (1.0, 3.5, 22.7 + 0.22 * k), BR, "Watcher_Head")
@@ -511,51 +563,99 @@ def build_body(b: Body, side_parts=True):
         for p0, p1 in zip(pts, pts[1:]):
             b.cyl(p0, p1, r, mat, bone, seg=seg, caps=False)
 
-    # the camera-lens eye: barrel, bezel, glass, emitters, aperture, shutter iris (unchanged anchors and bones)
-    ey = head_surface_y(EYE_R_X, EYE_Z)
-    b.cyl((EYE_R_X, ey + 0.55, EYE_Z), (EYE_R_X, ey - 0.08, EYE_Z), 0.78, ST, "Watcher_Eye", seg=24)
-    b.lathe((EYE_R_X, ey - 0.02, EYE_Z), (0, -1, 0), [(0, 0.86), (0.08, 0.88), (0.12, 0.72), (0.06, 0.7)], BR, "Watcher_Eye", seg=24, cap0=False, cap1=False)
-    b.cyl((EYE_R_X, ey - 0.02, EYE_Z), (EYE_R_X, ey - 0.06, EYE_Z), 0.6, "MAT_Watcher_LensGlass", "Watcher_Eye", seg=24)
-    for i, (bone, mat) in enumerate((("Watcher_LensNeutral", "MAT_Watcher_Lens_Neutral"), ("Watcher_LensRed", "MAT_Watcher_Lens_Red"),
-                                      ("Watcher_LensGreen", "MAT_Watcher_Lens_Green"))):
-        y = ey - 0.065 - 0.006 * i
-        b.cyl((EYE_R_X, y, EYE_Z), (EYE_R_X, y - 0.02, EYE_Z), 0.24, mat, bone, seg=16)
-        # glowing rings in the glass, like a camera's focus scale (they show with their signal state)
-        for r0, r1 in ((0.5, 0.54), (0.64, 0.67)):
-            b.lathe((EYE_R_X, y + 0.01, EYE_Z), (0, -1, 0), [(0, r1), (0.0, r0)], mat, bone, seg=28, cap0=False, cap1=False)
-    b.lathe((EYE_R_X, ey - 0.07, EYE_Z), (0, -1, 0), [(0, 0.46), (0.04, 0.46), (0.04, 0.36), (0.0, 0.36)], ST, "Watcher_Eye", seg=20, cap0=False, cap1=False)
-    for k in range(6):
-        a0 = 2 * math.pi * k / 6
-        c0 = Vector((EYE_R_X + math.cos(a0) * 0.47, ey - 0.075, EYE_Z + math.sin(a0) * 0.47))
-        t = Vector((-math.sin(a0 + 0.5), 0, math.cos(a0 + 0.5)))
-        b.beam(c0 - t * 0.2, c0 + t * 0.2, 0.15, 0.02, ST, "Watcher_Eye", up=(0, -1, 0))
-    # a thin steel ring set into the porcelain around the lens, with tick segments
-    seam_path([(EYE_R_X + 1.0 * math.cos(2 * math.pi * k / 36), EYE_Z + 1.0 * math.sin(2 * math.pi * k / 36)) for k in range(37)], 0.06, 0.06, ST, 0.02)
-    for k in range(24):
-        a0 = 2 * math.pi * k / 24
-        r0, r1 = (1.06, 1.16) if k % 3 else (1.06, 1.24)
-        seam_path([(EYE_R_X + r0 * math.cos(a0), EYE_Z + r0 * math.sin(a0)), (EYE_R_X + r1 * math.cos(a0), EYE_Z + r1 * math.sin(a0))], 0.035, 0.03, ST, 0.01)
+    # two doll eyes (decision 040): eyeballs set in the cut-out sockets, a lid rim with an upper lid and lashes,
+    # a dark iris and a pupil that glows with the signal state. The right eye rides on `Watcher_Eye` (its anchors
+    # are unchanged); the pupils of both eyes are weighted to the three lens-state bones.
+    EW, IR, LIP = "MAT_Watcher_EyeWhite", "MAT_Watcher_Iris", "MAT_Watcher_LipPaint"
+    states = (("Watcher_LensNeutral", "MAT_Watcher_Lens_Neutral"), ("Watcher_LensRed", "MAT_Watcher_Lens_Red"), ("Watcher_LensGreen", "MAT_Watcher_Lens_Green"))
+    for side in (-1, 1):
+        ex = side * abs(EYE_R_X)
+        bone = "Watcher_Eye" if ex == EYE_R_X else "Watcher_Head"
+        n = face_normal(ex, EYE_Z)
+        e0 = Vector((ex, face_y(ex, EYE_Z), EYE_Z))
+        gaze = (n + Vector((0, 0, -0.12)) + Vector((-ex * 0.04, 0, 0))).normalized()  # looking down at the field, slightly inward
+        cc = e0 - n * 0.42
+        # a dark cup behind the opening, so nothing shows through round the eyeball
+        b.ellipsoid(cc - n * 0.15, (EYE_HOLE[0] + 0.4, 0.55, EYE_HOLE[1] + 0.4), seam, "Watcher_Head", seg=16, rings=8)
+        b.ellipsoid(cc, (EYE_BALL, EYE_BALL, EYE_BALL), EW, bone, seg=28, rings=18)
+        front = cc + gaze * EYE_BALL
+        b.lathe(front - gaze * 0.06, gaze, [(0, 0.36), (0.045, 0.335), (0.06, 0.0)], IR, bone, seg=28, cap0=False, cap1=False)
+        b.lathe(front - gaze * 0.02, gaze, [(0.0, 0.2), (0.04, 0.19), (0.05, 0.0)], seam, bone, seg=20, cap0=False, cap1=False)
+        for i, (sb, sm) in enumerate(states):  # glowing pupil, one disc per signal state
+            b.lathe(front + gaze * (0.035 + 0.004 * i), gaze, [(0.0, 0.15), (0.012, 0.0)], sm, sb, seg=20, cap0=False, cap1=False)
+        # lid rim: a soft porcelain ring round the opening, thicker on top (the upper lid), and lashes
+        ring = []
+        for k in range(33):
+            a = 2 * math.pi * k / 32
+            up = max(0.0, math.sin(a))
+            ring.append((ex + math.cos(a) * (EYE_HOLE[0] + 0.03), EYE_Z + math.sin(a) * (EYE_HOLE[1] + 0.03 + 0.06 * up), up))
+        for (x0, z0, u0), (x1, z1, u1) in zip(ring, ring[1:]):
+            w = 0.16 + 0.12 * (u0 + u1) / 2
+            b.beam(on_face(x0, z0, 0.02 + 0.06 * u0), on_face(x1, z1, 0.02 + 0.06 * u1), w, 0.13 + 0.08 * (u0 + u1) / 2, P, "Watcher_Head",
+                   up=tuple(face_normal(x0, z0)))
+        for k in range(11):
+            a = math.pi * (0.12 + 0.76 * k / 10)
+            lx0 = ex + math.cos(a) * (EYE_HOLE[0] + 0.1)
+            lz0 = EYE_Z + math.sin(a) * (EYE_HOLE[1] + 0.1)
+            out = 0.16 + 0.06 * math.sin(a)
+            p0 = on_face(lx0, lz0, 0.16)
+            p1 = on_face(lx0 + math.cos(a) * out * 0.5, lz0 + out * 0.5, 0.32)
+            b.beam(p0, p1, 0.035, 0.025, HR, "Watcher_Head")
+        # crease above the lid and a tired lower lid
+        seam_path([(ex + math.cos(a) * (EYE_HOLE[0] + 0.28), EYE_Z + 0.08 + math.sin(a) * (EYE_HOLE[1] + 0.28)) for a in [math.pi * (0.1 + 0.8 * k / 12) for k in range(13)]],
+                  0.04, 0.035, lift=0.0)
+        seam_path([(ex + math.cos(a) * (EYE_HOLE[0] + 0.12), EYE_Z - 0.06 + math.sin(a) * (EYE_HOLE[1] + 0.22)) for a in [math.pi * (1.2 + 0.6 * k / 8) for k in range(9)]],
+                  0.03, 0.03, lift=0.0)
 
-    # the sealed eye: a slit stitched with brass staples, and a steel pin driven in above it
-    lx = -EYE_R_X
-    seam_path([(lx - 0.62, EYE_Z + 0.04), (lx - 0.3, EYE_Z - 0.06), (lx, EYE_Z - 0.08), (lx + 0.3, EYE_Z - 0.06), (lx + 0.62, EYE_Z + 0.04)], 0.08, 0.08, lift=0.0)
-    for k in range(6):
-        sx = lx - 0.5 + 0.2 * k
-        sz = EYE_Z - 0.06 + 0.07 * abs(k - 2.5) / 2.5
-        b.beam(on_face(sx, sz - 0.17, 0.04), on_face(sx, sz + 0.17, 0.04), 0.055, 0.045, BR, "Watcher_Head", up=tuple(face_normal(sx, sz)))
-    b.beam(on_face(lx - 0.95, 24.15, 0.07), on_face(lx + 0.75, 24.95, 0.07), 0.12, 0.08, ST, "Watcher_Head", up=tuple(face_normal(lx, 24.5)))
-    for px, pz in ((lx - 0.95, 24.15), (lx + 0.75, 24.95)):
-        b.ellipsoid(on_face(px, pz, 0.1), (0.1, 0.1, 0.1), BR, "Watcher_Head", seg=8, rings=4)
-
-    # the parted mouth: a dark opening between the lips with a hint of upper teeth
-    MZ = 21.93
-    face_disc(0, MZ, 0.5, 0.11, 0.015, seam, seg=20)
-    for k in range(6):
-        tx = -0.25 + 0.1 * k
-        b.beam(on_face(tx, MZ + 0.09, 0.025), on_face(tx, MZ + 0.03, 0.025), 0.075, 0.03, P, "Watcher_Head", up=tuple(face_normal(tx, MZ)))
-    # nostrils
+    # a real nose: bridge, tip, wings and nostrils (sculpted parts, not paint)
+    def ell(x, z, lift, r, mat=P, seg=14, rings=8):
+        b.ellipsoid(on_face(x, z, lift), r, mat, "Watcher_Head", seg=seg, rings=rings)
+    ell(0, 23.45, -0.1, (0.17, 0.2, 0.62))
+    ell(0, 23.1, 0.0, (0.2, 0.26, 0.42))
+    ell(0, 22.8, 0.04, (0.21, 0.23, 0.2), seg=16, rings=10)
     for s in (-1, 1):
-        face_disc(s * 0.15, 22.62, 0.07, 0.035, 0.01, seam, seg=8)
+        ell(s * 0.2, 22.72, -0.02, (0.15, 0.15, 0.13))
+        b.ellipsoid(on_face(s * 0.11, 22.62, 0.12), (0.06, 0.05, 0.035), seam, "Watcher_Head", seg=8, rings=4)
+
+    # real lips, slightly parted: swept tubes with a cupid's bow, painted a faded rose, over a dark mouth
+    def sweep(pts, rads, mat, seg=10):
+        gi, mi = b._g("Watcher_Head"), b._m(mat)
+        rings_ = []
+        for k, ((x, z, lift), (rh, rd)) in enumerate(zip(pts, rads)):
+            p = on_face(x, z, lift)
+            nn = face_normal(x, z)
+            xa, za = pts[max(0, k - 1)][:2]
+            xb, zb = pts[min(len(pts) - 1, k + 1)][:2]
+            t = (on_face(xb, zb) - on_face(xa, za)).normalized()
+            bb = t.cross(nn).normalized()
+            rings_.append([b._v(p + nn * math.cos(2 * math.pi * j / seg) * rd + bb * math.sin(2 * math.pi * j / seg) * rh, gi) for j in range(seg)])
+        fs = []
+        for k in range(len(rings_) - 1):
+            for j in range(seg):
+                jj = (j + 1) % seg
+                f = b.bm.faces.new((rings_[k][j], rings_[k][jj], rings_[k + 1][jj], rings_[k + 1][j]))
+                f.material_index, f.smooth = mi, True
+                b.project.add(f)
+                fs.append(f)
+        for f in fs:
+            cen = f.calc_center_median()
+            axis = min(range(len(pts)), key=lambda q: (on_face(pts[q][0], pts[q][1], pts[q][2]) - cen).length)
+            if f.normal.dot(cen - on_face(pts[axis][0], pts[axis][1], pts[axis][2])) < 0:
+                f.normal_flip()
+    MZ = 21.93
+    face_disc(0, MZ, 0.42, 0.07, 0.03, seam, seg=20)
+    xs = [-0.55 + 1.1 * k / 12 for k in range(13)]
+    sweep([(x, MZ + 0.11 + 0.035 * (1 - abs(abs(x) - 0.14) / 0.14) * (abs(x) < 0.28) - 0.06 * (abs(x) / 0.55) ** 2, 0.03) for x in xs],
+          [(0.02 + 0.075 * (1 - (abs(x) / 0.55) ** 2), 0.03 + 0.06 * (1 - (abs(x) / 0.55) ** 2)) for x in xs], LIP)
+    xs = [-0.48 + 0.96 * k / 12 for k in range(13)]
+    sweep([(x, MZ - 0.12 + 0.07 * (abs(x) / 0.48) ** 2, 0.04) for x in xs],
+          [(0.02 + 0.1 * (1 - (abs(x) / 0.48) ** 2), 0.03 + 0.08 * (1 - (abs(x) / 0.48) ** 2)) for x in xs], LIP)
+    for k in range(4):  # a hint of upper teeth in the gap
+        tx = -0.15 + 0.1 * k
+        b.beam(on_face(tx, MZ + 0.05, 0.03), on_face(tx, MZ - 0.01, 0.03), 0.08, 0.03, EW, "Watcher_Head", up=tuple(face_normal(tx, MZ)))
+    # philtrum ridges
+    for s in (-1, 1):
+        b.beam(on_face(s * 0.08, 22.5, 0.03), on_face(s * 0.1, 22.13, 0.04), 0.06, 0.05, P, "Watcher_Head", up=tuple(face_normal(0, 22.3)))
 
     # cracks across the porcelain (deterministic random walks)
     for k, (x0, z0, ang, n) in enumerate(CRACKS):
@@ -773,7 +873,7 @@ def apply_pose(arm, pose):
     for name in LENS:
         on = name.lower().endswith(state)
         arm.pose.bones[name].scale = (1, 1, 1) if on else (0.01, 0.01, 0.01)
-    arm.pose.bones["Watcher_Eye"].location = (0, pose.get("eye_out", 0.0), 0)  # bone Y points out of the face
+    arm.pose.bones["Watcher_Eye"].location = (0, 0.25 * pose.get("eye_out", 0.0), 0)  # bone Y points out of the face; decision 040: the doll eye only lurches
     arm.pose.bones["Watcher_Key"].rotation_quaternion = Quaternion(Vector((0, 1, 0)), math.radians(pose.get("key", 0.0)))
 
 
@@ -979,6 +1079,7 @@ def main() -> None:
     anchor("Watcher_Root", (0, 0, 0), "Watcher_Root", "ARROWS", 2.0, {"role": "root_ground_pivot"})
     anchor("Watcher_Facing", (0, -4.0, 0), "Watcher_Root", "SINGLE_ARROW", 2.0, {"role": "facing", "forward": "-Y in Blender, -Z in glTF (toward the start line)"})
     anchor("Watcher_OpticalOrigin", (EYE_R_X, ey - 0.1, EYE_Z), "Watcher_Eye", "SPHERE", 0.4, {"role": "optical_origin"})
+    anchor("Watcher_OpticalOrigin_L", (-EYE_R_X, ey - 0.1, EYE_Z), "Watcher_Head", "SPHERE", 0.4, {"role": "optical_origin_left_pupil"})
     anchor("Watcher_DetectionForward", (EYE_R_X, ey - 6.0, EYE_Z), "Watcher_Eye", "SINGLE_ARROW", 1.0, {"role": "detection_forward"})
     anchor("Watcher_AudioOrigin", (0, -2.7, 17.0), "Watcher_Chest", "SPHERE", 0.6, {"role": "audio_origin"})
     ib = anchor("Watcher_InteractionBounds", (0, -0.5, 14.0), "Watcher_Root", "CUBE", 1.0,

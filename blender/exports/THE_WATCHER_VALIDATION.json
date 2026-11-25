@@ -26,7 +26,7 @@
       ],
       "bounds_max": [
         4.767,
-        4.285,
+        5.148,
         28.0
       ],
       "optical_origin_m": [
@@ -46,19 +46,19 @@
       "pass": true,
       "problems": [],
       "vertex_groups": 32,
-      "vertices": 18461
+      "vertices": 25505
     },
     "geometry_uvs_lod": {
       "pass": true,
       "problems": [],
-      "triangles_lod0": 29392,
-      "triangles_lod1": 14662,
+      "triangles_lod0": 38408,
+      "triangles_lod1": 19180,
       "budget": 40000
     },
     "materials": {
       "pass": true,
       "problems": [],
-      "materials": 13,
+      "materials": 15,
       "images": {
         "T_W_Porcelain_BC.png": [
           1024,
@@ -83,6 +83,18 @@
         "T_W_HairLacquer_N.png": [
           512,
           512
+        ],
+        "T_W_Rubber_BC.png": [
+          256,
+          256
+        ],
+        "T_W_Rubber_ORM.png": [
+          256,
+          256
+        ],
+        "T_W_Rubber_N.png": [
+          256,
+          256
         ],
         "T_W_SteelDark_BC.png": [
           512,
@@ -131,18 +143,6 @@
         "T_W_Textile_N.png": [
           512,
           512
-        ],
-        "T_W_Rubber_BC.png": [
-          256,
-          256
-        ],
-        "T_W_Rubber_ORM.png": [
-          256,
-          256
-        ],
-        "T_W_Rubber_N.png": [
-          256,
-          256
         ]
       }
     },

@@ -75,19 +75,22 @@ export function WatcherFX({ room, root, search, eyeLight }: { room: TrialRoom; r
     // Eye glare: an additive glow on the lens (depth-tested, so the head hides it when The Watcher turns away).
     const glare = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), color: new THREE.Color('#ff2a1a'), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, toneMapped: false }));
     glare.visible = false;
+    // decision 040: two doll eyes, so the second pupil gets its own glare (from `Watcher_OpticalOrigin_L`)
+    const glareL = new THREE.Sprite(glare.material);
+    glareL.visible = false;
     // Red light on The Watcher's face and the plinth while the eye burns (Medium / High).
     const light = new THREE.PointLight(new THREE.Color('#ff2414'), 0, 40, 1.6);
     light.name = 'LGT_STG15_WatcherEye';
-    g.add(beam, ring, cone, spot, glare);
+    g.add(beam, ring, cone, spot, glare, glareL);
     if (eyeLight) g.add(light);
-    return { g, beam, ring, cone, spot, glare, light };
+    return { g, beam, ring, cone, spot, glare, glareL, light };
   }, []);
   useEffect(() => () => {
     fx.g.traverse((o) => { const m = o as THREE.Mesh; if (m.isMesh) { m.geometry.dispose(); (m.material as THREE.Material).dispose(); } });
     fx.glare.material.map?.dispose(); fx.glare.material.dispose();
   }, [fx]);
 
-  const tmp = useMemo(() => ({ a: new THREE.Vector3(), b: new THREE.Vector3(), d: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0) }), []);
+  const tmp = useMemo(() => ({ l: new THREE.Vector3(), a: new THREE.Vector3(), b: new THREE.Vector3(), d: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0) }), []);
   const seen = useMemo(() => ({ key: '', at: 0 }), []);
   useFrame((state) => {
     const lens = root?.getObjectByName('Watcher_OpticalOrigin');
@@ -129,6 +132,9 @@ export function WatcherFX({ room, root, search, eyeLight }: { room: TrialRoom; r
     const size = eye === 'flare' ? 11 + Math.sin(t * 30) * 1.5 : eye === 'red' ? 6.5 * pulse : 2.2 * pulse;
     fx.glare.scale.set(size, size, 1);
     fx.glare.material.opacity = eye === 'dim' ? 0.45 : 1;
+    const lensL = root?.getObjectByName('Watcher_OpticalOrigin_L');
+    fx.glareL.visible = !!lensL;
+    if (lensL) { lensL.getWorldPosition(tmp.l); fx.glareL.position.copy(tmp.l); fx.glareL.scale.set(size, size, 1); }
     // decision 038: weaker and further forward, so the red reads on the eye and the beam instead of flooding the face
     fx.light.intensity = THREE.MathUtils.lerp(fx.light.intensity, eye === 'flare' ? 480 : eye === 'red' ? 170 * pulse : 0, 0.2);
     fx.light.position.copy(tmp.a).add(new THREE.Vector3(0, -2.5, 6));
