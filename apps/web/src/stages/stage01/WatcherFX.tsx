@@ -47,7 +47,7 @@ export function WatcherFX({ room, root, search, eyeLight }: { room: TrialRoom; r
     // Soft volumetric-looking beam: brightest near the lens, fading along its length and toward its edges.
     const coneMat = new THREE.ShaderMaterial({
       transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false,
-      uniforms: { uColor: { value: new THREE.Color('#ff2a18') }, uStrength: { value: 0.2 }, uTime: { value: 0 } }, // decision 038: soft edges now really fade (was 0.22 with hard edges)
+      uniforms: { uColor: { value: new THREE.Color('#ff2a18') }, uStrength: { value: 0.4 }, uTime: { value: 0 } }, // decision 038: soft edges now really fade (was 0.22 with hard edges)
       // View-space normal through normalMatrix (the inverse transpose): the cone is scaled very unevenly (long and
       // thin), and transforming its normals by the model matrix bent them along the axis, so the edge fade never
       // happened and the beam drew as a flat, solid band.
@@ -58,8 +58,8 @@ export function WatcherFX({ room, root, search, eyeLight }: { room: TrialRoom; r
       // hard edge), a fade to nothing at the far end, a soft start at the lens and slow drifting haze bands.
       fragmentShader: `uniform vec3 uColor; uniform float uStrength; uniform float uTime; varying float vAlong; varying vec3 vN; varying vec3 vView;
         void main() { float facing = abs(dot(normalize(vN), normalize(vView)));
-          float edge = smoothstep(0.15, 1.0, facing); edge *= edge * edge;
-          float a = clamp(vAlong, 0.0, 1.0); float fall = pow(1.0 - a, 2.6) * smoothstep(0.0, 0.06, a); // clamped: pow of a negative base is NaN on Apple GPUs, and one NaN pixel spread by the bloom blacked out the screen on red
+          float edge = smoothstep(0.0, 1.0, facing); edge = 0.3 + 0.7 * edge * edge; // owner (26 Nov): a floor, so the beam still reads when it points toward the camera (seen end-on the fade erased it)
+          float a = clamp(vAlong, 0.0, 1.0); float fall = mix(1.0, 0.4, a) * smoothstep(0.0, 0.05, a) * (1.0 - smoothstep(0.92, 1.0, a)); // owner (26 Nov): the ray reads all the way down to the yard (it used to fade out long before the players) // clamped: pow of a negative base is NaN on Apple GPUs, and one NaN pixel spread by the bloom blacked out the screen on red
           float haze = 0.7 + 0.18 * sin(a * 23.0 - uTime * 1.7) + 0.12 * sin(a * 57.0 + uTime * 2.9);
           gl_FragColor = vec4(uColor * edge * fall * haze * uStrength, 1.0);
           #include <colorspace_fragment>
@@ -69,7 +69,7 @@ export function WatcherFX({ room, root, search, eyeLight }: { room: TrialRoom; r
     cone.visible = false;
     cone.frustumCulled = false;
     // Ground hotspot where the searchlight lands.
-    const spot = new THREE.Mesh(new THREE.CircleGeometry(1, 40), new THREE.MeshBasicMaterial({ color: new THREE.Color('#ff2a18').multiplyScalar(1.4), transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, toneMapped: false }));
+    const spot = new THREE.Mesh(new THREE.CircleGeometry(1, 40), new THREE.MeshBasicMaterial({ map: glowTexture(), color: new THREE.Color('#ff2a18').multiplyScalar(1.2), transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, toneMapped: false }));
     spot.rotation.x = -Math.PI / 2;
     spot.visible = false;
     // Eye glare: an additive glow on the lens (depth-tested, so the head hides it when The Watcher turns away).
@@ -83,16 +83,16 @@ export function WatcherFX({ room, root, search, eyeLight }: { room: TrialRoom; r
     light.name = 'LGT_STG15_WatcherEye';
     g.add(beam, ring, cone, spot, glare, glareL);
     if (eyeLight) g.add(light);
-    return { g, beam, ring, cone, spot, glare, glareL, light };
+    return { g, beam, ring, cone, spot, glare, glareL, light, packZ: -60 };
   }, []);
   useEffect(() => () => {
     fx.g.traverse((o) => { const m = o as THREE.Mesh; if (m.isMesh) { m.geometry.dispose(); (m.material as THREE.Material).dispose(); } });
-    fx.glare.material.map?.dispose(); fx.glare.material.dispose();
+    fx.glare.material.map?.dispose(); fx.glare.material.dispose(); (fx.spot.material as THREE.MeshBasicMaterial).map?.dispose();
   }, [fx]);
 
   const tmp = useMemo(() => ({ l: new THREE.Vector3(), a: new THREE.Vector3(), b: new THREE.Vector3(), d: new THREE.Vector3(), f: new THREE.Vector3(), v: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0) }), []);
   const seen = useMemo(() => ({ key: '', at: 0 }), []);
-  useFrame((state) => {
+  useFrame((state, dt) => {
     const lens = root?.getObjectByName('Watcher_OpticalOrigin');
     watcherFxStatus.anchor = !!lens;
     if (!lens) return;
@@ -145,21 +145,27 @@ export function WatcherFX({ room, root, search, eyeLight }: { room: TrialRoom; r
     fx.light.position.copy(tmp.a).add(new THREE.Vector3(0, -10, 16));
     watcherFxStatus.eyeLight = eyeLight && fx.light.intensity > 1;
     // Searchlight sweep during red (presentation only; detection is not line-of-sight, decision E9).
-    const sweeping = search && phase === 'active' && sig === 'red' && !p;
+    // Owner (26 Nov 2026): the beam must show on every red. It used to hide for 1.6 s after each spot, so with many
+    // players being caught it flickered off; now it sweeps the whole red, and it sweeps across where the players are.
+    const sweeping = search && phase === 'active' && sig === 'red';
     fx.cone.visible = sweeping;
     fx.spot.visible = sweeping;
     watcherFxStatus.search = sweeping;
     if (sweeping) {
       const t = state.clock.elapsedTime;
-      tmp.b.set(Math.sin(t * 0.7) * 22, 0, -60 + Math.sin(t * 0.37) * 35);
+      let zs = 0, n = 0;
+      for (const pl of room.players.values()) if (pl.status === 'active') { zs += pl.z; n++; }
+      const packZ = n ? THREE.MathUtils.clamp(zs / n, -150, -10) : -60;
+      fx.packZ = THREE.MathUtils.lerp(fx.packZ, packZ, 1 - Math.exp(-Math.min(dt, 0.25) * 1.5));
+      tmp.b.set(Math.sin(t * 0.7) * 22, 0, fx.packZ - 14 + Math.sin(t * 0.37) * 14); // lands just ahead of the pack, toward The Watcher
       tmp.d.subVectors(tmp.b, tmp.a);
       const len = tmp.d.length();
       (fx.cone.material as THREE.ShaderMaterial).uniforms.uTime.value = t;
       fx.cone.position.copy(tmp.a);
       fx.cone.quaternion.setFromUnitVectors(tmp.up, tmp.d.normalize());
-      fx.cone.scale.set(len * 0.06, len, len * 0.06);
+      fx.cone.scale.set(len * 0.045, len, len * 0.045);
       fx.spot.position.set(tmp.b.x, 0.05, tmp.b.z);
-      fx.spot.scale.setScalar(len * 0.06 * 1.2);
+      fx.spot.scale.setScalar(len * 0.045 * 1.5);
     }
   });
   return <primitive object={fx.g} />;

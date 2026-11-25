@@ -459,3 +459,54 @@ label.check { display: flex !important; align-items: center; gap: 8px; font: 500
 /* HUD icons follow the HUD scale too */
 .tool-btn .ico { width: calc(30px * var(--hud-scale)); height: calc(30px * var(--hud-scale)); }
 .counts .ico, .pts-chip .ico, .hb-cell .ico { width: calc(22px * var(--hud-scale)); height: calc(22px * var(--hud-scale)); }
+
+/* ---------- Lobby, briefing, countdown and results in the owner's style (26 Nov 2026) ----------
+   Same frosted glass as the HUD, red primary buttons as on the main menu, Barlow Condensed italics for big numbers. */
+.hud .card { clip-path: none; border-radius: 10px; padding: 24px 26px; color: #f2f2f2;
+  background: linear-gradient(180deg, rgba(50, 54, 58, 0.8), rgba(26, 29, 32, 0.86)); border: 1px solid rgba(255, 255, 255, 0.11);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 14px 40px rgba(0, 0, 0, 0.45); backdrop-filter: blur(16px) saturate(1.1); -webkit-backdrop-filter: blur(16px) saturate(1.1); }
+.hud .card-head h2, .hud .card-title { font: 700 22px/1 var(--display); letter-spacing: 0.22em; }
+.hud .card-foot { border-top-color: rgba(255, 255, 255, 0.1); }
+.hud .eyebrow { color: #aeb2b5; letter-spacing: 0.26em; }
+.hud .muted, .hud .lobby-hint { color: #b9bdc0; }
+.hud .btn { border-radius: 5px; border: 1px solid rgba(255, 255, 255, 0.14); background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05)); color: #f2f2f2; letter-spacing: 0.14em; }
+.hud .btn:hover:not(:disabled) { background: linear-gradient(180deg, rgba(255, 255, 255, 0.17), rgba(255, 255, 255, 0.09)); border-color: rgba(255, 255, 255, 0.26); }
+.hud .btn.ghost { background: none; border-color: transparent; color: #c9cdd0; }
+.hud .btn.ghost:hover:not(:disabled) { background: none; border-color: transparent; color: #fff; }
+.hud .btn.go, .hud .btn.primary { background: linear-gradient(180deg, #a91f18 0%, #8c1812 55%, #74130e 100%); border: 1.5px solid #cf2b21; color: #f3eee6; box-shadow: 0 6px 22px rgba(170, 28, 20, 0.32); }
+.hud .btn.go:hover:not(:disabled), .hud .btn.primary:hover:not(:disabled) { background: linear-gradient(180deg, #bd241c 0%, #9c1b14 55%, #82160f 100%); border-color: #e53a2f; }
+.hud .btn.primary .k, .hud .btn.go .k { color: rgba(243, 238, 230, 0.75); }
+.hud .btn.on { background: linear-gradient(180deg, rgba(49, 209, 107, 0.22), rgba(49, 209, 107, 0.1)); border-color: #31d16b; color: #7ff0a8; }
+.hud .btn.big { min-height: 56px; font-size: 21px; }
+/* lobby */
+.hud .code { font: italic 800 46px/1 var(--display); letter-spacing: 0.16em; color: #fff; }
+.hud .count-big { font: italic 800 56px/1 var(--display); }
+.hud .count-big small { font-style: italic; color: #aeb2b5; }
+.hud .slot { border-radius: 4px; border-color: rgba(255, 255, 255, 0.07); background: rgba(255, 255, 255, 0.035); }
+.hud .slot.taken { border-color: rgba(255, 255, 255, 0.16); background: rgba(255, 255, 255, 0.08); }
+.hud .slot.me { border-color: rgba(255, 255, 255, 0.75); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25); }
+.hud .slot.host .slot-meta { color: #ec3a2e; }
+.hud .slot.ready .slot-meta { color: #31d16b; }
+.hud .slot-n { color: rgba(255, 255, 255, 0.3); }
+.hud .slot.empty .slot-name { color: rgba(255, 255, 255, 0.32); }
+.hud .my-contestant b { font-weight: 700; }
+/* briefing */
+.hud .briefing .stage-of { font-style: italic; }
+.hud .briefing .rule { font: italic 700 28px/1.1 var(--display); letter-spacing: 0.02em; }
+/* countdown: a frosted glass dial, the number in the same italic as GO / STOP (no lens: owner) */
+.hud .countdown .dial { border-radius: 50%; width: 230px; height: 230px;
+  background: radial-gradient(circle at 50% 40%, rgba(70, 75, 80, 0.62), rgba(26, 29, 32, 0.78) 70%); border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 0 0 12px rgba(255, 255, 255, 0.035), inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 14px 40px rgba(0, 0, 0, 0.45); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+.hud .cd-num { font: italic 800 150px/1 var(--display); color: #fff; text-shadow: 0 3px 14px rgba(0, 0, 0, 0.35); }
+.hud .cd-label { color: #f2f2f2; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6); }
+/* results */
+.hud .results-head h2 { font-style: italic; }
+.hud .results-head h2 i { color: #9a9ea2; }
+.hud .board th { border-bottom-color: rgba(255, 255, 255, 0.2); color: #aeb2b5; }
+.hud .board td { border-bottom-color: rgba(255, 255, 255, 0.08); }
+.hud .board .place { color: #aeb2b5; font-style: italic; }
+.hud .board .total, .hud .board .gain { font-style: italic; }
+.hud .board tr.me td { background: rgba(255, 255, 255, 0.07); }
+.hud .first-finisher { border-radius: 6px; border-color: rgba(255, 255, 255, 0.16); background: rgba(255, 255, 255, 0.05); }
+.hud .first-finisher small { color: #aeb2b5; }
+.hud .first-finisher b { font-style: italic; }
