@@ -39,6 +39,18 @@ try {
   await press(page, 'start');
   await waitFor(async () => (await phase(page)) === 'active', 'match active', 30_000);
   check('host sees Restart during the match', await page.locator('[data-testid=restart]').isVisible());
+  // Pause (owner, 25 Nov 2026): the host's pause stops the clock and movement for everyone; Resume carries on.
+  await press(page, 'pause');
+  await waitFor(() => page.evaluate(() => !!window.__cn.round().paused), 'paused', 5_000);
+  const left1 = await page.evaluate(() => window.__cn.round().remaining);
+  await sleep(1500);
+  const left2 = await page.evaluate(() => window.__cn.round().remaining);
+  check('pause menu shows Resume, Restart stage and Main menu', await page.locator('[data-testid=resume]').isVisible() && await page.locator('[data-testid=pause-restart]').isVisible() && await page.locator('[data-testid=main-menu]').isVisible());
+  check('clock stops while paused', left1 === left2, `${left1} -> ${left2}`);
+  await page.screenshot({ path: `${shots}/00_paused.png` });
+  await press(page, 'resume');
+  await waitFor(() => page.evaluate(() => !window.__cn.round().paused), 'resumed', 5_000);
+  check('Resume carries on', (await phase(page)) === 'active');
   await press(page, 'restart');
   check('restart asks first', await page.locator('[data-testid=restart-ask]').isVisible());
   await page.screenshot({ path: `${shots}/01_restart_confirm.png` });
@@ -47,7 +59,7 @@ try {
   await press(page, 'restart');
   await press(page, 'restart-yes');
   await waitFor(async () => (await phase(page)) === 'briefing', 'briefing after restart', 5_000);
-  check('confirming restarts at the briefing of stage 1', (await page.locator('[data-testid=hud]').getAttribute('data-stage')) === '1');
+  check('confirming restarts the current stage (stage 1) at its briefing', (await page.locator('[data-testid=hud]').getAttribute('data-stage')) === '1');
   await page.screenshot({ path: `${shots}/02_after_restart.png` });
 
   await waitFor(async () => (await page.locator('[data-testid=final]').count()) > 0, 'final results', 60_000);

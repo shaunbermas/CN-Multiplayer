@@ -50,8 +50,13 @@ export type ClientMessage =
   | BotAction
   /** Host: skip the rest of the stage results and start the next stage now (v7). */
   | { t: 'next' }
-  /** Host: restart the match from stage 1 with everyone in the room, during play or from the final results. */
-  | { t: 'restart' };
+  /**
+   * Host: restart. With stage: true (owner, 25 Nov 2026) the stage in progress starts again from its briefing and
+   * points from earlier stages are kept; without it the whole match starts again from stage 1 (final results).
+   */
+  | { t: 'restart'; stage?: boolean }
+  /** Host: pause or resume the room (owner, 25 Nov 2026). The whole simulation freezes for everyone. */
+  | { t: 'pause'; on: boolean };
 
 // ---- server -> client
 export interface RosterEntry { /** Disconnected mid-match, seat kept for a reconnect (v8). */ away?: boolean; id: string; name: string; spawn: number; /** Ready in the lobby (Stage 1.5). */ ready?: boolean; /** Colourway of the shared contestant, unique in the room and kept on reconnect (CW01–CW30; protocol v6). */ colorway: string; /** Server-side bot (v7). */ bot?: boolean }
@@ -89,6 +94,8 @@ export interface RoundState {
   match: MatchState;
   /** Stage 02 public state (v8): head start, hunter ids, hider counts. Never a hider's position. */
   hunt?: HuntPublic;
+  /** The host paused the room: nothing moves and no timer runs (owner, 25 Nov 2026). */
+  paused?: boolean;
 }
 
 /** One player's line in the stage results (v7: points). */

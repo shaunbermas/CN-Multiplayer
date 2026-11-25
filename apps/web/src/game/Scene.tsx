@@ -53,6 +53,7 @@ export function canMove(room: TrialRoom): boolean {
   if (!me) return false;
   if (me.down > 0) return false; // knocked down by a collision (server-authoritative): no control until back up
   if (room.round.phase === 'lobby') return true;
+  if (room.round.paused) return false; // the host paused the room
   if (room.hunt && (room.hunt.captured || room.hunt.hide)) return false; // Stage 02: caught, or inside a hiding place
   return room.round.phase === 'active' && (me.status === 'active' || me.status === 'finished');
 }
@@ -286,7 +287,7 @@ function GroundFxLayer() {
     return () => { scene.remove(fx.points, fx.rings); fx.dispose(); if (groundFx.current === fx) groundFx.current = null; };
   }, [scene, fx]);
   useFrame((_, dt) => {
-    fx.density = quality.tier === 'low' ? 0.5 : 1;
+    fx.density = 0; // owner (25 Nov 2026): no particles; puddle ripples only
     fx.setViewport(size.height, (camera as THREE.PerspectiveCamera).fov ?? 60);
     fx.update(Math.min(dt, 0.1));
   });

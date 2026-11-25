@@ -102,12 +102,13 @@ try {
   // 10–11: HUD green and red (client signal view held for exact captures; server state unaffected)
   await waitFor(() => page.evaluate(() => window.__cn.round().phase === 'active'), 'active');
   await page.evaluate(() => { globalThis.__cnSignalHold = { signal: 'green', since: Date.now() }; });
-  await step(page, '10_hud_green', async () => { await waitFor(() => page.evaluate(() => document.querySelector('[data-testid=signal]')?.textContent?.includes('GREEN')), 'green banner'); });
+  await step(page, '10_hud_green', async () => { await waitFor(() => page.evaluate(() => document.querySelector('[data-testid=signal]')?.textContent?.trim() === 'GO'), 'GO banner'); });
   await page.evaluate(() => { globalThis.__cnSignalHold = { signal: 'red', since: Date.now() }; });
-  // Decision 037: the HUD shows only the RED LIGHT word and lens (no SCANNING tag, no time-left bar, no hint).
+  // Decision 043: the signal banner shows only GO or STOP (no lens, no SCANNING tag, no time-left bar, no hint).
   await step(page, '11_hud_red_scanning', async () => {
-    await waitFor(() => page.evaluate(() => document.querySelector('[data-testid=signal]')?.textContent?.trim() === 'RED LIGHT'), 'red banner, word only');
+    await waitFor(() => page.evaluate(() => document.querySelector('[data-testid=signal]')?.textContent?.trim() === 'STOP'), 'STOP banner, word only');
     if (await page.evaluate(() => !!document.querySelector('.seg-bar, .scanning, .signal .sub'))) throw new Error('signal hints still shown (time bar, SCANNING or sub text)');
+    if (await page.evaluate(() => !!document.querySelector('[data-testid=signal] svg, [data-testid=signal] .lens'))) throw new Error('lens icon still in the signal banner');
   });
   await page.evaluate(() => { delete globalThis.__cnSignalHold; });
 
