@@ -12,6 +12,8 @@ Status: **built, ready for owner review** (21 November 2026). Design direction a
 | Asset manifest | `blender/exports/THE_WATCHER_ASSET_MANIFEST.json` (pack schema) |
 | Validation | `docs/THE_WATCHER_VALIDATION.md` |
 
+> **Decisions 038-039 (owner, 25 Nov 2026):** the face was resculpted (sockets, brow, nose, cheekbones, parted lips and mouth, a ringed lens, an eye stapled shut with a steel pin, cracks, a broken cheek with fiber-optic lines), the hair is now long and messy to the shoulders with curtains framing the face (no bun), fiber-optic lines show at the neck, elbows and knees, and the runtime finish is rusty, cracked and dirty with a near-black dress. Rig, clips, anchors, proportions and height are unchanged. The tables below describe the original build where they differ.
+
 ## 1. Concept
 
 The Watcher is an antique wind-up toy automaton built at monument scale: the yard's old night

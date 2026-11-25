@@ -115,13 +115,13 @@ def main() -> None:
         if any(not (abs(d.uv.x) < 1e4 and abs(d.uv.y) < 1e4) for d in uv):
             p.append("invalid UV values")
     t0, t1 = tri(body), tri(lod)
-    if t0 > 25000:
-        p.append(f"LOD0 has {t0} triangles (budget 25,000)")
+    if t0 > 40000:
+        p.append(f"LOD0 has {t0} triangles (budget 40,000; raised for the face and hair, decision 039)")
     if not (0.35 < t1 / t0 < 0.65):
         p.append(f"LOD1 is {t1} triangles ({t1 / t0:.0%} of LOD0), expected about half")
     if len(lod.vertex_groups) != len(body.vertex_groups):
         p.append("LOD1 lost vertex groups")
-    check("geometry_uvs_lod", p, {"triangles_lod0": t0, "triangles_lod1": t1, "budget": 25000})
+    check("geometry_uvs_lod", p, {"triangles_lod0": t0, "triangles_lod1": t1, "budget": 40000})
 
     # materials
     p, images = [], {}

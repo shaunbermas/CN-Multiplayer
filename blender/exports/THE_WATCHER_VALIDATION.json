@@ -26,7 +26,7 @@
       ],
       "bounds_max": [
         4.767,
-        5.15,
+        4.285,
         28.0
       ],
       "optical_origin_m": [
@@ -46,19 +46,19 @@
       "pass": true,
       "problems": [],
       "vertex_groups": 32,
-      "vertices": 8295
+      "vertices": 18461
     },
     "geometry_uvs_lod": {
       "pass": true,
       "problems": [],
-      "triangles_lod0": 14918,
-      "triangles_lod1": 7421,
-      "budget": 25000
+      "triangles_lod0": 29392,
+      "triangles_lod1": 14662,
+      "budget": 40000
     },
     "materials": {
       "pass": true,
       "problems": [],
-      "materials": 12,
+      "materials": 13,
       "images": {
         "T_W_Porcelain_BC.png": [
           1024,
@@ -84,18 +84,6 @@
           512,
           512
         ],
-        "T_W_Brass_BC.png": [
-          512,
-          512
-        ],
-        "T_W_Brass_ORM.png": [
-          256,
-          256
-        ],
-        "T_W_Brass_N.png": [
-          256,
-          256
-        ],
         "T_W_SteelDark_BC.png": [
           512,
           512
@@ -107,6 +95,18 @@
         "T_W_SteelDark_N.png": [
           512,
           512
+        ],
+        "T_W_Brass_BC.png": [
+          512,
+          512
+        ],
+        "T_W_Brass_ORM.png": [
+          256,
+          256
+        ],
+        "T_W_Brass_N.png": [
+          256,
+          256
         ],
         "T_W_EnamelTeal_BC.png": [
           1024,

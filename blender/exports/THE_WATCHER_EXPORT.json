@@ -3,8 +3,8 @@
   "blend": "blender/scenes/THE_WATCHER.blend",
   "blender": "5.3.0",
   "fps": 24,
-  "triangles_lod0": 14198,
-  "triangles_lod1": 7064,
+  "triangles_lod0": 29392,
+  "triangles_lod1": 14662,
   "clips_in_blend": {
     "Watcher_Detect": [
       1,
@@ -53,10 +53,10 @@
     ]
   },
   "glb_summary": {
-    "bytes": 2455984,
+    "bytes": 3349968,
     "nodes": 41,
     "meshes": 1,
-    "primitives": 12,
+    "primitives": 13,
     "skins": 1,
     "joints": 33,
     "joint_names": [
@@ -97,6 +97,7 @@
     "materials": [
       "MAT_Watcher_Brass",
       "MAT_Watcher_EnamelTeal",
+      "MAT_Watcher_FiberOptic",
       "MAT_Watcher_HairLacquer",
       "MAT_Watcher_LensGlass",
       "MAT_Watcher_Lens_Green",
