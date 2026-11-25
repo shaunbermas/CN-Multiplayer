@@ -29,7 +29,7 @@ television character") and conflict C5 in `docs/REFERENCE_MANIFEST.md`.
 |-------------------------------------------|-------------|
 | Black bob with a fringe and two pigtails | Swept-back lacquered hair, no fringe, one bun with a brass band |
 | Yellow collared top over an orange pinafore dress | Deep-teal enamel coat with a high charcoal collar, double brass buttons and a sash; no yellow or orange |
-| Two large round doll eyes | One recessed camera-lens eye; the other eye is sealed shut (a painted seam) |
+| Two large round doll eyes | One camera-lens eye in a riveted steel socket; the other eye is stapled shut (decision 038) |
 | Mary-Jane strap shoes and socks | Heavy riveted iron boots with brass cuffs; porcelain shins with knee guards |
 | Fixed upright pose; the head turns | The upper body turns on a visible steel waist turret; a brass wind-up key turns in its back |
 | Smooth face | Porcelain face-plate seams, fine cracks and grime |
@@ -52,8 +52,8 @@ mechanical pieces move like hinged parts with no rubbery deformation.
 
 | Group | Parts |
 |-------|-------|
-| Head | Porcelain shell; face-plate seams; nose; seam mouth; sealed left eye; lacquered hair shell with a rolled hairline; bun and brass band; rear control housing with vents and three status lights per signal state |
-| Optical eye | Steel barrel, brass bezel, dark glass, inner aperture ring, three emitter discs (neutral, red, green) |
+| Head | Porcelain shell; faceplate seam; angled brow plates; hairline crack; nose ridge with vents; marionette jaw and porcelain-toothed mouth grille; left eye stapled shut (face reworked in decision 038); lacquered hair shell with a rolled hairline; bun and brass band; rear control housing with vents and three status lights per signal state |
+| Optical eye | Riveted steel socket, steel barrel, brass bezel, dark glass, six-blade shutter iris, inner aperture ring, three emitter discs (neutral, red, green) |
 | Neck | Stacked steel turret with a brass ring |
 | Torso | Enamel coat shell, high textile collar, placket seam, eight brass buttons, charcoal sash with a brass buckle |
 | Waist | Steel turret ring (the upper body turns here); pleated enamel coat skirt with a brass hem |

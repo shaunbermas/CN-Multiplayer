@@ -3,8 +3,8 @@
   "blend": "blender/scenes/THE_WATCHER.blend",
   "blender": "5.3.0",
   "fps": 24,
-  "triangles_lod0": 12662,
-  "triangles_lod1": 6314,
+  "triangles_lod0": 14198,
+  "triangles_lod1": 7064,
   "clips_in_blend": {
     "Watcher_Detect": [
       1,
@@ -53,7 +53,7 @@
     ]
   },
   "glb_summary": {
-    "bytes": 2278516,
+    "bytes": 2455984,
     "nodes": 41,
     "meshes": 1,
     "primitives": 12,

@@ -47,14 +47,21 @@ export function WatcherFX({ room, root, search, eyeLight }: { room: TrialRoom; r
     // Soft volumetric-looking beam: brightest near the lens, fading along its length and toward its edges.
     const coneMat = new THREE.ShaderMaterial({
       transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false,
-      uniforms: { uColor: { value: new THREE.Color('#ff2a18') }, uStrength: { value: 0.22 } }, // Phase 10: was 0.32
+      uniforms: { uColor: { value: new THREE.Color('#ff2a18') }, uStrength: { value: 0.2 }, uTime: { value: 0 } }, // decision 038: soft edges now really fade (was 0.22 with hard edges)
+      // View-space normal through normalMatrix (the inverse transpose): the cone is scaled very unevenly (long and
+      // thin), and transforming its normals by the model matrix bent them along the axis, so the edge fade never
+      // happened and the beam drew as a flat, solid band.
       vertexShader: `varying float vAlong; varying vec3 vN; varying vec3 vView;
-        void main() { vAlong = position.y; vec4 wp = modelMatrix * vec4(position, 1.0); vN = normalize(mat3(modelMatrix) * normal);
-          vView = normalize(cameraPosition - wp.xyz); gl_Position = projectionMatrix * viewMatrix * wp; }`,
-      fragmentShader: `uniform vec3 uColor; uniform float uStrength; varying float vAlong; varying vec3 vN; varying vec3 vView;
-        void main() { float edge = pow(abs(dot(normalize(vN), normalize(vView))), 2.2);
-          float fall = (1.0 - vAlong) * (1.0 - vAlong) * 0.85 + 0.15;
-          gl_FragColor = vec4(uColor * edge * fall * uStrength, 1.0);
+        void main() { vAlong = position.y; vec4 mv = modelViewMatrix * vec4(position, 1.0); vN = normalize(normalMatrix * normal);
+          vView = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }`,
+      // Owner (25 Nov 2026): the beam read too solid. Softer now: a steeper fade toward the cone's silhouette (no
+      // hard edge), a fade to nothing at the far end, a soft start at the lens and slow drifting haze bands.
+      fragmentShader: `uniform vec3 uColor; uniform float uStrength; uniform float uTime; varying float vAlong; varying vec3 vN; varying vec3 vView;
+        void main() { float facing = abs(dot(normalize(vN), normalize(vView)));
+          float edge = smoothstep(0.15, 1.0, facing); edge *= edge * edge;
+          float fall = pow(1.0 - vAlong, 2.6) * smoothstep(0.0, 0.06, vAlong);
+          float haze = 0.7 + 0.18 * sin(vAlong * 23.0 - uTime * 1.7) + 0.12 * sin(vAlong * 57.0 + uTime * 2.9);
+          gl_FragColor = vec4(uColor * edge * fall * haze * uStrength, 1.0);
           #include <colorspace_fragment>
         }`,
     });
@@ -62,7 +69,7 @@ export function WatcherFX({ room, root, search, eyeLight }: { room: TrialRoom; r
     cone.visible = false;
     cone.frustumCulled = false;
     // Ground hotspot where the searchlight lands.
-    const spot = new THREE.Mesh(new THREE.CircleGeometry(1, 40), new THREE.MeshBasicMaterial({ color: new THREE.Color('#ff2a18').multiplyScalar(1.4), transparent: true, opacity: 0.32, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, toneMapped: false }));
+    const spot = new THREE.Mesh(new THREE.CircleGeometry(1, 40), new THREE.MeshBasicMaterial({ color: new THREE.Color('#ff2a18').multiplyScalar(1.4), transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, toneMapped: false }));
     spot.rotation.x = -Math.PI / 2;
     spot.visible = false;
     // Eye glare: an additive glow on the lens (depth-tested, so the head hides it when The Watcher turns away).
@@ -122,8 +129,9 @@ export function WatcherFX({ room, root, search, eyeLight }: { room: TrialRoom; r
     const size = eye === 'flare' ? 11 + Math.sin(t * 30) * 1.5 : eye === 'red' ? 6.5 * pulse : 2.2 * pulse;
     fx.glare.scale.set(size, size, 1);
     fx.glare.material.opacity = eye === 'dim' ? 0.45 : 1;
-    fx.light.intensity = THREE.MathUtils.lerp(fx.light.intensity, eye === 'flare' ? 900 : eye === 'red' ? 420 * pulse : 0, 0.2);
-    fx.light.position.copy(tmp.a).add(new THREE.Vector3(0, -1.5, 3));
+    // decision 038: weaker and further forward, so the red reads on the eye and the beam instead of flooding the face
+    fx.light.intensity = THREE.MathUtils.lerp(fx.light.intensity, eye === 'flare' ? 480 : eye === 'red' ? 170 * pulse : 0, 0.2);
+    fx.light.position.copy(tmp.a).add(new THREE.Vector3(0, -2.5, 6));
     watcherFxStatus.eyeLight = eyeLight && fx.light.intensity > 1;
     // Searchlight sweep during red (presentation only; detection is not line-of-sight, decision E9).
     const sweeping = search && phase === 'active' && sig === 'red' && !p;
@@ -135,6 +143,7 @@ export function WatcherFX({ room, root, search, eyeLight }: { room: TrialRoom; r
       tmp.b.set(Math.sin(t * 0.7) * 22, 0, -60 + Math.sin(t * 0.37) * 35);
       tmp.d.subVectors(tmp.b, tmp.a);
       const len = tmp.d.length();
+      (fx.cone.material as THREE.ShaderMaterial).uniforms.uTime.value = t;
       fx.cone.position.copy(tmp.a);
       fx.cone.quaternion.setFromUnitVectors(tmp.up, tmp.d.normalize());
       fx.cone.scale.set(len * 0.06, len, len * 0.06);

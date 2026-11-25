@@ -21,7 +21,7 @@
       "height_m": 28.0,
       "bounds_min": [
         -4.767,
-        -3.469,
+        -3.536,
         0.0
       ],
       "bounds_max": [
@@ -46,13 +46,13 @@
       "pass": true,
       "problems": [],
       "vertex_groups": 32,
-      "vertices": 6871
+      "vertices": 8295
     },
     "geometry_uvs_lod": {
       "pass": true,
       "problems": [],
-      "triangles_lod0": 12662,
-      "triangles_lod1": 6314,
+      "triangles_lod0": 14918,
+      "triangles_lod1": 7421,
       "budget": 25000
     },
     "materials": {

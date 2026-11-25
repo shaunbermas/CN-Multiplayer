@@ -363,7 +363,10 @@ def build_body(b: Body, side_parts=True):
         for x in (-0.6, 0.0, 0.6):  # rear status lights, one set per signal state
             b.box((x - 0.15, 3.38 + 0.004 * i, 23.62), (x + 0.15, 3.46 + 0.004 * i, 23.86), mat, bone)
 
-    # --- face: one recessed camera-lens eye, sealed left eye, small nose, seam mouth, plate seams
+    # --- face (owner, 25 Nov 2026, decision 038: the face reads unfinished and not scary; rework the face only,
+    # head shape, hair, coat and body unchanged). One camera-lens eye in a heavy riveted steel socket with a shutter
+    # iris, the other eye sealed with brass staples, angled brow plates, a hairline crack, nostril vents, a
+    # marionette jaw panel and a porcelain-toothed mouth grille, all framed by a faceplate seam.
     ey = head_surface_y(EYE_R_X, EYE_Z)
     b.cyl((EYE_R_X, ey + 0.55, EYE_Z), (EYE_R_X, ey - 0.08, EYE_Z), 0.78, ST, "Watcher_Eye", seg=20)
     b.lathe((EYE_R_X, ey - 0.02, EYE_Z), (0, -1, 0), [(0, 0.86), (0.08, 0.88), (0.12, 0.72), (0.06, 0.7)], BR, "Watcher_Eye", seg=20, cap0=False, cap1=False)
@@ -373,15 +376,72 @@ def build_body(b: Body, side_parts=True):
         y = ey - 0.065 - 0.006 * i
         b.cyl((EYE_R_X, y, EYE_Z), (EYE_R_X, y - 0.02, EYE_Z), 0.24, mat, bone, seg=16)
     b.lathe((EYE_R_X, ey - 0.07, EYE_Z), (0, -1, 0), [(0, 0.46), (0.04, 0.46), (0.04, 0.36), (0.0, 0.36)], ST, "Watcher_Eye", seg=20, cap0=False, cap1=False)
-    lx = -EYE_R_X
-    b.beam((lx - 0.5, head_surface_y(lx - 0.5, EYE_Z + 0.05) - 0.03, EYE_Z + 0.05),
-           (lx + 0.5, head_surface_y(lx + 0.5, EYE_Z) - 0.03, EYE_Z), 0.07, 0.07, seam, "Watcher_Head")
-    b.ellipsoid((0, head_surface_y(0, 23.0) + 0.05, 23.0), (0.24, 0.2, 0.36), P, "Watcher_Head", seg=10, rings=6)
-    b.beam((-0.5, head_surface_y(-0.5, 22.0) - 0.02, 22.0), (0.5, head_surface_y(0.5, 22.0) - 0.02, 22.0), 0.06, 0.06, seam, "Watcher_Head")
-    for s in (-1, 1):
-        pts = [(s * (2.75 - 0.9 * t), 25.6 - 4.4 * t) for t in [k / 6 for k in range(7)]]
+    # shutter iris: six overlapping steel blades around the lit pupil (they ride out with the eye)
+    for k in range(6):
+        a0 = 2 * math.pi * k / 6
+        c0 = Vector((EYE_R_X + math.cos(a0) * 0.47, ey - 0.075, EYE_Z + math.sin(a0) * 0.47))
+        t = Vector((-math.sin(a0 + 0.5), 0, math.cos(a0 + 0.5)))
+        b.beam(c0 - t * 0.2, c0 + t * 0.2, 0.15, 0.02, ST, "Watcher_Eye", up=(0, -1, 0))
+
+    def normal_at(x, z):
+        y = head_surface_y(x, z)
+        return Vector((x / HEAD_R[0] ** 2, y / HEAD_R[1] ** 2, (z - HEAD_C.z) / HEAD_R[2] ** 2)).normalized()
+
+    def on_face(x, z, lift=0.0):
+        return Vector((x, head_surface_y(x, z), z)) + normal_at(x, z) * lift
+
+    def seam_path(pts, w=0.07, h=0.07, mat=seam, lift=0.0):
         for (x0, z0), (x1, z1) in zip(pts, pts[1:]):
-            b.beam((x0, head_surface_y(x0, z0) - 0.01, z0), (x1, head_surface_y(x1, z1) - 0.01, z1), 0.05, 0.05, seam, "Watcher_Head")
+            b.beam(on_face(x0, z0, lift), on_face(x1, z1, lift), w, h, mat, "Watcher_Head", up=tuple(normal_at((x0 + x1) / 2, (z0 + z1) / 2)))
+
+    def socket(x, rim_mat):
+        """A heavy socket ring around an eye, following the face's curve: dark inner funnel, raised outer rim."""
+        n = normal_at(x, EYE_Z)  # outward
+        c = Vector((x, head_surface_y(x, EYE_Z), EYE_Z))
+        b.lathe(c, n, [(0.02, 0.86), (0.12, 0.94)], seam, "Watcher_Head", seg=24, cap0=False, cap1=False, side=(0, 0, 1))
+        b.lathe(c, n, [(0.12, 0.94), (0.14, 1.02), (0.08, 1.1), (-0.06, 1.16), (-0.2, 1.18)], rim_mat, "Watcher_Head", seg=24,
+                cap0=False, cap1=False, side=(0, 0, 1))
+        for k in range(6):  # rivets on the rim
+            a0 = 2 * math.pi * (k + 0.5) / 6
+            rx, rz = x + math.cos(a0) * 1.03, EYE_Z + math.sin(a0) * 1.03
+            b.ellipsoid(on_face(rx, rz, 0.1), (0.055, 0.055, 0.055), BR, "Watcher_Head", seg=8, rings=4)
+
+    socket(EYE_R_X, ST)
+    lx = -EYE_R_X
+    # sealed eye: a sunken lid seam stapled shut
+    seam_path([(lx - 0.75, EYE_Z + 0.02), (lx - 0.35, EYE_Z - 0.1), (lx, EYE_Z - 0.13), (lx + 0.35, EYE_Z - 0.1), (lx + 0.75, EYE_Z + 0.02)], 0.09, 0.08)
+    for k in range(5):
+        sx = lx - 0.56 + 0.28 * k
+        sz = EYE_Z - 0.1 + 0.08 * abs(k - 2) / 2
+        b.beam(on_face(sx, sz - 0.2, 0.05), on_face(sx, sz + 0.2, 0.05), 0.07, 0.05, BR, "Watcher_Head", up=tuple(normal_at(sx, sz)))
+        for dz in (-0.2, 0.2):
+            b.beam(on_face(sx, sz + dz, 0.05), on_face(sx, sz + dz, -0.05), 0.07, 0.07, BR, "Watcher_Head")
+    # angled brow plates (low toward the nose: a fixed, hostile glare) and a furrow
+    for s in (-1, 1):
+        b.beam(on_face(s * 2.35, 25.15, 0.1), on_face(s * 0.35, 24.6, 0.16), 0.26, 0.26, P, "Watcher_Head", up=tuple(normal_at(s * 1.35, 24.9)))
+        seam_path([(s * 2.35, 24.97), (s * 0.35, 24.42)], 0.05, 0.05, lift=0.03)
+    seam_path([(0, 24.75), (0, 24.25)], 0.05, 0.05)
+    # hairline crack from the sealed eye down the cheek
+    seam_path([(lx + 0.35, 22.32), (lx + 0.5, 21.95), (lx + 0.36, 21.6), (lx + 0.62, 21.2), (lx + 0.55, 20.95)], 0.04, 0.04)
+    seam_path([(lx + 0.5, 21.95), (lx + 0.82, 21.78)], 0.03, 0.03)
+    # nose: a small porcelain ridge with two vents
+    b.ellipsoid((0, head_surface_y(0, 23.05) + 0.06, 23.05), (0.2, 0.16, 0.34), P, "Watcher_Head", seg=10, rings=6)
+    for s in (-1, 1):
+        b.beam(on_face(s * 0.13, 22.66, 0.02), on_face(s * 0.2, 22.62, 0.02), 0.04, 0.06, seam, "Watcher_Head")
+    # marionette jaw: seams from the mouth corners down to the chin, and across the chin
+    for s in (-1, 1):
+        seam_path([(s * 0.85, 22.25), (s * 0.88, 21.6), (s * 0.82, 20.95)], 0.07, 0.07)
+    seam_path([(-0.82, 20.95), (-0.4, 20.85), (0, 20.83), (0.4, 20.85), (0.82, 20.95)], 0.07, 0.07)
+    # mouth grille: a dark slot with porcelain teeth
+    mz = 21.95
+    seam_path([(-0.72, mz), (-0.36, mz - 0.03), (0, mz - 0.04), (0.36, mz - 0.03), (0.72, mz)], 0.24, 0.1, lift=-0.02)
+    for k in range(9):
+        tx = -0.6 + 0.15 * k
+        tz = mz - 0.03 + 0.04 * (abs(tx) / 0.72) ** 2
+        b.beam(on_face(tx, tz - 0.12, 0.03), on_face(tx, tz + 0.12, 0.03), 0.07, 0.06, P, "Watcher_Head", up=tuple(normal_at(tx, tz)))
+    # faceplate outline: the mask's edge, just inside the hairline, cheeks and jaw
+    ring = [(2.95 * math.cos(2 * math.pi * k / 40), 23.15 + 2.7 * math.sin(2 * math.pi * k / 40)) for k in range(41)]
+    seam_path(ring, 0.08, 0.08)
 
     # --- neck turret
     b.cyl((0, 0, 19.3), (0, 0, 20.7), 1.1, ST, "Watcher_Neck", seg=16)

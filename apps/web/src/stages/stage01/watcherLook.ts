@@ -74,7 +74,9 @@ export function upgradeWatcherMaterials(root: THREE.Object3D, plinthY: number, h
       let out: THREE.Material = m;
       switch (m.name) {
         case 'MAT_Watcher_Porcelain':     // glazed porcelain: a thin clear glaze over the painted surface
-          out = toPhysical(m, { clearcoat: 0.55, clearcoatRoughness: 0.28 }); addGrime(out as THREE.MeshStandardMaterial, 0.55, plinthY, height); break;
+          // decision 038: an older, colder ivory (it bloomed white under the floodlights)
+          out = toPhysical(m, { clearcoat: 0.45, clearcoatRoughness: 0.3 }); (out as THREE.MeshPhysicalMaterial).color.multiplyScalar(0.74);
+          addGrime(out as THREE.MeshStandardMaterial, 0.55, plinthY, height); break;
         case 'MAT_Watcher_HairLacquer':   // lacquered hair: a tighter, darker sheen
           out = toPhysical(m, { clearcoat: 0.8, clearcoatRoughness: 0.18 }); break;
         case 'MAT_Watcher_EnamelTeal':    // enamel panels: glossy, chipped toward the base
