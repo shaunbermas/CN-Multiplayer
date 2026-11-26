@@ -8,12 +8,17 @@ import type { Standing } from './match.ts';
 import type { HuntPrivate, HuntPublic } from './hunt/hunt.ts';
 import type { TeamSlot, TeamsView } from './teams.ts';
 import type { AgawanEvent, AgawanPrivate, AgawanPublic } from './agawan/agawan.ts';
+import type { TeamStageResult, TeamStanding } from './teamChampionship.ts';
+
+/** Team championship board (v11): standings and the result of the stage just played. */
+export interface TeamBoard { standings: TeamStanding[]; stage: TeamStageResult | null; /** Stage ids in match order (column headings). */ order: string[] }
 
 /** v7 (Stage 01 refinement): bots, collisions (knock-down timer in snapshots), multi-stage match with points.
  *  v8 (The Hunt): input flags, stage actions, per-player Hunt state, filtered snapshots, reconnect by key, start stage.
  *  v9 (Agawan Base teams, decision 045): team messages and the `teams` view in welcome and team updates.
- *  v10 (Agawan Base play): hold-E interaction, public scores and prisoners, per-player `ag` state, stage feed events. */
-export const PROTOCOL_VERSION = 10;
+ *  v10 (Agawan Base play): hold-E interaction, public scores and prisoners, per-player `ag` state, stage feed events.
+ *  v11 (team championship): results and standings carry the team board (3 / 2 / 1 per stage) in matches with teams. */
+export const PROTOCOL_VERSION = 11;
 
 export interface StartRequestOptions {
   /** Obstacles are always on (decision 031). `false` is honoured only in test rooms (CN_TEST=1). */
@@ -136,9 +141,9 @@ export type ServerMessage =
   | { t: 'snap'; time: number; rows: SnapRow[]; round: RoundState; me?: HuntPrivate; all?: boolean; /** Agawan Base: your own state (v10). */ ag?: AgawanPrivate }
   /** Agawan Base feed (v10): a tag, rescue, automatic release or base raid; at = seconds since GO. */
   | { t: 'agawan'; ev: AgawanEvent; at: number }
-  | { t: 'results'; roundId: number; stage: string; mode: Mode; placings: ResultPlacing[]; match: MatchState; standings: Standing[] }
+  | { t: 'results'; roundId: number; stage: string; mode: Mode; placings: ResultPlacing[]; match: MatchState; standings: Standing[]; teams?: TeamBoard }
   /** Overall standings (v7): after each stage and to a player joining mid-match. */
-  | { t: 'standings'; match: MatchState; standings: Standing[] }
+  | { t: 'standings'; match: MatchState; standings: Standing[]; teams?: TeamBoard }
   /** at = seconds since GO, on the server's clock. `other`: the second player of a collision (v7). */
   | { t: 'event'; kind: 'spotted' | 'finished' | 'collision' | 'captured'; id: string; at: number; other?: string }
   | { t: 'probe'; id: number }

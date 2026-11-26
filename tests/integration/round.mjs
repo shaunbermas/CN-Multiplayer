@@ -104,7 +104,10 @@ try {
   await sleep(200);
   if (late.self.status !== 'active') errors.push(`Late joiner is ${late.self.status} in the lobby, expected active`);
 
-  // Two-stage match: everyone stands still for two short stages.
+  // Two-stage match (Stage 01, then Agawan Base, decision 046): everyone stands still for two short stages. Agawan Base
+  // needs a captain per team first; a scoreless Agawan stage plays its 30 s sudden death before the results.
+  careful.autoCaptains();
+  await waitFor(() => careful.teams?.teams.every((t) => t.captain), 'captains for the two-stage match', 10_000);
   careful.start({ seed: SEED + 1, roundS: 6, briefingS: 0, stages: 2, resultsS: 2 });
   const keepAlive = setInterval(() => {
     for (const b of [...bots, late]) b.send({ t: 'input', seq: Date.now(), mx: 0, mz: 0, yaw: 0 });
@@ -116,7 +119,7 @@ try {
   // Host skips the stage results: stage 2 should start without anyone pressing Start.
   careful.nextStage();
   await waitFor(() => careful.round.match?.stage === 2 && careful.round.phase !== 'results', 'stage 2 starts', 30_000);
-  await waitFor(() => careful.round.phase === 'results' && careful.resultsMeta?.match?.stage === 2, 'stage 2 results', 40_000);
+  await waitFor(() => careful.round.phase === 'results' && careful.resultsMeta?.match?.stage === 2, 'stage 2 results', 70_000);
   if (!careful.resultsMeta.match.final) errors.push('Stage 2 of 2 is not marked final');
   const st = careful.standings;
   if (st.length !== 4) errors.push(`Final standings rows ${st.length}, expected 4`);

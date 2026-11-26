@@ -21,6 +21,14 @@ export const WINDOW_S = 2;
  */
 const MAX_DPR = 1.25;
 
+/**
+ * Bumped when a stage loads or its shaders finish compiling (performance pass, 26 Nov 2026): the monitor then starts
+ * a new warm-up, so the one-off hitch of building a stage is never read as a slow machine (it used to cost a
+ * resolution step, and on a slow laptop eventually a tier, at every stage change).
+ */
+export const warmupEpoch = { n: 0 };
+export function restartWarmup() { warmupEpoch.n++; }
+
 export interface QualityChange { at: number; from: string; to: string; fps: number }
 
 function pinnedFromUrl(): Quality | null {

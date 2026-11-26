@@ -266,6 +266,38 @@ export const sfx = {
   /** Captured (you): the same heavy hit as being spotted. Caught someone: a hard metal clamp. */
   caught(): void { sfx.spottedMe(); },
   captureMade(): void { impact(0, 0.7); tone(LOW.A2 * 2, 0.02, 0.6, { type: 'square', gain: 0.06, filter: 1600 }); },
+  // ---- Stage 02 · Agawan Base: the thriller palette with a light Christmas bell motif (owner, 25 Nov 2026)
+  /** A small church-bell strike: a sine with the inharmonic partials of a bell. */
+  bell(freq: number, at = 0, gain = 0.12): void {
+    tone(freq, at, 2.2, { type: 'sine', gain, attack: 0.003 });
+    tone(freq * 2.0, at, 1.4, { type: 'sine', gain: gain * 0.45, attack: 0.003 });
+    tone(freq * 2.76, at, 0.9, { type: 'sine', gain: gain * 0.25, attack: 0.003 });
+    tone(freq * 5.4, at, 0.4, { type: 'sine', gain: gain * 0.12, attack: 0.002 });
+  },
+  /** Sleigh bells: a few bright jingles. */
+  jingle(at = 0, n = 4, gain = 0.06): void {
+    for (let i = 0; i < n; i++) noise(at + i * 0.07 + Math.random() * 0.02, 0.09, { type: 'highpass', freq: 6500, gain, q: 1.2 });
+  },
+  /** The motif: four descending bell notes in a minor key over a soft jingle (match start and now and then). */
+  bellMotif(gain = 0.09): void {
+    const notes = [880, 784, 659.25, 587.33];
+    notes.forEach((f, i) => sfx.bell(f, i * 0.32, gain));
+    sfx.jingle(0, 6, gain * 0.5);
+  },
+  /** You tagged a rival: a sharp tap and a bright ping. */
+  agTagMade(): void { noise(0, 0.05, { type: 'bandpass', freq: 2600, q: 4, gain: 0.25 }); tone(1046.5, 0.02, 0.35, { type: 'triangle', gain: 0.12 }); },
+  /** You were tagged: a lighter version of the spotted hit and a falling tone (no doom: it's a playground game). */
+  agTagged(): void { impact(0, 0.7); tone(LOW.A2 * 4, 0.02, 0.9, { type: 'triangle', to: LOW.A2 * 2, gain: 0.1 }); },
+  /** Someone else was tagged: a soft distant tap. */
+  agTagOther(): void { noise(0, 0.04, { type: 'bandpass', freq: 1800, q: 5, gain: 0.08 }); },
+  /** A rescue (you were freed or freed someone): rising bells. */
+  agRescue(near: boolean): void { const g = near ? 0.11 : 0.04; [659.25, 783.99, 987.77].forEach((f, i) => sfx.bell(f, i * 0.09, g)); if (near) sfx.jingle(0.1, 4, 0.05); },
+  /** Base raid: ours = bell chord and jingle; against us = a low alarm horn; others = one far bell. */
+  agRaid(kind: 'ours' | 'against' | 'other'): void {
+    if (kind === 'ours') { impact(0, 0.6); [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => sfx.bell(f, i * 0.05, 0.12)); sfx.jingle(0.05, 8, 0.07); }
+    else if (kind === 'against') { tone(LOW.E2, 0, 1.2, { type: 'sawtooth', gain: 0.2, filter: 1100, filterTo: 300, distort: true }); tone(LOW.F2, 0, 1.2, { type: 'sawtooth', gain: 0.12, filter: 1100, filterTo: 300 }); sfx.bell(440, 0.05, 0.08); }
+    else sfx.bell(392, 0, 0.07);
+  },
   uiClick(): void {
     noise(0, 0.03, { type: 'bandpass', freq: 1400, q: 5, gain: 0.12, bus: 'ui' });
   },

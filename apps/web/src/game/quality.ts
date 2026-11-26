@@ -1,7 +1,7 @@
 // Graphics quality: re-exports the store and adds the adaptive monitor that runs inside the Canvas.
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
-import { MIN_FPS, RECOVER_FPS, WARMUP_S, WINDOW_S, nextStepDown, nextStepUp, quality, setQuality, useQuality } from './qualityStore.ts';
+import { MIN_FPS, RECOVER_FPS, WARMUP_S, WINDOW_S, nextStepDown, nextStepUp, quality, setQuality, useQuality, warmupEpoch } from './qualityStore.ts';
 
 export * from './qualityStore.ts';
 
@@ -9,11 +9,12 @@ export * from './qualityStore.ts';
 export function AdaptiveQuality() {
   const setDpr = useThree((s) => s.setDpr);
   const tier = useQuality();
-  const acc = useRef({ since: 0, frames: 0, time: 0, good: 0 });
+  const acc = useRef({ since: 0, frames: 0, time: 0, good: 0, epoch: warmupEpoch.n });
   useEffect(() => { setDpr(quality.dpr); }, [setDpr, tier]);
   useFrame((_, dt) => {
     if (quality.urlPinned) return;
     const a = acc.current;
+    if (a.epoch !== warmupEpoch.n) { a.epoch = warmupEpoch.n; a.since = 0; a.frames = 0; a.time = 0; }
     // Hidden tabs are skipped directly. Slow frames DO count (capped at 5 s each), even very slow ones: a machine
     // at 0.4 fps is exactly the one that needs to step down. Only a gap over 30 s (a paused or suspended page,
     // e.g. a laptop waking up) is ignored. Found by CI: the old 2 s cutoff hid every frame of a 0.4 fps page.

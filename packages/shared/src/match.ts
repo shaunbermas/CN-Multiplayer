@@ -17,6 +17,8 @@
 //   6. earlier to join the room (deterministic last resort, so there is always exactly one winner)
 import { ROUND, type Placing } from './round.ts';
 import { DEFAULT_STAGE_ID, MATCH_ORDER, resolveStageId } from './stages.ts';
+import { TeamChampionship, type TeamStageResult, type TeamStanding } from './teamChampionship.ts';
+import type { TeamSlot } from './teams.ts';
 
 export const MATCH = {
   /**
@@ -105,7 +107,18 @@ export class Match {
   /** Scores of each recorded stage, in order. */
   readonly stageScores: StageScore[][] = [];
 
+  /** Team championship (matches with teams, i.e. with Agawan Base in them): 3 / 2 / 1 per stage. */
+  champ: TeamChampionship | null = null;
+  /** The team result of the most recently recorded stage. */
+  lastTeamStage: TeamStageResult | null = null;
+
   constructor(order: string[] = matchOrder()) { this.order = order.length ? order : matchOrder(); }
+
+  /** This match crowns a team champion (teams were required at the start). */
+  enableTeams(): void { this.champ ??= new TeamChampionship(this.order); }
+
+  /** Team standings, or null for a match without teams. */
+  teamStandings(): TeamStanding[] | null { return this.champ?.standings() ?? null; }
 
   /** Start the match at a later stage (landing page picker); earlier stages are not played (null points). */
   startAt(stageId: string): void {
@@ -139,7 +152,7 @@ export class Match {
    * Record one stage's frozen placings. Idempotent per roundId: a second call with the same round changes
    * nothing and returns null (no duplicate awards). Returns the stage scores otherwise.
    */
-  record(roundId: number, placings: Placing[], players: PlayerRef[]): StageScore[] | null {
+  record(roundId: number, placings: Placing[], players: PlayerRef[], roster?: Record<string, TeamSlot>): StageScore[] | null {
     if (this.recorded.has(roundId)) return null;
     this.recorded.add(roundId);
     for (const p of players) this.ensure(p);
@@ -156,6 +169,7 @@ export class Match {
       if (s.status === 'finished') { e.finishes++; if (s.finishTime >= 0) e.timeSum += s.finishTime; }
     }
     this.stageScores[stageNo] = scores;
+    if (this.champ && roster) this.lastTeamStage = this.champ.record(stageNo, this.stageId, scores, placings, roster);
     return scores;
   }
 

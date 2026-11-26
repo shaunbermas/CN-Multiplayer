@@ -16,7 +16,7 @@ import type { Rect, Spawn, StageGeometry } from '../stage.ts';
 import type { TeamSlot } from '../teams.ts';
 import { AGAWAN } from './config.ts';
 
-export type AgawanWallKind = 'shell' | 'house' | 'fence' | 'barrier' | 'crate' | 'jeepney' | 'tricycle' | 'kiosk' | 'cart' | 'planter' | 'bench' | 'stall';
+export type AgawanWallKind = 'shell' | 'house' | 'fence' | 'barrier' | 'crate' | 'jeepney' | 'tricycle' | 'kiosk' | 'cart' | 'planter' | 'bench' | 'stall' | 'tree';
 
 export interface AgawanWall extends Rect {
   kind: AgawanWallKind;
@@ -63,7 +63,7 @@ export interface AgawanLayout {
 }
 
 const HEIGHT: Record<AgawanWallKind, number> = {
-  shell: 6, house: 5, fence: 1.2, barrier: 0.9, crate: 1.4, jeepney: 2.4, tricycle: 1.6, kiosk: 2.4, cart: 1.2, planter: 0.7, bench: 0.5, stall: 2.2,
+  shell: 6, house: 5, fence: 1.2, barrier: 0.9, crate: 1.4, jeepney: 2.4, tricycle: 1.6, kiosk: 2.4, cart: 1.2, planter: 0.7, bench: 0.5, stall: 2.2, tree: 6,
 };
 
 /** Pack coordinates (origin south-west, Z north) to game coordinates. */
@@ -162,6 +162,7 @@ export function buildAgawanLayout(): AgawanLayout {
   W(at('S02A_OB10_CRATE', 'crate', 31, 31, 1.6, 1.6));       // west approach to the plaza
   W(at('S02A_OB11_STALL', 'stall', 65, 31, 1.6, 1.6));       // east approach to the plaza (same footprint)
   W(prop('bench', 0, -11, 2, 0.5, 'S02A_OB12_BENCH'));        // plaza bench, moved 1 m south of pack (48, 52) to clear Team A's pen gate
+  W(prop('tree', 0, 11, 2.4, 2.4, 'S02A_PLAZA_TREE'));        // the plaza Christmas tree's planter: solid, so nobody walks through the tree
 
   // ---- bases and spawns: 10 spawns behind each marker, facing the plaza
   const sp = (index: number, x: number, z: number): Spawn => ({ index, x, z, yaw: Math.atan2(x, z) }); // yaw faces the origin

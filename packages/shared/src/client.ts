@@ -2,7 +2,7 @@
 // Keeps the latest server snapshot per player and the round state; the web app adds prediction.
 import {
   PROTOCOL_VERSION, STATUS_OF, type ClientMessage, type MatchState, type ResultPlacing, type RosterEntry, type RoundState, type ServerMessage,
-  type StartRequestOptions,
+  type StartRequestOptions, type TeamBoard,
 } from './protocol.ts';
 import type { Standing } from './match.ts';
 import type { Emote } from './contestantColorways.ts';
@@ -59,6 +59,8 @@ export class RoomClient {
   resultsMeta: { roundId: number; stage: string; mode: string; match: MatchState } | null = null;
   /** Overall match standings (v7), newest from the server. */
   standings: Standing[] = [];
+  /** Team championship board (v11) in matches with teams, newest from the server. */
+  teamBoard: TeamBoard | null = null;
   standingsMatch: MatchState | null = null;
   /** at = local receive time (ms); roundT = seconds since GO on the server's clock. */
   /** Your own Hunt state (role, timers, pulse reading), or null outside The Hunt (v8). */
@@ -144,10 +146,12 @@ export class RoomClient {
             c.resultsMeta = { roundId: msg.roundId, stage: msg.stage, mode: msg.mode, match: msg.match };
             c.standings = msg.standings;
             c.standingsMatch = msg.match;
+            c.teamBoard = msg.teams ?? null;
             break;
           case 'standings':
             c.standings = msg.standings;
             c.standingsMatch = msg.match;
+            c.teamBoard = msg.teams ?? null;
             break;
           case 'agawan':
             c.agawanFeed.push({ ...msg.ev, at: Date.now(), roundT: msg.at });
@@ -175,7 +179,7 @@ export class RoomClient {
   private setRound(r: RoundState): void {
     if (r.phase === 'briefing' && this.round.phase !== 'briefing') this.results = [];
     // A new match (stage 1 briefing) clears the previous match's standings.
-    if (r.phase === 'briefing' && r.match?.stage === 1 && this.round.phase !== 'briefing') { this.standings = []; this.standingsMatch = null; }
+    if (r.phase === 'briefing' && r.match?.stage === 1 && this.round.phase !== 'briefing') { this.standings = []; this.standingsMatch = null; this.teamBoard = null; }
     this.round = r;
     this.roundAt = Date.now();
   }

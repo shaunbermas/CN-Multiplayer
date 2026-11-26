@@ -6,14 +6,14 @@ import { GroundFx, groundFx, groundFxStatus, nearestWet } from './groundFx.ts';
 import { ContestantInstance, assignLods, contestantCpu, enableShadowLayer, contestantAsset, contestantStatus, loadContestant, setColorway, type ContestantAsset } from './contestant.ts';
 import type { PlayerView, TrialRoom } from '../net.ts';
 import { hud } from './hudStore.ts';
-import { AdaptiveQuality, quality } from './quality.ts';
+import { AdaptiveQuality, quality, restartWarmup } from './quality.ts';
 import { attachInput, input } from './input.ts';
 import { Predictor } from './predictor.ts';
 import { sfx } from './audio.ts';
 import { PerfProbe, perfEnabled } from './PerfOverlay.tsx';
 import { STAGE_SCENES } from '../stages/registry.ts';
 import { activeStage } from './stage.ts';
-import { HUNT, greenTime, obstacleWalls, type Rect } from '@cn-trials/shared';
+import { HUNT, TEAMS, greenTime, obstacleWalls, type Rect, type TeamSlot } from '@cn-trials/shared';
 import { scheduleFor, signalView } from './roundClock.ts';
 
 
@@ -201,7 +201,7 @@ function NameTags({ room }: { room: TrialRoom }) {
     d.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:1';
     return d;
   }, []);
-  const tags = useRef(new Map<string, { el: HTMLDivElement; text: string; cls: string; shown: boolean; tf: string }>());
+  const tags = useRef(new Map<string, { el: HTMLDivElement; text: string; cls: string; shown: boolean; tf: string; z: number }>());
   useEffect(() => {
     const parent = gl.domElement.parentElement;
     parent?.appendChild(layer);
@@ -212,16 +212,18 @@ function NameTags({ room }: { room: TrialRoom }) {
     const cam = camera as THREE.PerspectiveCamera;
     const k = 9 / (2 * Math.tan((cam.fov * Math.PI) / 360));
     const seenIds = new Set<string>();
+    const agTeams = room.round.phase !== 'lobby' ? room.round.agawan?.teamOf : undefined;
+    const agMine = room.agawan?.team;
     for (const [id, p] of room.players) {
       const out = p.status === 'spotted' || p.status === 'captured';
-      if (id === room.id && !out) continue;
+      if (id === room.id && (!out || agTeams)) continue;
       seenIds.add(id);
       let t = tags.current.get(id);
       if (!t) {
         const el = document.createElement('div');
         el.style.cssText = 'position:absolute;left:0;top:0;will-change:transform';
         layer.appendChild(el);
-        t = { el, text: '', cls: '', shown: true, tf: '' };
+        t = { el, text: '', cls: '', shown: true, tf: '', z: -1 };
         tags.current.set(id, t);
       }
       const obj = contestantInstances.get(id)?.root.parent ?? null; // the PLAYER_<id> group (drawn position)
@@ -232,19 +234,58 @@ function NameTags({ room }: { room: TrialRoom }) {
       const show = (p.seen !== false || id === room.id) && v.z < 1 && dist < TAG_MAX_DIST && Math.abs(v.x) < 1.2 && Math.abs(v.y) < 1.2;
       if (show !== t.shown) { t.el.style.display = show ? '' : 'none'; t.shown = show; }
       if (!show) continue;
-      const text = p.status === 'spotted' ? 'SPOTTED!' : p.status === 'captured' ? 'CAUGHT' : p.name;
-      const cls = `nametag ${out ? 'spotted' : p.status}`;
+      // Agawan Base: every tag carries the team letter and colour (decision: coloured ring and name tag, coats
+      // untouched); a prisoner keeps their name, marked as held.
+      const team = agTeams?.[id];
+      const text = team ? p.name : p.status === 'spotted' ? 'SPOTTED!' : p.status === 'captured' ? 'CAUGHT' : p.name;
+      const cls = team ? `nametag team team-${team}${p.status === 'captured' ? ' held' : ''}${team === agMine ? ' mate' : ''}` : `nametag ${out ? 'spotted' : p.status}`;
       if (text !== t.text) { t.el.textContent = text; t.text = text; }
-      if (cls !== t.cls) { t.el.className = cls; t.cls = cls; }
+      if (cls !== t.cls) { t.el.className = cls; t.cls = cls; if (team) t.el.dataset.team = team; else delete t.el.dataset.team; }
       const sx = ((v.x + 1) / 2) * size.width, sy = ((1 - v.y) / 2) * size.height;
       const sc = Math.min(2, k / Math.max(dist, 0.5));
       const tf = `translate3d(${sx.toFixed(1)}px,${sy.toFixed(1)}px,0) translate(-50%,-50%) scale(${sc.toFixed(3)})`;
       if (tf !== t.tf) { t.el.style.transform = tf; t.tf = tf; }
-      t.el.style.zIndex = String(Math.round(1000 - dist * 10));
+      const zi = Math.round(1000 - dist * 10);
+      if (zi !== t.z) { t.el.style.zIndex = String(zi); t.z = zi; } // DOM writes only on change (each one restyles)
     }
     for (const [id, t] of tags.current) if (!seenIds.has(id)) { t.el.remove(); tags.current.delete(id); }
   });
   return null;
+}
+
+/** Agawan Base: a team-coloured ring on the ground under every contestant (one instanced mesh). */
+function TeamRings({ room }: { room: TrialRoom }) {
+  const mesh = useMemo(() => {
+    const g = new THREE.RingGeometry(0.42, 0.56, 32).rotateX(-Math.PI / 2);
+    const m = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.9, depthWrite: false, toneMapped: false });
+    const im = new THREE.InstancedMesh(g, m, 32);
+    im.name = 'S02A_TEAM_RINGS';
+    im.frustumCulled = false;
+    im.count = 0;
+    im.renderOrder = 3;
+    return im;
+  }, []);
+  useEffect(() => () => { mesh.geometry.dispose(); (mesh.material as THREE.Material).dispose(); }, [mesh]);
+  const mtx = useMemo(() => new THREE.Matrix4(), []), col = useMemo(() => new THREE.Color(), []);
+  useFrame(() => {
+    const teamOf = room.round.phase !== 'lobby' ? room.round.agawan?.teamOf : undefined;
+    if (!teamOf) { mesh.count = 0; return; }
+    let i = 0;
+    for (const [id, p] of room.players) {
+      const team = teamOf[id];
+      if (!team || i >= 32 || (p.seen === false && id !== room.id)) continue;
+      const obj = contestantInstances.get(id)?.root.parent ?? null;
+      const x = obj ? obj.position.x : p.x, z = obj ? obj.position.z : p.z;
+      const sc = id === room.id ? 1.15 : 1;
+      mesh.setMatrixAt(i, mtx.makeScale(sc, 1, sc).setPosition(x, 0.04, z));
+      mesh.setColorAt(i, col.set(TEAMS.colors[team as TeamSlot]).multiplyScalar(p.status === 'captured' ? 0.45 : 1));
+      i++;
+    }
+    mesh.count = i;
+    mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+  });
+  return <primitive object={mesh} />;
 }
 
 /** Contestant statistics for tests (window.__cn.contestants()). */
@@ -343,6 +384,8 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
   /** Local clock time when we were spotted, for the death cam (decision 037), or null. */
   const spottedAt = useRef<number | null>(null);
   const capHeld = useRef(false);
+  /** Agawan Base: the stage (seed) whose start we already faced the camera for. */
+  const facedFor = useRef<number | null>(null);
 
   useEffect(() => attachInput(gl.domElement), [gl]);
 
@@ -385,6 +428,8 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
     } else if (capHeld.current && !room.agawan) { capHeld.current = false; room.capture(false); }
     // Agawan Base: hold E; the server decides whether it tags a rival, rescues a teammate or raids a base.
     const ag = room.agawan;
+    // Agawan Base starts everyone at their own base: turn the camera to face the plaza (the middle of the map) once.
+    if (ag && phase !== 'lobby' && facedFor.current !== room.round.seed) { facedFor.current = room.round.seed; input.yaw = Math.atan2(me.x, me.z); }
     if (ag) {
       const holding = phase === 'active' && !ag.pen && input.interact;
       if (holding !== capHeld.current) { capHeld.current = holding; room.interact(holding); }
@@ -406,7 +451,8 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
     // Follow ourselves, or spectate an active player once spotted or while waiting (spec §7).
     let fx = me.x, fz = me.z;
     // Spotted (decision 037): first watch your own fall for SPOTTED_HOLD_S, then spectate other players.
-    const out = me.status === 'spotted' || me.status === 'captured';
+    // Agawan Base prisoners keep their own camera: they watch for a teammate coming to free them.
+    const out = (me.status === 'spotted' || me.status === 'captured') && !room.agawan;
     if (out) { if (spottedAt.current === null) spottedAt.current = clock.current; } else spottedAt.current = null;
     const deathCam = spottedAt.current !== null ? Math.min(1, (clock.current - spottedAt.current) / SPOTTED_HOLD_S) : -1;
     if (mobile || me.status === 'finished') {
@@ -475,6 +521,38 @@ function Players({ room, predictor }: { room: TrialRoom; predictor: React.RefObj
     if (now.join() !== ids.current.join()) { ids.current = now; force((n) => n + 1); }
   });
   return <>{ids.current.map((id) => <Contestant key={id} id={id} room={room} local={id === room.id} predictor={predictor} />)}</>;
+}
+
+/**
+ * Shader warm-up (performance pass, 26 Nov 2026). three.js compiles a material's shader the first time it is drawn,
+ * so turning the camera towards something new (or a new effect appearing) used to compile in the middle of play: a
+ * visible hitch, and on Intel Macs (Chrome on Metal) each compile can take 100 ms or more. Once the stage and the
+ * contestants are loaded, and again after a quality change, everything in the scene is compiled up front, off the
+ * critical path where the browser supports parallel compiles (compileAsync), ignoring what the camera can see.
+ */
+export const shaderWarmup = { key: '', programs: 0, ms: 0 };
+function ShaderWarmup({ stageId, ready }: { stageId: string; ready: () => boolean }) {
+  const { gl, scene, camera } = useThree();
+  const tick = useRef(0);
+  const busy = useRef(false);
+  useEffect(() => { restartWarmup(); }, [stageId]);
+  useFrame((_, dt) => {
+    tick.current += dt;
+    if (busy.current || tick.current < 0.2) return; // checked five times a second, whatever the frame rate
+    tick.current = 0;
+    const key = `${stageId}:${quality.tier}:${contestantInstances.size}`;
+    if (shaderWarmup.key === key || !ready() || contestantStatus.state !== 'ready') return;
+    busy.current = true;
+    const t0 = performance.now();
+    gl.compileAsync(scene, camera).catch(() => undefined).finally(() => {
+      shaderWarmup.key = key;
+      shaderWarmup.programs = gl.info.programs?.length ?? 0;
+      shaderWarmup.ms = Math.round(performance.now() - t0);
+      busy.current = false;
+      restartWarmup();
+    });
+  });
+  return null;
 }
 
 /** Renderer statistics of the last frame, for tests (window.__cn.renderInfo). */
@@ -546,7 +624,7 @@ export function Scene({ room, onStageError }: { room: TrialRoom; onStageError: (
       match: () => ({ ...room.round.match }),
       assets: () => JSON.parse(JSON.stringify(stageModule.assets)),
       quality: () => JSON.parse(JSON.stringify(quality)),
-      renderInfo: () => ({ ...renderInfo }),
+      renderInfo: () => ({ ...renderInfo, warmup: { ...shaderWarmup } }),
     };
   }, [room, stageModule, stage]);
   const StageScene = stageModule.Scene;
@@ -556,6 +634,7 @@ export function Scene({ room, onStageError }: { room: TrialRoom; onStageError: (
       shadows={{ type: THREE.PCFShadowMap }}>
       <AdaptiveQuality />
       <RenderInfo />
+      <ShaderWarmup stageId={stage.def.id} ready={() => stageModule.assets.environment === 'ready'} />
       <StageErrorBoundary onError={onStageError}>
         <Suspense fallback={null}>
           <StageScene key={stage.def.id} room={room} />
@@ -563,6 +642,7 @@ export function Scene({ room, onStageError }: { room: TrialRoom; onStageError: (
       </StageErrorBoundary>
       <Players room={room} predictor={predictor} />
       <NameTags room={room} />
+      <TeamRings room={room} />
       <ContestantHooks room={room} />
       <GroundFxLayer />
       <LocalController room={room} predictor={predictor} />

@@ -22,9 +22,9 @@ describe('stage order (decision 045)', () => {
     expect(m.stageId).toBe(HUNT.id);
   });
 
-  it('keeps Agawan Base out of the match until it is switched on, with no stand-in replay', () => {
-    expect(AGAWAN_ENABLED).toBe(false);
-    expect(MATCH_ORDER).toEqual(['STAGE_01_RED_LIGHT', 'STAGE_03_THE_HUNT']);
+  it('plays Agawan Base as Stage 02 now that it is switched on, with no stand-in replay', () => {
+    expect(AGAWAN_ENABLED).toBe(true);
+    expect(MATCH_ORDER).toEqual(['STAGE_01_RED_LIGHT', 'STAGE_02_AGAWAN_BASE', 'STAGE_03_THE_HUNT']);
     expect(STARTABLE_STAGES).toEqual(MATCH_ORDER);
     expect(new Set(MATCH_ORDER).size).toBe(MATCH_ORDER.length);
   });
