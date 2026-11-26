@@ -31,7 +31,8 @@
     "test:restart-ui": "tsx tests/e2e/restart-ui.mjs",
     "test:hunt": "tsx tests/integration/hunt.mjs",
     "test:teams": "tsx tests/integration/teams.mjs",
-    "test:agawan": "tsx tests/integration/agawan.mjs"
+    "test:agawan": "tsx tests/integration/agawan.mjs",
+    "test:e2e:agawan": "tsx tests/e2e/agawan-browser.mjs"
   },
   "devDependencies": {
     "@types/node": "22.20.5",

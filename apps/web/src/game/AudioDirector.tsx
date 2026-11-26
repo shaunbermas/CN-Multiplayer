@@ -21,6 +21,7 @@ export function AudioDirector({ room }: { room: TrialRoom }) {
     let lastEventAt = Date.now();
     let lastOther = 0;
     let released = false, pulseN = -1, wasHidden = false;
+    let agSeen = room.agawanFeed.length ? room.agawanFeed[room.agawanFeed.length - 1].at : 0, motifAt = 0;
     const tick = () => {
       startAmbience(); // no-op until sound is allowed and unmuted, or once running
       const r = room.round;
@@ -31,12 +32,29 @@ export function AudioDirector({ room }: { room: TrialRoom }) {
       }
       if (r.phase !== phase) {
         if (phase === 'countdown' && r.phase === 'active') sfx.count(0);
-        if (phase === 'active') { stopScan(); stopHeartbeat(); signal = 'none'; released = false; pulseN = -1; wasHidden = false; }
+        if (phase === 'active') { stopScan(); stopHeartbeat(); signal = 'none'; released = false; pulseN = -1; wasHidden = false; motifAt = 0; }
         if (r.phase === 'results') sfx.stageEnd();
         if (r.phase !== 'countdown') count = -1;
         phase = r.phase;
       }
-      if (r.phase === 'active' && r.hunt) {
+      if (r.phase === 'active' && r.agawan) {
+        // Agawan Base: a calm pulse that tightens near the end (and in sudden death), heavier while you are held.
+        startHeartbeat();
+        const me = room.agawan, left = room.remaining();
+        if (me?.pen) setHeartbeat(84, 0.3);
+        else if (r.agawan.sudden || left < 30) setHeartbeat(132, 0.7);
+        else setHeartbeat(96, 0.35);
+        const now2 = Date.now();
+        if (!motifAt) motifAt = now2 + 1200;           // just after GO
+        if (now2 >= motifAt) { sfx.bellMotif(0.07); motifAt = now2 + 24000 + Math.random() * 8000; }
+        for (const e of room.agawanFeed) {
+          if (e.at <= agSeen) continue;
+          if (e.kind === 'tag') { if (e.id === room.id) sfx.agTagged(); else if (e.by === room.id) sfx.agTagMade(); else sfx.agTagOther(); }
+          else if (e.kind === 'rescue') sfx.agRescue(e.id === room.id || e.by === room.id);
+          else if (e.kind === 'raid') sfx.agRaid(me && e.team === me.team ? 'ours' : me && e.base === me.team ? 'against' : 'other');
+        }
+        if (room.agawanFeed.length) agSeen = Math.max(agSeen, room.agawanFeed[room.agawanFeed.length - 1].at);
+      } else if (r.phase === 'active' && r.hunt) {
         // The Hunt: heartbeat follows the hider's threat level; the hunter's is steady. Gates, pulses, hiding.
         startHeartbeat();
         const h = room.hunt;

@@ -4,7 +4,7 @@
 // lens, timer, counts) · spotted / finished / knocked-down banners · feed · spectator · stage results with points
 // and overall standings · final winner and leaderboard.
 import { useEffect, useState } from 'react';
-import { BOT_LIMITS, DEFAULT_STAGE_ID, MATCH, MAX_PLAYERS, OFFICIAL_ORDER, STARTABLE_STAGES, colorwayById, getStage, matchOrder, stageNumber, tieBreakReason, type Standing } from '@cn-trials/shared';
+import { BOT_LIMITS, DEFAULT_STAGE_ID, MATCH, MAX_PLAYERS, OFFICIAL_ORDER, STARTABLE_STAGES, colorwayById, getStage, matchOrder, stageNumber, tieBreakReason, type Standing, type TeamSlot } from '@cn-trials/shared';
 import type { TrialRoom } from '../net.ts';
 import { inviteLink } from '../net.ts';
 import { hud } from '../game/hudStore.ts';
@@ -17,7 +17,7 @@ import { settings } from './settings.ts';
 import { IconBars, IconCheck, IconFlag, IconGear, IconHome, IconMouse, IconPause, IconPin, IconPlay, IconRestart, IconRestartCcw, IconUsers, IconVolume, IconVolumeOff, IconX } from './icons.tsx';
 import { setMuted } from '../game/audio.ts';
 import { HuntBriefingRole, HuntPanel, HuntRoleChip, HuntTop, captureText } from './HuntHud.tsx';
-import { AgawanPanel, AgawanTop } from './AgawanHud.tsx';
+import { AgawanPanel, AgawanResultsBoard, AgawanTeamChip, AgawanTeamStatus, AgawanTop, teamName } from './AgawanHud.tsx';
 import { TeamLobby, teamsVisible } from './TeamLobby.tsx';
 
 // Decision 037: no time-left bar, no "get ready" warning and no hint text: knowing when red comes is part of the
@@ -208,7 +208,8 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
   const now = Date.now();
   const recentSpot = room.events.find((e) => e.kind === 'spotted' && e.id === room.id && now - e.at < 3000);
   const recentFinish = room.events.find((e) => e.kind === 'finished' && e.id === room.id && now - e.at < 3500);
-  const feed = room.events.filter((e) => now - e.at < 3500 && e.id !== room.id && e.other !== room.id).slice(-3);
+  // Agawan Base has its own feed (tags, rescues, raids); bump toasts there would only be noise.
+  const feed = room.events.filter((e) => now - e.at < 3500 && e.id !== room.id && e.other !== room.id && !(room.round.agawan && e.kind === 'collision')).slice(-3);
   const myStanding = room.standings.find((x) => x.id === room.id);
   const inMatch = r.phase !== 'lobby' && m.stage > 0;
   const stageNo = `STAGE ${pad2(stage.number)}`;
@@ -259,6 +260,7 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
             ? <div className="glass stage-chip"><b>Lobby</b><i className="sep" /><span>Practice walk is open</span></div>
             : <div className="glass stage-chip" data-testid="stage-chip"><b>{stageNo}{inMatch && <> / {ALL_STAGES}</>}</b><i className="sep" /><span>{stage.name}</span></div>}
           {isHunt && <HuntRoleChip room={room} />}
+          {isAgawan && r.phase === 'active' && <AgawanTeamChip room={room} />}
           {inMatch && me && (
             <div className="glass pts-chip" data-testid="my-points"><IconBars size={22} /><span className="pts">{myStanding?.points ?? 0} PTS</span></div>
           )}
@@ -351,6 +353,7 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
       )}
       {isHunt && <HuntPanel room={room} />}
       {isAgawan && <AgawanPanel room={room} />}
+      {isAgawan && playing && <AgawanTeamStatus room={room} />}
       {hud.down > 0 && !recentSpot && (
         <div className="banner down" data-testid="knocked-down"><b>Knocked over</b><span>Back on your feet in a moment</span></div>
       )}
@@ -385,7 +388,7 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
         <span className="hb-cell hb-dist num">{isAgawan && r.phase !== 'lobby' ? <>{room.agawan ? (room.teams?.teams.find((t) => t.slot === room.agawan!.team)?.name ?? `Team ${room.agawan.team}`) : 'Agawan Base'}</> : isHunt && r.phase !== 'lobby' ? <>{room.hunt?.role === 'hunter' ? 'Hunter' : room.hunt?.role === 'hider' ? 'Hider' : 'The Hunt'}</> : <><IconPin size={24} /><span><b>{hud.distance.toFixed(0)}</b> m to go</span></>}</span>
         <i className="sep" />
         <span className="hb-cell hb-keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><em>Move</em><span className="dot" aria-hidden="true">•</span><IconMouse size={26} /><em>Look</em>
-          {isAgawan && r.phase === 'active' && <em className="extra">Hold E: tag a rival · free a teammate · raid a base</em>}
+          {isAgawan && r.phase === 'active' && <em className="extra"><kbd>E</kbd> Tag / Rescue / Raid · <kbd>Tab</kbd> Team status</em>}
           {isHunt && r.phase === 'active' && <em className="extra">{room.hunt?.role === 'hunter' ? 'Q pulse · hold E capture · Shift sprint' : 'E hide · Shift sprint · C crouch'}</em>}
           {me?.status === 'spotted' && <em className="extra">Tab switch</em>}{r.phase === 'lobby' && <em className="extra">R respawn</em>}<em className="extra">P pause</em></span>
         <i className="sep" />
@@ -422,9 +425,10 @@ function StageResults({ room, remaining, onLeave }: { room: TrialRoom; remaining
   return (
     <section className="card results" data-testid="results" aria-label="Stage results">
       <div className="results-head">
-        <div><span className="eyebrow">Stage results</span><h2>Stage {stageNoAt(m.total, m.stage)} <i>/ {ALL_STAGES}</i></h2></div>
+        <div><span className="eyebrow">Stage results</span><h2>Stage {room.round.stage ? pad2(stageNumber(room.round.stage)) : stageNoAt(m.total, m.stage)} <i>/ {ALL_STAGES}</i></h2></div>
         <div className="first-finisher" data-testid="winner">
-          {rows.some((x) => x.role) ? <div><small>The Hunt</small><b>{rows.filter((x) => x.role === 'hider' && x.status !== 'captured').length} hiders survived</b> <span className="muted num">{rows.filter((x) => x.status === 'captured').length} caught</span></div>
+          {rows.some((x) => x.teamPlace) ? <div><small>Agawan Base</small><b>{(room.round.agawan?.winners ?? []).map((s) => teamName(room, s)).join(' and ') || 'No winner'} {(room.round.agawan?.winners.length ?? 0) > 1 ? 'share first place' : 'win'}</b></div>
+            : rows.some((x) => x.role) ? <div><small>The Hunt</small><b>{rows.filter((x) => x.role === 'hider' && x.status !== 'captured').length} hiders survived</b> <span className="muted num">{rows.filter((x) => x.status === 'captured').length} caught</span></div>
             : first ? <><Swatch colorway={firstPlayer?.colorway} /><div><small>First to finish · +2</small><b>{first.name}</b> <span className="muted num">{first.finishTime.toFixed(2)} s</span></div></>
             : <div><small>First to finish</small><b>Nobody finished</b></div>}
         </div>
@@ -432,6 +436,7 @@ function StageResults({ room, remaining, onLeave }: { room: TrialRoom; remaining
       <div className="results-body">
         <div>
           <span className="eyebrow">This stage</span>
+          <AgawanResultsBoard room={room} />
           <StageBoard room={room} />
         </div>
         <div>
@@ -461,7 +466,8 @@ function StageBoard({ room }: { room: TrialRoom }) {
           <tr key={p.id} className={p.id === room.id ? 'me' : ''}>
             <td className="place">{p.place}</td>
             <td className="name">{p.name}{p.bot && <span className="tag bot">bot</span>}{p.status === 'spotted' && <span className="tag out">spotted</span>}{p.status === 'captured' && <span className="tag out">caught</span>}</td>
-            <td className="muted">{p.role === 'hunter' ? `Hunter · ${p.captures ?? 0} ${p.captures === 1 ? 'capture' : 'captures'}`
+            <td className="muted">{p.teamPlace ? [`${p.team ? teamName(room, p.team as TeamSlot) : ''} · ${ordinal(p.teamPlace)}`, p.raids ? `${p.raids} ${p.raids === 1 ? 'raid' : 'raids'}` : '', p.tags ? `${p.tags} ${p.tags === 1 ? 'tag' : 'tags'}` : '', p.rescues ? `${p.rescues} ${p.rescues === 1 ? 'rescue' : 'rescues'}` : ''].filter(Boolean).join(' · ')
+              : p.role === 'hunter' ? `Hunter · ${p.captures ?? 0} ${p.captures === 1 ? 'capture' : 'captures'}`
               : p.role === 'hider' ? (p.status === 'captured' ? 'Hider · caught' : 'Hider · survived')
               : p.status === 'finished' ? `${p.finishTime.toFixed(2)} s` : p.status === 'spotted' ? 'Spotted' : `${Math.round(p.progress * 100)}% of the way`}</td>
             <td className={`r gain${p.points ? '' : ' zero'}`}>+{p.points}</td>
@@ -517,6 +523,7 @@ function FinalResults({ room, remaining, onLeave }: { room: TrialRoom; remaining
       {room.results.length > 0 && (
         <details className="last-stage" open={m.total <= 1}>
           <summary className="eyebrow">Stage {stageNoAt(m.total, m.stage)} results</summary>
+          <AgawanResultsBoard room={room} />
           <StageBoard room={room} />
         </details>
       )}
