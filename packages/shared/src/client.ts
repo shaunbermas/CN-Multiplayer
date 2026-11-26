@@ -8,6 +8,7 @@ import type { Standing } from './match.ts';
 import type { Emote } from './contestantColorways.ts';
 import type { PlayerStatus } from './round.ts';
 import type { HuntPrivate } from './hunt/hunt.ts';
+import type { TeamSlot, TeamsView } from './teams.ts';
 
 export interface PlayerView {
   id: string; name: string; spawn: number;
@@ -61,6 +62,10 @@ export class RoomClient {
   /** at = local receive time (ms); roundT = seconds since GO on the server's clock. */
   /** Your own Hunt state (role, timers, pulse reading), or null outside The Hunt (v8). */
   hunt: HuntPrivate | null = null;
+  /** Team setup for Stage 02 · Agawan Base (v9), newest from the server. */
+  teams: TeamsView | null = null;
+  /** The last request the server refused after joining (e.g. a team rule), with its local receive time (ms). */
+  lastError: { code: string; message: string; at: number } | null = null;
   readonly events: { kind: 'spotted' | 'finished' | 'collision' | 'captured'; id: string; at: number; roundT: number; other?: string }[] = [];
   private ws: WebSocket;
   private closeHandlers: ((code: number, reason: string) => void)[] = [];
@@ -94,15 +99,20 @@ export class RoomClient {
         try { msg = JSON.parse(String(ev.data)); } catch { return; }
         switch (msg.t) {
           case 'error':
+            if (settled) { c.lastError = { code: msg.code, message: msg.message, at: Date.now() }; return; }
             return fail(new RoomError(msg.code, msg.message));
           case 'welcome':
             c.id = msg.id; c.room = msg.room; c.stage = msg.stage;
             c.applyRoster(msg.roster);
             c.setRound(msg.round);
+            c.teams = msg.teams ?? null;
             if (!settled) { settled = true; clearTimeout(timer); resolve(c); }
             break;
           case 'roster':
             c.applyRoster(msg.roster);
+            break;
+          case 'teams':
+            c.teams = msg.teams;
             break;
           case 'snap':
             c.time = msg.time;
@@ -244,6 +254,15 @@ export class RoomClient {
   restartStage(): void { this.send({ t: 'restart', stage: true }); }
   /** Host: pause or resume the room for everyone. */
   pause(on: boolean): void { this.send({ t: 'pause', on }); }
+
+  /** Team setup (v9): pick a team, nominate yourself; host: rename, appoint a captain, move, auto-balance, auto-pick captains. */
+  joinTeam(slot: TeamSlot): void { this.send({ t: 'team', a: 'join', slot }); }
+  nominate(on: boolean): void { this.send({ t: 'team', a: 'nominate', on }); }
+  renameTeam(slot: TeamSlot, name: string): void { this.send({ t: 'team', a: 'rename', slot, name }); }
+  setCaptain(slot: TeamSlot, id: string | null): void { this.send({ t: 'team', a: 'captain', slot, id }); }
+  moveToTeam(id: string, slot: TeamSlot): void { this.send({ t: 'team', a: 'move', id, slot }); }
+  balanceTeams(): void { this.send({ t: 'team', a: 'balance' }); }
+  autoCaptains(): void { this.send({ t: 'team', a: 'autoCaptains' }); }
 
   /** The Hunt: fire the Pulse Detector (hunters). */
   pulse(): void { this.send({ t: 'act', a: 'pulse' }); }

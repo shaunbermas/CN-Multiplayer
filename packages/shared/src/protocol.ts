@@ -6,10 +6,12 @@ import type { Mode } from './tournament.ts';
 import type { Emote } from './contestantColorways.ts';
 import type { Standing } from './match.ts';
 import type { HuntPrivate, HuntPublic } from './hunt/hunt.ts';
+import type { TeamSlot, TeamsView } from './teams.ts';
 
 /** v7 (Stage 01 refinement): bots, collisions (knock-down timer in snapshots), multi-stage match with points.
- *  v8 (The Hunt): input flags, stage actions, per-player Hunt state, filtered snapshots, reconnect by key, start stage. */
-export const PROTOCOL_VERSION = 8;
+ *  v8 (The Hunt): input flags, stage actions, per-player Hunt state, filtered snapshots, reconnect by key, start stage.
+ *  v9 (Agawan Base teams, decision 045): team messages and the `teams` view in welcome and team updates. */
+export const PROTOCOL_VERSION = 9;
 
 export interface StartRequestOptions {
   /** Obstacles are always on (decision 031). `false` is honoured only in test rooms (CN_TEST=1). */
@@ -24,6 +26,19 @@ export interface StartRequestOptions {
   /** Stage the match starts at (landing page picker; any room). Unknown ids start at Stage 01. */
   startStage?: string;
 }
+
+/**
+ * Team setup in the lobby (v9, Stage 02 · Agawan Base). Players pick a team and nominate themselves as captain; the host
+ * renames teams, appoints captains, moves players, auto-balances and auto-picks captains. The server checks every rule.
+ */
+export type TeamAction =
+  | { t: 'team'; a: 'join'; slot: TeamSlot }
+  | { t: 'team'; a: 'nominate'; on: boolean }
+  | { t: 'team'; a: 'rename'; slot: TeamSlot; name: string }
+  | { t: 'team'; a: 'captain'; slot: TeamSlot; id: string | null }
+  | { t: 'team'; a: 'move'; id: string; slot: TeamSlot }
+  | { t: 'team'; a: 'balance' }
+  | { t: 'team'; a: 'autoCaptains' };
 
 /** Host-only bot management in the lobby: add some random bots, fill every free slot, or remove them all. */
 export type BotAction = { t: 'bots'; action: 'add'; count?: number } | { t: 'bots'; action: 'fill' } | { t: 'bots'; action: 'clear' };
@@ -48,6 +63,8 @@ export type ClientMessage =
   | { t: 'emote'; e: Emote }
   /** Host: add / fill / clear bots (lobby only, v7). */
   | BotAction
+  /** Team setup (lobby only, v9). */
+  | TeamAction
   /** Host: skip the rest of the stage results and start the next stage now (v7). */
   | { t: 'next' }
   /**
@@ -102,7 +119,9 @@ export interface RoundState {
 export type ResultPlacing = Placing & { name: string; points: number; first: boolean; bot?: boolean };
 
 export type ServerMessage =
-  | { t: 'welcome'; v: number; id: string; room: string; stage: string; spawn: number; roster: RosterEntry[]; round: RoundState }
+  | { t: 'welcome'; v: number; id: string; room: string; stage: string; spawn: number; roster: RosterEntry[]; round: RoundState; teams?: TeamsView }
+  /** Team setup changed (v9). */
+  | { t: 'teams'; teams: TeamsView }
   | { t: 'roster'; roster: RosterEntry[] }
   /**
    * The Hunt snapshots are made per player (v8): rows only for players the receiver may see (line of sight,
@@ -117,7 +136,7 @@ export type ServerMessage =
   | { t: 'probe'; id: number }
   | { t: 'pong'; at: number }
   | { t: 'emote'; id: string; e: Emote }
-  | { t: 'error'; code: 'full' | 'version' | 'bad_request' | 'not_host' | 'not_lobby'; message: string };
+  | { t: 'error'; code: 'full' | 'version' | 'bad_request' | 'not_host' | 'not_lobby' | 'team'; message: string };
 
 export const STATUS_CODE: Record<PlayerStatus, number> = { active: 0, finished: 1, spotted: 2, waiting: 3, captured: 4 };
 export const STATUS_OF: PlayerStatus[] = ['active', 'finished', 'spotted', 'waiting', 'captured'];

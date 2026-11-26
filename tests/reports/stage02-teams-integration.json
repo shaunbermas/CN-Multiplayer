@@ -1,0 +1,44 @@
+{
+  "scenarios": {
+    "1": {
+      "sizes": [
+        4,
+        4,
+        4
+      ]
+    },
+    "2": {
+      "p2Team": "A",
+      "nominees": [
+        "p2"
+      ]
+    },
+    "4": {
+      "duplicate": "Another team already has that name",
+      "markup": "Use letters, numbers, spaces and - ' . & ! ? only",
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "captains": [
+        "p2",
+        "b8",
+        "b5"
+      ]
+    },
+    "5": {
+      "locked": true,
+      "p3WasCaptainOf": null
+    },
+    "6": {
+      "room2": [
+        "Team A",
+        "Team B",
+        "Team C"
+      ]
+    }
+  },
+  "errors": [],
+  "passed": true
+}

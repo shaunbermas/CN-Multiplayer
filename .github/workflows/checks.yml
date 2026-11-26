@@ -156,6 +156,12 @@ jobs:
           SKIP_BUILD: "1"
           WRANGLER_SEND_METRICS: "false"
 
+      - name: Stage 02 · Agawan Base teams and captains
+        run: npm run test:teams
+        env:
+          SKIP_BUILD: "1"
+          WRANGLER_SEND_METRICS: "false"
+
       - name: Two browsers in one room
         run: npm run test:e2e
         env:

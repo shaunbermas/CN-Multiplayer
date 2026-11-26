@@ -17,6 +17,7 @@ import { settings } from './settings.ts';
 import { IconBars, IconCheck, IconFlag, IconGear, IconHome, IconMouse, IconPause, IconPin, IconPlay, IconRestart, IconRestartCcw, IconUsers, IconVolume, IconVolumeOff, IconX } from './icons.tsx';
 import { setMuted } from '../game/audio.ts';
 import { HuntBriefingRole, HuntPanel, HuntRoleChip, HuntTop, captureText } from './HuntHud.tsx';
+import { TeamLobby, teamsVisible } from './TeamLobby.tsx';
 
 // Decision 037: no time-left bar, no "get ready" warning and no hint text: knowing when red comes is part of the
 // challenge. Owner's HUD design (25 Nov 2026): the signal reads GO or STOP, with no lens icon.
@@ -95,6 +96,7 @@ function Lobby({ room }: { room: TrialRoom }) {
             );
           })}
         </ol>
+        {teamsVisible() && <TeamLobby room={room} />}
       </div>
       <aside className="lobby-side">
         <div className="invite">
