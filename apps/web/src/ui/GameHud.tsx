@@ -17,6 +17,7 @@ import { settings } from './settings.ts';
 import { IconBars, IconCheck, IconFlag, IconGear, IconHome, IconMouse, IconPause, IconPin, IconPlay, IconRestart, IconRestartCcw, IconUsers, IconVolume, IconVolumeOff, IconX } from './icons.tsx';
 import { setMuted } from '../game/audio.ts';
 import { HuntBriefingRole, HuntPanel, HuntRoleChip, HuntTop, captureText } from './HuntHud.tsx';
+import { AgawanPanel, AgawanTop } from './AgawanHud.tsx';
 import { TeamLobby, teamsVisible } from './TeamLobby.tsx';
 
 // Decision 037: no time-left bar, no "get ready" warning and no hint text: knowing when red comes is part of the
@@ -215,6 +216,9 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
   const closing = r.phase === 'active' && finished > 0;
   const iWonStage = recentFinish && firstFinisherId(room) === room.id;
   const isHunt = stage.rules === 'hide_and_hunt';
+  const isAgawan = stage.rules === 'agawan_base';
+  /** Stages without a finish line (The Hunt, Agawan Base). */
+  const noCourse = isHunt || isAgawan;
   const recentCaught = room.events.find((e) => e.kind === 'captured' && e.id === room.id && now - e.at < 3000);
   const leaderProgress = Math.max(0, ...inRound.filter((p) => p.id !== room.id).map((p) => {
     const g = activeStage(room).geo;
@@ -267,11 +271,11 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
           )}
         </div>
         <div className="hud-right">
-          {isHunt && r.phase === 'active' ? <HuntTop room={room} /> : r.phase === 'active' ? <div className={`glass timer num${closing ? ' closing' : ''}`} data-testid="timer">{closing && <small>Finish closes</small>}{fmtClock(remaining)}</div>
+          {isHunt && r.phase === 'active' ? <HuntTop room={room} /> : isAgawan && r.phase === 'active' ? <AgawanTop room={room} /> : r.phase === 'active' ? <div className={`glass timer num${closing ? ' closing' : ''}`} data-testid="timer">{closing && <small>Finish closes</small>}{fmtClock(remaining)}</div>
             : r.phase === 'lobby' ? <div className="glass timer num" data-testid="timer">{hud.walkTime.toFixed(1)} s</div> : null}
           {/* Owner (25 Nov 2026): the button row is as wide as the counts panel above it. */}
           <div className="hud-stack">
-          {!isHunt && (r.phase === 'active' || r.phase === 'results' || r.phase === 'countdown') && (
+          {!noCourse && (r.phase === 'active' || r.phase === 'results' || r.phase === 'countdown') && (
             <div className="glass counts num" data-testid="round-counts">
               <span title="Still racing"><IconUsers size={22} />{alive} / {inRound.length}</span><i className="sep" />
               <span className="in" title="Finished"><IconCheck size={22} />{finished}</span><i className="sep" />
@@ -346,6 +350,7 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
         <div className="banner spotted" data-testid="caught-banner"><b>Caught</b><span>{captureText(room, room.id, recentCaught.other)}. You keep your {myStanding?.points ?? 0} points and play the next stage.</span></div>
       )}
       {isHunt && <HuntPanel room={room} />}
+      {isAgawan && <AgawanPanel room={room} />}
       {hud.down > 0 && !recentSpot && (
         <div className="banner down" data-testid="knocked-down"><b>Knocked over</b><span>Back on your feet in a moment</span></div>
       )}
@@ -377,13 +382,14 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
         {r.phase === 'lobby' && <div className="glass objective">{hud.status === 'finished' ? `Practice: finished in ${hud.finishTime.toFixed(2)} s` : 'Practice: walk to the finish line'}</div>}
       </div>
       <div className="glass hud-bottom">
-        <span className="hb-cell hb-dist num">{isHunt && r.phase !== 'lobby' ? <>{room.hunt?.role === 'hunter' ? 'Hunter' : room.hunt?.role === 'hider' ? 'Hider' : 'The Hunt'}</> : <><IconPin size={24} /><span><b>{hud.distance.toFixed(0)}</b> m to go</span></>}</span>
+        <span className="hb-cell hb-dist num">{isAgawan && r.phase !== 'lobby' ? <>{room.agawan ? (room.teams?.teams.find((t) => t.slot === room.agawan!.team)?.name ?? `Team ${room.agawan.team}`) : 'Agawan Base'}</> : isHunt && r.phase !== 'lobby' ? <>{room.hunt?.role === 'hunter' ? 'Hunter' : room.hunt?.role === 'hider' ? 'Hider' : 'The Hunt'}</> : <><IconPin size={24} /><span><b>{hud.distance.toFixed(0)}</b> m to go</span></>}</span>
         <i className="sep" />
         <span className="hb-cell hb-keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><em>Move</em><span className="dot" aria-hidden="true">•</span><IconMouse size={26} /><em>Look</em>
+          {isAgawan && r.phase === 'active' && <em className="extra">Hold E: tag a rival · free a teammate · raid a base</em>}
           {isHunt && r.phase === 'active' && <em className="extra">{room.hunt?.role === 'hunter' ? 'Q pulse · hold E capture · Shift sprint' : 'E hide · Shift sprint · C crouch'}</em>}
           {me?.status === 'spotted' && <em className="extra">Tab switch</em>}{r.phase === 'lobby' && <em className="extra">R respawn</em>}<em className="extra">P pause</em></span>
         <i className="sep" />
-        {!(isHunt && r.phase !== 'lobby') && <><span className="hb-cell hb-finish"><IconFlag size={28} /><b>Finish</b></span><i className="sep" /></>}
+        {!(noCourse && r.phase !== 'lobby') && <><span className="hb-cell hb-finish"><IconFlag size={28} /><b>Finish</b></span><i className="sep" /></>}
         <span className="hb-cell hb-room">Room <b>{room.room.toUpperCase()}</b></span>
       </div>
 

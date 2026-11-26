@@ -1,10 +1,11 @@
 // Client side of the stage registry: stage id (packages/shared/src/stages.ts) -> scene module.
 // The generic game scene (players, camera, input) stays the same for every stage; each stage brings its
-// own environment, figure and presentation. A new stage adds one entry here (Stage 02 · Agawan Base next).
+// own environment, figure and presentation. A new stage adds one entry here.
 import type { ComponentType } from 'react';
 import type { TrialRoom } from '../net.ts';
 import { Stage01Scene, preloadStage01, stage01Assets } from './stage01/Stage01Scene.tsx';
 import { HuntScene, preloadHunt, huntAssets } from './hunt/HuntScene.tsx';
+import { AgawanScene, preloadAgawan, agawanAssets } from './agawan/AgawanScene.tsx';
 
 export interface StageSceneModule {
   Scene: ComponentType<{ room: TrialRoom }>;
@@ -15,5 +16,6 @@ export interface StageSceneModule {
 
 export const STAGE_SCENES: Record<string, StageSceneModule> = {
   STAGE_01_RED_LIGHT: { Scene: Stage01Scene, preload: preloadStage01, assets: stage01Assets },
+  STAGE_02_AGAWAN_BASE: { Scene: AgawanScene, preload: preloadAgawan, assets: agawanAssets },
   STAGE_03_THE_HUNT: { Scene: HuntScene, preload: preloadHunt, assets: huntAssets },
 };

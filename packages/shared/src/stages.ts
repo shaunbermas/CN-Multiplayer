@@ -10,8 +10,10 @@ import { buildHuntLayout, huntGeometry, type HuntLayout } from './hunt/layout.ts
 import { buildNavGrid, type NavGrid } from './hunt/nav.ts';
 import { HUNT } from './hunt/config.ts';
 import { AGAWAN_ENABLED } from './constants.ts';
+import { AGAWAN } from './agawan/config.ts';
+import { agawanGeometry, buildAgawanLayout, type AgawanLayout } from './agawan/layout.ts';
 
-export type StageRuleSet = 'red_light_green_light' | 'hide_and_hunt';
+export type StageRuleSet = 'red_light_green_light' | 'hide_and_hunt' | 'agawan_base';
 
 export interface StageDefinition {
   id: string;
@@ -27,6 +29,8 @@ export interface StageDefinition {
   geometry: StageGeometry;
   /** The Hunt only: the greybox layout and the bots' navigation grid (immutable, shared by every room). */
   hunt?: { layout: HuntLayout; nav: NavGrid };
+  /** Agawan Base only: the street greybox and the bots' navigation grid (immutable, shared by every room). */
+  agawan?: { layout: AgawanLayout; nav: NavGrid };
 }
 
 function stage01(): StageDefinition {
@@ -61,6 +65,24 @@ function theHunt(): StageDefinition {
   };
 }
 
+function agawanBase(): StageDefinition {
+  const layout = buildAgawanLayout();
+  return {
+    id: AGAWAN.id,
+    number: stageNumber(AGAWAN.id),
+    name: 'Agawan Base',
+    rules: 'agawan_base',
+    briefing: {
+      rule: 'Three teams. Tag rivals, rescue your teammates, raid the other bases.',
+      detail: 'Hold E near a rival to tag them into your pen. Hold E beside a captured teammate to free them. Hold E at an enemy base marker to raid it for 5 points.',
+    },
+    figure: 'The other teams',
+    metadata: null,
+    geometry: agawanGeometry(layout),
+    agawan: { layout, nav: buildNavGrid(layout.walls, layout.bounds) },
+  };
+}
+
 /** Stage 01's registry id (from its approved Blender metadata). */
 export const DEFAULT_STAGE_ID = 'STAGE_01_RED_LIGHT';
 /** Stage 02 · AGAWAN BASE: registered once it is built and switched on (AGAWAN_ENABLED). */
@@ -80,9 +102,11 @@ export function stageNumber(id: string): number { return OFFICIAL_ORDER.indexOf(
 export const LEGACY_STAGE_IDS: Record<string, string> = { STAGE_02_THE_HUNT: HUNT.id };
 export function resolveStageId(id: string): string { return LEGACY_STAGE_IDS[id] ?? id; }
 
-export const STAGES: Record<string, StageDefinition> = Object.fromEntries([stage01(), theHunt()].map((s) => [s.id, s]));
+export const STAGES: Record<string, StageDefinition> = Object.fromEntries([stage01(), agawanBase(), theHunt()].map((s) => [s.id, s]));
 /** The match plays every registered (and switched-on) stage in the official order. */
 export const MATCH_ORDER: string[] = OFFICIAL_ORDER.filter((id) => id in STAGES && (id !== AGAWAN_STAGE_ID || AGAWAN_ENABLED));
+/** Every built stage in the official order, switched on or not (test rooms may play Agawan Base before it is switched on). */
+export const REGISTERED_ORDER: string[] = OFFICIAL_ORDER.filter((id) => id in STAGES);
 /** Stages a host may start a match from (main menu picker). */
 export const STARTABLE_STAGES: string[] = MATCH_ORDER;
 /** Kept for the older tournament manager (tournament.ts). */

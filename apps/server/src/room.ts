@@ -13,6 +13,7 @@ import {
   type BotBrain, type ClientMessage, type GapRow, type MatchState, type Rect, type ResolvedObstacles, type RosterEntry, type RoundEvents, type RoundPlayer, type RoundState,
   type ServerMessage, type StageGeometry, type StartRequestOptions,
   AGAWAN_STAGE_ID, TeamBook, type TeamAction, type TeamResult,
+  AgawanEngine, agawanBotInput, REGISTERED_ORDER, MATCH_ORDER, type AgawanBody,
 } from '@cn-trials/shared';
 import type { Env } from './env.ts';
 
@@ -218,6 +219,8 @@ export class TrialRoom extends DurableObject<Env> {
 
   /** The Hunt rules engine, when the room is playing The Hunt. */
   private hunt(): HuntEngine | null { return this.engine instanceof HuntEngine ? this.engine : null; }
+  /** The Agawan Base rules engine, when the room is playing Agawan Base. */
+  private agawan(): AgawanEngine | null { return this.engine instanceof AgawanEngine ? this.engine : null; }
 
   /**
    * Reconnect (v8): a browser with the key of a player who dropped out during a match (or who opened a second tab)
@@ -242,12 +245,14 @@ export class TrialRoom extends DurableObject<Env> {
     this.broadcastTeams();
     this.broadcastSnapshot();
     this.startLoop();
-    console.log(JSON.stringify({ ev: 'reconnect', room, id: p.id, status: p.status, role: this.hunt()?.roleOf(p.id) ?? null, phase: this.engine.phase }));
+    console.log(JSON.stringify({ ev: 'reconnect', room, id: p.id, status: p.status, role: this.hunt()?.roleOf(p.id) ?? this.agawan()?.teamOf(p.id) ?? null, phase: this.engine.phase }));
     return true;
   }
 
   /** The Hunt actions (pulse, hide, capture hold), validated by the hunt engine. */
   private stageAction(p: Player, msg: { a: string; on?: boolean }): void {
+    const ag = this.agawan();
+    if (ag) { if (msg.a === 'interact' && ag.phase === 'active') ag.setHold(p, msg.on === true); return; }
     const h = this.hunt();
     if (!h || h.phase !== 'active') return;
     const bodies = this.roundPlayers();
@@ -307,6 +312,7 @@ export class TrialRoom extends DurableObject<Env> {
       // Mid-match: keep the seat (role, captures, status, points) so the same browser can come back (v8).
       gone.away = true; gone.queue = []; gone.vx = 0; gone.vz = 0;
       this.hunt()?.setCapture(gone, false);
+      this.agawan()?.setHold(gone, false);
     } else {
       this.players.delete(att.id);
       this.teams.remove(att.id);
@@ -401,6 +407,16 @@ export class TrialRoom extends DurableObject<Env> {
   private broadcastTeams(): void { this.broadcast({ t: 'teams', teams: this.teams.view() }); }
 
   /** The match about to start reaches Stage 02 · Agawan Base (only once it is switched on and in MATCH_ORDER). */
+  /**
+   * Stage order for a new match. Test rooms (CN_TEST=1) that ask to start at Agawan Base get every built stage, so
+   * the stage can be tested before it is switched on; everyone else plays MATCH_ORDER.
+   */
+  private orderFor(opts: StartRequestOptions | undefined): string[] {
+    const test = this.env.CN_TEST === '1';
+    const all = test && opts?.startStage === AGAWAN_STAGE_ID ? REGISTERED_ORDER : MATCH_ORDER;
+    return matchOrder(test && Number.isInteger(opts?.stages) ? Number(opts!.stages) : all.length, all);
+  }
+
   private matchNeedsTeams(order: string[], startStage?: string): boolean {
     const m = new Match(order);
     if (typeof startStage === 'string') m.startAt(startStage);
@@ -434,7 +450,9 @@ export class TrialRoom extends DurableObject<Env> {
     this.obstacles = def.rules === 'red_light_green_light' ? resolveObstacles(this.geo) : null;
     this.gapRows = obstacleGapRows(this.obstacles, this.geo);
     // A new engine per stage: no timer, role, capture or hiding state carries over (09 F2).
-    this.engine = def.rules === 'hide_and_hunt' && def.hunt ? new HuntEngine(def.hunt.layout) : new RoundEngine(this.geo);
+    this.engine = def.rules === 'hide_and_hunt' && def.hunt ? new HuntEngine(def.hunt.layout)
+      : def.rules === 'agawan_base' && def.agawan ? new AgawanEngine(def.agawan.layout)
+      : new RoundEngine(this.geo);
     this.engine.now = this.elapsed;
   }
 
@@ -452,8 +470,7 @@ export class TrialRoom extends DurableObject<Env> {
       return;
     }
     if (this.engine.phase !== 'lobby') return;
-    const test = this.env.CN_TEST === '1';
-    const order = matchOrder(test && Number.isInteger(opts?.stages) ? Number(opts.stages) : MATCH.stages);
+    const order = this.orderFor(opts);
     if (this.matchNeedsTeams(order, opts?.startStage)) {
       // Agawan Base needs three valid teams with a captain each before the match may start (handoff pack §6).
       const problems = this.teams.startProblems([...this.players.values()].filter((p) => !p.away).map((p) => p.id));
@@ -500,11 +517,9 @@ export class TrialRoom extends DurableObject<Env> {
   }
 
   private beginMatch(opts: StartRequestOptions): void {
-    const test = this.env.CN_TEST === '1';
-    const stages = test && Number.isInteger(opts?.stages) ? Number(opts.stages) : MATCH.stages;
     // Players who dropped out of the previous match and never came back leave now.
-    for (const p of [...this.players.values()]) if (p.away) { this.players.delete(p.id); this.match?.markLeft(p.id); }
-    this.match = new Match(matchOrder(stages));
+    for (const p of [...this.players.values()]) if (p.away) { this.players.delete(p.id); this.teams.remove(p.id); this.match?.markLeft(p.id); }
+    this.match = new Match(this.orderFor(opts));
     if (typeof opts?.startStage === 'string') this.match.startAt(opts.startStage);
     for (const p of this.players.values()) this.match.ensure({ ...p, bot: !!p.bot });
     this.matchRunning = true;
@@ -539,7 +554,9 @@ export class TrialRoom extends DurableObject<Env> {
     this.roundId++;
     // Obstacles are always on (decision 031); only test rooms may switch them off (walk-timing and rollback tests).
     const obstacles = !(test && (opts?.obstacles === false || this.plainCourse()));
-    this.engine.start(players, { seed, roundS, briefingS, resultsS, mode: 'standup', obstacles });
+    // Agawan Base plays the teams locked in the lobby (late joiners were placed in the smallest team).
+    for (const p of players) this.teams.place(p.id);
+    this.engine.start(players, { seed, roundS, briefingS, resultsS, mode: 'standup', obstacles, teams: this.teams.view().members });
     for (const p of players) p.yaw = 0;
     console.log(JSON.stringify({ ev: 'stage_start', room: this.roomCode, round: this.roundId, stage: this.geo.stage, match: this.matchState(), seed, players: players.length, bots: this.botCount(),
       schedule: this.engine.schedule.slice(0, 12).map((s) => [s.signal[0], s.start, s.end]) }));
@@ -574,6 +591,7 @@ export class TrialRoom extends DurableObject<Env> {
       match: this.matchState(),
       ...(this.paused ? { paused: true } : {}),
       ...(this.hunt() ? { hunt: this.hunt()!.publicState() } : {}),
+      ...(this.agawan() && this.engine.phase !== 'lobby' ? { agawan: this.agawan()!.publicState() } : {}),
     };
   }
 
@@ -647,7 +665,8 @@ export class TrialRoom extends DurableObject<Env> {
     const extra = e.extraWalls?.() ?? [];
     const walls: Rect[] = extra.length ? [...base, ...extra] : base;
     const h = this.hunt();
-    if (this.botCount() > 0) { if (h) this.driveHuntBots(h); else this.driveBots(gt); }
+    const ag = this.agawan();
+    if (this.botCount() > 0) { if (h) this.driveHuntBots(h); else if (ag) this.driveAgawanBots(ag); else this.driveBots(gt); }
     for (const p of this.players.values()) {
       // Token bucket: one step per tick sustained, so a client cannot move faster than real time.
       p.tokens = Math.min(INPUT_BURST, p.tokens + 1);
@@ -674,7 +693,11 @@ export class TrialRoom extends DurableObject<Env> {
     const at = Math.round((this.elapsed - e.goTime) * 1000) / 1000;
     for (const id of moveEv.spotted) this.broadcast({ t: 'event', kind: 'spotted', id, at });
     for (const id of moveEv.finished) this.broadcast({ t: 'event', kind: 'finished', id, at });
-    for (const [id, by] of ev.captured ?? []) {
+    if (ag) for (const x of ag.drainEvents()) {
+      this.broadcast({ t: 'agawan', ev: x, at });
+      console.log(JSON.stringify({ ev: `agawan_${x.kind}`, room: this.roomCode, round: this.roundId, at, ...x }));
+    }
+    for (const [id, by] of ag ? [] : ev.captured ?? []) {
       this.broadcast({ t: 'event', kind: 'captured', id, other: by, at });
       console.log(JSON.stringify({ ev: 'captured', room: this.roomCode, round: this.roundId, id, by, at }));
     }
@@ -733,6 +756,30 @@ export class TrialRoom extends DurableObject<Env> {
     }
   }
 
+  /**
+   * Agawan Base bots: each thinks at 10 Hz (a third of them per tick) from what a human could know (positions in line
+   * of sight, the public scores), holds E through the same engine method as a human, and queues its move like an input.
+   */
+  private driveAgawanBots(ag: AgawanEngine): void {
+    const nav = getStage(this.geo.stage).agawan?.nav;
+    if (!nav) return;
+    const bodies = this.roundPlayers() as unknown as AgawanBody[];
+    const pub = ag.phase === 'active' ? ag.publicState() : null;
+    const tickNo = Math.round(this.elapsed * SIM_HZ);
+    let i = 0;
+    for (const p of this.players.values()) {
+      if (!p.bot) continue;
+      i++;
+      if (pub && (!p.botMove || (tickNo + i) % 3 === 0)) {
+        const act = agawanBotInput(p.bot, p as unknown as AgawanBody, ag.privateState(p.id), ag, pub, bodies, nav, this.elapsed);
+        ag.setHold(p, act.hold);
+        p.botMove = { mx: act.mx, mz: act.mz, yaw: act.yaw, k: 0 };
+      } else if (!pub) p.botMove = { mx: 0, mz: 0, yaw: p.yaw, k: 0 };
+      const mv = p.botMove!;
+      if (p.queue.length < 4) p.queue.push({ seq: p.ack + p.queue.length + 1, mx: mv.mx, mz: mv.mz, yaw: mv.yaw, k: mv.k });
+    }
+  }
+
   /** Lobby practice walk (walk test): time from the first move to the finish line. */
   private practiceFinish(p: Player, input: { mx: number; mz: number }): void {
     if (p.firstMoveAt === null && (input.mx !== 0 || input.mz !== 0)) p.firstMoveAt = this.elapsed - SIM_DT;
@@ -786,6 +833,18 @@ export class TrialRoom extends DurableObject<Env> {
     const time = Math.round(this.elapsed * 1000) / 1000;
     const round = this.roundState();
     const h = this.hunt();
+    const ag = this.agawan();
+    if (ag && ag.phase !== 'lobby') {
+      // Agawan Base has no hiding: everyone gets every row, plus their own state (serialised once, then appended).
+      const base = JSON.stringify({ t: 'snap', time, rows, round } satisfies ServerMessage);
+      for (const [pid, ws] of this.sockets) {
+        const me = ag.privateState(pid);
+        const text = me ? `${base.slice(0, -1)},"ag":${JSON.stringify(me)}}` : base;
+        this.stats.snaps++; this.stats.snapBytes += text.length;
+        sendRaw(ws, text);
+      }
+      return;
+    }
     if (!h || h.phase === 'lobby') {
       const text = JSON.stringify({ t: 'snap', time, rows, round } satisfies ServerMessage);
       this.stats.snaps++; this.stats.snapBytes += text.length;
