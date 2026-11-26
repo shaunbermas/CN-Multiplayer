@@ -86,6 +86,8 @@ export class TrialRoom extends DurableObject<Env> {
   private roomCode = 'default';
   /** Stage 02 · Agawan Base teams and captains (v9): set in the lobby, locked while a match runs, kept between matches. */
   private teams = new TeamBook();
+  /** The match started in an Agawan Base lobby, where players saw and set up the teams (decision 048). */
+  private teamsFromLobby = false;
   private roundId = 0;
 
   async fetch(request: Request): Promise<Response> {
@@ -430,12 +432,6 @@ export class TrialRoom extends DurableObject<Env> {
     return matchOrder(test && Number.isInteger(opts?.stages) ? Number(opts!.stages) : all.length, all);
   }
 
-  private matchNeedsTeams(order: string[], startStage?: string): boolean {
-    const m = new Match(order);
-    if (typeof startStage === 'string') m.startAt(startStage);
-    return order.slice(m.index).includes(AGAWAN_STAGE_ID);
-  }
-
   private respawn(p: Player): void {
     const s = this.geo.spawns.find((x) => x.index === p.spawn) ?? this.geo.spawns[0];
     Object.assign(p, { x: s.x, z: s.z, vx: 0, vz: 0, yaw: s.yaw, status: 'active', finishTime: -1, spotTime: -1, firstMoveAt: null, downUntil: 0, immuneUntil: 0 });
@@ -502,8 +498,8 @@ export class TrialRoom extends DurableObject<Env> {
     }
     if (this.engine.phase !== 'lobby') return;
     const order = this.orderFor(opts);
-    if (this.matchNeedsTeams(order, opts?.startStage)) {
-      // Shuffle mode (decision 047): nobody has to appoint captains by hand; any team still without one gets one now.
+    if (resolveStageId(opts?.startStage ?? DEFAULT_STAGE_ID) === AGAWAN_STAGE_ID) {
+      // Teams are only set up in an Agawan Base lobby (decision 048). Shuffle mode (decision 047): nobody has to appoint captains by hand; any team still without one gets one now.
       if (this.teams.mode === 'shuffle') this.teams.autoCaptains([...this.players.values()].filter((p) => !p.away).map((p) => ({ id: p.id, joinOrder: p.joinOrder, bot: !!p.bot })));
       // Agawan Base needs three valid teams with a captain each before the match may start (handoff pack §6).
       const problems = this.teams.startProblems([...this.players.values()].filter((p) => !p.away).map((p) => p.id));
@@ -554,8 +550,9 @@ export class TrialRoom extends DurableObject<Env> {
     for (const p of [...this.players.values()]) if (p.away) { this.players.delete(p.id); this.teams.remove(p.id); this.match?.markLeft(p.id); }
     this.match = new Match(this.orderFor(opts));
     if (typeof opts?.startStage === 'string') this.match.startAt(opts.startStage);
-    // A match with Agawan Base in it is played in teams and crowns a team champion (3 / 2 / 1 per stage).
-    if (this.matchNeedsTeams(this.match.order, opts?.startStage)) this.match.enableTeams();
+    // Decision 048 (owner, 26 Nov 2026): teams exist only in Agawan Base. No team championship across stages: the
+    // match winner is the individual board; Agawan's team places give each member 2 / 1 / 0 like the other stages.
+    this.teamsFromLobby = resolveStageId(opts?.startStage ?? DEFAULT_STAGE_ID) === AGAWAN_STAGE_ID;
     for (const p of this.players.values()) this.match.ensure({ ...p, bot: !!p.bot });
     this.matchRunning = true;
     this.teams.locked = true; // names, captains and membership are fixed for the whole match
@@ -589,7 +586,16 @@ export class TrialRoom extends DurableObject<Env> {
     this.roundId++;
     // Obstacles are always on (decision 031); only test rooms may switch them off (walk-timing and rollback tests).
     const obstacles = !(test && (opts?.obstacles === false || this.plainCourse()));
-    // Agawan Base plays the teams locked in the lobby (late joiners were placed in the smallest team).
+    // Agawan Base plays the teams locked in the lobby (late joiners were placed in the smallest team). A match that
+    // started on another stage never showed the team setup (decision 048), so the teams are dealt now: random,
+    // balanced, a captain each.
+    if (this.geo.stage === AGAWAN_STAGE_ID && !this.teamsFromLobby) {
+      this.teams.locked = false;
+      this.teams.shuffle(players.map((p) => ({ id: p.id, joinOrder: p.joinOrder, bot: !!p.bot })));
+      this.teams.locked = true;
+      this.teamsFromLobby = true; // dealt once per match
+      this.broadcastTeams();
+    }
     for (const p of players) this.teams.place(p.id);
     // The roster this stage is scored against for the team championship (everyone it starts with).
     const members = this.teams.view().members;

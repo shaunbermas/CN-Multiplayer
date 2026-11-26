@@ -25,6 +25,17 @@ let browser;
 try {
   await worker.ready;
   browser = await chromium.launch();
+  // Decision 048: a Stage 01 lobby (a fresh browser picks Stage 01) shows no team setup at all.
+  {
+    const p1 = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    await p1.goto(`http://127.0.0.1:${PORT}/?name=Solo&autojoin=1&quality=low&teams=1&room=ag-s1-lobby`);
+    await p1.waitForSelector('[data-testid=lobby-stage]', { timeout: 60_000 });
+    await sleep(1500);
+    const s1 = await p1.evaluate(() => ({ teams: !!document.querySelector('[data-testid=teams]'), stage: window.__cn?.stage }));
+    report.stage01Lobby = s1;
+    if (s1.teams) errors.push('team setup shows in a Stage 01 lobby');
+    await p1.close();
+  }
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
   const pageErrors = [];
   page.on('pageerror', (e) => pageErrors.push(e.message));

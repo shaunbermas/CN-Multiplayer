@@ -4,7 +4,7 @@
 // lens, timer, counts) · spotted / finished / knocked-down banners · feed · spectator · stage results with points
 // and overall standings · final winner and leaderboard.
 import { useEffect, useState } from 'react';
-import { BOT_LIMITS, DEFAULT_STAGE_ID, MATCH, MAX_PLAYERS, OFFICIAL_ORDER, STARTABLE_STAGES, colorwayById, getStage, matchOrder, stageNumber, tieBreakReason, type Standing, type TeamSlot } from '@cn-trials/shared';
+import { AGAWAN_STAGE_ID, BOT_LIMITS, DEFAULT_STAGE_ID, MATCH, MAX_PLAYERS, OFFICIAL_ORDER, STARTABLE_STAGES, colorwayById, getStage, matchOrder, stageNumber, tieBreakReason, type Standing, type TeamSlot } from '@cn-trials/shared';
 import type { TrialRoom } from '../net.ts';
 import { inviteLink } from '../net.ts';
 import { hud } from '../game/hudStore.ts';
@@ -113,7 +113,8 @@ function Lobby({ room }: { room: TrialRoom }) {
             );
           })}
         </ol>
-        {teamsVisible() && <TeamLobby room={room} />}
+        {/* Decision 048: team setup shows only in an Agawan Base lobby; Stage 01 and The Hunt have no teams. */}
+        {teamsVisible() && lobbyStage === AGAWAN_STAGE_ID && <TeamLobby room={room} />}
       </div>
       <aside className="lobby-side">
         <div className="invite">

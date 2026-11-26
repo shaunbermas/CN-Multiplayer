@@ -23,7 +23,7 @@ Every number below lives in `packages/shared/src/agawan/config.ts` (the pack: "o
 | Team score | Base taken +10 (including taking your own back); each base held at the final whistle +5; capture +1; rescue +1. |
 | End | Highest team score. A tie at the top plays 30 s of sudden death in which the first base taken by a tied team wins. Then bases held, bases taken, captures, rescues, then a shared place. |
 | Individual board | Every member gets 2 / 1 / 0 by team place, like the other stages (secondary board). |
-| Team championship | 3 / 2 / 1 per stage for every stage of a match with teams (§4). |
+| Teams outside this stage | None (decision 048): the team setup shows only in an Agawan Base lobby, and a match that starts on another stage deals random teams when it reaches Agawan Base. There is no team championship across stages (§4). |
 
 ## 2. Map
 
@@ -48,7 +48,11 @@ route lengths, clear width along the routes and the two approaches per base.
   when it is lost. The rest are rovers, who free teammates and hunt rivals. A bot at 1 heart (unless it is standing alone in an enemy ring) goes to the nearest
   base its team owns to heal. Anyone hits a rival who walks into reach.
 
-## 4. Team championship
+## 4. Team championship (retired by decision 048)
+
+Decision 048 turned the cross-stage team championship off: the match winner is the top individual. The code below
+stays in `teamChampionship.ts` but is no longer enabled by the room.
+
 
 `packages/shared/src/teamChampionship.ts`, turned on for every match with Agawan Base in it.
 
