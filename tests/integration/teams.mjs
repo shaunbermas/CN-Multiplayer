@@ -48,6 +48,9 @@ try {
   check(!host.teams.locked, 'teams locked in the lobby');
   report.scenarios[1] = { sizes: sizes(host) };
 
+  // Decision 047: rooms start in shuffle mode; this scenario covers manual picks, so the host switches.
+  host.setTeamMode('manual');
+  await waitFor(() => host.teams.mode === 'manual', 3000, 'manual mode');
   // 2
   const target = ['A', 'B', 'C'].find((s) => s !== p2.teams.members[p2.id]);
   p2.joinTeam(target);

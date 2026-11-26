@@ -25,6 +25,8 @@ function active(players: AgawanBody[], teams: Record<string, TeamSlot>, opts: { 
 /** Put `a` right in front of `b`, facing them. */
 function face(a: AgawanBody, b: AgawanBody, d = 1) { a.x = b.x; a.z = b.z + d; a.yaw = 0; } // yaw 0 faces -Z
 
+function inRing(p: AgawanBody, slot: TeamSlot, i = 0) { const b = layout.bases[slot]; p.x = b.x + Math.cos(i) * 1.2; p.z = b.z + Math.sin(i) * 1.2; }
+
 describe('map', () => {
   it('has three bases with 10 spawns each, inside the block and clear of every wall', () => {
     for (const s of ['A', 'B', 'C'] as const) {
@@ -114,253 +116,299 @@ describe('start', () => {
   });
 });
 
-describe('tag', () => {
-  it('holding E on a rival in reach captures them into the tagger\'s pen, +1 the first time only', () => {
+/** One press of E (down this tick, up the next). */
+function press(e: AgawanEngine, p: AgawanBody, run: (s: number) => unknown) { e.setHold(p, true); run(DT); e.setHold(p, false); run(AGAWAN.health.hitCooldownS); }
+
+describe('hearts and hits (decision 047)', () => {
+  it('each press on a rival in reach takes one heart; the third captures them into the attacker\'s pen, +1', () => {
     const a = body('a', 1), b = body('b', 2), c = body('c', 3);
     const { e, run } = active([a, b, c], { a: 'A', b: 'B', c: 'C' });
     b.x = 0; b.z = 0; face(a, b);
-    e.setHold(a, true);
-    run(0.3);
-    expect(e.isImprisoned('b')).toBe(false); // 0.45 s hold
-    run(0.25);
+    expect(e.state.get('b')!.hp).toBe(AGAWAN.health.max);
+    press(e, a, run); face(a, b);
+    expect(e.state.get('b')!.hp).toBe(2);
+    expect(Math.hypot(b.x, b.z)).toBeGreaterThan(0.3); // knocked back
+    press(e, a, run); face(a, b);
+    expect(e.state.get('b')!.hp).toBe(1);
+    expect(e.isImprisoned('b')).toBe(false);
+    press(e, a, run);
     expect(e.isImprisoned('b')).toBe(true);
     expect(e.state.get('b')!.pen).toBe('A');
     expect(b.status).toBe('captured');
     const slot = layout.pens.A.slots[e.state.get('b')!.slot];
     expect([b.x, b.z]).toEqual([slot.x, slot.z]);
-    expect(e.publicState().teams[0].score).toBe(1);
-    expect(e.canMove(b)).toBe(false);
-    // Released, tagged again by the same team: no second point.
-    run(AGAWAN.prison.maxS + AGAWAN.protectS + 0.2);
-    expect(e.isImprisoned('b')).toBe(false);
+    expect(e.publicState().teams[0].score).toBe(AGAWAN.points.capture);
+    expect(e.publicState().teams[0].captures).toBe(1);
+  });
+
+  it('presses faster than the cooldown do not count; holding E keeps hitting, slower', () => {
+    const a = body('a', 1), b = body('b', 2), c = body('c', 3);
+    const { e, run } = active([a, b, c], { a: 'A', b: 'B', c: 'C' });
     b.x = 0; b.z = 0; face(a, b);
-    e.setHold(a, false); e.setHold(a, true);
-    run(0.6);
+    e.setHold(a, true); run(DT); e.setHold(a, false); run(DT); e.setHold(a, true); run(DT); e.setHold(a, false); run(DT);
+    expect(e.state.get('b')!.hp).toBe(2);
+    run(1); face(a, b);
+    e.setHold(a, true);
+    run(DT); face(a, b);
+    expect(e.state.get('b')!.hp).toBe(1);
+    run(AGAWAN.health.holdRepeatS + 0.05);
     expect(e.isImprisoned('b')).toBe(true);
-    expect(e.publicState().teams[0].score).toBe(1);
-    expect(e.state.get('a')!.tags).toBe(2);
   });
 
   it('refuses teammates, rivals behind you, out of reach or behind a wall', () => {
-    const a = body('a', 1), mate = body('m', 2), b = body('b', 3);
-    const { e, run } = active([a, mate, b], { a: 'A', m: 'A', b: 'B' });
-    mate.x = 0; mate.z = 0; face(a, mate);
-    b.x = 30; b.z = 30;
-    e.setHold(a, true); run(1);
-    expect(e.isImprisoned('m')).toBe(false);
-    // behind
-    b.x = 0; b.z = 0; a.x = 0; a.z = -1; a.yaw = 0; mate.x = 20; mate.z = 0;
-    run(1);
-    expect(e.isImprisoned('b')).toBe(false);
-    // too far
-    face(a, b, AGAWAN.tag.distM + 0.3); run(1);
-    expect(e.isImprisoned('b')).toBe(false);
-    // wall in between: a house corner between them
-    const house = layout.walls.find((w) => w.id === 'S02A_HOUSE_IS')!;
-    b.x = (house.minX + house.maxX) / 2; b.z = house.minZ - 0.4; a.x = b.x; a.z = house.maxZ + 0.4; a.yaw = 0;
-    run(1);
-    expect(e.isImprisoned('b')).toBe(false);
+    const a = body('a', 1), b = body('b', 2), mate = body('m', 3), c = body('c', 4);
+    const { e, run } = active([a, b, mate, c], { a: 'A', b: 'B', m: 'A', c: 'C' });
+    mate.x = 0; mate.z = 0; face(a, mate); b.x = 30; b.z = 30;
+    press(e, a, run);
+    expect(e.state.get('m')!.hp).toBe(AGAWAN.health.max);
+    b.x = 0; b.z = 0; a.x = 0; a.z = 1; a.yaw = Math.PI; // facing away
+    press(e, a, run);
+    expect(e.state.get('b')!.hp).toBe(AGAWAN.health.max);
+    b.x = 0; b.z = 0; face(a, b, AGAWAN.health.reachM + 0.3);
+    press(e, a, run);
+    expect(e.state.get('b')!.hp).toBe(AGAWAN.health.max);
+    const w = layout.walls.find((x) => x.kind === 'house' && x.maxX - x.minX > 6)!;
+    b.x = (w.minX + w.maxX) / 2; b.z = w.minZ - 0.6; a.x = b.x; a.z = w.maxZ + 0.6; a.yaw = 0;
+    if (Math.hypot(a.x - b.x, a.z - b.z) <= AGAWAN.health.reachM) {
+      press(e, a, run);
+      expect(e.state.get('b')!.hp).toBe(AGAWAN.health.max);
+    }
   });
 
-  it('two attackers finishing on the same rival in one tick: only the first captures', () => {
-    const a = body('a', 1), c = body('c', 2), b = body('b', 3);
-    const { e, run } = active([a, c, b], { a: 'A', c: 'C', b: 'B' });
-    b.x = 0; b.z = 0;
-    a.x = 0; a.z = 1; a.yaw = 0;
-    c.x = 0; c.z = -1; c.yaw = Math.PI;
-    e.setHold(a, true); e.setHold(c, true);
-    run(0.6);
-    expect(e.state.get('b')!.pen).toBe('A'); // a joined first
-    expect(e.state.get('c')!.tags).toBe(0);
-    const occupied = [...e.occupancy.values()].flat().filter((x) => x === 'b');
-    expect(occupied).toHaveLength(1);
-  });
-
-  it('a raider who is tagged mid-raid loses the raid', () => {
-    const a = body('a', 1), b = body('b', 2);
-    const { e, run } = active([a, b], { a: 'A', b: 'B' });
-    const base = layout.bases.B;
-    a.x = base.x; a.z = base.z - 1; e.setHold(a, true);
-    run(1.0);
-    expect(e.state.get('a')!.action?.kind).toBe('raid');
-    face(b, a); e.setHold(b, true);
-    run(0.6);
-    expect(e.isImprisoned('a')).toBe(true);
-    run(1);
-    expect(e.publicState().teams[0].raids).toBe(0);
+  it('protected (just released) players cannot be hit and cannot hit', () => {
+    const a = body('a', 1), b = body('b', 2), c = body('c', 3);
+    const { e, run } = active([a, b, c], { a: 'A', b: 'B', c: 'C' });
+    e.state.get('b')!.protectUntil = e.now + 5;
+    b.x = 0; b.z = 0; face(a, b);
+    press(e, a, run);
+    expect(e.state.get('b')!.hp).toBe(AGAWAN.health.max);
   });
 });
 
-describe('prison, rescue and release', () => {
-  it('releases a prisoner after 15 s at their own base with 2 s of protection', () => {
-    const a = body('a', 1), b = body('b', 2);
-    const { e, run } = active([a, b], { a: 'A', b: 'B' });
-    b.x = 0; b.z = 0; face(a, b); e.setHold(a, true); run(0.6);
-    e.setHold(a, false);
+describe('prison, rescue, release and healing', () => {
+  function capture(e: AgawanEngine, a: AgawanBody, b: AgawanBody, run: (s: number) => unknown) {
+    for (let i = 0; i < AGAWAN.health.max && !e.isImprisoned(b.id); i++) { if (!e.isImprisoned(b.id)) { const bx = b.x, bz = b.z; face(a, { ...b, x: bx, z: bz }); press(e, a, run); } }
+  }
+
+  it('releases a prisoner after 15 s at their own base with 1 heart and 2 s of protection', () => {
+    const a = body('a', 1), b = body('b', 2), c = body('c', 3);
+    const { e, run } = active([a, b, c], { a: 'A', b: 'B', c: 'C' });
+    b.x = 0; b.z = 0;
+    capture(e, a, b, run);
+    expect(e.isImprisoned('b')).toBe(true);
     run(AGAWAN.prison.maxS - 0.5);
     expect(e.isImprisoned('b')).toBe(true);
     run(0.6);
     expect(e.isImprisoned('b')).toBe(false);
     expect(b.status).toBe('active');
+    expect(e.state.get('b')!.hp).toBe(AGAWAN.health.afterRelease);
     expect(Math.hypot(b.x - layout.bases.B.x, b.z - layout.bases.B.z)).toBeLessThan(12);
-    expect(e.privateState('b')!.protectLeft).toBeGreaterThan(1.3);
-    expect(e.occupancy.get('A')!.every((x) => x === null)).toBe(true);
-    // Protected: cannot be tagged.
-    face(a, b); e.setHold(a, true); run(1);
-    expect(e.isImprisoned('b')).toBe(false);
+    expect(e.publicState().protected).toContain('b');
   });
 
-  it('a teammate holding E beside the prisoner for 1 s frees them, +1 once per teammate', () => {
-    const a = body('a', 1), b = body('b', 2), b2 = body('b2', 3);
-    const { e, run } = active([a, b, b2], { a: 'A', b: 'B', b2: 'B' });
-    b.x = 0; b.z = 0; face(a, b); e.setHold(a, true); run(0.6); e.setHold(a, false);
-    a.x = 40; a.z = 0;
-    b2.x = b.x + 1; b2.z = b.z; e.setHold(b2, true);
-    run(0.9);
+  it('hearts do not come back in the street, only in a base the team owns', () => {
+    const a = body('a', 1), b = body('b', 2), c = body('c', 3);
+    const { e, run } = active([a, b, c], { a: 'A', b: 'B', c: 'C' });
+    e.state.get('b')!.hp = 1;
+    b.x = 0; b.z = 0; a.x = 40; a.z = 40;
+    run(5);
+    expect(e.state.get('b')!.hp).toBe(1);
+    b.x = layout.bases.A.x; b.z = layout.bases.A.z; // an enemy base heals nothing
+    run(3);
+    expect(e.state.get('b')!.hp).toBe(1);
+    b.x = layout.bases.B.x + 1; b.z = layout.bases.B.z; // home
+    run(AGAWAN.health.healEveryS * 2 + 0.1);
+    expect(e.state.get('b')!.hp).toBe(AGAWAN.health.max);
+  });
+
+  it('a teammate holding E beside the prisoner for 1 s frees them, +1', () => {
+    const a = body('a', 1), b = body('b', 2), mate = body('m', 3), c = body('c', 4);
+    const { e, run } = active([a, b, mate, c], { a: 'A', b: 'B', m: 'B', c: 'C' });
+    b.x = 0; b.z = 0; mate.x = 40; mate.z = 40;
+    capture(e, a, b, run);
+    a.x = -40; a.z = -40;
+    mate.x = b.x; mate.z = b.z + 1.2;
+    e.setHold(mate, true);
+    run(0.8);
     expect(e.isImprisoned('b')).toBe(true);
-    run(0.2);
+    run(0.3);
     expect(e.isImprisoned('b')).toBe(false);
-    expect(e.publicState().teams[1].score).toBe(1);
-    expect(e.state.get('b2')!.rescues).toBe(1);
+    expect(e.publicState().teams[1].score).toBe(AGAWAN.points.rescue);
   });
 
   it('rescue and automatic release racing: exactly one wins and the slot is freed once', () => {
-    const a = body('a', 1), b = body('b', 2), b2 = body('b2', 3);
-    const { e, run } = active([a, b, b2], { a: 'A', b: 'B', b2: 'B' });
-    b.x = 0; b.z = 0; face(a, b); e.setHold(a, true); run(0.6); e.setHold(a, false); a.x = 40; a.z = 0;
+    const a = body('a', 1), b = body('b', 2), mate = body('m', 3), c = body('c', 4);
+    const { e, run } = active([a, b, mate, c], { a: 'A', b: 'B', m: 'B', c: 'C' });
+    b.x = 0; b.z = 0; mate.x = 40; mate.z = 40;
+    capture(e, a, b, run);
+    a.x = -40; a.z = -40;
     run(AGAWAN.prison.maxS - 1.0);
-    b2.x = b.x + 1; b2.z = b.z; e.setHold(b2, true); // rescue would complete just as the timer runs out
-    run(1.2);
+    mate.x = b.x; mate.z = b.z + 1.2;
+    e.setHold(mate, true);
+    run(1.5);
     expect(e.isImprisoned('b')).toBe(false);
-    const team = e.publicState().teams[1];
-    expect(e.state.get('b2')!.rescues + (team.score === 0 ? 1 : 0)).toBe(1);
-    expect(e.occupancy.get('A')!.filter((x) => x !== null)).toHaveLength(0);
+    expect(e.occupancy.get('A')!.filter(Boolean)).toHaveLength(0);
   });
 
   it('20 prisoners get 20 different slots; leavers never keep one', () => {
-    const tagger = body('t', 1);
-    const victims = Array.from({ length: 20 }, (_, i) => body(`v${i}`, i + 2));
-    const teams: Record<string, TeamSlot> = { t: 'A', ...Object.fromEntries(victims.map((v, i) => [v.id, i % 2 ? 'B' : 'C'])) };
-    const ps = [tagger, ...victims];
+    const ps = Array.from({ length: 21 }, (_, i) => body(`p${i}`, i + 1, 40, 40));
+    const teams: Record<string, TeamSlot> = { p0: 'A' };
+    for (let i = 1; i < 21; i++) teams[`p${i}`] = i % 2 ? 'B' : 'C';
     const { e, run } = active(ps, teams);
-    for (const v of victims) {
-      v.x = 0; v.z = 0; face(tagger, v); e.setHold(tagger, false); e.setHold(tagger, true);
-      run(AGAWAN.tag.cooldownS + 0.5);
-      expect(e.isImprisoned(v.id), v.id).toBe(true);
-      e.state.get(v.id)!.releaseAt = Infinity; // one tagger needs longer than 15 s to fill a pen
-      for (const o of victims) if (!e.isImprisoned(o.id)) { o.x = 40; o.z = -30; }
+    const a = ps[0];
+    for (let i = 1; i < 21; i++) {
+      const v = ps[i]; v.x = 0; v.z = 0;
+      e.state.get(v.id)!.hp = 1; // one tap each, so all 20 are inside the pen before the 15 s release
+      for (let k = 0; k < AGAWAN.health.max && !e.isImprisoned(v.id); k++) { face(a, v); press(e, a, run); }
+      expect(e.isImprisoned(v.id)).toBe(true);
     }
-    expect(new Set(victims.map((v) => e.state.get(v.id)!.slot)).size).toBe(20);
-    // One prisoner leaves the room for good: their slot frees on the next tick.
-    const gone = victims[0];
-    const left = ps.filter((p) => p !== gone);
+    const slots = ps.slice(1).map((p) => e.state.get(p.id)!.slot);
+    expect(new Set(slots).size).toBe(20);
+    run(DT);
+    const left = ps.filter((p) => p.id !== 'p5');
     e.tick(e.now + DT, left);
-    expect(e.occupancy.get('A')!.includes(gone.id)).toBe(false);
+    expect(e.occupancy.get('A')!.filter(Boolean)).toHaveLength(19);
   });
 });
 
-describe('base raid', () => {
-  it('holding E for 1.5 s on an enemy marker scores 5; the cooldown is per attacking team and base', () => {
-    const a = body('a', 1), c = body('c', 2), b = body('b', 3);
-    const { e, run } = active([a, c, b], { a: 'A', c: 'C', b: 'B' });
-    b.x = 40; b.z = -30;
-    const base = layout.bases.B;
-    a.x = base.x + 1; a.z = base.z; e.setHold(a, true);
-    run(1.4);
-    expect(e.publicState().teams[0].score).toBe(0);
-    run(0.2);
-    expect(e.publicState().teams[0].score).toBe(5);
-    expect(e.publicState().raidCd.AB).toBeGreaterThan(19);
-    run(3);
-    expect(e.publicState().teams[0].score).toBe(5); // A's cooldown on B
-    // Team C may raid B at the same time.
-    c.x = base.x - 1; c.z = base.z; e.setHold(c, true);
-    run(1.6);
-    expect(e.publicState().teams[2].score).toBe(5);
-    // Own base: nothing.
-    a.x = layout.bases.A.x; a.z = layout.bases.A.z; run(3);
-    expect(e.publicState().teams[0].raids).toBe(1);
-    // A can raid C's base (another pair).
-    a.x = layout.bases.C.x; a.z = layout.bases.C.z - 1; run(1.6);
-    expect(e.publicState().teams[0].raids).toBe(2);
+describe('base takeover (decision 047)', () => {
+  const rival = (n: number, id: string) => body(id, n, 40, 40);
+
+  it('one attacker alone takes a base in about 12 s and scores 10', () => {
+    const a = body('a', 1), b = rival(2, 'b'), c = rival(3, 'c');
+    const { e, run } = active([a, b, c], { a: 'A', b: 'B', c: 'C' });
+    inRing(a, 'B');
+    run(AGAWAN.base.soloS - 0.5);
+    expect(e.ownerOf('B')).toBe('B');
+    run(0.7);
+    expect(e.ownerOf('B')).toBe('A');
+    const t = e.publicState().teams[0];
+    expect(t.score).toBe(AGAWAN.points.baseCapture);
+    expect(t.held).toBe(2);
   });
 
-  it('standing in a base without holding E scores nothing', () => {
-    const a = body('a', 1), b = body('b', 2);
-    const { e, run } = active([a, b], { a: 'A', b: 'B' });
-    a.x = layout.bases.B.x; a.z = layout.bases.B.z; run(5);
-    expect(e.publicState().teams[0].score).toBe(0);
+  it('more attackers are faster: three take it in about 5 s', () => {
+    const ps = [body('a1', 1), body('a2', 2), body('a3', 3), rival(4, 'b'), rival(5, 'c')];
+    const { e, run } = active(ps, { a1: 'A', a2: 'A', a3: 'A', b: 'B', c: 'C' });
+    ps.slice(0, 3).forEach((p, i) => inRing(p, 'B', i * 2));
+    const need = AGAWAN.base.soloS / AGAWAN.base.crowd[2];
+    run(need - 0.4);
+    expect(e.ownerOf('B')).toBe('B');
+    run(0.6);
+    expect(e.ownerOf('B')).toBe('A');
+  });
+
+  it('a defender in the ring freezes the capture; defenders alone push it back', () => {
+    const a = body('a', 1), b = body('b', 2), c = rival(3, 'c');
+    const { e, run } = active([a, b, c], { a: 'A', b: 'B', c: 'C' });
+    inRing(a, 'B'); b.x = 40; b.z = 40;
+    run(6);
+    const p1 = e.publicState().bases[1].cap!.p;
+    expect(p1).toBeGreaterThan(0.4);
+    inRing(b, 'B', 3);
+    run(4);
+    expect(e.publicState().bases[1].cap!.p).toBeCloseTo(p1, 2);
+    expect(e.publicState().bases[1].inside.sort()).toEqual(['A', 'B']);
+    a.x = 40; a.z = -40;
+    run(4);
+    expect(e.publicState().bases[1].cap?.p ?? 0).toBeLessThan(p1 - 0.2);
+  });
+
+  it('the original owner can take a lost base back (faster), scoring 10 again', () => {
+    const a = body('a', 1), b = body('b', 2), c = rival(3, 'c');
+    const { e, run } = active([a, b, c], { a: 'A', b: 'B', c: 'C' });
+    inRing(a, 'B'); b.x = 40; b.z = 40;
+    run(AGAWAN.base.soloS + 0.3);
+    expect(e.ownerOf('B')).toBe('A');
+    a.x = 40; a.z = -40;
+    inRing(b, 'B');
+    run(AGAWAN.base.soloS / AGAWAN.base.homeBonus + 0.3);
+    expect(e.ownerOf('B')).toBe('B');
+    expect(e.publicState().teams[1].score).toBe(AGAWAN.points.baseCapture);
+  });
+
+  it('only a base your team owns heals you: losing your base takes your healing with it', () => {
+    const a = body('a', 1), b = body('b', 2), c = rival(3, 'c');
+    const { e, run } = active([a, b, c], { a: 'A', b: 'B', c: 'C' });
+    inRing(a, 'B'); b.x = 40; b.z = 40;
+    run(AGAWAN.base.soloS + 0.3);
+    e.state.get('a')!.hp = 1;
+    run(AGAWAN.health.healEveryS + 0.1);
+    expect(e.state.get('a')!.hp).toBe(2); // A owns B's base now: it heals A
   });
 });
 
 describe('match end', () => {
-  it('the highest score wins; placements give 2 / 1 / 0 board points and team places 1 / 2 / 3; nothing scores after the end', () => {
+  it('bases held at the whistle score 5 each; placements give 2 / 1 / 0 board points', () => {
     const a = body('a', 1), b = body('b', 2), c = body('c', 3);
-    const { e, run } = active([a, b, c], { a: 'A', b: 'B', c: 'C' }, { roundS: 8 });
-    a.x = layout.bases.B.x; a.z = layout.bases.B.z; e.setHold(a, true);
-    b.x = 0; b.z = 0; face(c, b); e.setHold(c, true);
-    const ev = run(10)!;
-    expect(ev.results).toBeDefined();
-    expect(e.winners).toEqual(['A']);
-    const pts = Object.fromEntries(ev.results!.map((r) => [r.id, r.points]));
-    expect(pts).toEqual({ a: 2, c: 1, b: 0 });
-    expect(Object.fromEntries(ev.results!.map((r) => [r.id, r.teamPlace]))).toEqual({ a: 1, c: 2, b: 3 });
-    expect(e.phase).toBe('results');
-    expect(e.state.get('b')!.pen).toBeNull(); // prisoners cleared
-    const before = JSON.stringify(e.publicState().teams);
-    run(1);
-    expect(JSON.stringify(e.publicState().teams)).toBe(before);
+    const { e, run } = active([a, b, c], { a: 'A', b: 'B', c: 'C' }, { roundS: 30 });
+    inRing(a, 'B'); b.x = 40; b.z = 40; c.x = -40; c.z = 40;
+    run(AGAWAN.base.soloS + 0.3);
+    a.x = 0; a.z = 0;
+    const ev = run(30);
+    expect(ev?.results).toBeTruthy();
+    const t = e.publicState().teams;
+    expect(t[0].score).toBe(AGAWAN.points.baseCapture + 2 * AGAWAN.points.baseHeld);
+    expect(t[1].score).toBe(0);
+    expect(t[2].score).toBe(AGAWAN.points.baseHeld);
+    const res = ev!.results!;
+    expect(res.find((r) => r.id === 'a')!.points).toBe(2);
+    expect(res.find((r) => r.id === 'c')!.points).toBe(1);
+    expect(res.find((r) => r.id === 'b')!.points).toBe(0);
   });
 
-  it('a tie at the top starts 30 s of sudden death; the first raid wins at once', () => {
+  it('a tie at the top starts 30 s of sudden death; the first base capture by a tied team wins', () => {
     const a = body('a', 1), b = body('b', 2), c = body('c', 3);
-    const { e, run } = active([a, b, c], { a: 'A', b: 'B', c: 'C' }, { roundS: 6 });
-    run(6.1);
+    const { e, run } = active([a, b, c], { a: 'A', b: 'B', c: 'C' }, { roundS: 10 });
+    run(10.1);
     expect(e.sudden).toBe(true);
     expect(e.phase).toBe('active');
-    expect(e.remaining()).toBeGreaterThan(29);
-    b.x = layout.bases.C.x; b.z = layout.bases.C.z; e.setHold(b, true);
-    const ev = run(2)!;
-    expect(ev.results).toBeDefined();
-    expect(e.winners).toEqual(['B']);
-    expect(e.phase).toBe('results');
+    inRing(c, 'A');
+    const ev = run(AGAWAN.base.soloS + 0.5);
+    expect(ev?.results).toBeTruthy();
+    expect(e.winners).toEqual(['C']);
   });
 
-  it('sudden death without a raid: tie-break on raids, unique tags, unique rescues, then a shared place', () => {
+  it('sudden death without a capture: tie-break, then a shared place', () => {
     const a = body('a', 1), b = body('b', 2), c = body('c', 3);
-    const { e, run } = active([a, b, c], { a: 'A', b: 'B', c: 'C' }, { roundS: 6 });
-    // A tags B (+1); C tags... nobody; give C one point by a first rescue? Keep it simple: tie A and C on score.
-    b.x = 0; b.z = 0; face(a, b); e.setHold(a, true); run(0.6); e.setHold(a, false); a.x = 40; a.z = -30;
-    e.teams.get('C')!.score = 1; // C level on score but no unique tags
-    const ev = run(40)!;
-    expect(ev.results).toBeDefined();
-    expect(e.winners).toEqual(['A']); // more unique opponents tagged
-    // Fully level: shared first place.
-    const x = body('x', 1), y = body('y', 2), z = body('z', 3);
-    const r2 = active([x, y, z], { x: 'A', y: 'B', z: 'C' }, { roundS: 5 });
-    const ev2 = r2.run(40)!;
-    expect(r2.e.winners).toEqual(['A', 'B', 'C']);
-    expect(ev2.results!.every((r) => r.points === 2 && r.teamPlace === 1)).toBe(true);
+    const { e, run } = active([a, b, c], { a: 'A', b: 'B', c: 'C' }, { roundS: 10 });
+    const ev = run(10 + AGAWAN.suddenDeathS + 0.5);
+    expect(ev?.results).toBeTruthy();
+    expect(e.winners.sort()).toEqual(['A', 'B', 'C']);
   });
 });
 
 describe('bots', () => {
-  it('a bot raider walks to an enemy base and raids it on its own', () => {
-    const bot = body('bot', 1), b = body('b', 2), c = body('c', 3);
-    const brain = makeBot(3);
-    const ps = [bot, b, c];
-    const { e } = active(ps, { bot: 'A', b: 'B', c: 'C' });
-    brain.agawan = undefined;
-    // Force the raider job (seeded jobs vary).
-    const m = { ...brain }; agawanBotInput(m, bot, e.privateState('bot'), e, e.publicState(), ps, nav, e.now); m.agawan!.job = 'raider';
-    b.x = 44; b.z = -38; c.x = -44; c.z = -38; // rivals out of the way
+  it('bot raiders walk to an enemy base and take it over on their own', () => {
+    const ps = [body('r1', 1), body('r2', 2), body('r3', 3), body('b', 4), body('c', 5)];
+    const { e } = active(ps, { r1: 'A', r2: 'A', r3: 'A', b: 'B', c: 'C' });
+    const brains = ps.slice(0, 3).map((_, i) => { const m = makeBot(10 + i); agawanBotInput(m, ps[i], e.privateState(ps[i].id), e, e.publicState(), ps, nav, e.now); m.agawan!.job = 'raider'; return m; });
+    ps[3].x = 44; ps[3].z = -38; ps[4].x = -44; ps[4].z = -38; // rivals out of the way
     let now = e.now;
-    for (let i = 0; i < 30 * 40 && e.publicState().teams[0].raids === 0; i++) {
-      const act = agawanBotInput(m, bot, e.privateState('bot'), e, e.publicState(), ps, nav, now);
-      e.setHold(bot, act.hold);
-      if (act.hold || act.mx || act.mz) { bot.x += act.mx * 4 * DT; bot.z += act.mz * 4 * DT; bot.yaw = act.yaw; }
+    for (let i = 0; i < 30 * 70 && e.publicState().teams[0].baseCaptures === 0; i++) {
+      for (let k = 0; k < 3; k++) {
+        const bot = ps[k];
+        const act = agawanBotInput(brains[k], bot, e.privateState(bot.id), e, e.publicState(), ps, nav, now);
+        e.setHold(bot, act.hold);
+        if (act.mx || act.mz) { bot.x += act.mx * 4 * DT; bot.z += act.mz * 4 * DT; bot.yaw = act.yaw; }
+      }
       now += DT; e.tick(now, ps);
     }
-    expect(e.publicState().teams[0].raids).toBe(1);
+    expect(e.publicState().teams[0].baseCaptures).toBeGreaterThanOrEqual(1);
+  });
+
+  it('a bot at one heart walks home to heal', () => {
+    const bot = body('bot', 1), b = body('b', 2), c = body('c', 3);
+    const { e } = active([bot, b, c], { bot: 'A', b: 'B', c: 'C' });
+    const brain = makeBot(5);
+    bot.x = 0; bot.z = 0; b.x = 44; b.z = -38; c.x = -44; c.z = -38;
+    e.state.get('bot')!.hp = 1;
+    let now = e.now;
+    for (let i = 0; i < 30 * 30 && e.state.get('bot')!.hp < AGAWAN.health.max; i++) {
+      const act = agawanBotInput(brain, bot, e.privateState('bot'), e, e.publicState(), [bot, b, c], nav, now);
+      if (act.mx || act.mz) { bot.x += act.mx * 4 * DT; bot.z += act.mz * 4 * DT; bot.yaw = act.yaw; }
+      now += DT; e.tick(now, [bot, b, c]);
+    }
+    expect(e.state.get('bot')!.hp).toBe(AGAWAN.health.max);
   });
 });

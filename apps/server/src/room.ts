@@ -13,7 +13,7 @@ import {
   type BotBrain, type ClientMessage, type GapRow, type MatchState, type Rect, type ResolvedObstacles, type RosterEntry, type RoundEvents, type RoundPlayer, type RoundState,
   type ServerMessage, type StageGeometry, type StartRequestOptions,
   AGAWAN_STAGE_ID, TeamBook, type TeamAction, type TeamResult,
-  AgawanEngine, agawanBotInput, REGISTERED_ORDER, MATCH_ORDER, type AgawanBody, type TeamSlot, type TeamStanding, type TeamStageResult,
+  AgawanEngine, agawanBotInput, REGISTERED_ORDER, MATCH_ORDER, STARTABLE_STAGES, resolveStageId, type AgawanBody, type TeamSlot, type TeamStanding, type TeamStageResult,
 } from '@cn-trials/shared';
 import type { Env } from './env.ts';
 
@@ -144,6 +144,9 @@ export class TrialRoom extends DurableObject<Env> {
         break;
       case 'respawn':
         if (this.engine.phase === 'lobby') this.respawn(p);
+        break;
+      case 'lobby':
+        this.setLobbyStage(p, msg.stage);
         break;
       case 'start':
         this.startMatch(p, msg.opts);
@@ -330,6 +333,7 @@ export class TrialRoom extends DurableObject<Env> {
       this.teams.reset();
       this.hostId = '';
       this.stopLoop();
+      this.lobbyStage = DEFAULT_STAGE_ID;
       this.loadStage(DEFAULT_STAGE_ID);
       this.match = null;
       this.matchRunning = false;
@@ -392,7 +396,7 @@ export class TrialRoom extends DurableObject<Env> {
     const ws = this.sockets.get(by.id);
     const refuse = (message: string) => { if (ws) send(ws, { t: 'error', code: 'team', message }); };
     if (this.engine.phase !== 'lobby' || this.teams.locked) return refuse('Teams are locked while the match is running');
-    const hostOnly = ['rename', 'captain', 'move', 'balance', 'autoCaptains'];
+    const hostOnly = ['rename', 'captain', 'move', 'balance', 'autoCaptains', 'mode', 'shuffle', 'recolor'];
     if (hostOnly.includes(msg.a) && by.id !== this.hostId) return refuse('Only the host can change that');
     const players = () => [...this.players.values()].filter((p) => !p.away).map((p) => ({ id: p.id, joinOrder: p.joinOrder, bot: !!p.bot }));
     let r: TeamResult;
@@ -404,6 +408,9 @@ export class TrialRoom extends DurableObject<Env> {
       case 'move': r = this.players.has(String(msg.id)) ? this.teams.move(msg.id, msg.slot) : { ok: false, reason: 'Unknown player' }; break;
       case 'balance': this.teams.balance(players()); r = { ok: true }; break;
       case 'autoCaptains': this.teams.autoCaptains(players()); r = { ok: true }; break;
+      case 'mode': r = this.teams.setMode(msg.mode, players()); break;
+      case 'shuffle': r = this.teams.shuffle(players()); break;
+      case 'recolor': r = this.teams.recolor(); break;
       default: return;
     }
     if (!r.ok) return refuse(r.reason);
@@ -448,6 +455,24 @@ export class TrialRoom extends DurableObject<Env> {
     return [...this.players.values()].map((p) => ({ id: p.id, name: p.name, spawn: p.spawn, ready: p.ready, colorway: p.colorway, ...(p.bot ? { bot: true } : {}), ...(p.away ? { away: true } : {}) }));
   }
 
+  /** The stage the lobby shows (decision 047): the host's pick from the main menu; Stage 01 until the host says. */
+  private lobbyStage: string = DEFAULT_STAGE_ID;
+
+  /**
+   * Host picks the lobby stage (owner, 26 Nov 2026: "when a player selected stage 2, we should be inside stage 2
+   * already"). Lobby only, startable stages only; everyone is moved to the new stage's spawns.
+   */
+  private setLobbyStage(by: Player, stage: unknown): void {
+    if (by.id !== this.hostId || this.engine.phase !== 'lobby' || this.matchRunning || typeof stage !== 'string') return;
+    const id = resolveStageId(stage);
+    if (!STARTABLE_STAGES.includes(id) || id === this.lobbyStage) return;
+    this.lobbyStage = id;
+    this.loadStage(id);
+    for (const p of this.players.values()) this.respawn(p);
+    console.log(JSON.stringify({ ev: 'lobby_stage', room: this.roomCode, stage: id }));
+    this.broadcastSnapshot();
+  }
+
   /** Loads one stage's geometry and obstacles into this room and gives it a fresh round engine (09 A1/A2). */
   private loadStage(stageId: string): void {
     const def = getStage(stageId);
@@ -478,6 +503,8 @@ export class TrialRoom extends DurableObject<Env> {
     if (this.engine.phase !== 'lobby') return;
     const order = this.orderFor(opts);
     if (this.matchNeedsTeams(order, opts?.startStage)) {
+      // Shuffle mode (decision 047): nobody has to appoint captains by hand; any team still without one gets one now.
+      if (this.teams.mode === 'shuffle') this.teams.autoCaptains([...this.players.values()].filter((p) => !p.away).map((p) => ({ id: p.id, joinOrder: p.joinOrder, bot: !!p.bot })));
       // Agawan Base needs three valid teams with a captain each before the match may start (handoff pack §6).
       const problems = this.teams.startProblems([...this.players.values()].filter((p) => !p.away).map((p) => p.id));
       if (problems.length) {
@@ -700,7 +727,12 @@ export class TrialRoom extends DurableObject<Env> {
     // yard collides; in a round only contestants still racing (finished, spotted and waiting players are out of play).
     const racing = e.phase === 'lobby' ? [...this.players.values()].filter((p) => p.status !== 'waiting')
       : e.phase === 'active' ? [...this.players.values()].filter((p) => p.status === 'active' && !h?.isHidden(p.id)) : [];
-    const knocks = racing.length > 1 ? resolvePlayerContacts(racing, this.elapsed, walls) : [];
+    // Teammates never knock each other over (decision 047): Agawan teams, and The Hunt's hunters or hiders.
+    const friendly = e.phase !== 'active' ? undefined
+      : ag ? (a: string, b: string) => { const ta = ag.teamOf(a); return !!ta && ta === ag.teamOf(b); }
+      : h ? (a: string, b: string) => h.isHunter(a) === h.isHunter(b)
+      : undefined;
+    const knocks = racing.length > 1 ? resolvePlayerContacts(racing, this.elapsed, walls, friendly) : [];
     const at = Math.round((this.elapsed - e.goTime) * 1000) / 1000;
     for (const id of moveEv.spotted) this.broadcast({ t: 'event', kind: 'spotted', id, at });
     for (const id of moveEv.finished) this.broadcast({ t: 'event', kind: 'finished', id, at });
@@ -833,8 +865,9 @@ export class TrialRoom extends DurableObject<Env> {
       this.matchRunning = false;
       for (const p of [...this.players.values()]) if (p.away) { this.players.delete(p.id); this.teams.remove(p.id); m?.markLeft(p.id); }
       this.teams.locked = false;
+      this.teams.recolor(); // every match gets new team colours (decision 047)
       this.broadcastTeams();
-      if (this.geo.stage !== DEFAULT_STAGE_ID) this.loadStage(DEFAULT_STAGE_ID); // the lobby is always the Stage 01 yard
+      if (this.geo.stage !== this.lobbyStage) this.loadStage(this.lobbyStage); // back to the stage the host picked
       for (const p of this.players.values()) this.respawn(p); // waiting players join in for the next match
       this.broadcast({ t: 'roster', roster: this.roster() });
     }

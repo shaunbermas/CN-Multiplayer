@@ -13,7 +13,7 @@ import { activeStage } from '../game/stage.ts';
 import { STAGE_SCENES } from '../stages/registry.ts';
 import { Brand, HowToPlay, SettingsPanel } from './Menu.tsx';
 import { useSettings } from './settings.ts';
-import { settings } from './settings.ts';
+import { settings, updateSettings } from './settings.ts';
 import { IconBars, IconCheck, IconFlag, IconGear, IconHome, IconMouse, IconPause, IconPin, IconPlay, IconRestart, IconRestartCcw, IconUsers, IconVolume, IconVolumeOff, IconX } from './icons.tsx';
 import { setMuted } from '../game/audio.ts';
 import { HuntBriefingRole, HuntPanel, HuntRoleChip, HuntTop, captureText } from './HuntHud.tsx';
@@ -39,13 +39,20 @@ const stageNoAt = (total: number, n: number) => pad2(stageNumber(stageAt(total, 
 const ordinal = (n: number) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] ?? 'th'}`;
 const fmtClock = (t: number) => { const c = Math.ceil(Math.max(0, t)); return `${pad2(Math.floor(c / 60))}:${pad2(c % 60)}`; };
 
-function startOptions() {
+/** The stage this player wants the match to start at: ?startStage=… (tests), else the main-menu pick. */
+function pickedStage(): string {
+  const q = new URLSearchParams(location.search).get('startStage');
+  return getStage(q ?? settings.startStage).id;
+}
+
+function startOptions(lobbyStage?: string) {
   // Obstacles are always on (decision 031). Test hooks: ?testSeed=…&testRound=…&testBriefing=…&testStages=…&obstacles=0
   // (the server honours these only in test mode).
   const q = new URLSearchParams(location.search);
   const test: Record<string, unknown> = q.get('obstacles') === '0' ? { obstacles: false } : {};
   // The stage picked on the main menu (decision 042). ?startStage=… overrides it (tests).
-  test.startStage = q.get('startStage') ?? settings.startStage;
+  // Decision 047: the lobby already shows the host's pick, so the match starts where everyone practised.
+  test.startStage = q.get('startStage') ?? lobbyStage ?? settings.startStage;
   if (q.get('testStages')) test.stages = Number(q.get('testStages'));
   if (q.get('testResults')) test.resultsS = Number(q.get('testResults'));
   if (!q.get('testSeed')) return test;
@@ -72,6 +79,15 @@ function Lobby({ room }: { room: TrialRoom }) {
   const free = MAX_PLAYERS - players.length;
   const [copied, setCopied] = useState('');
   const link = inviteLink(room.room);
+  const lobbyStage = getStage(r.stage || DEFAULT_STAGE_ID).id;
+  // Decision 047 (owner, 26 Nov 2026): the lobby is the stage the host picked on the main menu, not always Stage 01.
+  const isHost = room.isHost;
+  useEffect(() => {
+    if (!isHost || r.phase !== 'lobby') return;
+    const want = pickedStage();
+    if (STARTABLE_STAGES.includes(want) && want !== lobbyStage) room.setLobbyStage(want);
+  }, [isHost, r.phase]); // eslint-disable-line react-hooks/exhaustive-deps
+  const pickStage = (id: string) => { updateSettings({ startStage: id }); room.setLobbyStage(id); };
   const copy = async (text: string, what: string) => {
     try { await navigator.clipboard.writeText(text); setCopied(what); } catch { setCopied('select'); }
     setTimeout(() => setCopied(''), 2500);
@@ -109,6 +125,21 @@ function Lobby({ room }: { room: TrialRoom }) {
           </div>
           <span className="muted small" aria-live="polite">{copied === 'select' ? `Copy this link: ${link}` : copied ? `${copied === 'link' ? 'Invite link' : 'Code'} copied` : 'Friends open the link, pick a nickname and join.'}</span>
         </div>
+        <div className="lobby-stage" data-testid="lobby-stage">
+          <span className="eyebrow">{isHost ? 'Start at' : 'Starting at'}</span>
+          <div className="lobby-stage-row" role="radiogroup" aria-label="Stage the match starts at">
+            {STARTABLE_STAGES.map((id) => {
+              const st = getStage(id);
+              return (
+                <button key={id} role="radio" aria-checked={id === lobbyStage} disabled={!isHost && id !== lobbyStage}
+                  className={`lobby-stage-pick${id === lobbyStage ? ' on' : ''}`} data-testid={`lobby-stage-${pad2(st.number)}`}
+                  onClick={() => { if (isHost && id !== lobbyStage) pickStage(id); }}>
+                  <small>Stage {pad2(st.number)}</small><b>{st.name}</b>
+                </button>
+              );
+            })}
+          </div>
+        </div>
         <div>
           <span className="eyebrow">Players</span>
           <div className="count-big num" data-testid="players">{players.length}<small>/ {MAX_PLAYERS}</small></div>
@@ -116,7 +147,7 @@ function Lobby({ room }: { room: TrialRoom }) {
         </div>
         <div className="lobby-actions">
           {room.isHost
-            ? <button className="btn go big wide" data-testid="start" onClick={() => room.start(startOptions())}>Start game</button>
+            ? <button className="btn go big wide" data-testid="start" onClick={() => room.start(startOptions(lobbyStage))}>Start game</button>
             : <button className={`btn big wide${me?.ready ? ' on' : ''}`} onClick={() => room.setReady(!me?.ready)} data-testid="ready" aria-pressed={!!me?.ready}>{me?.ready ? '✓ Ready' : 'Ready'}</button>}
           {room.isHost && (
             <>
@@ -135,8 +166,8 @@ function Lobby({ room }: { room: TrialRoom }) {
         {me && <div className="my-contestant" data-testid="my-contestant" title="Colours are dealt at random and kept if you rejoin; nobody in the room shares yours">
           <Swatch colorway={me.colorway} />You are <b>{coat(me.colorway)?.displayName ?? 'a contestant'}</b></div>}
         <p className="lobby-hint">{room.isHost
-          ? `${getStage(settings.startStage).id !== DEFAULT_STAGE_ID && STARTABLE_STAGES.includes(getStage(settings.startStage).id) ? `Starts at Stage ${pad2(getStage(settings.startStage).number)} · ${getStage(settings.startStage).name} (picked on the main menu). ` : `${MATCH.stages} stages, starting with Red Light. `}Points add up across stages; most points wins. Walk around to practise.`
-          : 'Waiting for the host to start. Walk around to practise.'}</p>
+          ? `${lobbyStage !== DEFAULT_STAGE_ID ? `The match starts at Stage ${pad2(getStage(lobbyStage).number)} · ${getStage(lobbyStage).name}. ` : `${MATCH.stages} stages, starting with Red Light. `}Points add up across stages. Walk around this stage to practise.`
+          : 'Waiting for the host to start. Walk around this stage to practise.'}</p>
       </aside>
     </section>
   );
@@ -257,7 +288,7 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
       <div className="hud-top">
         <div className="hud-left">
           {r.phase === 'lobby'
-            ? <div className="glass stage-chip"><b>Lobby</b><i className="sep" /><span>Practice walk is open</span></div>
+            ? <div className="glass stage-chip"><b>Lobby</b><i className="sep" /><span>{noCourse ? `${stageNo} · ${stage.name}` : 'Practice walk is open'}</span></div>
             : <div className="glass stage-chip" data-testid="stage-chip"><b>{stageNo}{inMatch && <> / {ALL_STAGES}</>}</b><i className="sep" /><span>{stage.name}</span></div>}
           {isHunt && <HuntRoleChip room={room} />}
           {isAgawan && r.phase === 'active' && <AgawanTeamChip room={room} />}
@@ -382,17 +413,17 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
         : <StageResults room={room} remaining={remaining} onLeave={onLeave} />)}
 
       <div className="hud-lower">
-        {r.phase === 'lobby' && <div className="glass objective">{hud.status === 'finished' ? `Practice: finished in ${hud.finishTime.toFixed(2)} s` : 'Practice: walk to the finish line'}</div>}
+        {r.phase === 'lobby' && <div className="glass objective">{isAgawan ? 'Practice: explore the street and find the three bases' : isHunt ? 'Practice: explore the facility and its hiding places' : hud.status === 'finished' ? `Practice: finished in ${hud.finishTime.toFixed(2)} s` : 'Practice: walk to the finish line'}</div>}
       </div>
       <div className="glass hud-bottom">
-        <span className="hb-cell hb-dist num">{isAgawan && r.phase !== 'lobby' ? <>{room.agawan ? (room.teams?.teams.find((t) => t.slot === room.agawan!.team)?.name ?? `Team ${room.agawan.team}`) : 'Agawan Base'}</> : isHunt && r.phase !== 'lobby' ? <>{room.hunt?.role === 'hunter' ? 'Hunter' : room.hunt?.role === 'hider' ? 'Hider' : 'The Hunt'}</> : <><IconPin size={24} /><span><b>{hud.distance.toFixed(0)}</b> m to go</span></>}</span>
+        <span className="hb-cell hb-dist num">{isAgawan && r.phase !== 'lobby' ? <>{room.agawan ? (room.teams?.teams.find((t) => t.slot === room.agawan!.team)?.name ?? `Team ${room.agawan.team}`) : 'Agawan Base'}</> : isHunt && r.phase !== 'lobby' ? <>{room.hunt?.role === 'hunter' ? 'Hunter' : room.hunt?.role === 'hider' ? 'Hider' : 'The Hunt'}</> : noCourse ? <>{stage.name}</> : <><IconPin size={24} /><span><b>{hud.distance.toFixed(0)}</b> m to go</span></>}</span>
         <i className="sep" />
         <span className="hb-cell hb-keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><em>Move</em><span className="dot" aria-hidden="true">•</span><IconMouse size={26} /><em>Look</em>
-          {isAgawan && r.phase === 'active' && <em className="extra"><kbd>E</kbd> Tag / Rescue / Raid · <kbd>Tab</kbd> Team status</em>}
+          {isAgawan && r.phase === 'active' && <em className="extra"><kbd>E</kbd> Hit (tap) / Free (hold) · <kbd>Tab</kbd> Team status</em>}
           {isHunt && r.phase === 'active' && <em className="extra">{room.hunt?.role === 'hunter' ? 'Q pulse · hold E capture · Shift sprint' : 'E hide · Shift sprint · C crouch'}</em>}
           {me?.status === 'spotted' && <em className="extra">Tab switch</em>}{r.phase === 'lobby' && <em className="extra">R respawn</em>}<em className="extra">P pause</em></span>
         <i className="sep" />
-        {!(noCourse && r.phase !== 'lobby') && <><span className="hb-cell hb-finish"><IconFlag size={28} /><b>Finish</b></span><i className="sep" /></>}
+        {!noCourse && <><span className="hb-cell hb-finish"><IconFlag size={28} /><b>Finish</b></span><i className="sep" /></>}
         <span className="hb-cell hb-room">Room <b>{room.room.toUpperCase()}</b></span>
       </div>
 

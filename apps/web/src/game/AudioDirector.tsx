@@ -51,7 +51,8 @@ export function AudioDirector({ room }: { room: TrialRoom }) {
           if (e.at <= agSeen) continue;
           if (e.kind === 'tag') { if (e.id === room.id) sfx.agTagged(); else if (e.by === room.id) sfx.agTagMade(); else sfx.agTagOther(); }
           else if (e.kind === 'rescue') sfx.agRescue(e.id === room.id || e.by === room.id);
-          else if (e.kind === 'raid') sfx.agRaid(me && e.team === me.team ? 'ours' : me && e.base === me.team ? 'against' : 'other');
+          else if (e.kind === 'hit') { if (e.id === room.id) sfx.agTagOther(); else if (e.by === room.id) sfx.agTagMade(); }
+          else if (e.kind === 'base') sfx.agRaid(me && e.team === me.team ? 'ours' : me && (e.from === me.team || e.base === me.team) ? 'against' : 'other');
         }
         if (room.agawanFeed.length) agSeen = Math.max(agSeen, room.agawanFeed[room.agawanFeed.length - 1].at);
       } else if (r.phase === 'active' && r.hunt) {

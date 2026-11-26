@@ -40,7 +40,11 @@ export interface Knockdown {
  * down/immune timers; returns the knock-downs that happened this step. O(n²) over at most 30 bodies
  * (435 pair checks, a few microseconds), with a cheap square-distance reject first.
  */
-export function resolvePlayerContacts(bodies: CollisionBody[], now: number, walls: Rect[]): Knockdown[] {
+/**
+ * friendly(a, b): true for teammates (decision 047, owner 26 Nov 2026: in Agawan Base and The Hunt teammates never
+ * knock each other over; opponents still can). Teammates still bump and are pushed apart, they just never fall.
+ */
+export function resolvePlayerContacts(bodies: CollisionBody[], now: number, walls: Rect[], friendly?: (a: string, b: string) => boolean): Knockdown[] {
   const out: Knockdown[] = [];
   const d0 = COLLISION.contactDist;
   const d02 = d0 * d0;
@@ -60,7 +64,7 @@ export function resolvePlayerContacts(bodies: CollisionBody[], now: number, wall
       // Closing speed: how fast A moves toward B along the line between them (positive = approaching).
       const closing = (a.vx - b.vx) * nx + (a.vz - b.vz) * nz;
       const canFall = (p: CollisionBody) => p.downUntil <= now && p.immuneUntil <= now;
-      if (closing >= COLLISION.minImpactSpeed && canFall(a) && canFall(b)) {
+      if (closing >= COLLISION.minImpactSpeed && canFall(a) && canFall(b) && !friendly?.(a.id, b.id)) {
         const until = now + COLLISION.fallS + COLLISION.recoverS;
         for (const p of [a, b]) { p.downUntil = until; p.immuneUntil = until + COLLISION.immuneS; p.vx = 0; p.vz = 0; }
         out.push({ a: a.id, b: b.id, impact: Math.round(closing * 100) / 100, x: (a.x + b.x) / 2, z: (a.z + b.z) / 2 });

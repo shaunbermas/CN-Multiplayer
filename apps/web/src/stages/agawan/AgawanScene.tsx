@@ -1,14 +1,15 @@
 // Stage 02 · AGAWAN BASE scene module: a Philippine Christmas street at night (handoff pack 05 and the three
 // reference photos), built in code from the same layout the server simulates (packages/shared/src/agawan/layout.ts),
-// so what you see is exactly what collides. Team colours come from TEAMS.colors. See streetKit.ts for how the
+// so what you see is exactly what collides. Team colours come from the room (dealt per match, decision 047). See streetKit.ts for how the
 // street is put together in a handful of draw calls.
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import { AGAWAN, TEAMS, TEAM_SLOTS, getStage, type TeamSlot } from '@cn-trials/shared';
+import { AGAWAN, TEAM_SLOTS, getStage, type TeamSlot } from '@cn-trials/shared';
 import type { TrialRoom } from '../../net.ts';
 import { useQuality } from '../../game/quality.ts';
 import { buildStreet, starGeometry, type StreetBuild } from './streetKit.ts';
+import { colorOf, useTeamColors, type TeamColors } from '../../game/teamColors.ts';
 
 const def = getStage(AGAWAN.id);
 const layout = def.agawan!.layout;
@@ -28,9 +29,10 @@ const FOG = { color: '#1a1830', near: 38, far: 125 };
 export const POINT_MAX = { high: { bulb: 48, halo: 112 }, medium: { bulb: 40, halo: 84 }, low: { bulb: 32, halo: 60 } } as const;
 
 let cached: { key: string; k: StreetBuild } | null = null;
-function street(skyline: boolean): StreetBuild {
-  const key = skyline ? 'sky' : 'nosky';
-  if (!cached || cached.key !== key) cached = { key, k: buildStreet({ skyline }) };
+function street(skyline: boolean, colors: TeamColors): StreetBuild {
+  // Team colours are baked into the merged street mesh (arches, pen posts), so a new colour deal rebuilds it once.
+  const key = `${skyline ? 'sky' : 'nosky'}|${TEAM_SLOTS.map((t) => colors[t]).join(',')}`;
+  if (!cached || cached.key !== key) cached = { key, k: buildStreet({ skyline, colors }) };
   return cached.k;
 }
 
@@ -79,10 +81,10 @@ function radialTexture(): THREE.Texture {
 }
 
 /** The whole street: merged solids, merged self-lit surfaces, bulbs, glows, wires and warm light pools. */
-function Street() {
+function Street({ colors }: { colors: TeamColors }) {
   const tier = useQuality();
   const { size, camera, gl } = useThree();
-  const k = street(tier !== 'low');
+  const k = street(tier !== 'low', colors);
   const objs = useMemo(() => {
     const solid = new THREE.Mesh(k.solid.build(), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.82, metalness: 0.04 }));
     solid.name = 'S02A_STREET_SOLID';
@@ -192,8 +194,30 @@ function mergeAll(parts: THREE.BufferGeometry[]): THREE.BufferGeometry {
   return g;
 }
 
-/** Asphalt, base pads, raid rings and pen floors in team colours. */
-function Ground() {
+/** Asphalt, base pads, capture rings and pen floors. Pads and pens keep the home team's colour; the capture ring
+ *  takes the colour of whoever owns the base now, and a disc in the attacker's colour grows inside it as they take
+ *  it over (decision 047). */
+function Ground({ room, colors }: { room: TrialRoom; colors: TeamColors }) {
+  const rings = useRef<Partial<Record<TeamSlot, { ring: THREE.MeshBasicMaterial | null; fill: THREE.MeshBasicMaterial | null; cap: THREE.Mesh | null }>>>({});
+  const R = AGAWAN.base.zoneM;
+  useFrame(({ clock }) => {
+    const ag = room.round.agawan;
+    for (const s of TEAM_SLOTS) {
+      const m = rings.current[s];
+      if (!m) continue;
+      const b = ag?.bases.find((x) => x.slot === s);
+      const owner = b?.owner ?? s;
+      const contested = !!b && b.inside.length > 1;
+      m.ring?.color.set(colorOf(room, owner)).multiplyScalar(contested ? 0.75 + 0.35 * Math.sin(clock.elapsedTime * 10) : 1);
+      m.fill?.color.set(colorOf(room, owner));
+      if (m.cap) {
+        const p = b?.cap?.p ?? 0;
+        m.cap.visible = p > 0.01;
+        if (b?.cap) { m.cap.scale.setScalar(Math.max(0.01, p)); (m.cap.material as THREE.MeshBasicMaterial).color.set(colorOf(room, b.cap.team)); }
+      }
+    }
+  });
+  const slot = (s: TeamSlot) => (rings.current[s] ??= { ring: null, fill: null, cap: null });
   return (
     <group name="S02A_GROUND">
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.03, 0]}><planeGeometry args={[260, 240]} /><meshStandardMaterial color="#1d1c22" roughness={1} /></mesh>
@@ -205,19 +229,23 @@ function Ground() {
           <group key={s}>
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[(b.area.minX + b.area.maxX) / 2, 0.007, (b.area.minZ + b.area.maxZ) / 2]} name={`S02A_BASE_PAD_${s}`}>
               <planeGeometry args={[b.area.maxX - b.area.minX, b.area.maxZ - b.area.minZ]} />
-              <meshStandardMaterial color={TEAMS.colors[s]} transparent opacity={0.16} roughness={0.9} />
+              <meshStandardMaterial color={colors[s]} transparent opacity={0.16} roughness={0.9} />
             </mesh>
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[b.x, 0.009, b.z]} name={`S02A_RAID_ZONE_${s}`}>
-              <ringGeometry args={[AGAWAN.raid.radiusM - 0.18, AGAWAN.raid.radiusM, 64]} />
-              <meshBasicMaterial color={TEAMS.colors[s]} transparent opacity={0.85} toneMapped={false} />
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[b.x, 0.009, b.z]} name={`S02A_CAPTURE_ZONE_${s}`}>
+              <ringGeometry args={[R - 0.22, R, 64]} />
+              <meshBasicMaterial ref={(m) => { slot(s).ring = m; }} color={colors[s]} transparent opacity={0.9} toneMapped={false} />
             </mesh>
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[b.x, 0.008, b.z]}>
-              <circleGeometry args={[AGAWAN.raid.radiusM - 0.18, 64]} />
-              <meshBasicMaterial color={TEAMS.colors[s]} transparent opacity={0.1} toneMapped={false} depthWrite={false} />
+              <circleGeometry args={[R - 0.22, 64]} />
+              <meshBasicMaterial ref={(m) => { slot(s).fill = m; }} color={colors[s]} transparent opacity={0.12} toneMapped={false} depthWrite={false} />
+            </mesh>
+            <mesh ref={(m) => { slot(s).cap = m; }} visible={false} rotation={[-Math.PI / 2, 0, 0]} position={[b.x, 0.0095, b.z]} name={`S02A_CAPTURE_FILL_${s}`}>
+              <circleGeometry args={[R - 0.22, 64]} />
+              <meshBasicMaterial color="#ffffff" transparent opacity={0.38} toneMapped={false} depthWrite={false} />
             </mesh>
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[(pen.minX + pen.maxX) / 2, 0.008, (pen.minZ + pen.maxZ) / 2]} name={`S02A_PEN_FLOOR_${s}`}>
               <planeGeometry args={[pen.maxX - pen.minX, pen.maxZ - pen.minZ]} />
-              <meshStandardMaterial color={TEAMS.colors[s]} transparent opacity={0.26} roughness={0.9} />
+              <meshStandardMaterial color={colors[s]} transparent opacity={0.26} roughness={0.9} />
             </mesh>
           </group>
         );
@@ -226,11 +254,11 @@ function Ground() {
   );
 }
 
-function letterTexture(slot: TeamSlot): THREE.Texture {
+function letterTexture(slot: TeamSlot, color: string): THREE.Texture {
   const c = document.createElement('canvas');
   c.width = 256; c.height = 160;
   const g = c.getContext('2d')!;
-  g.fillStyle = TEAMS.colors[slot];
+  g.fillStyle = color;
   g.fillRect(0, 0, 256, 160);
   g.fillStyle = 'rgba(0,0,0,0.18)';
   g.fillRect(0, 128, 256, 32);
@@ -245,20 +273,22 @@ function letterTexture(slot: TeamSlot): THREE.Texture {
 
 const MARKER_STAR = starGeometry(0.75, 0.14);
 
-/** Base markers: a white post with the team's letter banner and a big team-colour parol on top. Both dim while
- *  YOUR team's raid cooldown on that base runs (you cannot raid it yet). */
-function Markers({ room }: { room: TrialRoom }) {
+/** Base markers: a white post with the base's letter banner (home colour) and a big parol on top in the colour of
+ *  the team that owns the base now. The parol flickers fast while someone is taking the base over. */
+function Markers({ room, colors }: { room: TrialRoom; colors: TeamColors }) {
   const mats = useRef<Record<string, { banner: THREE.MeshStandardMaterial | null; star: THREE.MeshBasicMaterial | null }>>({});
-  const textures = useMemo(() => Object.fromEntries(TEAM_SLOTS.map((s) => [s, letterTexture(s)])) as Record<TeamSlot, THREE.Texture>, []);
+  const textures = useMemo(() => Object.fromEntries(TEAM_SLOTS.map((s) => [s, letterTexture(s, colors[s])])) as Record<TeamSlot, THREE.Texture>, [colors]);
   useEffect(() => () => { for (const t of Object.values(textures)) t.dispose(); }, [textures]);
   useFrame(({ clock }) => {
-    const ag = room.round.agawan, mine = room.agawan?.team;
+    const ag = room.round.agawan;
     for (const s of TEAM_SLOTS) {
       const m = mats.current[s];
       if (!m) continue;
-      const cooling = !!(mine && s !== mine && ag?.raidCd[mine + s]);
-      if (m.banner) m.banner.emissiveIntensity = cooling ? 0.05 : 0.55;
-      if (m.star) m.star.color.set(TEAMS.colors[s]).multiplyScalar(cooling ? 0.3 : 1 + 0.15 * Math.sin(clock.elapsedTime * 2 + s.charCodeAt(0)));
+      const b = ag?.bases.find((x) => x.slot === s);
+      const owner = b?.owner ?? s;
+      const taking = !!b?.cap && b.cap.p > 0.01;
+      const t = clock.elapsedTime;
+      if (m.star) m.star.color.set(colorOf(room, owner)).multiplyScalar(taking ? 0.7 + 0.5 * Math.abs(Math.sin(t * 7)) : 1 + 0.15 * Math.sin(t * 2 + s.charCodeAt(0)));
     }
   });
   return (
@@ -275,7 +305,7 @@ function Markers({ room }: { room: TrialRoom }) {
               <meshStandardMaterial ref={(m) => { (mats.current[s] ??= { banner: null, star: null }).banner = m; }} map={textures[s]} emissiveMap={textures[s]} emissive="#ffffff" emissiveIntensity={0.55} side={THREE.DoubleSide} />
             </mesh>
             <mesh position={[0, 4.75, 0]} geometry={MARKER_STAR}>
-              <meshBasicMaterial ref={(m) => { (mats.current[s] ??= { banner: null, star: null }).star = m; }} color={TEAMS.colors[s]} toneMapped={false} />
+              <meshBasicMaterial ref={(m) => { (mats.current[s] ??= { banner: null, star: null }).star = m; }} color={colors[s]} toneMapped={false} />
             </mesh>
           </group>
         );
@@ -332,13 +362,14 @@ function Sky() {
 }
 
 export function AgawanScene({ room }: { room: TrialRoom }) {
+  const colors = useTeamColors(room);
   return (
     <group name="STG02_AGAWAN_BASE">
       <Sky />
-      <Ground />
-      <Street />
+      <Ground room={room} colors={colors} />
+      <Street colors={colors} />
       <Fences />
-      <Markers room={room} />
+      <Markers room={room} colors={colors} />
     </group>
   );
 }

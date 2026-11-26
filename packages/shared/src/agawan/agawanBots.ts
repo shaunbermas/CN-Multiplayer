@@ -1,13 +1,16 @@
-// Agawan Base bots (approved by the owner, 25 Nov 2026: bots tag, rescue and raid). They are ordinary room players
-// without a socket: each think the room asks for a move plus "hold E or not", and runs both through the same engine
-// checks, movement, walls and collisions as a human. Bots only use what a human player can know: positions of players
-// in line of sight (Agawan Base has no hiding), the public score board (prisoners, raid cooldowns) and their own state.
+// Agawan Base bots (approved by the owner, 25 Nov 2026: bots tag, rescue and raid; decision 047: hearts and base
+// takeover). They are ordinary room players without a socket: each think the room asks for a move plus "E down or
+// not", and runs both through the same engine checks, movement, walls and collisions as a human. Bots only use what a
+// human player can know: positions of players in line of sight (Agawan Base has no hiding), the public board (hearts,
+// prisoners, base owners and captures) and their own state.
 //
 // Each bot gets a seeded job for the stage:
-//   raider    walks to an enemy base whose raid cooldown (for its team) has run out and holds E on the marker
-//   defender  patrols near its own base and pen, and chases rivals who come close
-//   rover     rescues imprisoned teammates first, otherwise hunts rivals around the plaza
-// Everyone tags a rival who walks into reach, and anyone free rescues a teammate they pass.
+//   raider    gathers with its team's raiders near an enemy base, then rushes into its ring together and stands there
+//             until the base is theirs (more of them in the ring take it faster)
+//   defender  stays around its own base; steps into the ring when rivals are capturing it, and hits intruders
+//   rover     frees captured teammates first, otherwise hunts rivals around the plaza
+// Everyone: presses E on a rival in reach (a person tapping, not faster), goes home to heal when down to one heart,
+// and drops everything to take back its own base when it is lost.
 import { rng } from '../round.ts';
 import type { BotBrain } from '../bots.ts';
 import { TEAM_SLOTS, type TeamSlot } from '../teams.ts';
@@ -22,12 +25,15 @@ export interface AgawanBotMemory {
   rand: () => number;
   job: AgawanJob;
   path: [number, number][];
-  goal: { x: number; z: number; kind: 'patrol' | 'chase' | 'rescue' | 'raid'; target?: string } | null;
-  /** Raiders: since when they have been waiting outside a guarded base, and bases they gave up on (until when). */
+  goal: { x: number; z: number; kind: 'patrol' | 'chase' | 'rescue' | 'raid' | 'heal' | 'hold'; target?: string } | null;
+  /** Raiders: since when they have been waiting at the staging point. */
   waitSince: number;
-  skip: Partial<Record<TeamSlot, number>>;
   repathAt: number;
   bestD: number; bestAt: number; dodge: number; dodgeUntil: number;
+  /** Last E press (room time): bots tap at a person's pace. */
+  lastPress: number;
+  /** Where inside a ring this bot stands (so a crowd spreads out instead of piling on the marker). */
+  ringAngle: number;
 }
 
 export interface AgawanBotAction { mx: number; mz: number; yaw: number; hold: boolean }
@@ -38,7 +44,10 @@ function memory(b: BotBrain): AgawanBotMemory {
   if (!b.agawan) {
     const rand = rng(b.seed ^ 0x41474e42);
     const r = rand();
-    b.agawan = { rand, job: r < AGAWAN.bots.raiderShare ? 'raider' : r < AGAWAN.bots.raiderShare + AGAWAN.bots.defenderShare ? 'defender' : 'rover', path: [], goal: null, repathAt: 0, bestD: Infinity, bestAt: 0, dodge: 0, dodgeUntil: 0, waitSince: -1, skip: {} };
+    b.agawan = {
+      rand, job: r < AGAWAN.bots.raiderShare ? 'raider' : r < AGAWAN.bots.raiderShare + AGAWAN.bots.defenderShare ? 'defender' : 'rover',
+      path: [], goal: null, repathAt: 0, bestD: Infinity, bestAt: 0, dodge: 0, dodgeUntil: 0, waitSince: -1, lastPress: -Infinity, ringAngle: rand() * Math.PI * 2,
+    };
   }
   return b.agawan;
 }
@@ -51,6 +60,8 @@ export function agawanBotInput(b: BotBrain, me: AgawanBody, priv: AgawanPrivate 
   const layout = engine.layout;
   const team = priv.team;
   const protectedNow = priv.protectLeft > 0;
+  const owner = (s: TeamSlot) => pub.bases.find((x) => x.slot === s)?.owner ?? s;
+  const ring = AGAWAN.base.zoneM;
 
   // ---- what this bot can see: rivals in the open, in line of sight
   const rivals: { p: AgawanBody; d: number }[] = [];
@@ -62,13 +73,27 @@ export function agawanBotInput(b: BotBrain, me: AgawanBody, priv: AgawanPrivate 
   }
   rivals.sort((a, c) => a.d - c.d);
   const near = rivals[0];
+  const press = (): boolean => { if (now - m.lastPress >= AGAWAN.bots.pressS) { m.lastPress = now; return true; } return false; };
 
-  // ---- 1. a rival within reach: face them and hold E (the server checks reach, facing and sight)
-  if (near && near.d <= AGAWAN.tag.distM * 0.95 && priv.tagCd <= 0 && !protectedNow) {
-    return { mx: (near.p.x - me.x) * 0.25, mz: (near.p.z - me.z) * 0.25, yaw: yawTo(near.p.x - me.x, near.p.z - me.z), hold: true };
+  // ---- 1. a rival within reach: face them and tap E (the server checks reach, facing, sight and cooldown)
+  if (near && near.d <= AGAWAN.health.reachM * 0.9 && !protectedNow) {
+    return { mx: (near.p.x - me.x) * 0.2, mz: (near.p.z - me.z) * 0.2, yaw: yawTo(near.p.x - me.x, near.p.z - me.z), hold: press() };
   }
 
-  // ---- 2. a teammate in a pen nearby, or anywhere for a rover: go and free them
+  // ---- 2. down to one heart: back to the nearest base we own to heal (unless a teammate is about to be freed by us)
+  const owned = TEAM_SLOTS.filter((s) => owner(s) === team).map((s) => layout.bases[s]);
+  const inOwned = owned.some((bs) => Math.hypot(bs.x - me.x, bs.z - me.z) < AGAWAN.health.healRadiusM - 1);
+  if (priv.hp <= 1 || (m.goal?.kind === 'heal' && priv.hp < AGAWAN.health.max)) {
+    if (owned.length) {
+      if (inOwned) { m.goal = { x: me.x, z: me.z, kind: 'heal' }; m.path = []; return idle; }
+      const home = owned.map((bs) => ({ bs, d: Math.hypot(bs.x - me.x, bs.z - me.z) })).sort((a, c) => a.d - c.d)[0].bs;
+      if (m.goal?.kind !== 'heal' || m.path.length === 0) setGoal(m, me, nav, home.x, home.z, 'heal', now);
+      const threats = rivals.filter((r) => r.d < 6).map((r) => r.p);
+      return move(m, me, nav, now, b.pace, false, threats);
+    }
+  }
+
+  // ---- 3. a teammate in a pen nearby, or anywhere for a rover: go and free them (hold E at the fence)
   const captive = pub.prisoners
     .filter(([id, pen, left]) => pub.teamOf[id] === team && pen !== team && left > 2)
     .map(([id]) => players.find((p) => p.id === id))
@@ -81,44 +106,44 @@ export function agawanBotInput(b: BotBrain, me: AgawanBody, priv: AgawanPrivate 
     return move(m, me, nav, now, b.pace, false);
   }
 
-  // ---- 3. chase a rival close by (defenders: anyone near our base; raiders only when the rival is right on them)
-  const home = layout.bases[team];
-  // Raiders only tag what walks into reach; defenders only chase intruders near their base (they do not leave it).
+  // ---- 4. our own home base is lost, or being taken: everyone but busy rovers goes to stand in its ring
+  const homeSlot = team;
+  const homeBase = pub.bases.find((x) => x.slot === homeSlot)!;
+  const homePos = layout.bases[homeSlot];
+  const homeThreat = homeBase.owner !== team || (homeBase.cap && homeBase.cap.team !== team) || homeBase.inside.some((t) => t !== team);
+  const dHome = Math.hypot(homePos.x - me.x, homePos.z - me.z);
+  if (homeThreat && (m.job !== 'rover' || dHome < 25)) return standInRing(m, me, nav, now, b.pace, homeSlot, layout, rivals);
+
+  // ---- 5. chase a rival close by (defenders: intruders near our base; rovers: anyone close)
   const chaseLimit = m.job === 'rover' ? AGAWAN.bots.chaseM : 0;
-  const intruder = m.job === 'defender' ? rivals.find((r) => Math.hypot(r.p.x - home.x, r.p.z - home.z) < AGAWAN.bots.guardM) : undefined;
+  const intruder = m.job === 'defender' ? rivals.find((r) => Math.hypot(r.p.x - homePos.x, r.p.z - homePos.z) < AGAWAN.bots.guardM) : undefined;
   const prey = intruder ?? (near && near.d < chaseLimit ? near : undefined);
-  if (prey && priv.tagCd <= 0.3 && !protectedNow) {
+  if (prey && !protectedNow) {
     if (m.goal?.kind !== 'chase' || m.goal.target !== prey.p.id || now >= m.repathAt) setGoal(m, me, nav, prey.p.x, prey.p.z, 'chase', now, prey.p.id);
-    return move(m, me, nav, now, b.pace, prey.d < AGAWAN.tag.distM + 0.8);
+    return move(m, me, nav, now, b.pace, false);
   }
 
-  // ---- 4. raiders: the whole team's raiders pick the same enemy base (one whose cooldown for our team is over), gather
-  // at a staging point short of it, and rush together once enough of them are there: a defender can tag only one at a
-  // time, so a wave gets someone through the 1.5 s hold. A raider already in the zone keeps holding.
+  // ---- 6. raiders: the team's raiders pick the same base we do not own, gather at a staging point short of it, and
+  // rush together once enough of them are there; in the ring they spread out and stand until the base is ours.
   if (m.job === 'raider') {
-    const open = TEAM_SLOTS.filter((s) => s !== team && !pub.raidCd[team + s]);
-    if (open.length) {
-      // Same choice for every raider of the team: it changes every 45 s so waves alternate between bases.
-      const wave = Math.floor(now / 45) + TEAM_SLOTS.indexOf(team);
-      const target = open[wave % open.length];
+    const targets = TEAM_SLOTS.filter((s) => owner(s) !== team);
+    if (targets.length) {
+      const wave = Math.floor(now / 50) + TEAM_SLOTS.indexOf(team);
+      const target = targets[wave % targets.length];
       const base = layout.bases[target];
       const d = Math.hypot(base.x - me.x, base.z - me.z);
-      if (d <= AGAWAN.raid.radiusM * 0.7 && !protectedNow) return { mx: 0, mz: 0, yaw: yawTo(base.x - me.x, base.z - me.z), hold: true };
+      const capNow = pub.bases.find((x) => x.slot === target)?.cap;
+      const ours = capNow?.team === team && capNow.p > 0;
+      if (d <= ring + 4 || ours) return standInRing(m, me, nav, now, b.pace, target, layout, rivals);
       const stage = stagingPoint(layout, target, (Math.floor(wave / 2) % 2) * 2 - 1);
       const mates = players.filter((o) => o.id !== me.id && pub.teamOf[o.id] === team && o.status === 'active'
         && Math.hypot(o.x - stage.x, o.z - stage.z) < 6).length;
       const atStage = Math.hypot(stage.x - me.x, stage.z - me.z) < 5;
       if (atStage && m.waitSince < 0) m.waitSince = now;
-      // Rush when two teammates are with us, after 7 s of waiting, or once we are already committed past the staging point.
-      const rushing = m.goal?.kind === 'raid' && m.goal.target === target && (m.goal.x === base.x && m.goal.z === base.z);
-      if (rushing || (atStage && (mates >= 2 || now - m.waitSince > 7))) {
+      const rushing = m.goal?.kind === 'hold' && m.goal.target === target;
+      if (rushing || (atStage && (mates >= 2 || now - m.waitSince > 6))) {
         m.waitSince = -1;
-        if (!rushing) setGoal(m, me, nav, base.x, base.z, 'raid', now, target);
-        // Close to the marker, take on a defender who is right there (a tagged defender leaves the base open).
-        const guard = d < 7 && near && near.d < 3 && priv.tagCd <= 0 && !protectedNow ? near : undefined;
-        if (guard) { setGoal(m, me, nav, guard.p.x, guard.p.z, 'chase', now, guard.p.id); return move(m, me, nav, now, b.pace, guard.d < AGAWAN.tag.distM + 0.8); }
-        const threats = d > AGAWAN.raid.radiusM + 2 ? rivals.filter((r) => r.d < 5).map((r) => r.p) : [];
-        return move(m, me, nav, now, b.pace, false, threats);
+        return standInRing(m, me, nav, now, b.pace, target, layout, rivals);
       }
       if (atStage) return { mx: 0, mz: 0, yaw: yawTo(base.x - me.x, base.z - me.z), hold: false };
       if (m.goal?.kind !== 'raid' || m.goal.target !== target || m.goal.x !== stage.x) setGoal(m, me, nav, stage.x, stage.z, 'raid', now, target);
@@ -127,13 +152,13 @@ export function agawanBotInput(b: BotBrain, me: AgawanBody, priv: AgawanPrivate 
     }
   }
 
-  // ---- 5. patrol: defenders around their base and pen, everyone else around the plaza and the streets
+  // ---- 7. patrol: defenders around their base and pen, everyone else around the plaza and the streets
   if (!m.goal || m.goal.kind !== 'patrol' || (m.path.length === 0 && now >= m.repathAt)) {
     let x: number, z: number;
     if (m.job === 'defender') {
       const pen = layout.pens[team].area;
-      const anchor = m.rand() < 0.5 ? home : { x: (pen.minX + pen.maxX) / 2, z: (pen.minZ + pen.maxZ) / 2 };
-      x = anchor.x + (m.rand() * 2 - 1) * 7; z = anchor.z + (m.rand() * 2 - 1) * 7;
+      const anchor = m.rand() < 0.6 ? homePos : { x: (pen.minX + pen.maxX) / 2, z: (pen.minZ + pen.maxZ) / 2 };
+      x = anchor.x + (m.rand() * 2 - 1) * 6; z = anchor.z + (m.rand() * 2 - 1) * 6;
     } else {
       const r = layout.routes[Math.floor(m.rand() * layout.routes.length)];
       const pt = r.points[1 + Math.floor(m.rand() * (r.points.length - 2))];
@@ -143,6 +168,22 @@ export function agawanBotInput(b: BotBrain, me: AgawanBody, priv: AgawanPrivate 
     m.repathAt = now + 4 + m.rand() * 4;
   }
   return move(m, me, nav, now, b.pace * 0.85, false);
+}
+
+/** Walk into a base's ring and stand there (each bot at its own spot, so a group spreads out inside the ring). */
+function standInRing(m: AgawanBotMemory, me: AgawanBody, nav: NavGrid, now: number, pace: number, slot: TeamSlot, layout: AgawanEngine['layout'], rivals: { p: AgawanBody; d: number }[]): AgawanBotAction {
+  const base = layout.bases[slot];
+  const r = AGAWAN.base.zoneM * 0.55;
+  const spot = { x: base.x + Math.cos(m.ringAngle) * r, z: base.z + Math.sin(m.ringAngle) * r };
+  const d = Math.hypot(spot.x - me.x, spot.z - me.z);
+  if (Math.hypot(base.x - me.x, base.z - me.z) <= AGAWAN.base.zoneM * 0.85 && d < 1.2) {
+    const look = rivals[0]?.p ?? base;
+    m.goal = { x: spot.x, z: spot.z, kind: 'hold', target: slot }; m.path = [];
+    return { mx: 0, mz: 0, yaw: yawTo(look.x - me.x, look.z - me.z), hold: false };
+  }
+  if (m.goal?.kind !== 'hold' || m.goal.target !== slot || m.path.length === 0) setGoal(m, me, nav, spot.x, spot.z, 'hold', now, slot);
+  if (!m.goal) return { mx: (spot.x - me.x) / Math.max(d, 0.01), mz: (spot.z - me.z) / Math.max(d, 0.01), yaw: yawTo(spot.x - me.x, spot.z - me.z), hold: false };
+  return move(m, me, nav, now, pace, false);
 }
 
 /** Where a team's raiders gather before rushing a base: 11 m from the marker, off to one side of the line from the

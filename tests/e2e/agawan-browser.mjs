@@ -31,7 +31,7 @@ try {
   await page.goto(`http://127.0.0.1:${PORT}/?name=Tester&autojoin=1&quality=low&teams=1&startStage=STAGE_02_AGAWAN_BASE&testSeed=11&testRound=${ROUND_S}&testBriefing=1&testResults=60`);
   await page.waitForSelector('[data-testid=teams]', { timeout: 60_000 });
   for (let i = 0; i < 2; i++) { await page.click('[data-testid=add-bots]'); await sleep(400); }
-  await page.click('[data-testid=team-auto-captains]');
+  // Shuffle mode (the default, decision 047) picks captains at start; nothing to click.
   await sleep(600);
   await page.click('[data-testid=start]');
   await page.waitForSelector('[data-testid=agawan-top]', { timeout: 60_000 });

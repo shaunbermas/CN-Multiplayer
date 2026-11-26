@@ -534,7 +534,7 @@ function stall(k: StreetBuild, cx: number, cz: number, sx: number, sz: number, a
 // Base surroundings: two posts behind each base carrying a swag of team-coloured fabric with lights (concept art),
 // pen posts and rails, kerbs and road paint.
 
-function bases(k: StreetBuild): void {
+function bases(k: StreetBuild, colors: Record<TeamSlot, string>): void {
   for (const s of TEAM_SLOTS) {
     const b = layout.bases[s];
     const l = Math.hypot(b.x, b.z), ox = b.x / l, oz = b.z / l; // outward
@@ -544,7 +544,7 @@ function bases(k: StreetBuild): void {
     const back = -5, half = 6.5, top = 6.0;
     const p1 = new THREE.Vector3(b.x + ox * back + px * half, 0, b.z + oz * back + pz * half);
     const p2 = new THREE.Vector3(b.x + ox * back - px * half, 0, b.z + oz * back - pz * half);
-    const team = TEAMS.colors[s];
+    const team = colors[s];
     for (const p of [p1, p2]) {
       if (insideSolid(p.x, p.z)) continue;
       k.solid.box(p.x, top / 2, p.z, 0.4, top, 0.4, '#d9d2c2');
@@ -576,7 +576,7 @@ function bases(k: StreetBuild): void {
     for (let i = 0; i <= n; i++) {
       const t = i / n;
       const x = alongX ? w.minX + sx * t : (w.minX + w.maxX) / 2, z = alongX ? (w.minZ + w.maxZ) / 2 : w.minZ + sz * t;
-      k.solid.box(x, 0.8, z, 0.09, 1.6, 0.09, i === 0 || i === n ? TEAMS.colors[slot] : '#9aa0a6');
+      k.solid.box(x, 0.8, z, 0.09, 1.6, 0.09, i === 0 || i === n ? colors[slot] : '#9aa0a6');
     }
     k.solid.box((w.minX + w.maxX) / 2, 1.6, (w.minZ + w.maxZ) / 2, alongX ? sx : 0.07, 0.06, alongX ? 0.07 : sz, '#b0b5ba');
   }
@@ -629,12 +629,12 @@ function skyline(k: StreetBuild, rand: () => number): void {
 }
 
 /** Builds everything once (deterministic). */
-export function buildStreet(opts: { skyline: boolean }): StreetBuild {
+export function buildStreet(opts: { skyline: boolean; colors?: Record<TeamSlot, string> }): StreetBuild {
   const rand = rng(0x5ea50202);
   const k: StreetBuild = { solid: new Kit(), glow: new Kit(), bulbs: new Dots(), halos: new Dots(), wires: [], pools: [] };
   houses(k, rand);
   props(k, rand);
-  bases(k);
+  bases(k, opts.colors ?? TEAMS.colors);
   roadPaint(k);
   plaza(k, rand);
   overhead(k, rand);
