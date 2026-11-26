@@ -33,6 +33,8 @@
     "test:teams": "tsx tests/integration/teams.mjs",
     "test:agawan": "tsx tests/integration/agawan.mjs",
     "test:e2e:agawan": "tsx tests/e2e/agawan-browser.mjs",
+    "test:e2e:switch": "tsx tests/e2e/stage-switch.mjs",
+    "test:e2e:ceremony": "tsx tests/e2e/ceremony.mjs",
     "test:perf": "tsx tests/e2e/stage-perf.mjs"
   },
   "devDependencies": {

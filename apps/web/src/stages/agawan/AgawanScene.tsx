@@ -22,6 +22,10 @@ export const agawanAssets = {
   walls: layout.walls.length,
   drawCalls: 0,
   parts: { solid: 0, glow: 0, bulbs: 0, halos: 0, wires: 0, pools: 0 },
+  /** Vertices in the street meshes of the current mount (tests: a stage switch must not leave them empty). */
+  verts: { solid: 0, glow: 0 },
+  /** How many times the street has mounted since the page loaded. */
+  mounts: 0,
 };
 
 const FOG = { color: '#1a1830', near: 38, far: 125 };
@@ -112,6 +116,8 @@ function Street({ colors }: { colors: TeamColors }) {
     pools.computeBoundingSphere();
     pools.renderOrder = 1;
     agawanAssets.parts = { solid: k.solid.count, glow: k.glow.count, bulbs: k.bulbs.size.length, halos: k.halos.size.length, wires: k.wires.length / 6, pools: k.pools.length };
+    agawanAssets.verts = { solid: solid.geometry.getAttribute('position')?.count ?? 0, glow: glow.geometry.getAttribute('position')?.count ?? 0 };
+    agawanAssets.mounts++;
     return { solid, glow, bulbs, halos, wires, pools, tex };
   }, [k]);
   useEffect(() => () => {

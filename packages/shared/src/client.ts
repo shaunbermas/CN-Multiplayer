@@ -274,6 +274,8 @@ export class RoomClient {
   /** Team setup (v9): pick a team, nominate yourself; host: rename, appoint a captain, move, auto-balance, auto-pick captains. */
   /** v12 (decision 047): host picks shuffle or manual teams, reshuffles, or deals new team colours. */
   setTeamMode(mode: 'shuffle' | 'manual'): void { this.send({ t: 'team', a: 'mode', mode }); }
+  /** Host: play Agawan Base with 2 or 3 teams (decision 049). */
+  setTeamCount(count: 2 | 3): void { this.send({ t: 'team', a: 'count', count }); }
   shuffleTeams(): void { this.send({ t: 'team', a: 'shuffle' }); }
   recolorTeams(): void { this.send({ t: 'team', a: 'recolor' }); }
   joinTeam(slot: TeamSlot): void { this.send({ t: 'team', a: 'join', slot }); }

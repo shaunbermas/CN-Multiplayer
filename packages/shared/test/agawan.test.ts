@@ -2,7 +2,7 @@
 // 03_STAGE_02_TEST_MATRIX). Pure engine tests: no room, no network.
 import { describe, expect, it } from 'vitest';
 import { simulateAgawan } from './agawanSim.ts';
-import { AGAWAN, AgawanEngine, getStage, findPath, newRoundPlayer, lineOfSight, agawanBotInput, makeBot, type AgawanBody, type TeamSlot } from '../src/index.ts';
+import { AGAWAN, AgawanEngine, playerPoints, getStage, findPath, newRoundPlayer, lineOfSight, agawanBotInput, makeBot, type AgawanBody, type TeamSlot } from '../src/index.ts';
 
 const def = getStage(AGAWAN.id);
 const layout = def.agawan!.layout;
@@ -14,7 +14,7 @@ function body(id: string, n: number, x = 0, z = 0, yaw = 0): AgawanBody {
 }
 
 /** An engine in its active phase with the given players and teams. */
-function active(players: AgawanBody[], teams: Record<string, TeamSlot>, opts: { roundS?: number } = {}) {
+function active(players: AgawanBody[], teams: Record<string, TeamSlot>, opts: { roundS?: number; teamCount?: 2 | 3 } = {}) {
   const e = new AgawanEngine(layout);
   e.start(players, { seed: 7, briefingS: 0, resultsS: 2, teams, ...opts });
   let now = 0;
@@ -191,20 +191,18 @@ describe('prison, rescue, release and healing', () => {
     for (let i = 0; i < AGAWAN.health.max && !e.isImprisoned(b.id); i++) { if (!e.isImprisoned(b.id)) { const bx = b.x, bz = b.z; face(a, { ...b, x: bx, z: bz }); press(e, a, run); } }
   }
 
-  it('releases a prisoner after 15 s at their own base with 1 heart and 2 s of protection', () => {
+  it('a captured player stays in the pen with no timer until the stage ends (decision 049)', () => {
     const a = body('a', 1), b = body('b', 2), c = body('c', 3);
     const { e, run } = active([a, b, c], { a: 'A', b: 'B', c: 'C' });
     b.x = 0; b.z = 0;
     capture(e, a, b, run);
     expect(e.isImprisoned('b')).toBe(true);
-    run(AGAWAN.prison.maxS - 0.5);
+    a.x = -40; a.z = -40;
+    run(120);
     expect(e.isImprisoned('b')).toBe(true);
-    run(0.6);
-    expect(e.isImprisoned('b')).toBe(false);
-    expect(b.status).toBe('active');
-    expect(e.state.get('b')!.hp).toBe(AGAWAN.health.afterRelease);
-    expect(Math.hypot(b.x - layout.bases.B.x, b.z - layout.bases.B.z)).toBeLessThan(12);
-    expect(e.publicState().protected).toContain('b');
+    expect(b.status).toBe('captured');
+    expect(e.privateState('b')!.heldS).toBeGreaterThan(100);
+    expect(e.drainEvents().map((x) => x.kind as string)).not.toContain('release');
   });
 
   it('hearts do not come back in the street, only in a base the team owns', () => {
@@ -237,17 +235,21 @@ describe('prison, rescue, release and healing', () => {
     expect(e.publicState().teams[1].score).toBe(AGAWAN.points.rescue);
   });
 
-  it('rescue and automatic release racing: exactly one wins and the slot is freed once', () => {
+  it('a rescue sends the prisoner home with 1 heart and 2 s of protection, and frees the slot once', () => {
     const a = body('a', 1), b = body('b', 2), mate = body('m', 3), c = body('c', 4);
     const { e, run } = active([a, b, mate, c], { a: 'A', b: 'B', m: 'B', c: 'C' });
     b.x = 0; b.z = 0; mate.x = 40; mate.z = 40;
     capture(e, a, b, run);
     a.x = -40; a.z = -40;
-    run(AGAWAN.prison.maxS - 1.0);
+    run(30);
+    expect(e.isImprisoned('b')).toBe(true);
     mate.x = b.x; mate.z = b.z + 1.2;
     e.setHold(mate, true);
     run(1.5);
     expect(e.isImprisoned('b')).toBe(false);
+    expect(b.status).toBe('active');
+    expect(e.state.get('b')!.hp).toBe(AGAWAN.health.afterRelease);
+    expect(Math.hypot(b.x - layout.bases.B.x, b.z - layout.bases.B.z)).toBeLessThan(12);
     expect(e.occupancy.get('A')!.filter(Boolean)).toHaveLength(0);
   });
 
@@ -259,7 +261,7 @@ describe('prison, rescue, release and healing', () => {
     const a = ps[0];
     for (let i = 1; i < 21; i++) {
       const v = ps[i]; v.x = 0; v.z = 0;
-      e.state.get(v.id)!.hp = 1; // one tap each, so all 20 are inside the pen before the 15 s release
+      e.state.get(v.id)!.hp = 1; // one tap each, to keep the test short
       for (let k = 0; k < AGAWAN.health.max && !e.isImprisoned(v.id); k++) { face(a, v); press(e, a, run); }
       expect(e.isImprisoned(v.id)).toBe(true);
     }
@@ -418,7 +420,39 @@ describe('bots', () => {
       const r = simulateAgawan(seed, AGAWAN.matchS);
       expect(r.counts.base, `seed ${seed}`).toBeGreaterThanOrEqual(2);
       expect(r.counts.tag, `seed ${seed}`).toBeGreaterThanOrEqual(20);
-      expect(r.counts.rescue + r.counts.release, `seed ${seed}`).toBeGreaterThan(0);
+      expect(r.counts.rescue, `seed ${seed}`).toBeGreaterThan(0);
     }
   }, 60_000);
+});
+
+describe('Agawan Base with 2 teams (decision 049)', () => {
+  it('plays only teams A and B; base C is closed and cannot be taken', () => {
+    const ps = Array.from({ length: 4 }, (_, i) => body(`p${i}`, i + 1, 40, 40));
+    const { e, run } = active(ps, { p0: 'A', p1: 'A', p2: 'B', p3: 'B' }, { teamCount: 2 });
+    const pub = e.publicState();
+    expect(pub.teams.map((t) => t.slot)).toEqual(['A', 'B']);
+    expect(pub.bases.map((b) => b.slot)).toEqual(['A', 'B']);
+    inRing(ps[0], 'C', 0); inRing(ps[1], 'C', 2);
+    run(AGAWAN.base.soloS + 2);
+    expect(e.publicState().bases.map((b) => b.slot)).toEqual(['A', 'B']);
+    expect(e.publicState().teams[0].baseCaptures).toBe(0);
+  });
+
+  it('a player sent in with team C joins A or B instead', () => {
+    const ps = Array.from({ length: 3 }, (_, i) => body(`p${i}`, i + 1, 40, 40));
+    const { e } = active(ps, { p0: 'A', p1: 'B', p2: 'C' }, { teamCount: 2 });
+    expect(['A', 'B']).toContain(e.teamOf('p2'));
+  });
+
+  it('the winners score 2 and the other team 0', () => {
+    expect(playerPoints(1, 2)).toBe(2);
+    expect(playerPoints(2, 2)).toBe(0);
+    expect([1, 2, 3].map((p) => playerPoints(p, 3))).toEqual([2, 1, 0]);
+  });
+
+  it('a whole 2-team match plays out with captures and base takeovers', () => {
+    const r = simulateAgawan(2026, 120, 12, undefined, 2);
+    expect(r.counts.tag).toBeGreaterThan(5);
+    expect(r.teams.map((t) => t.slot)).toEqual(['A', 'B']);
+  });
 });

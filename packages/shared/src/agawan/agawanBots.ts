@@ -13,7 +13,7 @@
 // and drops everything to take back its own base when it is lost.
 import { rng } from '../round.ts';
 import type { BotBrain } from '../bots.ts';
-import { TEAM_SLOTS, type TeamSlot } from '../teams.ts';
+import type { TeamSlot } from '../teams.ts';
 import { findPath, type NavGrid } from '../hunt/nav.ts';
 import { lineOfSight } from '../hunt/los.ts';
 import { AGAWAN } from './config.ts';
@@ -73,6 +73,8 @@ export function agawanBotInput(b: BotBrain, me: AgawanBody, priv: AgawanPrivate 
   }
   const protectedNow = priv.protectLeft > 0;
   const owner = (s: TeamSlot) => pub.bases.find((x) => x.slot === s)?.owner ?? s;
+  // Bases in play (decision 049: with 2 teams, base C is closed).
+  const SLOTS = pub.bases.map((b) => b.slot);
   const ring = AGAWAN.base.zoneM;
 
   // ---- what this bot can see: rivals in the open, in line of sight
@@ -93,7 +95,7 @@ export function agawanBotInput(b: BotBrain, me: AgawanBody, priv: AgawanPrivate 
   }
 
   // ---- 2. down to one heart: back to the nearest base we own to heal (unless a teammate is about to be freed by us)
-  const owned = TEAM_SLOTS.filter((s) => owner(s) === team).map((s) => layout.bases[s]);
+  const owned = SLOTS.filter((s) => owner(s) === team).map((s) => layout.bases[s]);
   const inOwned = owned.some((bs) => Math.hypot(bs.x - me.x, bs.z - me.z) < AGAWAN.health.healRadiusM - 1);
   // A raider standing in an enemy ring keeps taking it while no rival is close (a person would not walk away from a
   // half-taken base to heal); it only runs home once someone comes for it.
@@ -144,9 +146,9 @@ export function agawanBotInput(b: BotBrain, me: AgawanBody, priv: AgawanPrivate 
   // ---- 6. raiders: the team's raiders pick the same base we do not own, gather at a staging point short of it, and
   // rush together once enough of them are there; in the ring they spread out and stand until the base is ours.
   if (m.job === 'raider') {
-    const targets = TEAM_SLOTS.filter((s) => owner(s) !== team);
+    const targets = SLOTS.filter((s) => owner(s) !== team);
     if (targets.length) {
-      const wave = Math.floor(now / 50) + TEAM_SLOTS.indexOf(team);
+      const wave = Math.floor(now / 50) + SLOTS.indexOf(team);
       // Finish what we started: a base where our team already has capture progress comes before the wave's pick.
       const started = targets.find((s) => { const c = pub.bases.find((x) => x.slot === s)?.cap; return c?.team === team && c.p > 0.05; });
       const target = started ?? targets[wave % targets.length];

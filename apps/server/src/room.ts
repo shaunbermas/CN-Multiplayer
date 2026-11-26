@@ -398,7 +398,7 @@ export class TrialRoom extends DurableObject<Env> {
     const ws = this.sockets.get(by.id);
     const refuse = (message: string) => { if (ws) send(ws, { t: 'error', code: 'team', message }); };
     if (this.engine.phase !== 'lobby' || this.teams.locked) return refuse('Teams are locked while the match is running');
-    const hostOnly = ['rename', 'captain', 'move', 'balance', 'autoCaptains', 'mode', 'shuffle', 'recolor'];
+    const hostOnly = ['rename', 'captain', 'move', 'balance', 'autoCaptains', 'mode', 'count', 'shuffle', 'recolor'];
     if (hostOnly.includes(msg.a) && by.id !== this.hostId) return refuse('Only the host can change that');
     const players = () => [...this.players.values()].filter((p) => !p.away).map((p) => ({ id: p.id, joinOrder: p.joinOrder, bot: !!p.bot }));
     let r: TeamResult;
@@ -411,6 +411,7 @@ export class TrialRoom extends DurableObject<Env> {
       case 'balance': this.teams.balance(players()); r = { ok: true }; break;
       case 'autoCaptains': this.teams.autoCaptains(players()); r = { ok: true }; break;
       case 'mode': r = this.teams.setMode(msg.mode, players()); break;
+      case 'count': r = this.teams.setCount(msg.count, players()); break;
       case 'shuffle': r = this.teams.shuffle(players()); break;
       case 'recolor': r = this.teams.recolor(); break;
       default: return;
@@ -486,7 +487,7 @@ export class TrialRoom extends DurableObject<Env> {
   private matchState(): MatchState {
     const m = this.match;
     if (!m) return { stage: 0, total: 0, final: false };
-    return { stage: m.index + 1, total: m.total, final: m.isFinal };
+    return { stage: m.index + 1, total: m.total, final: m.isFinal, champion: m.fullRun };
   }
 
   /** Host starts a match: every stage in MATCH order, points accumulated, everyone plays every stage. */
@@ -575,7 +576,9 @@ export class TrialRoom extends DurableObject<Env> {
     // A later stage keeps the short briefing only when its rules were already explained (a replay of Stage 01).
     const seenRules = m.order.slice(0, m.index).includes(m.stageId);
     const briefingS = test && typeof opts?.briefingS === 'number' ? Math.max(0, Math.min(15, opts.briefingS)) : (seenRules ? MATCH.nextBriefingS : undefined);
-    const resultsS = test && typeof opts?.resultsS === 'number' ? Math.max(1, Math.min(60, opts.resultsS)) : (m.isFinal ? MATCH.finalResultsS : MATCH.stageResultsS);
+    // The winner ceremony after a full match (decision 049) always gets its full length, test rooms included.
+    const resultsS = m.isFinal && m.fullRun ? MATCH.championResultsS
+      : test && typeof opts?.resultsS === 'number' ? Math.max(1, Math.min(60, opts.resultsS)) : (m.isFinal ? MATCH.finalResultsS : MATCH.stageResultsS);
     this.loadStage(m.stageId);
     const players = [...this.players.values()];
     for (const p of players) {
@@ -600,7 +603,7 @@ export class TrialRoom extends DurableObject<Env> {
     // The roster this stage is scored against for the team championship (everyone it starts with).
     const members = this.teams.view().members;
     this.stageRoster = Object.fromEntries(players.filter((p) => members[p.id]).map((p) => [p.id, members[p.id]]));
-    this.engine.start(players, { seed, roundS, briefingS, resultsS, mode: 'standup', obstacles, teams: this.teams.view().members });
+    this.engine.start(players, { seed, roundS, briefingS, resultsS, mode: 'standup', obstacles, teams: this.teams.view().members, teamCount: this.teams.count });
     for (const p of players) p.yaw = 0;
     console.log(JSON.stringify({ ev: 'stage_start', room: this.roomCode, round: this.roundId, stage: this.geo.stage, match: this.matchState(), seed, players: players.length, bots: this.botCount(),
       schedule: this.engine.schedule.slice(0, 12).map((s) => [s.signal[0], s.start, s.end]) }));

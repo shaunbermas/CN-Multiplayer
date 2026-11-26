@@ -35,6 +35,7 @@ export const ROUND = {
   // Match flow (match.ts reads these): results between stages, the final leaderboard, later briefings.
   stageResultsS: 9,     // host can skip                                 [new]
   finalResultsS: 16,    // then everyone returns to the lobby            [new]
+  championResultsS: 35, // winner ceremony after a full 3-stage match (decision 049)
   nextBriefingS: 4,     // stage 2 onward (rules already known, skippable) [new]
 } as const;
 
@@ -180,7 +181,7 @@ export interface RoundEvents {
   results?: Placing[];
 }
 
-export interface StartOptions { seed: number; roundS?: number; briefingS?: number; mode?: Mode; /** Stage 1.5 obstacle twist (host toggle). */ obstacles?: boolean; /** Results screen length for this stage (match: per-stage or final). */ resultsS?: number; /** Seconds left for the others after the first finish. */ closeAfterFirstS?: number; /** Agawan Base: player id -> team slot, locked in the lobby. */ teams?: Record<string, 'A' | 'B' | 'C'> }
+export interface StartOptions { seed: number; roundS?: number; briefingS?: number; mode?: Mode; /** Stage 1.5 obstacle twist (host toggle). */ obstacles?: boolean; /** Results screen length for this stage (match: per-stage or final). */ resultsS?: number; /** Seconds left for the others after the first finish. */ closeAfterFirstS?: number; /** Agawan Base: player id -> team slot, locked in the lobby. */ teams?: Record<string, 'A' | 'B' | 'C'>; /** Agawan Base: how many teams play (decision 049), 3 when not given. */ teamCount?: 2 | 3 }
 
 /**
  * Phase machine for one room. The room calls:
