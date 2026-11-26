@@ -88,6 +88,8 @@ export class TrialRoom extends DurableObject<Env> {
   private teams = new TeamBook();
   /** The match started in an Agawan Base lobby, where players saw and set up the teams (decision 048). */
   private teamsFromLobby = false;
+  /** Decision 050: between two stages of a running match the room waits in the next stage's lobby for the host. */
+  private between = false;
   private roundId = 0;
 
   async fetch(request: Request): Promise<Response> {
@@ -339,6 +341,7 @@ export class TrialRoom extends DurableObject<Env> {
       this.loadStage(DEFAULT_STAGE_ID);
       this.match = null;
       this.matchRunning = false;
+      this.between = false;
       this.paused = false;
       console.log(JSON.stringify({ ev: 'leave', room: att.room, id: att.id, n: 0, reset: true }));
       return;
@@ -487,7 +490,7 @@ export class TrialRoom extends DurableObject<Env> {
   private matchState(): MatchState {
     const m = this.match;
     if (!m) return { stage: 0, total: 0, final: false };
-    return { stage: m.index + 1, total: m.total, final: m.isFinal, champion: m.fullRun };
+    return { stage: m.index + 1, total: m.total, final: m.isFinal, champion: m.fullRun, ...(this.between ? { between: true } : {}) };
   }
 
   /** Host starts a match: every stage in MATCH order, points accumulated, everyone plays every stage. */
@@ -499,7 +502,8 @@ export class TrialRoom extends DurableObject<Env> {
     }
     if (this.engine.phase !== 'lobby') return;
     const order = this.orderFor(opts);
-    if (resolveStageId(opts?.startStage ?? DEFAULT_STAGE_ID) === AGAWAN_STAGE_ID) {
+    const stageToStart = this.between && this.match ? this.match.stageId : resolveStageId(opts?.startStage ?? DEFAULT_STAGE_ID);
+    if (stageToStart === AGAWAN_STAGE_ID) {
       // Teams are only set up in an Agawan Base lobby (decision 048). Shuffle mode (decision 047): nobody has to appoint captains by hand; any team still without one gets one now.
       if (this.teams.mode === 'shuffle') this.teams.autoCaptains([...this.players.values()].filter((p) => !p.away).map((p) => ({ id: p.id, joinOrder: p.joinOrder, bot: !!p.bot })));
       // Agawan Base needs three valid teams with a captain each before the match may start (handoff pack §6).
@@ -510,6 +514,7 @@ export class TrialRoom extends DurableObject<Env> {
         return;
       }
     }
+    if (this.between && this.match && this.matchRunning) { this.continueMatch(); return; }
     this.beginMatch(opts);
   }
 
@@ -546,7 +551,43 @@ export class TrialRoom extends DurableObject<Env> {
     this.startStage();
   }
 
+  /**
+   * Decision 050 (owner, 27 Nov 2026): after a stage's results the match does not jump straight into the next stage.
+   * Everyone lands in the next stage's lobby, where they get the same options as a lobby picked on the main menu
+   * (Agawan Base: 2 or 3 teams, Shuffle or Pick your team), ready up and practise; the host starts the stage.
+   */
+  private enterBetween(): void {
+    const m = this.match!;
+    this.between = true;
+    this.loadStage(m.stageId);
+    for (const p of this.players.values()) { this.respawn(p); p.ready = !!p.bot; }
+    if (m.stageId === AGAWAN_STAGE_ID) {
+      this.teams.locked = false;
+      const present = [...this.players.values()].filter((p) => !p.away).map((p) => ({ id: p.id, joinOrder: p.joinOrder, bot: !!p.bot }));
+      if (this.teams.mode === 'shuffle') this.teams.shuffle(present);
+      else { for (const p of present) this.teams.place(p.id); this.teams.autoCaptains(present); }
+      this.broadcastTeams();
+    }
+    console.log(JSON.stringify({ ev: 'between_stages', room: this.roomCode, next: m.stageId, match: this.matchState() }));
+    this.broadcast({ t: 'roster', roster: this.roster() });
+  }
+
+  /** The host starts the next stage from the between-stages lobby. */
+  private continueMatch(): void {
+    const m = this.match!;
+    this.between = false;
+    if (m.stageId === AGAWAN_STAGE_ID) {
+      this.teamsFromLobby = true; // the teams picked in this lobby are the ones that play
+      for (const p of this.players.values()) this.teams.place(p.id);
+      this.teams.locked = true;
+      this.broadcastTeams();
+    }
+    for (const p of this.players.values()) this.respawn(p);
+    this.startStage();
+  }
+
   private beginMatch(opts: StartRequestOptions): void {
+    this.between = false;
     // Players who dropped out of the previous match and never came back leave now.
     for (const p of [...this.players.values()]) if (p.away) { this.players.delete(p.id); this.teams.remove(p.id); this.match?.markLeft(p.id); }
     this.match = new Match(this.orderFor(opts));
@@ -577,8 +618,10 @@ export class TrialRoom extends DurableObject<Env> {
     const seenRules = m.order.slice(0, m.index).includes(m.stageId);
     const briefingS = test && typeof opts?.briefingS === 'number' ? Math.max(0, Math.min(15, opts.briefingS)) : (seenRules ? MATCH.nextBriefingS : undefined);
     // The winner ceremony after a full match (decision 049) always gets its full length, test rooms included.
-    const resultsS = m.isFinal && m.fullRun ? MATCH.championResultsS
-      : test && typeof opts?.resultsS === 'number' ? Math.max(1, Math.min(60, opts.resultsS)) : (m.isFinal ? MATCH.finalResultsS : MATCH.stageResultsS);
+    // Decision 050: every match ends on the ranking ceremony, which keeps its full length.
+    const testS = (v: unknown) => (test && typeof v === 'number' ? Math.max(1, Math.min(60, v)) : undefined);
+    const resultsS = m.isFinal ? (testS(opts?.finalResultsS) ?? testS(opts?.resultsS) ?? MATCH.championResultsS)
+      : (testS(opts?.resultsS) ?? MATCH.stageResultsS);
     this.loadStage(m.stageId);
     const players = [...this.players.values()];
     for (const p of players) {
@@ -867,11 +910,17 @@ export class TrialRoom extends DurableObject<Env> {
     if (ev.phase === 'lobby') {
       // Results are over: the next stage of the match, or back to the lobby after the final leaderboard.
       if (m && this.matchRunning && m.advance()) {
-        for (const p of this.players.values()) this.respawn(p);
-        this.startStage();
+        if (this.env.CN_TEST === '1' && this.matchOpts.autoNext) {
+          for (const p of this.players.values()) this.respawn(p);
+          this.startStage();
+          return;
+        }
+        this.enterBetween();
+        this.broadcastSnapshot();
         return;
       }
       this.matchRunning = false;
+      this.between = false;
       for (const p of [...this.players.values()]) if (p.away) { this.players.delete(p.id); this.teams.remove(p.id); m?.markLeft(p.id); }
       this.teams.locked = false;
       this.teams.recolor(); // every match gets new team colours (decision 047)

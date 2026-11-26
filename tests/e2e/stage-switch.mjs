@@ -31,6 +31,7 @@ const streetNow = (page) => page.evaluate(() => {
     stage: window.__cn?.stage,
     solid: count('S02A_STREET_SOLID'),
     glow: count('S02A_STREET_GLOW'),
+    details: count('S02A_STREET_DETAILS'),
     bulbs: count('S02A_STRING_LIGHTS'),
     agawanRoot: !!t.scene.getObjectByName('STG02_AGAWAN_BASE'),
   };
@@ -49,6 +50,7 @@ function checkStreet(label, s) {
   check(s.solid > 1000, `${label}: street houses and props are empty (${s.solid} vertices)`);
   check(s.glow > 100, `${label}: windows and signs are empty (${s.glow} vertices)`);
   check(s.bulbs > 0, `${label}: string lights missing`);
+  check(s.details > 1000, `${label}: textured details (windows, doors, roofs) are empty (${s.details} vertices)`);
   if (!fullSolid) fullSolid = s.solid;
   else check(s.solid >= fullSolid * 0.5, `${label}: street has ${s.solid} vertices, first visit had ${fullSolid}`);
 }
@@ -99,7 +101,15 @@ try {
     await sleep(500);
     await page.click('[data-testid=start]');
     await waitStage(page, 'STAGE_01_RED_LIGHT');
-    await page.waitForFunction(() => window.__cn?.stage === 'STAGE_02_AGAWAN_BASE', null, { timeout: 90_000 });
+    // Decision 050: after Stage 01's results everyone lands in Stage 02's lobby (team setup, ready); the host starts it.
+    await page.waitForSelector('[data-testid=lobby-next]', { timeout: 90_000 });
+    await waitStage(page, 'STAGE_02_AGAWAN_BASE');
+    const lobby = await streetNow(page);
+    report.betweenLobby = { ...lobby, teams: await page.evaluate(() => !!document.querySelector('[data-testid=teams]')), count2: await page.evaluate(() => !!document.querySelector('[data-testid=team-count-2]')) };
+    checkStreet('between-stages lobby', lobby);
+    check(report.betweenLobby.teams && report.betweenLobby.count2, 'the between-stages Agawan lobby shows the team setup (2 or 3 teams, Shuffle / Pick)');
+    await page.screenshot({ path: `${shots}/switch-between-lobby.png` });
+    await page.click('[data-testid=start]');
     await page.waitForSelector('[data-testid=agawan-top]', { timeout: 30_000 });
     await sleep(1500);
     const s = await streetNow(page);

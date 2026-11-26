@@ -16,7 +16,9 @@ import type { Rect, Spawn, StageGeometry } from '../stage.ts';
 import type { TeamSlot } from '../teams.ts';
 import { AGAWAN } from './config.ts';
 
-export type AgawanWallKind = 'shell' | 'house' | 'fence' | 'barrier' | 'crate' | 'jeepney' | 'tricycle' | 'kiosk' | 'cart' | 'planter' | 'bench' | 'stall' | 'tree';
+export type AgawanWallKind = 'shell' | 'house' | 'fence' | 'barrier' | 'crate' | 'jeepney' | 'tricycle' | 'kiosk' | 'cart' | 'planter' | 'bench' | 'stall' | 'tree'
+  // Base decor (decision 050): gift piles, a fenced garden, a playground (swing, slide, seesaw) and a basketball hoop.
+  | 'gifts' | 'garden' | 'swing' | 'slide' | 'seesaw' | 'hoop';
 
 export interface AgawanWall extends Rect {
   kind: AgawanWallKind;
@@ -64,6 +66,7 @@ export interface AgawanLayout {
 
 const HEIGHT: Record<AgawanWallKind, number> = {
   shell: 6, house: 5, fence: 1.2, barrier: 0.9, crate: 1.4, jeepney: 2.4, tricycle: 1.6, kiosk: 2.4, cart: 1.2, planter: 0.7, bench: 0.5, stall: 2.2, tree: 6,
+  gifts: 1.2, garden: 1.0, swing: 2.2, slide: 2.0, seesaw: 0.6, hoop: 3.0,
 };
 
 /** Pack coordinates (origin south-west, Z north) to game coordinates. */
@@ -163,6 +166,16 @@ export function buildAgawanLayout(): AgawanLayout {
   W(at('S02A_OB11_STALL', 'stall', 65, 31, 1.6, 1.6));       // east approach to the plaza (same footprint)
   W(prop('bench', 0, -11, 2, 0.5, 'S02A_OB12_BENCH'));        // plaza bench, moved 1 m south of pack (48, 52) to clear Team A's pen gate
   W(prop('tree', 0, 11, 2.4, 2.4, 'S02A_PLAZA_TREE'));        // the plaza Christmas tree's planter: solid, so nobody walks through the tree
+
+  // ---- base decor (decision 050: "so it does not look too open"; mixed so no two bases look the same). Every piece
+  // hugs a house face or the block's wall, away from the spawns, the capture rings and the main streets.
+  //   Team A (north): two gift piles and two picket-fenced gardens with a small lit tree
+  //   Team B (south-west): a playground (swing set, slide, seesaw)
+  //   Team C (south-east): a basketball hoop on a painted court, a gift pile and a garden
+  W(prop('gifts', -15, -30.6, 3, 2.4, 'S02A_DECOR_A_GIFTS_W'), prop('gifts', 15, -30.6, 3, 2.4, 'S02A_DECOR_A_GIFTS_E'));
+  W(box('garden', -11.8, -8.2, -40, -36.8, 'S02A_DECOR_A_GARDEN_W'), box('garden', 8.2, 11.8, -40, -36.8, 'S02A_DECOR_A_GARDEN_E'));
+  W(box('swing', -28, -24, 38.2, 40, 'S02A_DECOR_B_SWING'), box('slide', -39.2, -37.8, 10, 13.2, 'S02A_DECOR_B_SLIDE'), box('seesaw', -34, -31, 39.2, 40, 'S02A_DECOR_B_SEESAW'));
+  W(box('hoop', 25.7, 26.3, 39.4, 40, 'S02A_DECOR_C_HOOP'), box('gifts', 37, 40, 10, 12.4, 'S02A_DECOR_C_GIFTS'), box('garden', 37.6, 41, 22.4, 25.6, 'S02A_DECOR_C_GARDEN'));
 
   // ---- bases and spawns: 10 spawns behind each marker, facing the plaza
   const sp = (index: number, x: number, z: number): Spawn => ({ index, x, z, yaw: Math.atan2(x, z) }); // yaw faces the origin

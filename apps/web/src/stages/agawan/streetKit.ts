@@ -9,6 +9,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { AGAWAN, TEAMS, TEAM_SLOTS, getStage, rng, type AgawanWall, type Rect, type TeamSlot } from '@cn-trials/shared';
+import art from '../../../../../blender/exports/stage02/STAGE_02_ART.json';
 
 const layout = getStage(AGAWAN.id).agawan!.layout;
 const B = layout.bounds;
@@ -87,12 +88,96 @@ export class Dots {
   }
 }
 
+export type AtlasCell = keyof typeof art.atlas.cells;
+const CELLS = art.atlas.cells as Record<AtlasCell, number[]>;
+
+/**
+ * Textured quads that all sample ONE atlas (blender/exports/stage02/T02_StreetAtlas.webp, decision 050): capiz windows,
+ * grilles, doors, tin roofs, plaster, signs, gift wrap, chalk. Low-poly boxes keep their vertex colour; the detail
+ * comes from these quads laid a centimetre in front. Two of these collectors make two draw calls (lit by the scene,
+ * and self-lit for windows and signs).
+ */
+export class Decals {
+  private pos: number[] = [];
+  private nor: number[] = [];
+  private uv: number[] = [];
+  private col: number[] = [];
+  private m = new THREE.Matrix4();
+  private nm = new THREE.Matrix3();
+  private q = new THREE.Quaternion();
+  private e = new THREE.Euler();
+  private v = new THREE.Vector3();
+  private s = new THREE.Vector3();
+  private c = new THREE.Color();
+  count = 0;
+
+  /** A unit quad in the XY plane facing +Z, transformed by m. */
+  add(m: THREE.Matrix4, cell: AtlasCell, color: THREE.ColorRepresentation = '#ffffff'): this {
+    const [u0, v0, u1, v1] = CELLS[cell];
+    this.nm.getNormalMatrix(m);
+    const n = new THREE.Vector3(0, 0, 1).applyMatrix3(this.nm).normalize();
+    this.c.set(color);
+    for (const [x, y, u, v] of [[-0.5, -0.5, u0, v0], [0.5, -0.5, u1, v0], [0.5, 0.5, u1, v1], [-0.5, -0.5, u0, v0], [0.5, 0.5, u1, v1], [-0.5, 0.5, u0, v1]]) {
+      const p = this.v.set(x, y, 0).applyMatrix4(m);
+      this.pos.push(p.x, p.y, p.z); this.nor.push(n.x, n.y, n.z); this.uv.push(u, v); this.col.push(this.c.r, this.c.g, this.c.b);
+    }
+    this.count++;
+    return this;
+  }
+
+  /** Upright quad centred at (x, y, z), w wide and h tall, facing yaw ry (0 faces +Z, PI/2 faces +X). */
+  face(x: number, y: number, z: number, w: number, h: number, ry: number, cell: AtlasCell, color: THREE.ColorRepresentation = '#ffffff'): this {
+    this.e.set(0, ry, 0);
+    return this.add(this.m.compose(this.v.set(x, y, z), this.q.setFromEuler(this.e), this.s.set(w, h, 1)).clone(), cell, color);
+  }
+
+  /** Flat quad on the ground (w along X, d along Z before the turn ry); the cell's top points north (-Z). */
+  ground(x: number, z: number, w: number, d: number, ry: number, cell: AtlasCell, y = 0.016, color: THREE.ColorRepresentation = '#ffffff'): this {
+    this.e.set(-Math.PI / 2, ry, 0, 'YXZ');
+    const m = this.m.compose(this.v.set(x, y, z), this.q.setFromEuler(this.e), this.s.set(w, d, 1)).clone();
+    this.e.set(0, 0, 0, 'XYZ');
+    return this.add(m, cell, color);
+  }
+
+  /** The top face of a box placed like Kit.box (same centre, size and turn), lifted just above it. */
+  top(x: number, y: number, z: number, sx: number, sy: number, sz: number, cell: AtlasCell, color: THREE.ColorRepresentation = '#ffffff', ry = 0, rx = 0, rz = 0): this {
+    this.e.set(rx, ry, rz);
+    const m = new THREE.Matrix4().compose(this.v.set(x, y, z), this.q.setFromEuler(this.e), this.s.set(1, 1, 1));
+    m.multiply(new THREE.Matrix4().makeTranslation(0, sy / 2 + 0.012, 0)).multiply(new THREE.Matrix4().makeRotationX(-Math.PI / 2)).multiply(new THREE.Matrix4().makeScale(sx, sz, 1));
+    return this.add(m, cell, color);
+  }
+
+  /** The four sides (and optionally the top) of an upright box turned by ry. */
+  skin(x: number, y: number, z: number, sx: number, sy: number, sz: number, ry: number, cell: AtlasCell, topCell?: AtlasCell, color: THREE.ColorRepresentation = '#ffffff'): this {
+    const c = Math.cos(ry), s = Math.sin(ry), o = 0.012;
+    // local +Z face, -Z, +X, -X
+    for (const [lx, lz, w, a] of [[0, sz / 2 + o, sx, 0], [0, -sz / 2 - o, sx, Math.PI], [sx / 2 + o, 0, sz, Math.PI / 2], [-sx / 2 - o, 0, sz, -Math.PI / 2]] as const) {
+      this.face(x + lx * c + lz * s, y, z - lx * s + lz * c, w, sy, ry + a, cell, color);
+    }
+    if (topCell) this.top(x, y, z, sx, sy, sz, topCell, color, ry);
+    return this;
+  }
+
+  private built: THREE.BufferGeometry | null = null;
+  /** Same caching rule as Kit.build(): later mounts get the same full geometry back. */
+  build(): THREE.BufferGeometry {
+    if (this.built) return this.built;
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(this.pos, 3));
+    g.setAttribute('normal', new THREE.Float32BufferAttribute(this.nor, 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute(this.uv, 2));
+    g.setAttribute('color', new THREE.Float32BufferAttribute(this.col, 3));
+    g.computeBoundingSphere();
+    this.built = g;
+    return g;
+  }
+}
+
 // ---- palettes (muted for night: the warm light comes from windows, parols and bulbs)
 const WALLS = ['#d8c9a8', '#c9d6c0', '#e0b9a0', '#b8c8d8', '#e3d08f', '#d6b4c4', '#c4b49a', '#a9c2b3', '#e6dccb', '#c7a98b'];
 const TRIM = ['#f1ebe0', '#8f6e52', '#5d6f7a', '#a24f3c', '#ece3cf'];
 const ROOFS = ['#7d3b2c', '#3d5a60', '#5f5a57', '#8a4b2a', '#4a4f6b', '#6b6f73'];
 const WINDOW_WARM = ['#ffd27a', '#ffc35e', '#ffe2a6', '#ffb86b', '#fff0c8'];
-const WINDOW_DARK = '#232838';
 const AWNINGS = ['#c43b3b', '#2f7f6f', '#d9a531', '#2e5d9a', '#b0467c'];
 export const PAROL = ['#ff4d4d', '#ffd84a', '#5ad1ff', '#7dff8a', '#ff7ad9', '#ffffff', '#ffa040', '#a98bff'];
 export const BULB = ['#ffd27a', '#ff6b6b', '#6be2ff', '#9dff7a', '#ff9ef0', '#fff4d6'];
@@ -162,7 +247,7 @@ function splitBlock(w: AgawanWall, rand: () => number): Unit[] {
   return units;
 }
 
-export interface StreetBuild { solid: Kit; glow: Kit; bulbs: Dots; halos: Dots; wires: number[]; pools: { x: number; z: number; r: number; color: string }[] }
+export interface StreetBuild { solid: Kit; glow: Kit; decals: Decals; lit: Decals; bulbs: Dots; halos: Dots; wires: number[]; pools: { x: number; z: number; r: number; color: string }[] }
 
 function houses(k: StreetBuild, rand: () => number): void {
   for (const w of layout.walls) {
@@ -191,8 +276,13 @@ function house(k: StreetBuild, u: Unit, rand: () => number): void {
     const pitch = 0.32, half = span / 2 + 0.45, rise = Math.tan(pitch) * half;
     for (const side of [-1, 1]) {
       const off = (half / 2) * Math.cos(pitch) * side;
-      if (alongX) k.solid.box(cx, h + rise / 2, cz + off, run + 0.8, 0.08, half / Math.cos(pitch), u.roof, 0, pitch * side);
-      else k.solid.box(cx + off, h + rise / 2, cz, half / Math.cos(pitch), 0.08, run + 0.8, u.roof, 0, 0, -pitch * side);
+      if (alongX) {
+        k.solid.box(cx, h + rise / 2, cz + off, run + 0.8, 0.08, half / Math.cos(pitch), u.roof, 0, pitch * side);
+        k.decals.top(cx, h + rise / 2, cz + off, run + 0.8, 0.08, half / Math.cos(pitch), 'tin', u.roof, 0, pitch * side);
+      } else {
+        k.solid.box(cx + off, h + rise / 2, cz, half / Math.cos(pitch), 0.08, run + 0.8, u.roof, 0, 0, -pitch * side);
+        k.decals.top(cx + off, h + rise / 2, cz, half / Math.cos(pitch), 0.08, run + 0.8, 'tin', u.roof, 0, 0, -pitch * side);
+      }
     }
     // gable fill (a low box under the slopes)
     k.solid.box(cx, h + rise * 0.3, cz, sx - 0.1, rise * 0.6, sz - 0.1, upper);
@@ -209,7 +299,13 @@ function house(k: StreetBuild, u: Unit, rand: () => number): void {
     if (!u.edge[F.f]) continue;
     const nx = F.f === 'w' ? -1 : F.f === 'e' ? 1 : 0, nz = F.f === 'n' ? -1 : F.f === 's' ? 1 : 0;
     const at = (t: number, y: number, out: number) => [F.ox + F.tx * t + nx * out, y, F.oz + F.tz * t + nz * out] as const;
+    // Plaster (or bare hollow blocks) over the low-poly walls: stains, cracks and rain streaks from the atlas.
+    { const [x, , z] = at(0, 0, 0.012); k.decals.face(x, g1 / 2, z, F.len, g1, F.ry, rand() < 0.25 ? 'blocks' : 'plaster', u.wall); }
+    { const [x, , z] = at(0, 0, 0.002); k.decals.face(x, g1 + (h - g1) / 2, z, F.len - 0.02, h - g1, F.ry, 'plaster', upper); }
     const n = Math.max(1, Math.floor((F.len - 1) / 2.3));
+    // A few ground floors are a lantern stall (a wall of lit parols, the owner's reference photo) or a closed shop.
+    const shop = F.len > 5 ? rand() : 1;
+    const tarpAt = F.len > 4.5 && h > 4.3 && rand() < 0.12 ? Math.floor(n / 2) : -1;
     const doorAt = !doorDone && F.len > 3.5 ? Math.floor(rand() * n) : -1;
     for (let i = 0; i < n; i++) {
       const t = -F.len / 2 + (F.len / n) * (i + 0.5);
@@ -217,8 +313,11 @@ function house(k: StreetBuild, u: Unit, rand: () => number): void {
         doorDone = true;
         const [x, , z] = at(t, 0, 0.04);
         k.solid.box(x, 1.05, z, F.tx ? 1.0 : 0.08, 2.1, F.tz ? 1.0 : 0.08, '#4a3020');
+        const [dx, , dz] = at(t, 0, 0.085);
+        if (shop < 0.1) k.decals.face(dx, 1.05, dz, 1.0, 2.1, F.ry, 'shutter');
+        else k.decals.face(dx, 1.05, dz, 1.0, 2.1, F.ry, 'door', '#e8ddd0');
         const [lx, , lz] = at(t, 0, 0.06);
-        k.glow.box(lx, 2.2, lz, F.tx ? 0.9 : 0.06, 0.12, F.tz ? 0.9 : 0.06, '#ffd9a0'); // transom light
+        k.lit.face(lx, 2.27, lz, 0.95, 0.26, F.ry, 'transom'); // transom light
         // awning over the door
         if (rand() < 0.65) {
           const [ax, , az] = at(t, 0, 0.55);
@@ -233,15 +332,23 @@ function house(k: StreetBuild, u: Unit, rand: () => number): void {
       } else {
         const lit = rand() < 0.7;
         const [x, , z] = at(t, 0, 0.03);
-        const c = lit ? WINDOW_WARM[Math.floor(rand() * WINDOW_WARM.length)] : WINDOW_DARK;
-        (lit ? k.glow : k.solid).box(x, 1.55, z, F.tx ? 1.0 : 0.06, 0.95, F.tz ? 1.0 : 0.06, c);
+        if (shop > 0.1 && shop < 0.24 && i === (doorAt + 1) % n) {
+          // lantern stall: a wall of lit parols where the window would be
+          k.lit.face(x, 1.45, z, Math.min(2.2, F.len / n), 1.7, F.ry, 'lanterns');
+          const [hx, , hz] = at(t, 0, 0.6);
+          k.halos.add(hx, 1.5, hz, '#ffb870', 2.6);
+          k.pools.push({ x: hx, z: hz, r: 2.6, color: '#ffb36a' });
+        } else if (lit) k.lit.face(x, 1.55, z, 1.0, 0.95, F.ry, rand() < 0.2 ? 'curtain' : 'capiz', WINDOW_WARM[Math.floor(rand() * WINDOW_WARM.length)]);
+        else k.decals.face(x, 1.55, z, 1.0, 0.95, F.ry, 'grille');
         k.solid.box(x + nx * 0.03, 1.02, z + nz * 0.03, F.tx ? 1.2 : 0.12, 0.08, F.tz ? 1.2 : 0.12, u.trim); // sill
       }
       if (h > 4.3) {
         const lit = rand() < 0.55;
         const [x, , z] = at(t, 0, 0.03);
-        const c = lit ? WINDOW_WARM[Math.floor(rand() * WINDOW_WARM.length)] : WINDOW_DARK;
-        (lit ? k.glow : k.solid).box(x, g1 + (h - g1) * 0.5, z, F.tx ? 1.0 : 0.06, 0.9, F.tz ? 1.0 : 0.06, c);
+        const wy = g1 + (h - g1) * 0.5;
+        if (i === tarpAt) k.decals.face(x, wy, z, 1.9, 1.3, F.ry, 'tarp'); // a barangay greeting tarpaulin
+        else if (lit) k.lit.face(x, wy, z, 1.0, 0.9, F.ry, rand() < 0.3 ? 'capizParol' : 'capiz', WINDOW_WARM[Math.floor(rand() * WINDOW_WARM.length)]);
+        else k.decals.face(x, wy, z, 1.0, 0.9, F.ry, 'grille');
         // shutters
         k.solid.box(x + F.tx * 0.62, g1 + (h - g1) * 0.5, z + F.tz * 0.62, F.tx ? 0.2 : 0.08, 0.9, F.tz ? 0.2 : 0.08, u.trim);
         k.solid.box(x - F.tx * 0.62, g1 + (h - g1) * 0.5, z - F.tz * 0.62, F.tx ? 0.2 : 0.08, 0.9, F.tz ? 0.2 : 0.08, u.trim);
@@ -341,7 +448,7 @@ function overhead(k: StreetBuild, rand: () => number): void {
         const off = (d / 9) % 2 ? 2.2 : -2.2;
         const a = new THREE.Vector3(x0 + ux * d - uz * off, 6.6, z0 + uz * d + ux * off);
         const b = new THREE.Vector3(x0 + ux * (d + 9) + uz * off, 6.6, z0 + uz * (d + 9) - ux * off);
-        strand(k, a, b, 0.5, rand, { palette: ['#fff4d6', '#ffd27a'] });
+        strand(k, a, b, 0.5, rand, { palette: ['#fff4d6', '#ffd27a'], parols: rand() < 0.5 ? 1 : 0 });
       }
     }
   }
@@ -358,9 +465,9 @@ function plaza(k: StreetBuild, rand: () => number): void {
   const tiers = [[1.65, 2.1, 1.9], [1.35, 1.8, 3.2], [1.05, 1.6, 4.4], [0.7, 1.3, 5.4]] as const;
   for (const [r, h, y] of tiers) k.solid.add(CONE, new THREE.Matrix4().compose(new THREE.Vector3(tx, y, tz), new THREE.Quaternion(), new THREE.Vector3(r, h, r)), '#1f5a33');
   // spiral of bulbs
-  for (let i = 0; i < 150; i++) {
-    const f = i / 150, y = 1.1 + f * 5.0, rr = 1.7 * (1 - f) + 0.15;
-    const a = f * Math.PI * 2 * 6.5;
+  for (let i = 0; i < 260; i++) {
+    const f = i / 260, y = 1.1 + f * 5.0, rr = 1.7 * (1 - f) + 0.15;
+    const a = f * Math.PI * 2 * 9.5;
     k.bulbs.add(tx + Math.cos(a) * rr, y, tz + Math.sin(a) * rr, BULB[i % BULB.length], 0.2);
   }
   // ornaments
@@ -372,6 +479,18 @@ function plaza(k: StreetBuild, rand: () => number): void {
   k.glow.add(starGeometry(0.5, 0.1), new THREE.Matrix4().compose(top, new THREE.Quaternion(), new THREE.Vector3(1, 1, 1)), '#ffe066');
   k.halos.add(top.x, top.y, top.z, '#ffd84a', 4.5);
   k.pools.push({ x: tx, z: tz, r: 5, color: '#ffcf70' });
+  // little parols hung on the tree's tiers (decision 050: more lights)
+  for (let i = 0; i < 14; i++) {
+    const f = 0.1 + (i / 14) * 0.75, y = 1.3 + f * 4.4, rr = 1.75 * (1 - f) + 0.25, a = i * 2.4;
+    const col = PAROL[i % PAROL.length];
+    k.glow.add(SMALL_STAR, new THREE.Matrix4().compose(new THREE.Vector3(tx + Math.cos(a) * rr, y, tz + Math.sin(a) * rr), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -a + Math.PI / 2, 0)), new THREE.Vector3(0.7, 0.7, 0.7)), col);
+    k.halos.add(tx + Math.cos(a) * rr, y, tz + Math.sin(a) * rr, col, 1.1);
+  }
+  // presents under the tree
+  for (let i = 0; i < 7; i++) {
+    const a = i * 0.9 + 0.3, s = 0.35 + rand() * 0.25, h = 0.3 + rand() * 0.25;
+    present(k, tx + Math.cos(a) * 1.55, 0.6 + h / 2 + 0.02, tz + Math.sin(a) * 1.55, s, h, rand(), rand);
+  }
   // Strands from the tree top fanning out over the plaza to the nearest houses.
   for (let i = 0; i < 10; i++) {
     const a = (i / 10) * Math.PI * 2 + 0.2;
@@ -458,13 +577,238 @@ function props(k: StreetBuild, rand: () => number): void {
         for (const s of [-0.42, 0.42]) k.solid.box(cx + (along ? 0 : s * L), 0.2, cz + (along ? s * L : 0), 0.08, 0.4, 0.08, '#333', ry);
         break;
       }
+      case 'gifts': gifts(k, cx, cz, sx, sz, rand); break;
+      case 'garden': garden(k, w, rand); break;
+      case 'swing': swing(k, cx, cz, sx, sz); break;
+      case 'slide': slide(k, w); break;
+      case 'seesaw': seesaw(k, cx, cz, sx); break;
+      case 'hoop': hoop(k, cx, cz); break;
       default: break;
     }
   }
 }
 
+// ---------------------------------------------------------------------------------------------------------------
+// Base decor (decision 050): every base looks different and less open. Each piece fills its collision box.
+
+const WRAPS: AtlasCell[] = ['wrapA', 'wrapB', 'wrapC', 'wrapD'];
+
+/** A pile of wrapped Christmas presents with bows (a few smaller ones stacked on top). */
+function gifts(k: StreetBuild, cx: number, cz: number, sx: number, sz: number, rand: () => number): void {
+  const cols = sx > sz ? 3 : 2, rows = sx > sz ? 2 : 3;
+  const cw = sx / cols, cd = sz / rows;
+  const tops: [number, number, number, number][] = [];
+  for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) {
+    const s = Math.min(cw, cd) * (0.62 + rand() * 0.3), h = 0.45 + rand() * 0.45, ry = (rand() - 0.5) * 0.6;
+    const x = cx - sx / 2 + cw * (i + 0.5) + (rand() - 0.5) * 0.1, z = cz - sz / 2 + cd * (j + 0.5) + (rand() - 0.5) * 0.1;
+    present(k, x, h / 2, z, s, h, ry, rand);
+    tops.push([x, z, h, s]);
+  }
+  for (let n = 0; n < 2; n++) {
+    const [x, z, h, s] = tops[Math.floor(rand() * tops.length)];
+    const s2 = s * 0.6, h2 = 0.3 + rand() * 0.2;
+    present(k, x, h + h2 / 2 + 0.01, z, s2, h2, rand() * 1.5, rand);
+    tops.push([x, z, h + h2, s2]);
+  }
+  // a little light string around the pile's foot
+  for (let i = 0; i < 28; i++) {
+    const a = (i / 28) * Math.PI * 2;
+    k.bulbs.add(cx + Math.cos(a) * (sx / 2 + 0.1), 0.12, cz + Math.sin(a) * (sz / 2 + 0.1), BULB[i % BULB.length], 0.14);
+  }
+  k.pools.push({ x: cx, z: cz, r: 2.2, color: '#ffcf8a' });
+}
+
+function present(k: StreetBuild, x: number, y: number, z: number, s: number, h: number, ry: number, rand: () => number): void {
+  const cell = WRAPS[Math.floor(rand() * WRAPS.length)];
+  k.solid.box(x, y, z, s, h, s, '#c9302c', ry);
+  k.decals.skin(x, y, z, s, h, s, ry, cell, cell === 'wrapA' ? 'giftTop' : cell);
+  // bow: two loops on top
+  for (const o of [-1, 1]) {
+    k.solid.add(SPHERE, new THREE.Matrix4().compose(new THREE.Vector3(x + Math.cos(ry) * o * s * 0.12, y + h / 2 + 0.06, z - Math.sin(ry) * o * s * 0.12), new THREE.Quaternion(), new THREE.Vector3(s * 0.12, 0.06, s * 0.07)), '#f2c24e');
+  }
+}
+
+/** A picket-fenced garden with a small lit Christmas tree and presents, lights along the fence. */
+function garden(k: StreetBuild, w: AgawanWall, rand: () => number): void {
+  const cx = (w.minX + w.maxX) / 2, cz = (w.minZ + w.maxZ) / 2, sx = w.maxX - w.minX, sz = w.maxZ - w.minZ;
+  k.solid.box(cx, 0.06, cz, sx - 0.1, 0.12, sz - 0.1, '#3d5a33'); // grass bed
+  const edge = (x0: number, z0: number, x1: number, z1: number) => {
+    const L = Math.hypot(x1 - x0, z1 - z0), n = Math.max(2, Math.round(L / 0.3)), ry = Math.atan2(-(z1 - z0), x1 - x0);
+    for (let i = 0; i <= n; i++) {
+      const t = i / n, x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t;
+      k.solid.box(x, 0.42, z, 0.09, 0.84, 0.05, '#ece6d6', ry);
+      k.solid.add(CONE, new THREE.Matrix4().compose(new THREE.Vector3(x, 0.88, z), new THREE.Quaternion(), new THREE.Vector3(0.06, 0.1, 0.06)), '#ece6d6');
+      if (i % 2 === 0) k.bulbs.add(x, 0.98, z, BULB[(i / 2) % BULB.length], 0.15);
+    }
+    for (const y of [0.3, 0.66]) k.solid.box((x0 + x1) / 2, y, (z0 + z1) / 2, L, 0.06, 0.04, '#d8d1c0', ry);
+  };
+  const x0 = w.minX + 0.05, x1 = w.maxX - 0.05, z0 = w.minZ + 0.05, z1 = w.maxZ - 0.05;
+  edge(x0, z0, x1, z0); edge(x1, z0, x1, z1); edge(x1, z1, x0, z1); edge(x0, z1, x0, z0);
+  // small tree
+  const tx = cx + (rand() - 0.5) * 0.4, tz = cz + (rand() - 0.5) * 0.4;
+  for (const [r, h, y] of [[0.75, 1.0, 0.75], [0.55, 0.85, 1.35], [0.32, 0.65, 1.85]] as const) k.solid.add(CONE, new THREE.Matrix4().compose(new THREE.Vector3(tx, y, tz), new THREE.Quaternion(), new THREE.Vector3(r, h, r)), '#225c36');
+  for (let i = 0; i < 46; i++) {
+    const f = i / 46, a = f * Math.PI * 2 * 4.5, rr = 0.75 * (1 - f) + 0.08;
+    k.bulbs.add(tx + Math.cos(a) * rr, 0.35 + f * 1.8, tz + Math.sin(a) * rr, BULB[i % BULB.length], 0.15);
+  }
+  k.glow.add(SMALL_STAR, new THREE.Matrix4().compose(new THREE.Vector3(tx, 2.3, tz), new THREE.Quaternion(), new THREE.Vector3(0.8, 0.8, 0.8)), '#ffe066');
+  k.halos.add(tx, 2.3, tz, '#ffd84a', 2);
+  present(k, tx + 0.7, 0.32, tz + 0.5, 0.4, 0.36, 0.4, rand);
+  present(k, tx - 0.6, 0.27, tz + 0.6, 0.34, 0.3, -0.3, rand);
+  k.pools.push({ x: cx, z: cz, r: 2.6, color: '#ffd28a' });
+}
+
+/** Playground swing set: A-frame ends, a top bar with lights, two seats on chains. */
+function swing(k: StreetBuild, cx: number, cz: number, sx: number, sz: number): void {
+  const alongX = sx >= sz, L = Math.max(sx, sz) - 0.2, H = 2.2, ry = alongX ? 0 : Math.PI / 2;
+  const P = (a: number, b: number) => (alongX ? [cx + a, cz + b] : [cx + b, cz + a]) as [number, number];
+  for (const e of [-L / 2, L / 2]) for (const s of [-1, 1]) {
+    const [x, z] = P(e, s * 0.45);
+    k.solid.box(x, H / 2, z, 0.09, H + 0.1, 0.09, '#c43b3b', ry, alongX ? s * 0.38 : 0, alongX ? 0 : -s * 0.38);
+  }
+  { const [x, z] = P(0, 0); k.solid.box(x, H, z, alongX ? L : 0.1, 0.1, alongX ? 0.1 : L, '#e2b229'); }
+  for (const t of [-L / 4, L / 4]) {
+    for (const o of [-0.22, 0.22]) { const [x, z] = P(t + o, 0); k.solid.box(x, H - 0.7, z, 0.025, 1.4, 0.025, '#9aa0a6'); }
+    const [x, z] = P(t, 0); k.solid.box(x, H - 1.42, z, alongX ? 0.55 : 0.22, 0.05, alongX ? 0.22 : 0.55, '#2e5d9a');
+  }
+  for (let i = 0; i <= 16; i++) { const [x, z] = P(-L / 2 + (L * i) / 16, 0); k.bulbs.add(x, H + 0.1, z, BULB[i % BULB.length], 0.16); }
+  k.pools.push({ x: cx, z: cz, r: 2.6, color: '#ffd28a' });
+}
+
+/** Playground slide: a ladder at the north end, a platform, the chute down to the south. */
+function slide(k: StreetBuild, w: AgawanWall): void {
+  const cx = (w.minX + w.maxX) / 2, L = w.maxZ - w.minZ, W2 = w.maxX - w.minX;
+  const z0 = w.minZ + 0.35, top = 1.6;
+  for (const s of [-1, 1]) k.solid.box(cx + s * (W2 / 2 - 0.15), top / 2 + 0.2, z0, 0.08, top + 0.4, 0.08, '#2e5d9a');
+  for (let y = 0.3; y < top; y += 0.3) k.solid.box(cx, y, z0, W2 - 0.3, 0.05, 0.06, '#2e5d9a');
+  k.solid.box(cx, top, z0 + 0.35, W2 - 0.2, 0.08, 0.7, '#e2b229');
+  for (const s of [-1, 1]) k.solid.box(cx + s * (W2 / 2 - 0.12), top + 0.4, z0 + 0.35, 0.05, 0.6, 0.7, '#c43b3b');
+  const run = L - 1.1, ang = Math.atan2(top - 0.25, run);
+  k.solid.box(cx, (top + 0.25) / 2, z0 + 0.7 + run / 2, W2 - 0.5, 0.06, Math.hypot(run, top - 0.25), '#ff8a3a', 0, ang);
+  for (const s of [-1, 1]) k.solid.box(cx + s * (W2 / 2 - 0.27), (top + 0.25) / 2 + 0.1, z0 + 0.7 + run / 2, 0.04, 0.2, Math.hypot(run, top - 0.25), '#c43b3b', 0, ang);
+  k.solid.box(cx, 0.12, w.maxZ - 0.25, W2 - 0.5, 0.24, 0.3, '#ff8a3a');
+  for (let i = 0; i < 10; i++) k.bulbs.add(cx + (i % 2 ? -1 : 1) * (W2 / 2 - 0.12), top + 0.7, z0 + 0.05 + (i >> 1) * 0.16, BULB[i % BULB.length], 0.15);
+}
+
+/** Seesaw: a pivot and a tilted plank with handles. */
+function seesaw(k: StreetBuild, cx: number, cz: number, sx: number): void {
+  const L = sx - 0.2, tilt = 0.17;
+  k.solid.box(cx, 0.25, cz, 0.3, 0.5, 0.5, '#2e5d9a');
+  k.solid.box(cx, 0.52, cz, L, 0.07, 0.3, '#e2b229', 0, 0, tilt);
+  for (const s of [-1, 1]) {
+    const x = cx + s * (L / 2 - 0.35), y = 0.52 - s * Math.sin(tilt) * (L / 2 - 0.35);
+    k.solid.box(x, y + 0.2, cz, 0.05, 0.36, 0.3, '#c43b3b');
+    k.solid.box(x, y + 0.38, cz, 0.06, 0.05, 0.36, '#c43b3b');
+  }
+}
+
+/** Basketball hoop against the block's wall, facing the court painted in front of it. */
+function hoop(k: StreetBuild, cx: number, cz: number): void {
+  k.solid.box(cx, 1.6, cz, 0.16, 3.2, 0.16, '#3a6ea5');
+  k.solid.box(cx, 0.08, cz, 0.6, 0.16, 0.6, '#8c8577');
+  k.solid.box(cx, 3.15, cz - 0.4, 0.1, 0.1, 0.8, '#3a6ea5');
+  k.solid.box(cx, 3.15, cz - 0.82, 1.8, 1.05, 0.05, '#f2efe6');
+  k.solid.box(cx, 2.98, cz - 0.85, 0.6, 0.45, 0.02, '#c43b3b');
+  k.solid.box(cx, 2.98, cz - 0.86, 0.5, 0.35, 0.02, '#f2efe6');
+  k.solid.add(new THREE.TorusGeometry(0.23, 0.02, 4, 16), new THREE.Matrix4().compose(new THREE.Vector3(cx, 2.75, cz - 1.12), new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0)), new THREE.Vector3(1, 1, 1)), '#ff6a1a');
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    k.solid.box(cx + Math.cos(a) * 0.18, 2.55, cz - 1.12 + Math.sin(a) * 0.18, 0.015, 0.4, 0.015, '#f4f4f4');
+  }
+  // lights along the backboard's edge
+  for (let i = 0; i <= 10; i++) k.bulbs.add(cx - 0.9 + 0.18 * i, 3.7, cz - 0.84, BULB[i % BULB.length], 0.15);
+  // the court: a painted key and three-point arc on the street
+  k.decals.ground(cx, cz - 3.6, 6.8, 6.8, Math.PI, 'court', 0.014);
+  k.pools.push({ x: cx, z: cz - 2.5, r: 3.5, color: '#ffd9a0' });
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// More lights (decision 050, the owner's reference photos): light-wrapped poles with stacked parols along the
+// streets, Maligayang Pasko banners across the streets near the plaza, chalk piko squares where kids play.
+
+function lightPoles(k: StreetBuild, rand: () => number): void {
+  const placed: [number, number][] = [];
+  for (const w of layout.walls) {
+    if (w.kind !== 'house') continue;
+    const faces: { f: 'n' | 's' | 'w' | 'e'; a: [number, number]; b: [number, number]; nx: number; nz: number }[] = [
+      { f: 'n', a: [w.minX, w.minZ], b: [w.maxX, w.minZ], nx: 0, nz: -1 },
+      { f: 's', a: [w.minX, w.maxZ], b: [w.maxX, w.maxZ], nx: 0, nz: 1 },
+      { f: 'w', a: [w.minX, w.minZ], b: [w.minX, w.maxZ], nx: -1, nz: 0 },
+      { f: 'e', a: [w.maxX, w.minZ], b: [w.maxX, w.maxZ], nx: 1, nz: 0 },
+    ];
+    for (const F of faces) {
+      if (isShellEdge(w, F.f)) continue;
+      const L = Math.hypot(F.b[0] - F.a[0], F.b[1] - F.a[1]);
+      for (let d = 2.5; d < L - 1.5; d += 12) {
+        const t = d / L;
+        // the pole stands just inside the house box, so it never adds collision
+        const x = F.a[0] + (F.b[0] - F.a[0]) * t - F.nx * 0.12, z = F.a[1] + (F.b[1] - F.a[1]) * t - F.nz * 0.12;
+        if (insideSolid(x + F.nx * 1.6, z + F.nz * 1.6) || placed.some(([px, pz]) => Math.hypot(px - x, pz - z) < 7)) continue;
+        placed.push([x, z]);
+        pole(k, x, z, Math.atan2(F.nx, F.nz), rand);
+      }
+    }
+  }
+}
+
+function pole(k: StreetBuild, x: number, z: number, ry: number, rand: () => number): void {
+  const H = 7.2 + rand() * 0.8;
+  k.solid.box(x, H / 2, z, 0.2, H, 0.2, '#6b6a66');
+  k.solid.box(x, H - 0.5, z, 1.4, 0.1, 0.1, '#55534f', ry + Math.PI / 2);
+  const warm = rand() < 0.5;
+  const pal = warm ? ['#fff1cf', '#ffd27a'] : BULB;
+  for (let i = 0; i < 44; i++) {
+    const f = i / 44, a = f * Math.PI * 2 * 9;
+    k.bulbs.add(x + Math.cos(a) * 0.17, 0.4 + f * (H - 1.2), z + Math.sin(a) * 0.17, pal[i % pal.length], 0.15);
+  }
+  const n = 2 + Math.floor(rand() * 2);
+  for (let s = 0; s < n; s++) {
+    const col = PAROL[Math.floor(rand() * PAROL.length)];
+    const y = H + 0.55 + s * 0.95;
+    k.glow.add(PAROL_STAR, new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, ry, 0)), new THREE.Vector3(0.8, 0.8, 0.8)), col);
+    k.halos.add(x, y, z, col, 2.4);
+  }
+  k.solid.box(x, H + 0.4 + n * 0.5, z, 0.05, n * 1.0, 0.05, '#55534f');
+  k.pools.push({ x: x + Math.sin(ry) * 1.2, z: z + Math.cos(ry) * 1.2, r: 2.4, color: warm ? '#ffd28a' : '#d8b0ff' });
+}
+
+function banners(k: StreetBuild): void {
+  for (const r of layout.routes) {
+    // halfway along the route's longest segment
+    let best = 0, bl = 0;
+    for (let s = 0; s < r.points.length - 1; s++) {
+      const l = Math.hypot(r.points[s + 1][0] - r.points[s][0], r.points[s + 1][1] - r.points[s][1]);
+      if (l > bl) { bl = l; best = s; }
+    }
+    const [x0, z0] = r.points[best], [x1, z1] = r.points[best + 1];
+    const ux = (x1 - x0) / bl, uz = (z1 - z0) / bl, px = x0 + ux * bl * 0.5, pz = z0 + uz * bl * 0.5;
+    const L = rayToHouse(px, pz, -uz, ux, 16), R = rayToHouse(px, pz, uz, -ux, 16);
+    const y = 4.9;
+    const ry = Math.atan2(ux, uz); // the banner faces along the street
+    k.lit.face(px, y, pz, 3.4, 1.2, ry, 'banner');
+    k.lit.face(px, y, pz, 3.4, 1.2, ry + Math.PI, 'banner');
+    k.halos.add(px, y, pz, '#ff6a5a', 3.6);
+    if (L && R) {
+      const ex = -uz * 1.7, ez = ux * 1.7;
+      k.wires.push(L.x, y + 0.6, L.z, px + ex, y + 0.6, pz + ez, px - ex, y + 0.6, pz - ez, R.x, y + 0.6, R.z);
+    }
+  }
+}
+
+function groundArt(k: StreetBuild): void {
+  // chalk piko (hopscotch) squares beside the plaza, where the street opens up
+  k.decals.ground(-6.5, -6.0, 1.7, 3.4, 0.6, 'piko');
+  k.decals.ground(6.8, 3.8, 1.7, 3.4, -2.2, 'piko');
+  k.decals.ground(-20, 33.5, 1.7, 3.4, 1.35, 'piko');
+  // drain grates along the kerbs of the main streets
+  for (const [x, z] of [[-18.5, -24], [18.5, -24], [-24, 30.6], [24, 30.6], [0, 35.4], [-22.4, 2], [22.4, 2]] as const) {
+    if (!insideSolid(x, z, 0.4)) k.decals.ground(x, z, 0.9, 0.5, 0, 'grate', 0.015);
+  }
+}
+
 function crate(k: StreetBuild, x: number, y: number, z: number, s: number, h: number, ry = 0): void {
   k.solid.box(x, y, z, s, h, s, '#9a7348', ry);
+  k.decals.skin(x, y, z, s, h, s, ry, 'planks', 'planks', '#d9c4a8');
   // darker slats on four sides
   for (const t of [-0.3, 0.3]) {
     k.solid.box(x, y + t * h, z, s + 0.02, 0.07, s + 0.02, '#6f5032', ry);
@@ -524,7 +868,8 @@ function stall(k: StreetBuild, cx: number, cz: number, sx: number, sz: number, a
   // Four sides: a lit shelf window on each (it is seen from every street).
   for (const [nx, nz] of [[0, -1], [0, 1], [-1, 0], [1, 0]]) {
     const w = nx ? sz : sx;
-    k.glow.box(cx + nx * (sx / 2 + 0.02), 1.15, cz + nz * (sz / 2 + 0.02), nx ? 0.04 : w * 0.75, 0.7, nx ? w * 0.75 : 0.04, sariSari ? '#ffe2a6' : '#ffd0a0');
+    // sari-sari store front (kiosk) or a wall of lit parols for sale (stall, the owner's reference photo)
+    k.lit.face(cx + nx * (sx / 2 + 0.03), 1.2, cz + nz * (sz / 2 + 0.03), w * 0.86, sariSari ? 1.0 : 1.3, Math.atan2(nx, nz), sariSari ? 'sari' : 'lanterns');
     k.solid.box(cx + nx * (sx / 2 + 0.12), 0.8, cz + nz * (sz / 2 + 0.12), nx ? 0.24 : w * 0.8, 0.06, nx ? w * 0.8 : 0.24, '#7a5a3f');
     // striped awning
     for (let i = 0; i < 5; i++) {
@@ -619,35 +964,18 @@ function roadPaint(k: StreetBuild): void {
   }
 }
 
-/** Dark silhouettes beyond the walls (houses and tree canopies) so the block sits in a neighbourhood. */
-function skyline(k: StreetBuild, rand: () => number): void {
-  for (let i = 0; i < 70; i++) {
-    const a = (i / 70) * Math.PI * 2 + rand() * 0.05;
-    const r = 66 + rand() * 22;
-    const x = Math.cos(a) * r * 1.1, z = Math.sin(a) * r;
-    if (rand() < 0.55) {
-      const w = 6 + rand() * 8, h = 4 + rand() * 7;
-      k.solid.box(x, h / 2, z, w, h, 6 + rand() * 4, '#1c1a24', -a);
-      if (rand() < 0.6) k.glow.box(x - Math.cos(a) * 3.1, h * 0.55, z - Math.sin(a) * 3.1, 1.0, 0.8, 1.0, rand() < 0.5 ? '#ffcf7a' : '#ffb86b');
-    } else {
-      const s = 4 + rand() * 5;
-      k.solid.add(SPHERE, new THREE.Matrix4().compose(new THREE.Vector3(x, 5 + s * 0.6, z), new THREE.Quaternion(), new THREE.Vector3(s, s * 0.8, s)), '#141a1a');
-      k.solid.box(x, 2.5, z, 0.6, 5, 0.6, '#1a1612');
-    }
-    if (rand() < 0.35) k.halos.add(x, 9 + rand() * 4, z, PAROL[Math.floor(rand() * PAROL.length)], 2.5);
-  }
-}
-
 /** Builds everything once (deterministic). */
-export function buildStreet(opts: { skyline: boolean; colors?: Record<TeamSlot, string> }): StreetBuild {
+export function buildStreet(opts: { colors?: Record<TeamSlot, string> } = {}): StreetBuild {
   const rand = rng(0x5ea50202);
-  const k: StreetBuild = { solid: new Kit(), glow: new Kit(), bulbs: new Dots(), halos: new Dots(), wires: [], pools: [] };
+  const k: StreetBuild = { solid: new Kit(), glow: new Kit(), decals: new Decals(), lit: new Decals(), bulbs: new Dots(), halos: new Dots(), wires: [], pools: [] };
   houses(k, rand);
   props(k, rand);
   bases(k, opts.colors ?? TEAMS.colors);
   roadPaint(k);
   plaza(k, rand);
   overhead(k, rand);
-  if (opts.skyline) skyline(k, rand);
+  lightPoles(k, rand);
+  banners(k);
+  groundArt(k);
   return k;
 }

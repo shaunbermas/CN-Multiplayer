@@ -44,7 +44,7 @@ try {
   // Stage 03 directly (landing picker), a short test stage: 30 s active (head start scales to about 2.3 s), 1 s briefing.
   // stages: 4 makes the test match Stage 01, Agawan Base, The Hunt, Stage 01, so a stage still follows The Hunt
   // (decision 045 made The Hunt the last stage of a real match). Starting at The Hunt needs no teams. The old id STAGE_02_THE_HUNT must still start The Hunt.
-  const opts = { startStage: 'STAGE_02_THE_HUNT', stages: 4, seed: 4242, roundS: 30, briefingS: 1, resultsS: 3 };
+  const opts = { startStage: 'STAGE_02_THE_HUNT', stages: 4, seed: 4242, roundS: 30, briefingS: 1, resultsS: 3, autoNext: true };
   host.start(opts);
   other.start({ ...opts, seed: 99, roundS: 20 });
   await waitFor(() => host.round.phase === 'active' && host.round.hunt, 15_000, 'hunt active');

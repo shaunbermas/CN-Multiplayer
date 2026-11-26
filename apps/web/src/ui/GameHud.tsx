@@ -56,6 +56,8 @@ function startOptions(lobbyStage?: string) {
   test.startStage = q.get('startStage') ?? lobbyStage ?? settings.startStage;
   if (q.get('testStages')) test.stages = Number(q.get('testStages'));
   if (q.get('testResults')) test.resultsS = Number(q.get('testResults'));
+  if (q.get('testFinalResults')) test.finalResultsS = Number(q.get('testFinalResults'));
+  if (q.get('testAutoNext') === '1') test.autoNext = true;
   if (!q.get('testSeed')) return test;
   return { ...test, seed: Number(q.get('testSeed')), roundS: Number(q.get('testRound') ?? 30), briefingS: Number(q.get('testBriefing') ?? 2) };
 }
@@ -83,8 +85,11 @@ function Lobby({ room }: { room: TrialRoom }) {
   const lobbyStage = getStage(r.stage || DEFAULT_STAGE_ID).id;
   // Decision 047 (owner, 26 Nov 2026): the lobby is the stage the host picked on the main menu, not always Stage 01.
   const isHost = room.isHost;
+  // Decision 050: between two stages of a match the lobby is the next stage's; the stage order is fixed.
+  const between = !!r.match?.between;
+  const nextLabel = `Stage ${pad2(getStage(lobbyStage).number)} · ${getStage(lobbyStage).name}`;
   useEffect(() => {
-    if (!isHost || r.phase !== 'lobby') return;
+    if (!isHost || r.phase !== 'lobby' || between) return;
     const want = pickedStage();
     if (STARTABLE_STAGES.includes(want) && want !== lobbyStage) room.setLobbyStage(want);
   }, [isHost, r.phase]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -127,6 +132,17 @@ function Lobby({ room }: { room: TrialRoom }) {
           </div>
           <span className="muted small" aria-live="polite">{copied === 'select' ? `Copy this link: ${link}` : copied ? `${copied === 'link' ? 'Invite link' : 'Code'} copied` : 'Friends open the link, pick a nickname and join.'}</span>
         </div>
+        {between ? (
+          <div className="lobby-next" data-testid="lobby-next">
+            <span className="eyebrow">Next up · stage {r.match.stage} of {r.match.total}</span>
+            <b>{nextLabel}</b>
+            {room.standings.length > 0 && (
+              <ol className="mini-standings" aria-label="Standings so far">
+                {room.standings.slice(0, 3).map((x) => <li key={x.id}><b>{x.rank}</b><span>{x.name}</span><span className="num">{x.points} pts</span></li>)}
+              </ol>
+            )}
+          </div>
+        ) : (
         <div className="lobby-stage" data-testid="lobby-stage">
           <span className="eyebrow">{isHost ? 'Start at' : 'Starting at'}</span>
           <div className="lobby-stage-row" role="radiogroup" aria-label="Stage the match starts at">
@@ -142,6 +158,7 @@ function Lobby({ room }: { room: TrialRoom }) {
             })}
           </div>
         </div>
+        )}
         <div>
           <span className="eyebrow">Players</span>
           <div className="count-big num" data-testid="players">{players.length}<small>/ {MAX_PLAYERS}</small></div>
@@ -149,7 +166,7 @@ function Lobby({ room }: { room: TrialRoom }) {
         </div>
         <div className="lobby-actions">
           {room.isHost
-            ? <button className="btn go big wide" data-testid="start" onClick={() => room.start(startOptions(lobbyStage))}>Start game</button>
+            ? <button className="btn go big wide" data-testid="start" onClick={() => room.start(startOptions(lobbyStage))}>{between ? `Start stage ${pad2(getStage(lobbyStage).number)}` : 'Start game'}</button>
             : <button className={`btn big wide${me?.ready ? ' on' : ''}`} onClick={() => room.setReady(!me?.ready)} data-testid="ready" aria-pressed={!!me?.ready}>{me?.ready ? '✓ Ready' : 'Ready'}</button>}
           {room.isHost && (
             <>
@@ -167,7 +184,9 @@ function Lobby({ room }: { room: TrialRoom }) {
         </div>
         {me && <div className="my-contestant" data-testid="my-contestant" title="Colours are dealt at random and kept if you rejoin; nobody in the room shares yours">
           <Swatch colorway={me.colorway} />You are <b>{coat(me.colorway)?.displayName ?? 'a contestant'}</b></div>}
-        <p className="lobby-hint">{room.isHost
+        <p className="lobby-hint">{between
+          ? (room.isHost ? `Set up ${getStage(lobbyStage).name} and start when everyone is ready. Points so far are kept.` : `Get ready for ${getStage(lobbyStage).name}. The host starts the stage. Walk around to practise.`)
+          : room.isHost
           ? `${lobbyStage !== DEFAULT_STAGE_ID ? `The match starts at Stage ${pad2(getStage(lobbyStage).number)} · ${getStage(lobbyStage).name}. ` : `${MATCH.stages} stages, starting with Red Light. `}Points add up across stages. Walk around this stage to practise.`
           : 'Waiting for the host to start. Walk around this stage to practise.'}</p>
       </aside>
@@ -543,23 +562,25 @@ function FinalResults({ room, remaining, onLeave }: { room: TrialRoom; remaining
       </div>
     </footer>
   );
-  // Decision 049: the winner is broadcast (confetti, podium) only after a match that played all three stages.
-  if (m.champion && st.length > 0) {
-    return <WinnerCeremony room={room} standings={st} table={<StandingsTable room={room} standings={st.slice(3)} />} footer={footer} />;
+  const lastStage = room.results.length > 0 && (
+    <details className="last-stage" open={m.total <= 1} data-testid="last-stage">
+      <summary className="eyebrow">Stage {stageNoAt(m.total, m.stage)} results</summary>
+      <AgawanResultsBoard room={room} />
+      <StageBoard room={room} />
+    </details>
+  );
+  // Decision 050 (owner, 27 Nov 2026): every completed match ends on the ranking ceremony (podium, confetti, list).
+  // The last stage's own board (who was spotted or caught, times, points) stays below it.
+  if (st.length > 0) {
+    return <WinnerCeremony room={room} standings={st} total={m.total} table={<StandingsTable room={room} standings={st.slice(3)} />} extra={lastStage} footer={footer} />;
   }
   return (
     <section className="card results final" data-testid="results" aria-label="Final results">
       <div data-testid="final" className="results-head"><div><span className="eyebrow">Final results · {m.total} {m.total === 1 ? 'stage' : 'stages'}</span><h2>Match complete</h2>
-        {m.total > 1 && <p className="muted">Play all three stages from Stage 01 to crown a winner.</p>}</div></div>
+</div></div>
       <TeamChampionshipBoard room={room} final />
       {st.length ? <StandingsTable room={room} standings={st} /> : <p className="muted">No scores were recorded.</p>}
-      {room.results.length > 0 && (
-        <details className="last-stage" open={m.total <= 1}>
-          <summary className="eyebrow">Stage {stageNoAt(m.total, m.stage)} results</summary>
-          <AgawanResultsBoard room={room} />
-          <StageBoard room={room} />
-        </details>
-      )}
+      {lastStage}
       {footer}
     </section>
   );

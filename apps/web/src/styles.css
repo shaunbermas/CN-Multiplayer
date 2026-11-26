@@ -328,6 +328,10 @@ label.check { display: flex !important; align-items: center; gap: 8px; font: 500
 .lobby-hint { font-size: 13px; color: var(--muted); }
 /* Decision 047: the lobby is the stage the host picked; the host can switch it here (the scene follows). */
 .lobby-stage { display: grid; gap: 6px; }
+.lobby-next { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--brass) 45%, transparent); background: rgba(201, 163, 91, 0.08); }
+.lobby-next > b { font: 800 24px/1.05 var(--display); letter-spacing: 0.02em; }
+.lobby-next .eyebrow { color: var(--brass); }
+.lobby-next .mini-standings { margin: 4px 0 0; }
 .lobby-stage-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
 .lobby-stage-pick { display: grid; gap: 2px; align-content: start; min-height: 52px; padding: 7px 8px; text-align: left; border: 1px solid var(--line); background: rgba(233, 226, 212, 0.03); color: var(--ink); cursor: pointer; }
 .lobby-stage-pick small { font: 700 10px/1 var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
@@ -640,6 +644,16 @@ label.check { display: flex !important; align-items: center; gap: 8px; font: 500
 .ag-rank small { font: 600 10px/1.4 var(--body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
 .ag-rank .nm small { font: 500 12px/1.3 var(--body); letter-spacing: 0; text-transform: none; color: var(--muted); }
 .ag-mvp { margin: 0; font-size: 14px; }
+.ag-ended { margin: 0 0 10px; padding: 6px 12px; border-left: 3px solid var(--brass); background: rgba(201, 163, 91, 0.1); font: 700 14px/1.3 var(--display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--porcelain); }
+.ag-top { margin-top: 10px; display: grid; gap: 6px; }
+.ag-top ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.ag-top li { display: grid; grid-template-columns: auto auto auto 1fr auto; align-items: center; gap: 8px; padding: 5px 10px; border: 1px solid var(--line); border-left: 3px solid var(--team, var(--line)); }
+.ag-top li.me { background: rgba(233, 226, 212, 0.06); }
+.ag-top li em { font: 800 18px/1 var(--display); font-style: normal; color: var(--brass); }
+.ag-top .medal { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; font: 800 14px/1 var(--display); color: #1a1408; }
+.ag-top .medal.m1 { background: radial-gradient(circle at 35% 30%, #fff1c2, #e9c46a 45%, #a87d2c); }
+.ag-top .medal.m2 { background: radial-gradient(circle at 35% 30%, #fff, #c8d0d3 45%, #808b90); }
+.ag-top .medal.m3 { background: radial-gradient(circle at 35% 30%, #ffd8b0, #c48a55 45%, #7c4f2a); }
 .nametag.team { display: inline-flex; align-items: center; gap: 6px; padding-left: 3px; border-left: 0; }
 .nametag.team::before { content: attr(data-team); display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 3px; background: var(--t); color: #14121a; font: 800 11px/1 var(--display); }
 .nametag.team { box-shadow: inset 0 -2px 0 var(--t); }

@@ -60,7 +60,7 @@ export function scoreStage(placings: Placing[]): StageScore[] {
   for (const p of placings) if (p.status === 'finished' && p.finishTime < best) { best = p.finishTime; firstId = p.id; }
   // Stage 02 (and later stages with their own scoring) hand over points already decided by their rules.
   if (placings.some((p) => typeof p.points === 'number')) {
-    return placings.map((p) => ({ id: p.id, place: p.place, status: p.status, finishTime: p.finishTime, points: Math.max(0, Math.min(MATCH.points.first, p.points ?? 0)), first: false }));
+    return placings.map((p) => ({ id: p.id, place: p.place, status: p.status, finishTime: p.finishTime, points: Math.max(0, Math.min(MATCH.points.first, p.points ?? 0)), first: !!p.first }));
   }
   return placings.map((p) => {
     const first = p.id === firstId;

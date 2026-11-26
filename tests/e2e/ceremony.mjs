@@ -1,7 +1,7 @@
 // Winner ceremony (decision 049) in a real browser, against the Worker under `wrangler dev`:
 //  - a full match (Stage 01 -> 02 -> 03, short test rounds, bots) ends on the winner reveal over confetti, then the
 //    podium (1st, 2nd, 3rd) and everyone else's stats below
-//  - a one-stage match ends on the plain results: no reveal, no podium, no confetti
+//  - decision 050: a one-stage match ends on the same ranking ceremony
 // Screenshots go to tests/reports/screenshots/ceremony-*.png. Usage: npm run test:e2e:ceremony
 import { execSync } from 'node:child_process';
 import { createRequire } from 'node:module';
@@ -33,7 +33,7 @@ try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
     const pageErrors = [];
     page.on('pageerror', (e) => pageErrors.push(e.message));
-    await page.goto(`http://127.0.0.1:${PORT}/?name=Host&autojoin=1&quality=low&room=ceremony-full&testSeed=21&testRound=8&testBriefing=1&testStages=3&testResults=2`);
+    await page.goto(`http://127.0.0.1:${PORT}/?name=Host&autojoin=1&quality=low&room=ceremony-full&testSeed=21&testRound=8&testBriefing=1&testStages=3&testResults=2&testAutoNext=1&testFinalResults=40`);
     await page.waitForSelector('[data-testid=start]', { timeout: 60_000 });
     await addBots(page, 2);
     await page.click('[data-testid=start]');
@@ -81,9 +81,11 @@ try {
     await page.click('[data-testid=start]');
     await page.waitForSelector('[data-testid=final]', { timeout: 60_000 });
     await sleep(500);
-    const one = await page.evaluate(() => ({ ceremony: !!document.querySelector('[data-testid=ceremony]'), podium: !!document.querySelector('[data-testid=podium]') }));
+    await page.waitForSelector('[data-testid=podium]', { timeout: 10_000 });
+    const one = await page.evaluate(() => ({ ceremony: !!document.querySelector('[data-testid=ceremony]'), podium: !!document.querySelector('[data-testid=podium]'), eyebrow: document.querySelector('.cer-head .eyebrow')?.textContent ?? '' }));
     report.oneStage = one;
-    check(!one.ceremony && !one.podium, 'a one-stage match shows no winner ceremony');
+    check(one.ceremony && one.podium, 'a one-stage match ends on the ranking ceremony too');
+    check(/1 stage/.test(one.eyebrow), `one-stage eyebrow: ${one.eyebrow}`);
     await page.close();
   }
 } catch (e) {
