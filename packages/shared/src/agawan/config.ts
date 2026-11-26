@@ -60,14 +60,15 @@ export const AGAWAN = {
   base: {
     /** Inner ring around the marker where a capture happens (m). */
     zoneM: 3.5,
-    /** Seconds for ONE attacker alone to take a base. */
+    /** Seconds for ONE attacker alone to take a base. With rivals in the ring the team with more players moves the
+     *  capture at the speed of its lead (3 vs 1 counts as 2); equal numbers pause it. */
     soloS: 12,
     /** Capture speed by attackers in the ring: 1 -> x1, 2 -> x1.7, 3 -> x2.3, 4+ -> x2.8 (8 / 6 / 5 s). */
     crowd: [1, 1.7, 2.3, 2.8],
     /** The base's original team takes its own base back this much faster. */
     homeBonus: 1.5,
-    /** With nobody in the ring, a half-finished capture fades at this fraction per second. */
-    decayPerS: 1 / 10,
+    /** With nobody in the ring, a half-finished capture fades at this fraction per second (20 s from full). */
+    decayPerS: 1 / 20,
   },
 
   /** After a rescue or an automatic release: you cannot be hit and cannot hit or rescue. */

@@ -34,11 +34,15 @@ export interface AgawanBotMemory {
   lastPress: number;
   /** Where inside a ring this bot stands (so a crowd spreads out instead of piling on the marker). */
   ringAngle: number;
+  /** The job is fixed from the bot's place in its team on its first active think (so every team gets a mix). */
+  jobSet?: boolean;
 }
 
 export interface AgawanBotAction { mx: number; mz: number; yaw: number; hold: boolean }
 
 const yawTo = (dx: number, dz: number) => Math.atan2(-dx, -dz);
+/** Jobs by place in the team: 10 players -> 5 raiders, 2 defenders, 3 rovers; 3 players -> raider, defender, raider. */
+const JOB_CYCLE: AgawanJob[] = ['raider', 'defender', 'raider', 'rover', 'raider', 'rover', 'defender', 'raider', 'rover', 'raider'];
 
 function memory(b: BotBrain): AgawanBotMemory {
   if (!b.agawan) {
@@ -59,6 +63,14 @@ export function agawanBotInput(b: BotBrain, me: AgawanBody, priv: AgawanPrivate 
   if (!priv || engine.phase !== 'active' || priv.pen || me.status !== 'active' || me.downUntil > now) { m.path = []; m.goal = null; return idle; }
   const layout = engine.layout;
   const team = priv.team;
+  if (!m.jobSet) {
+    // Every team gets the same mix (about half raiders, a fifth defenders, the rest rovers), dealt by the bot's place
+    // among its teammates; a random pick per bot left some teams with one raider and others with six.
+    const mates = players.filter((o) => pub.teamOf[o.id] === team).map((o) => o.id);
+    const rank = Math.max(0, mates.indexOf(me.id));
+    m.job = JOB_CYCLE[rank % JOB_CYCLE.length];
+    m.jobSet = true;
+  }
   const protectedNow = priv.protectLeft > 0;
   const owner = (s: TeamSlot) => pub.bases.find((x) => x.slot === s)?.owner ?? s;
   const ring = AGAWAN.base.zoneM;
@@ -83,7 +95,10 @@ export function agawanBotInput(b: BotBrain, me: AgawanBody, priv: AgawanPrivate 
   // ---- 2. down to one heart: back to the nearest base we own to heal (unless a teammate is about to be freed by us)
   const owned = TEAM_SLOTS.filter((s) => owner(s) === team).map((s) => layout.bases[s]);
   const inOwned = owned.some((bs) => Math.hypot(bs.x - me.x, bs.z - me.z) < AGAWAN.health.healRadiusM - 1);
-  if (priv.hp <= 1 || (m.goal?.kind === 'heal' && priv.hp < AGAWAN.health.max)) {
+  // A raider standing in an enemy ring keeps taking it while no rival is close (a person would not walk away from a
+  // half-taken base to heal); it only runs home once someone comes for it.
+  const holdingRaid = m.goal?.kind === 'hold' && m.goal.target !== team && !rivals.some((r) => r.d < 5);
+  if (!holdingRaid && (priv.hp <= 1 || (m.goal?.kind === 'heal' && priv.hp < AGAWAN.health.max))) {
     if (owned.length) {
       if (inOwned) { m.goal = { x: me.x, z: me.z, kind: 'heal' }; m.path = []; return idle; }
       const home = owned.map((bs) => ({ bs, d: Math.hypot(bs.x - me.x, bs.z - me.z) })).sort((a, c) => a.d - c.d)[0].bs;
@@ -112,7 +127,10 @@ export function agawanBotInput(b: BotBrain, me: AgawanBody, priv: AgawanPrivate 
   const homePos = layout.bases[homeSlot];
   const homeThreat = homeBase.owner !== team || (homeBase.cap && homeBase.cap.team !== team) || homeBase.inside.some((t) => t !== team);
   const dHome = Math.hypot(homePos.x - me.x, homePos.z - me.z);
-  if (homeThreat && (m.job !== 'rover' || dHome < 25)) return standInRing(m, me, nav, now, b.pace, homeSlot, layout, rivals);
+  // Raiders stay on their raid unless the home base is actually lost or half taken and they are not far away.
+  const homeUrgent = homeBase.owner !== team || (!!homeBase.cap && homeBase.cap.team !== team && homeBase.cap.p > 0.4);
+  const answers = m.job === 'defender' ? homeThreat : m.job === 'rover' ? homeThreat && dHome < 25 : homeUrgent && dHome < 20;
+  if (answers) return standInRing(m, me, nav, now, b.pace, homeSlot, layout, rivals);
 
   // ---- 5. chase a rival close by (defenders: intruders near our base; rovers: anyone close)
   const chaseLimit = m.job === 'rover' ? AGAWAN.bots.chaseM : 0;
@@ -129,7 +147,9 @@ export function agawanBotInput(b: BotBrain, me: AgawanBody, priv: AgawanPrivate 
     const targets = TEAM_SLOTS.filter((s) => owner(s) !== team);
     if (targets.length) {
       const wave = Math.floor(now / 50) + TEAM_SLOTS.indexOf(team);
-      const target = targets[wave % targets.length];
+      // Finish what we started: a base where our team already has capture progress comes before the wave's pick.
+      const started = targets.find((s) => { const c = pub.bases.find((x) => x.slot === s)?.cap; return c?.team === team && c.p > 0.05; });
+      const target = started ?? targets[wave % targets.length];
       const base = layout.bases[target];
       const d = Math.hypot(base.x - me.x, base.z - me.z);
       const capNow = pub.bases.find((x) => x.slot === target)?.cap;

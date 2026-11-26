@@ -452,14 +452,17 @@ export class AgawanEngine implements StageEngine {
       }
       const inside = TEAM_SLOTS.filter((t) => count[t]?.length);
       b.inside = inside;
-      if (inside.length > 1) continue; // contested
       const rate = (n: number, team: TeamSlot) => (cfg.crowd[Math.min(n, cfg.crowd.length) - 1] / cfg.soloS) * (team === slot ? cfg.homeBonus : 1);
       if (inside.length === 0) {
         if (b.cap) { b.cap.p -= cfg.decayPerS * dt; if (b.cap.p <= 0) b.cap = null; }
         continue;
       }
-      const team = inside[0];
-      const n = count[team]!.length;
+      // Majority rule (decision 047): the team with the most players in the ring moves the capture, at the speed of
+      // its lead over the next team (3 attackers vs 1 defender capture like 2). Equal numbers at the top: paused.
+      const sizes = inside.map((t) => count[t]!.length).sort((x, y) => y - x);
+      if (sizes.length > 1 && sizes[0] === sizes[1]) continue; // contested, evenly
+      const team = inside.reduce((best, t) => (count[t]!.length > count[best]!.length ? t : best), inside[0]);
+      const n = sizes[0] - (sizes[1] ?? 0);
       if (team === b.owner) {
         // Defenders alone in their ring push a rival's capture back at their own capture speed.
         if (b.cap) { b.cap.p -= rate(n, team) * dt; if (b.cap.p <= 0) b.cap = null; }

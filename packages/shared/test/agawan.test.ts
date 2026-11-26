@@ -1,6 +1,7 @@
 // Stage 02 · AGAWAN BASE rules and map (handoff pack 02_STAGE_02_GAMEPLAY_MECHANICS_AND_RULES, 04_MAP_LAYOUT,
 // 03_STAGE_02_TEST_MATRIX). Pure engine tests: no room, no network.
 import { describe, expect, it } from 'vitest';
+import { simulateAgawan } from './agawanSim.ts';
 import { AGAWAN, AgawanEngine, getStage, findPath, newRoundPlayer, lineOfSight, agawanBotInput, makeBot, type AgawanBody, type TeamSlot } from '../src/index.ts';
 
 const def = getStage(AGAWAN.id);
@@ -411,4 +412,13 @@ describe('bots', () => {
     }
     expect(e.state.get('bot')!.hp).toBe(AGAWAN.health.max);
   });
+
+  it('30 bots over a full 4:00 match: bases change hands in every seeded match and nothing breaks', () => {
+    for (const seed of [2026, 3, 8]) {
+      const r = simulateAgawan(seed, AGAWAN.matchS);
+      expect(r.counts.base, `seed ${seed}`).toBeGreaterThanOrEqual(2);
+      expect(r.counts.tag, `seed ${seed}`).toBeGreaterThanOrEqual(20);
+      expect(r.counts.rescue + r.counts.release, `seed ${seed}`).toBeGreaterThan(0);
+    }
+  }, 60_000);
 });

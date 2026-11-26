@@ -19,7 +19,7 @@ Every number below lives in `packages/shared/src/agawan/config.ts` (the pack: "o
 | Rescue (hold `E`) | A teammate held in an opponent's pen, within 1.6 m with sight through the fence, held for 1 s. A rescue and the automatic release can never both happen. |
 | After release or rescue | 1 heart only, and 2 s of protection (cannot be hit, cannot hit or rescue). |
 | Healing | One heart every 1.2 s, only while standing in a base your team owns (within 6 m of its marker). Never in the street. |
-| Base takeover | Stand in the 3.5 m inner ring of a base your team does not own. One attacker takes 12 s, two 7 s, three about 5.2 s, four or more about 4.3 s. Any rival in the ring pauses the capture; with nobody there, progress fades over 10 s; a new team must first undo another team's progress. The base's original team takes its own base back 1.5x faster. A taken base belongs to the new team (their ring colour, their healing) until someone takes it back. |
+| Base takeover | Stand in the 3.5 m inner ring of a base your team does not own. One attacker takes 12 s, two 7 s, three about 5.2 s, four or more about 4.3 s. With rivals in the ring, the team with more players moves the capture at the speed of its lead (3 against 1 counts as 2); equal numbers pause it. With nobody there, progress fades over 20 s; a new team must first undo another team's progress. The base's original team takes its own base back 1.5x faster. A taken base belongs to the new team (their ring colour, their healing) until someone takes it back. |
 | Team score | Base taken +10 (including taking your own back); each base held at the final whistle +5; capture +1; rescue +1. |
 | End | Highest team score. A tie at the top plays 30 s of sudden death in which the first base taken by a tied team wins. Then bases held, bases taken, captures, rescues, then a shared place. |
 | Individual board | Every member gets 2 / 1 / 0 by team place, like the other stages (secondary board). |
@@ -42,10 +42,10 @@ route lengths, clear width along the routes and the two approaches per base.
   facing, sight, state and the hit cooldown. Snapshots carry the public state (scores, bases with owner and capture
   progress, prisoners, hearts below full, teams) and each socket's private state (`ag`); hits, captures, rescues,
   releases and base takeovers go out as feed events.
-- Bots (`agawan/agawanBots.ts`) only use what a person can see, and press E at a person's pace (0.45 s). About
-  45 % are raiders: a team's raiders gather on a flank of the same enemy base, then stand in its ring together to
-  take it fast. About 25 % are defenders, who guard their base, stand in its ring when rivals come, and retake it
-  when it is lost. The rest are rovers, who free teammates and hunt rivals. A bot at 1 heart goes to the nearest
+- Bots (`agawan/agawanBots.ts`) only use what a person can see, and press E at a person's pace (0.45 s). Jobs are dealt by place in the team, so every team gets the same mix: about
+  half are raiders: a team's raiders gather on a flank of the same enemy base, then stand in its ring together to
+  take it fast. A fifth are defenders, who guard their base, stand in its ring when rivals come, and retake it
+  when it is lost. The rest are rovers, who free teammates and hunt rivals. A bot at 1 heart (unless it is standing alone in an enemy ring) goes to the nearest
   base its team owns to heal. Anyone hits a rival who walks into reach.
 
 ## 4. Team championship
