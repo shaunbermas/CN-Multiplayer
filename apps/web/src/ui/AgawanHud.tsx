@@ -4,7 +4,7 @@
 // board on Tab. Everything is read from the server's public and private state: the client decides nothing. The
 // prompt is a hint from positions the client already has; the server still checks every hold.
 import { useEffect, useState } from 'react';
-import { AGAWAN, TEAMS, TEAM_SLOTS, getStage, type TeamSlot } from '@cn-trials/shared';
+import { AGAWAN, TEAMS, TEAM_SLOTS, TeamChampionship, getStage, type TeamSlot } from '@cn-trials/shared';
 import type { TrialRoom } from '../net.ts';
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
@@ -206,6 +206,40 @@ export function AgawanResultsBoard({ room }: { room: TrialRoom }) {
       {best && ((best.raids ?? 0) + (best.tags ?? 0) + (best.rescues ?? 0)) > 0 && (
         <p className="ag-mvp" data-testid="agawan-mvp"><span className="eyebrow">Most valuable</span> <b>{best.name}</b> <span className="muted num">{best.raids ?? 0} raids · {best.tags ?? 0} tags · {best.rescues ?? 0} rescues</span></p>
       )}
+    </div>
+  );
+}
+
+/** Team championship board (matches with teams): 3 / 2 / 1 per stage, total, and how this stage was ranked. */
+export function TeamChampionshipBoard({ room, final = false }: { room: TrialRoom; final?: boolean }) {
+  const b = room.teamBoard;
+  if (!b) return null;
+  const stageIds = b.order;
+  const champions = b.standings.filter((t) => t.rank === 1);
+  const why = champions.length === 1 ? TeamChampionship.tieBreak(b.standings[0], b.standings[1]) : null;
+  return (
+    <div className={`ag-champ${final ? ' final' : ''}`} data-testid="team-championship">
+      {final && (
+        <div className="ag-champ-hero" data-testid="team-champion" style={{ ['--team' as string]: TEAMS.colors[champions[0].slot] }}>
+          <span className="eyebrow">{champions.length > 1 ? 'Joint team champions' : 'Team champion'}</span>
+          <h3>{champions.map((t) => teamName(room, t.slot)).join(' and ')}</h3>
+          <p className="muted">{champions[0].points} championship points{why ? ` · won the tie on ${why}` : champions.length > 1 ? ' each · tied on every rule' : ''}</p>
+        </div>
+      )}
+      <table className="board ag-champ-table">
+        <thead><tr><th /><th>Team</th>{b.standings[0].perStage.map((_, i) => <th key={i} className="r">{stageIds[i] ? `S${pad2(getStage(stageIds[i]).number)}` : `#${i + 1}`}</th>)}<th className="r">Total</th></tr></thead>
+        <tbody>
+          {b.standings.map((t) => (
+            <tr key={t.slot} className={t.slot === room.agawan?.team || room.teams?.members[room.id] === t.slot ? 'me' : ''} data-testid={`team-standing-${t.slot}`}>
+              <td className="place">{t.rank}</td>
+              <td className="name"><TeamChip slot={t.slot} /> {teamName(room, t.slot)}</td>
+              {t.perStage.map((x, i) => <td key={i} className="r num">{x ?? '–'}</td>)}
+              <td className="r total">{t.points}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {b.stage && <p className="muted ag-champ-note">{b.stage.by === 'average' ? 'This stage: teams ranked by their members’ average points' : 'This stage: teams ranked by Agawan Base score'} · 1st 3, 2nd 2, 3rd 1 · ties share the place</p>}
     </div>
   );
 }

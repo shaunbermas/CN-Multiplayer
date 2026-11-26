@@ -52,8 +52,8 @@ export const BOT_LIMITS = {
 } as const;
 
 /**
- * Stage 02 · AGAWAN BASE switch (decision 045). Off until the stage is built and the owner approves it: while off, the
- * menu shows Stage 02 as "Coming soon" and a match plays Stage 01 then Stage 03 (The Hunt). One constant, so turning
- * it off again is also the rollback.
+ * Stage 02 · AGAWAN BASE switch (decision 045). On since PR E: a match plays 01 Red Light, 02 Agawan Base, 03 The Hunt
+ * in teams and crowns a team champion. Turning it off (false) is the rollback: the menu shows Stage 02 as "Coming
+ * soon" and a match plays Stage 01 then Stage 03, with the individual winner as before.
  */
-export const AGAWAN_ENABLED = false;
+export const AGAWAN_ENABLED = true;

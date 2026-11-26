@@ -12,6 +12,7 @@ export * from './obstacles.ts';
 export * from './contestantColorways.ts';
 export * from './collisions.ts';
 export * from './match.ts';
+export * from './teamChampionship.ts';
 export * from './bots.ts';
 export * from './engine.ts';
 export * from './teams.ts';

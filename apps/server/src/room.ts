@@ -13,7 +13,7 @@ import {
   type BotBrain, type ClientMessage, type GapRow, type MatchState, type Rect, type ResolvedObstacles, type RosterEntry, type RoundEvents, type RoundPlayer, type RoundState,
   type ServerMessage, type StageGeometry, type StartRequestOptions,
   AGAWAN_STAGE_ID, TeamBook, type TeamAction, type TeamResult,
-  AgawanEngine, agawanBotInput, REGISTERED_ORDER, MATCH_ORDER, type AgawanBody,
+  AgawanEngine, agawanBotInput, REGISTERED_ORDER, MATCH_ORDER, type AgawanBody, type TeamSlot, type TeamStanding, type TeamStageResult,
 } from '@cn-trials/shared';
 import type { Env } from './env.ts';
 
@@ -60,6 +60,12 @@ export class TrialRoom extends DurableObject<Env> {
   private obstacles: ResolvedObstacles | null = resolveObstacles(this.geo);
   private gapRows: GapRow[] = obstacleGapRows(this.obstacles, this.geo);
   private engine: StageEngine = new RoundEngine(this.geo);
+  /** Team roster of the stage being played (player id -> team), for the team championship. */
+  private stageRoster: Record<string, TeamSlot> = {};
+  private teamBoard(): { teams?: { standings: TeamStanding[]; stage: TeamStageResult | null; order: string[] } } {
+    const t = this.match?.teamStandings();
+    return t ? { teams: { standings: t, stage: this.match!.lastTeamStage, order: this.match!.order } } : {};
+  }
   /** The current or last multi-stage match (points and standings); null before the first match. */
   private match: Match | null = null;
   private matchRunning = false;
@@ -240,7 +246,7 @@ export class TrialRoom extends DurableObject<Env> {
     ws.serializeAttachment({ room, id: p.id } satisfies Attachment);
     if (!this.hostId) this.hostId = p.id;
     send(ws, { t: 'welcome', v: PROTOCOL_VERSION, id: p.id, room, stage: this.geo.stage, spawn: p.spawn, roster: this.roster(), round: this.roundState(), teams: this.teams.view() });
-    if (this.match) send(ws, { t: 'standings', match: this.matchState(), standings: this.match.standings() });
+    if (this.match) send(ws, { t: 'standings', match: this.matchState(), standings: this.match.standings(), ...this.teamBoard() });
     this.broadcast({ t: 'roster', roster: this.roster() });
     this.broadcastTeams();
     this.broadcastSnapshot();
@@ -294,7 +300,7 @@ export class TrialRoom extends DurableObject<Env> {
     ws.serializeAttachment({ room, id } satisfies Attachment);
     if (this.matchRunning) this.match?.ensure({ ...p, bot: false });
     send(ws, { t: 'welcome', v: PROTOCOL_VERSION, id, room, stage: this.geo.stage, spawn: p.spawn, roster: this.roster(), round: this.roundState(), teams: this.teams.view() });
-    if (this.match) send(ws, { t: 'standings', match: this.matchState(), standings: this.match.standings() });
+    if (this.match) send(ws, { t: 'standings', match: this.matchState(), standings: this.match.standings(), ...this.teamBoard() });
     this.broadcast({ t: 'roster', roster: this.roster() });
     this.broadcastTeams();
     this.broadcastSnapshot();
@@ -521,6 +527,8 @@ export class TrialRoom extends DurableObject<Env> {
     for (const p of [...this.players.values()]) if (p.away) { this.players.delete(p.id); this.teams.remove(p.id); this.match?.markLeft(p.id); }
     this.match = new Match(this.orderFor(opts));
     if (typeof opts?.startStage === 'string') this.match.startAt(opts.startStage);
+    // A match with Agawan Base in it is played in teams and crowns a team champion (3 / 2 / 1 per stage).
+    if (this.matchNeedsTeams(this.match.order, opts?.startStage)) this.match.enableTeams();
     for (const p of this.players.values()) this.match.ensure({ ...p, bot: !!p.bot });
     this.matchRunning = true;
     this.teams.locked = true; // names, captains and membership are fixed for the whole match
@@ -556,6 +564,9 @@ export class TrialRoom extends DurableObject<Env> {
     const obstacles = !(test && (opts?.obstacles === false || this.plainCourse()));
     // Agawan Base plays the teams locked in the lobby (late joiners were placed in the smallest team).
     for (const p of players) this.teams.place(p.id);
+    // The roster this stage is scored against for the team championship (everyone it starts with).
+    const members = this.teams.view().members;
+    this.stageRoster = Object.fromEntries(players.filter((p) => members[p.id]).map((p) => [p.id, members[p.id]]));
     this.engine.start(players, { seed, roundS, briefingS, resultsS, mode: 'standup', obstacles, teams: this.teams.view().members });
     for (const p of players) p.yaw = 0;
     console.log(JSON.stringify({ ev: 'stage_start', room: this.roomCode, round: this.roundId, stage: this.geo.stage, match: this.matchState(), seed, players: players.length, bots: this.botCount(),
@@ -795,7 +806,7 @@ export class TrialRoom extends DurableObject<Env> {
     if (ev.results && m) {
       // Results are frozen here and recorded in the match exactly once per round (no duplicate awards).
       const refs = [...this.players.values()].map((p) => ({ id: p.id, name: p.name, joinOrder: p.joinOrder, bot: !!p.bot }));
-      const scores = m.record(this.roundId, ev.results, refs);
+      const scores = m.record(this.roundId, ev.results, refs, this.stageRoster);
       if (scores) {
         const byId = new Map(scores.map((x) => [x.id, x]));
         const placings = ev.results.map((r) => {
@@ -803,7 +814,10 @@ export class TrialRoom extends DurableObject<Env> {
           return { ...r, name: pl?.name ?? r.id, points: byId.get(r.id)?.points ?? 0, first: !!byId.get(r.id)?.first, ...(pl?.bot ? { bot: true } : {}) };
         });
         const standings = m.standings();
-        this.broadcast({ t: 'results', roundId: this.roundId, stage: this.geo.stage, mode: this.engine.mode, placings, match: this.matchState(), standings });
+        const teamStandings = m.teamStandings();
+        this.broadcast({ t: 'results', roundId: this.roundId, stage: this.geo.stage, mode: this.engine.mode, placings, match: this.matchState(), standings,
+          ...(teamStandings ? { teams: { standings: teamStandings, stage: m.lastTeamStage, order: m.order } } : {}) });
+        if (teamStandings) console.log(JSON.stringify({ ev: 'team_championship', room: this.roomCode, round: this.roundId, stage: this.geo.stage, result: m.lastTeamStage, standings: teamStandings.map((t) => [t.rank, t.slot, t.points]) }));
         console.log(JSON.stringify({ ev: 'results', room: this.roomCode, round: this.roundId, stage: this.geo.stage, match: this.matchState(),
           seed: this.engine.seed, placings: placings.map((p) => [p.place, p.id, p.status, p.finishTime, p.points]),
           leader: standings[0] ? [standings[0].id, standings[0].points] : null }));

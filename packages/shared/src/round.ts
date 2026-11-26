@@ -126,6 +126,8 @@ export interface Placing {
   /** Agawan Base: the player's team, its placement (1-3) and the player's own tags, rescues and raids. */
   team?: 'A' | 'B' | 'C';
   teamPlace?: number;
+  /** Agawan Base: the team's gameplay score (raids, unique tags and rescues), for the team championship tie-break. */
+  teamScore?: number;
   tags?: number;
   rescues?: number;
   raids?: number;

@@ -17,7 +17,7 @@ import { settings } from './settings.ts';
 import { IconBars, IconCheck, IconFlag, IconGear, IconHome, IconMouse, IconPause, IconPin, IconPlay, IconRestart, IconRestartCcw, IconUsers, IconVolume, IconVolumeOff, IconX } from './icons.tsx';
 import { setMuted } from '../game/audio.ts';
 import { HuntBriefingRole, HuntPanel, HuntRoleChip, HuntTop, captureText } from './HuntHud.tsx';
-import { AgawanPanel, AgawanResultsBoard, AgawanTeamChip, AgawanTeamStatus, AgawanTop, teamName } from './AgawanHud.tsx';
+import { AgawanPanel, AgawanResultsBoard, AgawanTeamChip, AgawanTeamStatus, AgawanTop, TeamChampionshipBoard, teamName } from './AgawanHud.tsx';
 import { TeamLobby, teamsVisible } from './TeamLobby.tsx';
 
 // Decision 037: no time-left bar, no "get ready" warning and no hint text: knowing when red comes is part of the
@@ -440,7 +440,8 @@ function StageResults({ room, remaining, onLeave }: { room: TrialRoom; remaining
           <StageBoard room={room} />
         </div>
         <div>
-          <span className="eyebrow">Overall standings</span>
+          {room.teamBoard && <><span className="eyebrow">Team championship</span><TeamChampionshipBoard room={room} /></>}
+          <span className="eyebrow">{room.teamBoard ? 'Individual board' : 'Overall standings'}</span>
           <StandingsTable room={room} standings={standings} compact />
         </div>
       </div>
@@ -506,10 +507,12 @@ function FinalResults({ room, remaining, onLeave }: { room: TrialRoom; remaining
   return (
     <section className="card results final" data-testid="results" aria-label="Final results">
       <div data-testid="final" className="results-head"><div><span className="eyebrow">Final results · {m.total} {m.total === 1 ? 'stage' : 'stages'}</span><h2>Match complete</h2></div></div>
+      {/* Matches with teams crown a team champion (decision 045); the individual board below is secondary. */}
+      <TeamChampionshipBoard room={room} final />
       {w ? (
         <div className="winner-hero" data-testid="winner">
           <div className="crest" style={{ background: `#${c?.coatSecondary ?? '445'}`, borderColor: `#${c?.identifierAccent ?? 'ccc'}` }}>1</div>
-          <div><span className="eyebrow" style={{ color: 'var(--brass)' }}>Winner</span><h3>{w.name}{w.id === room.id ? ' (you)' : ''}</h3>
+          <div><span className="eyebrow" style={{ color: 'var(--brass)' }}>{room.teamBoard ? 'Top individual' : 'Winner'}</span><h3>{w.name}{w.id === room.id ? ' (you)' : ''}</h3>
             <div className="why">{why ? `Tied on ${w.points} points with ${st[1].name}: won on ${why}.` : `${w.wins} stage ${w.wins === 1 ? 'win' : 'wins'} · finished ${w.finishes} of ${m.total}`}</div></div>
           <div className="score num">{w.points}<small>POINTS</small></div>
         </div>

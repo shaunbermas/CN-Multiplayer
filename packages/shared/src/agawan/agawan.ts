@@ -426,7 +426,7 @@ export class AgawanEngine implements StageEngine {
     rows.sort((a, b) => place[a.s.team] - place[b.s.team] || contrib(b.s) - contrib(a.s) || a.p.joinOrder - b.p.joinOrder);
     return rows.map(({ p, s }, i) => ({
       id: p.id, place: i + 1, status: place[s.team] === 1 ? 'finished' : 'active', finishTime: -1, progress: 0, qualified: false,
-      points: AGAWAN.playerPoints[place[s.team] - 1] ?? 0, team: s.team, teamPlace: place[s.team],
+      points: AGAWAN.playerPoints[place[s.team] - 1] ?? 0, team: s.team, teamPlace: place[s.team], teamScore: this.teams.get(s.team)?.score ?? 0,
       tags: s.tags, rescues: s.rescues, raids: s.raids,
     }));
   }
