@@ -113,9 +113,9 @@ Measured on 26 Nov 2026 in the cloud container, with no real GPU:
 | Server tick, 30 players (27 bots) | avg 0.4 ms, p95 1 ms, max 9 ms | (unchanged) |
 | Snapshot size, 30 players | about 2.5 KB at 20 Hz, about 50 KB/s per client | (unchanged) |
 
-So on the same machine, Agawan Base draws about half the calls and triangles of Stage 01. Stage 01 already runs on
-the reference Intel Mac. That is an inference, not a measurement: **someone needs to play it on an Intel Mac to
-confirm**. The tick and snapshot numbers come from `npm run test:agawan` (`/health`).
+So on the same machine, Agawan Base draws about half the calls and triangles of Stage 01. That says it should run
+at least as well as Stage 01 on the same machine, but it is an inference, not a measurement: **someone needs to play
+it on an Intel Mac to confirm**. All three stages on every tier: `docs/PERFORMANCE.md`. The tick and snapshot numbers come from `npm run test:agawan` (`/health`).
 
 ## 9. Rollback
 

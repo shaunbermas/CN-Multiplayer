@@ -6,7 +6,7 @@ import { GroundFx, groundFx, groundFxStatus, nearestWet } from './groundFx.ts';
 import { ContestantInstance, assignLods, contestantCpu, enableShadowLayer, contestantAsset, contestantStatus, loadContestant, setColorway, type ContestantAsset } from './contestant.ts';
 import type { PlayerView, TrialRoom } from '../net.ts';
 import { hud } from './hudStore.ts';
-import { AdaptiveQuality, quality } from './quality.ts';
+import { AdaptiveQuality, quality, restartWarmup } from './quality.ts';
 import { attachInput, input } from './input.ts';
 import { Predictor } from './predictor.ts';
 import { sfx } from './audio.ts';
@@ -201,7 +201,7 @@ function NameTags({ room }: { room: TrialRoom }) {
     d.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:1';
     return d;
   }, []);
-  const tags = useRef(new Map<string, { el: HTMLDivElement; text: string; cls: string; shown: boolean; tf: string }>());
+  const tags = useRef(new Map<string, { el: HTMLDivElement; text: string; cls: string; shown: boolean; tf: string; z: number }>());
   useEffect(() => {
     const parent = gl.domElement.parentElement;
     parent?.appendChild(layer);
@@ -223,7 +223,7 @@ function NameTags({ room }: { room: TrialRoom }) {
         const el = document.createElement('div');
         el.style.cssText = 'position:absolute;left:0;top:0;will-change:transform';
         layer.appendChild(el);
-        t = { el, text: '', cls: '', shown: true, tf: '' };
+        t = { el, text: '', cls: '', shown: true, tf: '', z: -1 };
         tags.current.set(id, t);
       }
       const obj = contestantInstances.get(id)?.root.parent ?? null; // the PLAYER_<id> group (drawn position)
@@ -245,7 +245,8 @@ function NameTags({ room }: { room: TrialRoom }) {
       const sc = Math.min(2, k / Math.max(dist, 0.5));
       const tf = `translate3d(${sx.toFixed(1)}px,${sy.toFixed(1)}px,0) translate(-50%,-50%) scale(${sc.toFixed(3)})`;
       if (tf !== t.tf) { t.el.style.transform = tf; t.tf = tf; }
-      t.el.style.zIndex = String(Math.round(1000 - dist * 10));
+      const zi = Math.round(1000 - dist * 10);
+      if (zi !== t.z) { t.el.style.zIndex = String(zi); t.z = zi; } // DOM writes only on change (each one restyles)
     }
     for (const [id, t] of tags.current) if (!seenIds.has(id)) { t.el.remove(); tags.current.delete(id); }
   });
@@ -522,6 +523,38 @@ function Players({ room, predictor }: { room: TrialRoom; predictor: React.RefObj
   return <>{ids.current.map((id) => <Contestant key={id} id={id} room={room} local={id === room.id} predictor={predictor} />)}</>;
 }
 
+/**
+ * Shader warm-up (performance pass, 26 Nov 2026). three.js compiles a material's shader the first time it is drawn,
+ * so turning the camera towards something new (or a new effect appearing) used to compile in the middle of play: a
+ * visible hitch, and on Intel Macs (Chrome on Metal) each compile can take 100 ms or more. Once the stage and the
+ * contestants are loaded, and again after a quality change, everything in the scene is compiled up front, off the
+ * critical path where the browser supports parallel compiles (compileAsync), ignoring what the camera can see.
+ */
+export const shaderWarmup = { key: '', programs: 0, ms: 0 };
+function ShaderWarmup({ stageId, ready }: { stageId: string; ready: () => boolean }) {
+  const { gl, scene, camera } = useThree();
+  const tick = useRef(0);
+  const busy = useRef(false);
+  useEffect(() => { restartWarmup(); }, [stageId]);
+  useFrame((_, dt) => {
+    tick.current += dt;
+    if (busy.current || tick.current < 0.2) return; // checked five times a second, whatever the frame rate
+    tick.current = 0;
+    const key = `${stageId}:${quality.tier}:${contestantInstances.size}`;
+    if (shaderWarmup.key === key || !ready() || contestantStatus.state !== 'ready') return;
+    busy.current = true;
+    const t0 = performance.now();
+    gl.compileAsync(scene, camera).catch(() => undefined).finally(() => {
+      shaderWarmup.key = key;
+      shaderWarmup.programs = gl.info.programs?.length ?? 0;
+      shaderWarmup.ms = Math.round(performance.now() - t0);
+      busy.current = false;
+      restartWarmup();
+    });
+  });
+  return null;
+}
+
 /** Renderer statistics of the last frame, for tests (window.__cn.renderInfo). */
 const renderInfo = { calls: 0, triangles: 0, programs: 0, textures: 0, geometries: 0, dpr: 1 };
 function RenderInfo() {
@@ -591,7 +624,7 @@ export function Scene({ room, onStageError }: { room: TrialRoom; onStageError: (
       match: () => ({ ...room.round.match }),
       assets: () => JSON.parse(JSON.stringify(stageModule.assets)),
       quality: () => JSON.parse(JSON.stringify(quality)),
-      renderInfo: () => ({ ...renderInfo }),
+      renderInfo: () => ({ ...renderInfo, warmup: { ...shaderWarmup } }),
     };
   }, [room, stageModule, stage]);
   const StageScene = stageModule.Scene;
@@ -601,6 +634,7 @@ export function Scene({ room, onStageError }: { room: TrialRoom; onStageError: (
       shadows={{ type: THREE.PCFShadowMap }}>
       <AdaptiveQuality />
       <RenderInfo />
+      <ShaderWarmup stageId={stage.def.id} ready={() => stageModule.assets.environment === 'ready'} />
       <StageErrorBoundary onError={onStageError}>
         <Suspense fallback={null}>
           <StageScene key={stage.def.id} room={room} />

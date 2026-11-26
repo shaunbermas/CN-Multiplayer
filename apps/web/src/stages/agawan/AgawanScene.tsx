@@ -24,6 +24,8 @@ export const agawanAssets = {
 };
 
 const FOG = { color: '#1a1830', near: 38, far: 125 };
+/** Largest bulb and glow sprite, in CSS pixels, per tier (performance pass, 26 Nov 2026). */
+export const POINT_MAX = { high: { bulb: 48, halo: 112 }, medium: { bulb: 40, halo: 84 }, low: { bulb: 32, halo: 60 } } as const;
 
 let cached: { key: string; k: StreetBuild } | null = null;
 function street(skyline: boolean): StreetBuild {
@@ -35,13 +37,13 @@ function street(skyline: boolean): StreetBuild {
 /** Soft round sprites with per-point size (bulbs and glows), faded by the scene fog. */
 function pointsMaterial(halo: boolean): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
-    uniforms: { uScale: { value: 400 }, uNear: { value: FOG.near }, uFar: { value: FOG.far }, uAlpha: { value: halo ? 0.42 : 1 } },
+    uniforms: { uScale: { value: 400 }, uMax: { value: 140 }, uNear: { value: FOG.near }, uFar: { value: FOG.far }, uAlpha: { value: halo ? 0.42 : 1 } },
     vertexShader: /* glsl */ `
-      attribute float size; varying vec3 vColor; varying float vFog; uniform float uScale, uNear, uFar;
+      attribute float size; varying vec3 vColor; varying float vFog; uniform float uScale, uMax, uNear, uFar;
       void main() {
         vColor = color;
         vec4 mv = modelViewMatrix * vec4(position, 1.0);
-        gl_PointSize = clamp(size * uScale / -mv.z, 1.5, 140.0);
+        gl_PointSize = clamp(size * uScale / -mv.z, 1.5, uMax);
         vFog = smoothstep(uNear, uFar, -mv.z);
         gl_Position = projectionMatrix * mv;
       }`,
@@ -119,6 +121,12 @@ function Street() {
     const scale = (size.height * gl.getPixelRatio()) / (2 * Math.tan((cam.fov * Math.PI) / 360));
     (objs.bulbs.material as THREE.ShaderMaterial).uniforms.uScale.value = scale;
     (objs.halos.material as THREE.ShaderMaterial).uniforms.uScale.value = scale;
+    // Glows are additive sprites, so a big one near the camera shades many pixels several times over (overdraw).
+    // Performance pass (26 Nov 2026): their largest size follows the tier and the render resolution, which keeps
+    // the fill cost on integrated GPUs (Intel Macs) in check without changing how the street looks from afar.
+    const dpr = gl.getPixelRatio();
+    (objs.bulbs.material as THREE.ShaderMaterial).uniforms.uMax.value = POINT_MAX[tier].bulb * dpr;
+    (objs.halos.material as THREE.ShaderMaterial).uniforms.uMax.value = POINT_MAX[tier].halo * dpr;
   });
   return (
     <>
