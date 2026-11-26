@@ -48,11 +48,21 @@ export class Kit {
     return this;
   }
 
+  private built: THREE.BufferGeometry | null = null;
+
+  /**
+   * Merges the parts once and returns the same geometry on every later call. The street build is cached across
+   * scene mounts, so a second mount (switching from Stage 01 to Stage 02) must get the full street back, not an
+   * empty merge. Disposing the result on unmount only frees its GPU buffers; three.js uploads it again when the
+   * mesh renders next time.
+   */
   build(): THREE.BufferGeometry {
+    if (this.built) return this.built;
     const g = this.parts.length ? mergeGeometries(this.parts, false)! : new THREE.BufferGeometry();
     for (const p of this.parts) p.dispose();
     this.parts = [];
     g.computeBoundingSphere();
+    this.built = g;
     return g;
   }
 }
