@@ -14,6 +14,7 @@ export * from './collisions.ts';
 export * from './match.ts';
 export * from './bots.ts';
 export * from './engine.ts';
+export * from './teams.ts';
 export * from './hunt/config.ts';
 export * from './hunt/layout.ts';
 export * from './hunt/los.ts';

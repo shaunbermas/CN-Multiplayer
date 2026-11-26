@@ -319,6 +319,29 @@ label.check { display: flex !important; align-items: center; gap: 8px; font: 500
 .my-contestant { display: flex; align-items: center; gap: 10px; font-size: 14px; }
 .swatch { display: inline-block; width: 16px; height: 16px; border: 2px solid; flex: none; }
 .lobby-hint { font-size: 13px; color: var(--muted); }
+/* Stage 02 · Agawan Base team setup (decision 045): slot accents come from TEAMS.colors via --team */
+.teams { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+.team-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.team-card { display: grid; gap: 10px; align-content: start; padding: 12px; border: 1px solid var(--line); border-top: 3px solid var(--team); background: color-mix(in srgb, var(--team) 6%, transparent); }
+.team-card.mine { border-color: color-mix(in srgb, var(--team) 60%, transparent); border-top-color: var(--team); }
+.team-top { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.team-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--team); flex: none; }
+.team-name { min-width: 0; flex: 1; text-align: left; font: 800 18px/1.1 var(--display); letter-spacing: 0.04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: none; border: 0; padding: 0; color: var(--ink); }
+.team-name.editable { cursor: text; border-bottom: 1px dashed var(--line-strong); }
+.team-name-input { flex: 1; min-width: 0; font: 800 16px/1.2 var(--display); padding: 2px 6px; background: rgba(0, 0, 0, 0.3); color: var(--ink); border: 1px solid var(--team); }
+.team-count { font: 700 13px/1 var(--display); color: var(--muted); }
+.team-captain { display: grid; gap: 4px; font-size: 14px; }
+.team-captain select { font: 600 13px/1.2 var(--body); padding: 5px 6px; background: rgba(0, 0, 0, 0.3); color: var(--ink); border: 1px solid var(--line-strong); }
+.team-members { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; max-height: 220px; overflow: auto; }
+.team-members li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 6px; padding: 3px 6px; font-size: 13px; background: rgba(233, 226, 212, 0.04); }
+.team-members li.me { outline: 1px solid var(--porcelain); }
+.team-members li.empty { display: block; color: var(--muted); background: none; }
+.team-move { display: flex; gap: 3px; }
+.team-move .mini { width: 20px; height: 20px; padding: 0; font: 700 10px/1 var(--display); color: var(--ink); background: transparent; border: 1px solid var(--team); cursor: pointer; }
+.team-move .mini:hover { background: color-mix(in srgb, var(--team) 35%, transparent); }
+.team-tools { display: flex; gap: 8px; margin-top: 10px; }
+.team-error { min-height: 1.3em; margin: 8px 0 0; font-size: 13px; color: var(--stop, #e8705a); }
+@media (max-width: 860px) { .team-cards { grid-template-columns: 1fr; } }
 
 /* ---------- results and leaderboards ---------- */
 .results { margin: 56px auto 0; width: min(980px, 95vw); max-height: calc(100vh - 110px); overflow: auto; }

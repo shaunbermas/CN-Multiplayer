@@ -12,6 +12,7 @@ import {
   EMOTES, dealColorway, sanitizePlayerKey, greenTime, obstacleWalls, resolveObstacles, sanitizeName, step,
   type BotBrain, type ClientMessage, type GapRow, type MatchState, type Rect, type ResolvedObstacles, type RosterEntry, type RoundEvents, type RoundPlayer, type RoundState,
   type ServerMessage, type StageGeometry, type StartRequestOptions,
+  AGAWAN_STAGE_ID, TeamBook, type TeamAction, type TeamResult,
 } from '@cn-trials/shared';
 import type { Env } from './env.ts';
 
@@ -76,6 +77,8 @@ export class TrialRoom extends DurableObject<Env> {
   /** The host paused the room (owner, 25 Nov 2026): the simulation, timers and bots stand still. */
   private paused = false;
   private roomCode = 'default';
+  /** Stage 02 · Agawan Base teams and captains (v9): set in the lobby, locked while a match runs, kept between matches. */
+  private teams = new TeamBook();
   private roundId = 0;
 
   async fetch(request: Request): Promise<Response> {
@@ -144,6 +147,9 @@ export class TrialRoom extends DurableObject<Env> {
         break;
       case 'bots':
         this.manageBots(p, msg);
+        break;
+      case 'team':
+        this.teamAction(p, msg);
         break;
       case 'next':
         // Host: leave the stage results now (next stage, or the lobby after the final leaderboard).
@@ -230,9 +236,10 @@ export class TrialRoom extends DurableObject<Env> {
     this.sockets.set(p.id, ws);
     ws.serializeAttachment({ room, id: p.id } satisfies Attachment);
     if (!this.hostId) this.hostId = p.id;
-    send(ws, { t: 'welcome', v: PROTOCOL_VERSION, id: p.id, room, stage: this.geo.stage, spawn: p.spawn, roster: this.roster(), round: this.roundState() });
+    send(ws, { t: 'welcome', v: PROTOCOL_VERSION, id: p.id, room, stage: this.geo.stage, spawn: p.spawn, roster: this.roster(), round: this.roundState(), teams: this.teams.view() });
     if (this.match) send(ws, { t: 'standings', match: this.matchState(), standings: this.match.standings() });
     this.broadcast({ t: 'roster', roster: this.roster() });
+    this.broadcastTeams();
     this.broadcastSnapshot();
     this.startLoop();
     console.log(JSON.stringify({ ev: 'reconnect', room, id: p.id, status: p.status, role: this.hunt()?.roleOf(p.id) ?? null, phase: this.engine.phase }));
@@ -278,11 +285,13 @@ export class TrialRoom extends DurableObject<Env> {
     this.players.set(id, p);
     this.sockets.set(id, ws);
     if (!this.hostId) this.hostId = id;
+    this.teams.place(id); // everyone starts in the smallest team and may switch in the lobby
     ws.serializeAttachment({ room, id } satisfies Attachment);
     if (this.matchRunning) this.match?.ensure({ ...p, bot: false });
-    send(ws, { t: 'welcome', v: PROTOCOL_VERSION, id, room, stage: this.geo.stage, spawn: p.spawn, roster: this.roster(), round: this.roundState() });
+    send(ws, { t: 'welcome', v: PROTOCOL_VERSION, id, room, stage: this.geo.stage, spawn: p.spawn, roster: this.roster(), round: this.roundState(), teams: this.teams.view() });
     if (this.match) send(ws, { t: 'standings', match: this.matchState(), standings: this.match.standings() });
     this.broadcast({ t: 'roster', roster: this.roster() });
+    this.broadcastTeams();
     this.broadcastSnapshot();
     this.startLoop();
     console.log(JSON.stringify({ ev: 'join', room, id, spawn: p.spawn, n: this.players.size, phase: this.engine.phase }));
@@ -300,11 +309,13 @@ export class TrialRoom extends DurableObject<Env> {
       this.hunt()?.setCapture(gone, false);
     } else {
       this.players.delete(att.id);
+      this.teams.remove(att.id);
       this.match?.markLeft(att.id); // their points stay on the board
     }
     if (this.humanCount() === 0) {
       // Nobody real is left: bots do not keep a room alive. Reset everything for the next visitor.
       this.players.clear();
+      this.teams.reset();
       this.hostId = '';
       this.stopLoop();
       this.loadStage(DEFAULT_STAGE_ID);
@@ -321,6 +332,7 @@ export class TrialRoom extends DurableObject<Env> {
       this.hostId = next?.id ?? '';
     }
     this.broadcast({ t: 'roster', roster: this.roster() });
+    this.broadcastTeams();
     console.log(JSON.stringify({ ev: 'leave', room: att.room, id: att.id, n: this.players.size }));
   }
 
@@ -342,9 +354,11 @@ export class TrialRoom extends DurableObject<Env> {
     for (const name of names) {
       const p = this.newPlayer(name, undefined, makeBot(this.botSeed ^ Math.imul(this.nextId, 2654435761)));
       this.players.set(p.id, p);
+      this.teams.place(p.id);
       this.match?.ensure({ ...p, bot: true });
     }
     this.broadcast({ t: 'roster', roster: this.roster() });
+    this.broadcastTeams();
     this.broadcastSnapshot();
     console.log(JSON.stringify({ ev: 'bots_add', room: this.roomCode, added: names.length, bots: this.botCount(), n: this.players.size }));
   }
@@ -352,11 +366,45 @@ export class TrialRoom extends DurableObject<Env> {
   /** Removes up to n bots, newest first. */
   private removeBots(n: number): void {
     const bots = [...this.players.values()].filter((p) => p.bot).sort((a, b) => b.joinOrder - a.joinOrder).slice(0, n);
-    for (const b of bots) { this.players.delete(b.id); if (!this.matchRunning) this.match?.forget(b.id); }
+    for (const b of bots) { this.players.delete(b.id); this.teams.remove(b.id); if (!this.matchRunning) this.match?.forget(b.id); }
     if (bots.length) {
       this.broadcast({ t: 'roster', roster: this.roster() });
+      this.broadcastTeams();
       console.log(JSON.stringify({ ev: 'bots_remove', room: this.roomCode, removed: bots.length, bots: this.botCount(), n: this.players.size }));
     }
+  }
+
+  // ---------------------------------------------------------------- teams (Stage 02 · Agawan Base, v9)
+  /** Lobby team setup. Players pick a team and nominate themselves; the host does the rest. The book checks every rule. */
+  private teamAction(by: Player, msg: TeamAction): void {
+    const ws = this.sockets.get(by.id);
+    const refuse = (message: string) => { if (ws) send(ws, { t: 'error', code: 'team', message }); };
+    if (this.engine.phase !== 'lobby' || this.teams.locked) return refuse('Teams are locked while the match is running');
+    const hostOnly = ['rename', 'captain', 'move', 'balance', 'autoCaptains'];
+    if (hostOnly.includes(msg.a) && by.id !== this.hostId) return refuse('Only the host can change that');
+    const players = () => [...this.players.values()].filter((p) => !p.away).map((p) => ({ id: p.id, joinOrder: p.joinOrder, bot: !!p.bot }));
+    let r: TeamResult;
+    switch (msg.a) {
+      case 'join': r = this.teams.join(by.id, msg.slot); break;
+      case 'nominate': r = this.teams.nominate(by.id, !!msg.on); break;
+      case 'rename': r = this.teams.rename(msg.slot, msg.name); break;
+      case 'captain': r = this.teams.setCaptain(msg.slot, msg.id ?? null); break;
+      case 'move': r = this.players.has(String(msg.id)) ? this.teams.move(msg.id, msg.slot) : { ok: false, reason: 'Unknown player' }; break;
+      case 'balance': this.teams.balance(players()); r = { ok: true }; break;
+      case 'autoCaptains': this.teams.autoCaptains(players()); r = { ok: true }; break;
+      default: return;
+    }
+    if (!r.ok) return refuse(r.reason);
+    this.broadcastTeams();
+  }
+
+  private broadcastTeams(): void { this.broadcast({ t: 'teams', teams: this.teams.view() }); }
+
+  /** The match about to start reaches Stage 02 · Agawan Base (only once it is switched on and in MATCH_ORDER). */
+  private matchNeedsTeams(order: string[], startStage?: string): boolean {
+    const m = new Match(order);
+    if (typeof startStage === 'string') m.startAt(startStage);
+    return order.slice(m.index).includes(AGAWAN_STAGE_ID);
   }
 
   private respawn(p: Player): void {
@@ -404,6 +452,17 @@ export class TrialRoom extends DurableObject<Env> {
       return;
     }
     if (this.engine.phase !== 'lobby') return;
+    const test = this.env.CN_TEST === '1';
+    const order = matchOrder(test && Number.isInteger(opts?.stages) ? Number(opts.stages) : MATCH.stages);
+    if (this.matchNeedsTeams(order, opts?.startStage)) {
+      // Agawan Base needs three valid teams with a captain each before the match may start (handoff pack §6).
+      const problems = this.teams.startProblems([...this.players.values()].filter((p) => !p.away).map((p) => p.id));
+      if (problems.length) {
+        const ws = this.sockets.get(by.id);
+        if (ws) send(ws, { t: 'error', code: 'team', message: problems.join('. ') });
+        return;
+      }
+    }
     this.beginMatch(opts);
   }
 
@@ -449,6 +508,9 @@ export class TrialRoom extends DurableObject<Env> {
     if (typeof opts?.startStage === 'string') this.match.startAt(opts.startStage);
     for (const p of this.players.values()) this.match.ensure({ ...p, bot: !!p.bot });
     this.matchRunning = true;
+    this.teams.locked = true; // names, captains and membership are fixed for the whole match
+    for (const p of this.players.values()) this.teams.place(p.id);
+    this.broadcastTeams();
     this.matchOpts = opts ?? {};
     this.startStage();
   }
@@ -708,7 +770,9 @@ export class TrialRoom extends DurableObject<Env> {
         return;
       }
       this.matchRunning = false;
-      for (const p of [...this.players.values()]) if (p.away) { this.players.delete(p.id); m?.markLeft(p.id); }
+      for (const p of [...this.players.values()]) if (p.away) { this.players.delete(p.id); this.teams.remove(p.id); m?.markLeft(p.id); }
+      this.teams.locked = false;
+      this.broadcastTeams();
       if (this.geo.stage !== DEFAULT_STAGE_ID) this.loadStage(DEFAULT_STAGE_ID); // the lobby is always the Stage 01 yard
       for (const p of this.players.values()) this.respawn(p); // waiting players join in for the next match
       this.broadcast({ t: 'roster', roster: this.roster() });
