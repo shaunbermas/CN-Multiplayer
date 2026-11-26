@@ -19,6 +19,7 @@ import { setMuted } from '../game/audio.ts';
 import { HuntBriefingRole, HuntPanel, HuntRoleChip, HuntTop, captureText } from './HuntHud.tsx';
 import { AgawanPanel, AgawanResultsBoard, AgawanTeamChip, AgawanTeamStatus, AgawanTop, TeamChampionshipBoard, teamName } from './AgawanHud.tsx';
 import { TeamLobby, teamsVisible } from './TeamLobby.tsx';
+import { WinnerCeremony } from './WinnerCeremony.tsx';
 
 // Decision 037: no time-left bar, no "get ready" warning and no hint text: knowing when red comes is part of the
 // challenge. Owner's HUD design (25 Nov 2026): the signal reads GO or STOP, with no lens icon.
@@ -414,7 +415,7 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
         : <StageResults room={room} remaining={remaining} onLeave={onLeave} />)}
 
       <div className="hud-lower">
-        {r.phase === 'lobby' && <div className="glass objective">{isAgawan ? 'Practice: explore the street and find the three bases' : isHunt ? 'Practice: explore the facility and its hiding places' : hud.status === 'finished' ? `Practice: finished in ${hud.finishTime.toFixed(2)} s` : 'Practice: walk to the finish line'}</div>}
+        {r.phase === 'lobby' && <div className="glass objective">{isAgawan ? `Practice: explore the street and find the ${room.teams?.count === 2 ? 'two bases (base C is closed with 2 teams)' : 'three bases'}` : isHunt ? 'Practice: explore the facility and its hiding places' : hud.status === 'finished' ? `Practice: finished in ${hud.finishTime.toFixed(2)} s` : 'Practice: walk to the finish line'}</div>}
       </div>
       <div className="glass hud-bottom">
         <span className="hb-cell hb-dist num">{isAgawan && r.phase !== 'lobby' ? <>{room.agawan ? (room.teams?.teams.find((t) => t.slot === room.agawan!.team)?.name ?? `Team ${room.agawan.team}`) : 'Agawan Base'}</> : isHunt && r.phase !== 'lobby' ? <>{room.hunt?.role === 'hunter' ? 'Hunter' : room.hunt?.role === 'hider' ? 'Hider' : 'The Hunt'}</> : noCourse ? <>{stage.name}</> : <><IconPin size={24} /><span><b>{hud.distance.toFixed(0)}</b> m to go</span></>}</span>
@@ -532,29 +533,26 @@ function StandingsTable({ room, standings, compact = false }: { room: TrialRoom;
 function FinalResults({ room, remaining, onLeave }: { room: TrialRoom; remaining: number; onLeave: () => void }) {
   const st = room.standings;
   const m = room.resultsMeta?.match ?? room.round.match;
-  const w = st[0];
-  const wp = w ? room.players.get(w.id) : undefined;
-  const c = coat(wp?.colorway);
-  const why = w ? tieBreakReason(w, st[1]) : null;
+  const footer = (
+    <footer className="card-foot">
+      <span className="next-line">Back to the lobby in {Math.ceil(remaining)} s · ties: points, then stage wins, finishes, total time</span>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button className="btn" onClick={onLeave} data-testid="exit">Exit to menu</button>
+        {room.isHost && <button className="btn" onClick={() => room.nextStage()} data-testid="back-to-lobby">Back to lobby</button>}
+        {room.isHost && <button className="btn go" onClick={() => room.restart()} data-testid="play-again">↻ Restart game</button>}
+      </div>
+    </footer>
+  );
+  // Decision 049: the winner is broadcast (confetti, podium) only after a match that played all three stages.
+  if (m.champion && st.length > 0) {
+    return <WinnerCeremony room={room} standings={st} table={<StandingsTable room={room} standings={st.slice(3)} />} footer={footer} />;
+  }
   return (
     <section className="card results final" data-testid="results" aria-label="Final results">
-      <div data-testid="final" className="results-head"><div><span className="eyebrow">Final results · {m.total} {m.total === 1 ? 'stage' : 'stages'}</span><h2>Match complete</h2></div></div>
-      {/* Matches with teams crown a team champion (decision 045); the individual board below is secondary. */}
+      <div data-testid="final" className="results-head"><div><span className="eyebrow">Final results · {m.total} {m.total === 1 ? 'stage' : 'stages'}</span><h2>Match complete</h2>
+        {m.total > 1 && <p className="muted">Play all three stages from Stage 01 to crown a winner.</p>}</div></div>
       <TeamChampionshipBoard room={room} final />
-      {w ? (
-        <div className="winner-hero" data-testid="winner">
-          <div className="crest" style={{ background: `#${c?.coatSecondary ?? '445'}`, borderColor: `#${c?.identifierAccent ?? 'ccc'}` }}>1</div>
-          <div><span className="eyebrow" style={{ color: 'var(--brass)' }}>{room.teamBoard ? 'Top individual' : 'Winner'}</span><h3>{w.name}{w.id === room.id ? ' (you)' : ''}</h3>
-            <div className="why">{why ? `Tied on ${w.points} points with ${st[1].name}: won on ${why}.` : `${w.wins} stage ${w.wins === 1 ? 'win' : 'wins'} · finished ${w.finishes} of ${m.total}`}</div></div>
-          <div className="score num">{w.points}<small>POINTS</small></div>
-        </div>
-      ) : <p className="muted">No scores were recorded.</p>}
-      {st.length >= 3 && (
-        <div className="podium">
-          {[1, 0, 2].map((i) => <div key={i} className={`p${i + 1}`}><span>{ordinal(i + 1)}</span><b>{st[i].name}</b><span>{st[i].points} pts · {st[i].wins} {st[i].wins === 1 ? 'win' : 'wins'}</span></div>)}
-        </div>
-      )}
-      <StandingsTable room={room} standings={st} />
+      {st.length ? <StandingsTable room={room} standings={st} /> : <p className="muted">No scores were recorded.</p>}
       {room.results.length > 0 && (
         <details className="last-stage" open={m.total <= 1}>
           <summary className="eyebrow">Stage {stageNoAt(m.total, m.stage)} results</summary>
@@ -562,14 +560,7 @@ function FinalResults({ room, remaining, onLeave }: { room: TrialRoom; remaining
           <StageBoard room={room} />
         </details>
       )}
-      <footer className="card-foot">
-        <span className="next-line">Back to the lobby in {Math.ceil(remaining)} s · ties: points, then stage wins, finishes, total time</span>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn" onClick={onLeave} data-testid="exit">Exit to menu</button>
-          {room.isHost && <button className="btn" onClick={() => room.nextStage()} data-testid="back-to-lobby">Back to lobby</button>}
-          {room.isHost && <button className="btn go" onClick={() => room.restart()} data-testid="play-again">↻ Restart game</button>}
-        </div>
-      </footer>
+      {footer}
     </section>
   );
 }

@@ -36,6 +36,27 @@ try {
     if (s1.teams) errors.push('team setup shows in a Stage 01 lobby');
     await p1.close();
   }
+  // Decision 049: the host can play with 2 teams. Two team cards in the lobby, two teams and two bases in play.
+  {
+    const p2 = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    await p2.goto(`http://127.0.0.1:${PORT}/?name=Duo&autojoin=1&quality=low&teams=1&room=ag-two-teams&startStage=STAGE_02_AGAWAN_BASE&testSeed=3&testRound=30&testBriefing=1`);
+    await p2.waitForSelector('[data-testid=team-count-2]', { timeout: 60_000 });
+    await p2.click('[data-testid=add-bots]'); await sleep(400);
+    await p2.click('[data-testid=team-count-2]'); await sleep(800);
+    const cards = await p2.evaluate(() => [...document.querySelectorAll('.team-card')].map((e) => e.getAttribute('data-testid')));
+    await p2.click('[data-testid=start]');
+    await p2.waitForSelector('[data-testid=agawan-top]', { timeout: 60_000 });
+    await sleep(1500);
+    const inPlay = await p2.evaluate(() => ({
+      scores: [...document.querySelectorAll('[data-testid^=agawan-score-]')].map((e) => e.getAttribute('data-testid')),
+      bases: window.__cn.round().agawan?.bases?.map((b) => b.slot),
+    }));
+    report.twoTeams = { cards, ...inPlay };
+    check(JSON.stringify(cards) === '["team-A","team-B"]', `2-team lobby cards: ${cards}`);
+    check(JSON.stringify(inPlay.bases) === '["A","B"]', `2-team bases in play: ${inPlay.bases}`);
+    check(inPlay.scores.length === 2, `2-team scores: ${inPlay.scores}`);
+    await p2.close();
+  }
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
   const pageErrors = [];
   page.on('pageerror', (e) => pageErrors.push(e.message));

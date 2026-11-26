@@ -416,3 +416,21 @@ export function stopAmbience(): void { ambience?.stop(); ambience = null; }
 export function audioState(): { state: string; muted: boolean; volume: number; ambience: boolean; scanning: boolean; heartbeat: boolean } {
   return { state: ctx?.state ?? 'none', muted: settings.muted, volume: settings.volume, ambience: !!ambience, scanning: !!scanLoop, heartbeat: !!heart };
 }
+
+/**
+ * Winner ceremony (decision 049): a short, bright brass fanfare with a cymbal swell, code-made like every other sound
+ * (decision B). Major key on purpose: this is the one moment in the game that should feel like winning a prize.
+ */
+export function playFanfare(): void {
+  const C4 = 261.63, E4 = 329.63, G4 = 392, C5 = 523.25, E5 = 659.25, G5 = 783.99;
+  const brass = (f: number, at: number, dur: number, gain = 0.12) => {
+    tone(f, at, dur, { type: 'sawtooth', gain, filter: 2600, filterTo: 900, attack: 0.025, vibrato: 3, vibratoHz: 5.5 });
+    tone(f * 1.003, at, dur, { type: 'square', gain: gain * 0.4, filter: 1800, filterTo: 700, attack: 0.03 });
+  };
+  brass(G4, 0, 0.16); brass(G4, 0.18, 0.16); brass(G4, 0.36, 0.16);
+  brass(C5, 0.56, 0.5, 0.14); brass(E4, 0.56, 0.5, 0.08);
+  brass(G4, 1.1, 0.18); brass(C5, 1.3, 0.2); brass(E5, 1.52, 0.2);
+  for (const f of [C4, E4, G4, C5, E5, G5]) brass(f, 1.76, 1.8, 0.07);
+  tone(65.41, 1.76, 1.6, { type: 'sine', gain: 0.3, attack: 0.01 });
+  noise(1.7, 2.2, { type: 'highpass', freq: 5000, gain: 0.12, attack: 0.25 });
+}

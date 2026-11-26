@@ -7,7 +7,11 @@ import type { TrialRoom } from '../net.ts';
 
 export type TeamColors = Record<TeamSlot, string>;
 
-export const colorOf = (room: TrialRoom, slot: TeamSlot): string => teamColor(room.teams, slot);
+/** A base nobody plays for (decision 049: with 2 teams, base C is closed): a dim neutral, never a team colour. */
+export const CLOSED_BASE_COLOR = '#5a5862';
+
+export const colorOf = (room: TrialRoom, slot: TeamSlot): string =>
+  room.teams && !room.teams.teams.some((t) => t.slot === slot) ? CLOSED_BASE_COLOR : teamColor(room.teams, slot);
 export const readTeamColors = (room: TrialRoom): TeamColors =>
   Object.fromEntries(TEAM_SLOTS.map((s) => [s, colorOf(room, s)])) as TeamColors;
 

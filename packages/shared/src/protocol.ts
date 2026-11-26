@@ -19,8 +19,10 @@ export interface TeamBoard { standings: TeamStanding[]; stage: TeamStageResult |
  *  v10 (Agawan Base play): hold-E interaction, public scores and prisoners, per-player `ag` state, stage feed events.
  *  v11 (team championship): results and standings carry the team board (3 / 2 / 1 per stage) in matches with teams.
  *  v12 (decision 047): the host's picked stage is the lobby (`lobby` message), team mode and colours, Agawan health
- *      and base capture state. */
-export const PROTOCOL_VERSION = 12;
+ *      and base capture state.
+ *  v13 (decision 049): 2 or 3 teams (`team` count action, `count` in the teams view); no prison timer (prisoners carry
+ *      seconds held, the private state `heldS`); `match.champion` marks a match that plays all three stages. */
+export const PROTOCOL_VERSION = 13;
 
 export interface StartRequestOptions {
   /** Obstacles are always on (decision 031). `false` is honoured only in test rooms (CN_TEST=1). */
@@ -50,6 +52,7 @@ export type TeamAction =
   | { t: 'team'; a: 'autoCaptains' }
   /** v12 (decision 047): host picks shuffle or manual teams, reshuffles, or deals new team colours. */
   | { t: 'team'; a: 'mode'; mode: 'shuffle' | 'manual' }
+  | { t: 'team'; a: 'count'; count: 2 | 3 }
   | { t: 'team'; a: 'shuffle' }
   | { t: 'team'; a: 'recolor' };
 
@@ -106,6 +109,8 @@ export interface MatchState {
   total: number;
   /** Stage results are the last of the match (the final leaderboard is showing). */
   final: boolean;
+  /** v13 (decision 049): this match plays every stage from Stage 01, so its final results crown the winners. */
+  champion?: boolean;
 }
 
 export interface RoundState {

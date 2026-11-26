@@ -81,7 +81,7 @@ export function AgawanTeamChip({ room }: { room: TrialRoom }) {
       <div>
         <b>{teamName(room, me.team)}</b>
         <span className={home && (home.owner !== me.team || status.startsWith('under')) ? 'warn' : undefined}>Base {me.team} · {status}</span>
-        <span className="muted">{held} of 3 bases held</span>
+        <span className="muted">{held} of {ag.bases.length} bases held</span>
       </div>
       {!me.pen && <Hearts hp={me.hp} big />}
     </div>
@@ -129,9 +129,9 @@ export function AgawanPanel({ room }: { room: TrialRoom }) {
   if (!me || !ag || r.phase !== 'active') return null;
   const now = Date.now();
   const recent = (ms: number) => room.agawanFeed.filter((e) => now - e.at < ms);
-  const feed = recent(4500).filter((e) => e.kind === 'tag' || e.kind === 'rescue' || e.kind === 'release').slice(-4);
+  const feed = recent(4500).filter((e) => e.kind === 'tag' || e.kind === 'rescue').slice(-4);
   const base = recent(3500).filter((e) => e.kind === 'base').at(-1);
-  const freed = recent(3000).find((e) => (e.kind === 'rescue' || e.kind === 'release') && e.id === room.id);
+  const freed = recent(3000).find((e) => e.kind === 'rescue' && e.id === room.id);
   const hitMe = recent(900).filter((e) => e.kind === 'hit' && e.id === room.id).at(-1);
   const hitMade = recent(700).filter((e) => e.kind === 'hit' && e.by === room.id).at(-1);
   const helpNeeded = recent(4000).filter((e) => e.kind === 'tag' && ag.teamOf[e.id] === me.team && e.id !== room.id && ag.prisoners.some(([id]) => id === e.id)).at(-1);
@@ -151,11 +151,11 @@ export function AgawanPanel({ room }: { room: TrialRoom }) {
       )}
       {me.pen && (
         <div className="banner spotted ag-captured" data-testid="agawan-captured"><b>Captured</b>
-          <span>In {teamName(room, me.pen)}'s pen. A teammate can free you.</span>
-          <span className="num ag-release">Back to your base in {clock(me.releaseLeft)} · with 1 heart</span></div>
+          <span>In {teamName(room, me.pen)}'s pen. Only a teammate can free you.</span>
+          <span className="ag-release">Wait for a rescue: a teammate holds <kbd>E</kbd> at the fence</span></div>
       )}
       {!me.pen && freed && (
-        <div className="banner finished" data-testid="agawan-freed"><b>{freed.kind === 'rescue' ? 'Rescued' : 'Released'}</b>
+        <div className="banner finished" data-testid="agawan-freed"><b>Rescued</b>
           <span>{freed.kind === 'rescue' ? `${playerName(room, freed.by)} freed you. ` : ''}1 heart left: go to a base your team owns to heal.</span></div>
       )}
       {!me.pen && hitMe && hitMe.kind === 'hit' && <div className="ag-hit-flash" data-testid="agawan-hit" aria-hidden="true" />}
@@ -183,7 +183,7 @@ export function AgawanPanel({ room }: { room: TrialRoom }) {
           <li key={`${e.at}-${i}`}>{
             e.kind === 'tag' ? <><TeamChip room={room} slot={ag.teamOf[e.by]} />{playerName(room, e.by)} captured {playerName(room, e.id)}{e.points ? <b> +{e.points}</b> : ''}</>
               : e.kind === 'rescue' ? <><TeamChip room={room} slot={ag.teamOf[e.by]} />{playerName(room, e.by)} freed {playerName(room, e.id)}{e.points ? <b> +{e.points}</b> : ''}</>
-              : e.kind === 'release' ? <>{playerName(room, e.id)} walked home</> : null
+              : null
           }</li>
         ))}
       </ul>
@@ -203,11 +203,11 @@ export function AgawanTeamStatus({ room }: { room: TrialRoom }) {
   }, []);
   const ag = room.round.agawan;
   if (!open || !ag) return null;
-  const held = new Map(ag.prisoners.map(([id, pen, left]) => [id, { pen, left }]));
+  const held = new Map(ag.prisoners.map(([id, pen]) => [id, { pen }]));
   return (
     <section className="card ag-status" data-testid="agawan-status" aria-label="Team status">
       <header><span className="eyebrow">Team status</span><span className="muted">Release Tab to close</span></header>
-      <div className="ag-status-cols">
+      <div className="ag-status-cols" data-count={ag.teams.length}>
         {[...ag.teams].sort((a, b) => b.score - a.score).map((t) => {
           const members = Object.entries(ag.teamOf).filter(([, s]) => s === t.slot).map(([id]) => ({ id, p: room.players.get(id) }));
           return (
@@ -218,7 +218,7 @@ export function AgawanTeamStatus({ room }: { room: TrialRoom }) {
                 {members.map(({ id, p }) => {
                   const h = held.get(id);
                   return <li key={id} className={id === room.id ? 'me' : undefined}><span>{p?.name ?? 'Player'}{p?.bot && <i className="tag bot">bot</i>}</span>
-                    {h ? <em className="held">in {h.pen}'s pen · {Math.ceil(h.left)} s</em>
+                    {h ? <em className="held">in {teamName(room, h.pen)}'s pen · needs a rescue</em>
                       : ag.protected.includes(id) ? <em className="safe">protected</em>
                       : <Hearts hp={ag.hp[id] ?? AGAWAN.health.max} />}</li>;
                 })}

@@ -7,22 +7,22 @@ order wins: 01 Red Light, 02 Agawan Base, 03 The Hunt.
 
 ## 1. Rules
 
-A three-team Filipino street game of tag, prison, rescue and base takeover on a Philippine Christmas street at night.
+A two- or three-team Filipino street game of tag, prison, rescue and base takeover on a Philippine Christmas street at night.
 Every number below lives in `packages/shared/src/agawan/config.ts` (the pack: "one Stage 02 configuration object").
 
 | Rule | Value |
 |---|---|
-| Teams | A, B and C, up to 10 each, sizes within one. Colours are dealt at random per match (12-colour palette, hues at least 70° apart). The host picks Shuffle (random teams, captains picked automatically) or Pick your team (players join, nominate, host appoints captains). Locked for the whole match. At least 3 players (bots count). |
+| Teams | A, B and C (up to 10 each), or A and B only (up to 15 each) when the host picks 2 teams (decision 049); sizes within one. With 2 teams base C and its pen are closed: grey, not capturable, not in the HUD. Colours are dealt at random per match (12-colour palette, hues at least 70° apart). The host picks Shuffle (random teams, captains picked automatically) or Pick your team (players join, nominate, host appoints captains). Locked for the whole match. At least one player per team (bots count). |
 | Match | 4:00. Everyone starts at their own base, which their team owns. |
 | Hearts and hits (tap `E`) | Every player has 3 hearts. Each press on a rival within 2 m, inside a 70° half-angle cone in front of you, with clear line of sight, takes one heart and pushes them back a little. 0.35 s between hits; holding E repeats every 0.5 s. Teammates never knock each other down. |
-| Capture and prison | The last heart captures: the player is moved to the attacker's pen (5 x 4 = 20 fixed slots, see-through fence). They cannot move, hit, rescue or score. Automatic release to their own base after 15 s. |
-| Rescue (hold `E`) | A teammate held in an opponent's pen, within 1.6 m with sight through the fence, held for 1 s. A rescue and the automatic release can never both happen. |
-| After release or rescue | 1 heart only, and 2 s of protection (cannot be hit, cannot hit or rescue). |
+| Capture and prison | The last heart captures: the player is moved to the attacker's pen (5 x 4 = 20 fixed slots, see-through fence). They cannot move, hit, rescue or score. No release timer (decision 049): they stay in the pen until a teammate rescues them or the stage ends. |
+| Rescue (hold `E`) | A teammate held in an opponent's pen, within 1.6 m with sight through the fence, held for 1 s. The rescued player goes back to their own base. |
+| After a rescue | 1 heart only, and 2 s of protection (cannot be hit, cannot hit or rescue). |
 | Healing | One heart every 1.2 s, only while standing in a base your team owns (within 6 m of its marker). Never in the street. |
 | Base takeover | Stand in the 3.5 m inner ring of a base your team does not own. One attacker takes 12 s, two 7 s, three about 5.2 s, four or more about 4.3 s. With rivals in the ring, the team with more players moves the capture at the speed of its lead (3 against 1 counts as 2); equal numbers pause it. With nobody there, progress fades over 20 s; a new team must first undo another team's progress. The base's original team takes its own base back 1.5x faster. A taken base belongs to the new team (their ring colour, their healing) until someone takes it back. |
 | Team score | Base taken +10 (including taking your own back); each base held at the final whistle +5; capture +1; rescue +1. |
 | End | Highest team score. A tie at the top plays 30 s of sudden death in which the first base taken by a tied team wins. Then bases held, bases taken, captures, rescues, then a shared place. |
-| Individual board | Every member gets 2 / 1 / 0 by team place, like the other stages (secondary board). |
+| Individual board | Every member gets 2 / 1 / 0 by team place, like the other stages (secondary board); with 2 teams, 2 / 0. |
 | Teams outside this stage | None (decision 048): the team setup shows only in an Agawan Base lobby, and a match that starts on another stage deals random teams when it reaches Agawan Base. There is no team championship across stages (§4). |
 
 ## 2. Map

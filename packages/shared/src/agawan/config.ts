@@ -41,10 +41,8 @@ export const AGAWAN = {
     healRadiusM: 6,
   },
 
-  // ---- prison
+  // ---- prison (decision 049: no release timer; a captured player waits for a teammate's rescue)
   prison: {
-    /** Automatic release back to your own base after this long (pack: 15 s). */
-    maxS: 15,
     /** Slot grid inside each pen (pack: 5 x 4 = 20, one team may hold players from both other teams). */
     cols: 5,
     rows: 4,
@@ -71,7 +69,7 @@ export const AGAWAN = {
     decayPerS: 1 / 20,
   },
 
-  /** After a rescue or an automatic release: you cannot be hit and cannot hit or rescue. */
+  /** After a rescue: you cannot be hit and cannot hit or rescue. */
   protectS: 2,
 
   // ---- team score (server only)
@@ -88,7 +86,8 @@ export const AGAWAN = {
 
   /** Team championship points by placement (3 / 2 / 1; ties share the place and skip the next). */
   placementPoints: [3, 2, 1],
-  /** Individual board points by team placement, on the same 0-2 scale as the other stages (secondary board). */
+  /** Individual board points by team placement, on the same 0-2 scale as the other stages (secondary board).
+   *  With 2 teams (decision 049) the last team scores 0: 2 / 0. See playerPoints() in agawan.ts. */
   playerPoints: [2, 1, 0],
 
   // ---- bots

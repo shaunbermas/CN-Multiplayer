@@ -26,7 +26,8 @@ export interface AgawanState {
   /** Pen (owning team) holding this player, or null when free. */
   pen: TeamSlot | null;
   slot: number;
-  releaseAt: number;
+  /** Room time the player was captured (no automatic release, decision 049: only a rescue frees them). */
+  penSince: number;
   protectUntil: number;
   /** Room time of this player's last hit (cooldown) and of the next automatic hit while E stays held. */
   lastHitAt: number;
@@ -51,7 +52,8 @@ export interface AgawanPrivate {
   hp: number;
   /** Pen holding you (an opponent's slot), or null. */
   pen: TeamSlot | null;
-  releaseLeft: number;
+  /** Seconds you have been in the pen (there is no release timer: a teammate must rescue you). */
+  heldS: number;
   protectLeft: number;
   /** Seconds until your next hit may land. */
   hitCd: number;
@@ -105,7 +107,6 @@ export type AgawanEvent =
   | { kind: 'hit'; by: string; id: string; hp: number }
   | { kind: 'tag'; by: string; id: string; pen: TeamSlot; points: number }
   | { kind: 'rescue'; by: string; id: string; points: number }
-  | { kind: 'release'; id: string }
   | { kind: 'base'; team: TeamSlot; base: TeamSlot; from: TeamSlot; by: string[]; points: number };
 
 interface TeamScore { score: number; captures: number; rescues: number; baseCaptures: number }
@@ -138,6 +139,8 @@ export class AgawanEngine implements StageEngine {
   readonly bases = new Map<TeamSlot, BaseState>();
   /** Prison slot occupancy per pen: slot index -> player id. */
   readonly occupancy = new Map<TeamSlot, (string | null)[]>();
+  /** Teams playing this stage: A, B (and C). Decision 049: the host picks 2 or 3 teams; with 2, base C stays closed. */
+  slots: TeamSlot[] = [...TEAM_SLOTS];
   /** Events since the last drain (the room broadcasts them). */
   events: AgawanEvent[] = [];
   private lastNow = 0;
@@ -165,7 +168,9 @@ export class AgawanEngine implements StageEngine {
     this.mode = opts.mode === 'tournament' ? 'tournament' : 'standup';
     this.lastResults = []; this.skipped.clear(); this.state.clear(); this.events = [];
     this.sudden = false; this.winners = []; this.suddenTied = [];
-    for (const s of TEAM_SLOTS) {
+    this.slots = TEAM_SLOTS.slice(0, opts.teamCount === 2 ? 2 : 3);
+    this.teams.clear(); this.bases.clear(); this.occupancy.clear();
+    for (const s of this.slots) {
       this.teams.set(s, { score: 0, captures: 0, rescues: 0, baseCaptures: 0 });
       this.bases.set(s, { owner: s, cap: null, inside: [] });
       this.occupancy.set(s, Array(this.layout.pens[s].slots.length).fill(null));
@@ -175,7 +180,7 @@ export class AgawanEngine implements StageEngine {
     const sorted = [...players].sort((a, b) => a.joinOrder - b.joinOrder);
     for (const p of sorted) {
       let team = opts.teams?.[p.id] as TeamSlot | undefined;
-      if (!team || !TEAM_SLOTS.includes(team)) team = TEAM_SLOTS.reduce((a, b) => (used[b] < used[a] ? b : a));
+      if (!team || !this.slots.includes(team)) team = this.slots.reduce((a, b) => (used[b] < used[a] ? b : a));
       const spawns = this.layout.bases[team].spawns;
       const s = spawns[used[team]++ % spawns.length];
       Object.assign(p, { spawn: s.index, x: s.x, z: s.z, status: 'active', finishTime: -1, spotTime: -1, redDisp: 0, recent: [], downUntil: 0, immuneUntil: 0 });
@@ -265,8 +270,8 @@ export class AgawanEngine implements StageEngine {
 
   /** Teams with the highest score. */
   leaders(): TeamSlot[] {
-    const best = Math.max(...TEAM_SLOTS.map((s) => this.teams.get(s)!.score));
-    return TEAM_SLOTS.filter((s) => this.teams.get(s)!.score === best);
+    const best = Math.max(...this.slots.map((s) => this.teams.get(s)!.score));
+    return this.slots.filter((s) => this.teams.get(s)!.score === best);
   }
 
   heldBy(team: TeamSlot): number { let n = 0; for (const b of this.bases.values()) if (b.owner === team) n++; return n; }
@@ -287,11 +292,8 @@ export class AgawanEngine implements StageEngine {
     const byId = new Map(players.map((p) => [p.id, p]));
     // Prisoners who are gone from the room (left for good) never keep a slot.
     for (const [id, s] of this.state) if (s.pen && !byId.has(id)) this.freeSlot(id, s);
-    // Automatic release after prison.maxS.
-    for (const p of players) {
-      const s = this.state.get(p.id);
-      if (s?.pen && this.now >= s.releaseAt) { this.release(p, s); this.events.push({ kind: 'release', id: p.id }); }
-    }
+    // No automatic release (decision 049, owner 26 Nov 2026): a captured player stays in the pen until a teammate
+    // rescues them or the stage ends.
     // Presses and holds, in join order (deterministic).
     const order = [...players].sort((a, b) => a.joinOrder - b.joinOrder);
     for (const p of order) {
@@ -377,7 +379,7 @@ export class AgawanEngine implements StageEngine {
       console.error(JSON.stringify({ ev: 'agawan_pen_full', pen: s.team, id: o.id }));
       slot = occ.length - 1;
     } else occ[slot] = o.id;
-    t.pen = s.team; t.slot = slot; t.releaseAt = this.now + AGAWAN.prison.maxS; t.rescue = null; t.holding = false; t.pressed = false; t.captured++;
+    t.pen = s.team; t.slot = slot; t.penSince = this.now; t.rescue = null; t.holding = false; t.pressed = false; t.captured++;
     const pos = this.layout.pens[s.team].slots[slot];
     Object.assign(o, { x: pos.x, z: pos.z, vx: 0, vz: 0, status: 'captured' });
     s.tags++;
@@ -424,7 +426,7 @@ export class AgawanEngine implements StageEngine {
   }
 
   inOwnedBase(p: { x: number; z: number }, team: TeamSlot): boolean {
-    for (const slot of TEAM_SLOTS) {
+    for (const slot of this.slots) {
       if (this.bases.get(slot)!.owner !== team) continue;
       const b = this.layout.bases[slot];
       if (Math.hypot(b.x - p.x, b.z - p.z) <= AGAWAN.health.healRadiusM) return true;
@@ -440,7 +442,7 @@ export class AgawanEngine implements StageEngine {
    */
   private baseTick(players: AgawanBody[], dt: number): void {
     const cfg = AGAWAN.base;
-    for (const slot of TEAM_SLOTS) {
+    for (const slot of this.slots) {
       const b = this.bases.get(slot)!;
       const pos = this.layout.bases[slot];
       const count: Partial<Record<TeamSlot, string[]>> = {};
@@ -450,7 +452,7 @@ export class AgawanEngine implements StageEngine {
         if (Math.hypot(pos.x - p.x, pos.z - p.z) > cfg.zoneM) continue;
         (count[s.team] ??= []).push(p.id);
       }
-      const inside = TEAM_SLOTS.filter((t) => count[t]?.length);
+      const inside = this.slots.filter((t) => count[t]?.length);
       b.inside = inside;
       const rate = (n: number, team: TeamSlot) => (cfg.crowd[Math.min(n, cfg.crowd.length) - 1] / cfg.soloS) * (team === slot ? cfg.homeBonus : 1);
       if (inside.length === 0) {
@@ -515,7 +517,7 @@ export class AgawanEngine implements StageEngine {
     if (!s.pen) return;
     const occ = this.occupancy.get(s.pen)!;
     if (occ[s.slot] === id) occ[s.slot] = null;
-    s.pen = null; s.slot = -1; s.releaseAt = 0; s.rescue = null;
+    s.pen = null; s.slot = -1; s.penSince = 0; s.rescue = null;
   }
 
   /** Moves the sudden-death results (if any) into this tick's events. */
@@ -542,7 +544,7 @@ export class AgawanEngine implements StageEngine {
     rows.sort((a, b) => place[a.s.team] - place[b.s.team] || contrib(b.s) - contrib(a.s) || a.p.joinOrder - b.p.joinOrder);
     return rows.map(({ p, s }, i) => ({
       id: p.id, place: i + 1, status: place[s.team] === 1 ? 'finished' : 'active', finishTime: -1, progress: 0, qualified: false,
-      points: AGAWAN.playerPoints[place[s.team] - 1] ?? 0, team: s.team, teamPlace: place[s.team], teamScore: this.teams.get(s.team)?.score ?? 0,
+      points: playerPoints(place[s.team], this.slots.length), team: s.team, teamPlace: place[s.team], teamScore: this.teams.get(s.team)?.score ?? 0,
       tags: s.tags, rescues: s.rescues, raids: s.bases,
     }));
   }
@@ -553,7 +555,7 @@ export class AgawanEngine implements StageEngine {
     const out = {} as Record<TeamSlot, number>;
     const winners = this.winners.length ? this.winners : this.leaders();
     for (const w of winners) out[w] = 1;
-    const rest = TEAM_SLOTS.filter((t) => !winners.includes(t)).sort((a, b) => score(b) - score(a));
+    const rest = this.slots.filter((t) => !winners.includes(t)).sort((a, b) => score(b) - score(a));
     let placed = winners.length;
     rest.forEach((t, i) => { out[t] = i > 0 && score(t) === score(rest[i - 1]) ? out[rest[i - 1]] : placed + 1; placed++; });
     return out;
@@ -571,15 +573,15 @@ export class AgawanEngine implements StageEngine {
       counts[s.team].players++;
       teamOf[id] = s.team;
       if (s.hp < AGAWAN.health.max) hp[id] = s.hp;
-      if (s.pen) { counts[s.pen].prisoners++; prisoners.push([id, s.pen, r2(Math.max(0, s.releaseAt - this.now))]); }
+      if (s.pen) { counts[s.pen].prisoners++; prisoners.push([id, s.pen, r2(Math.max(0, this.now - s.penSince))]); }
       if (s.protectUntil > this.now) prot.push(id);
     }
     return {
-      teams: TEAM_SLOTS.map((slot) => {
+      teams: this.slots.map((slot) => {
         const t = this.teams.get(slot);
         return { slot, score: t?.score ?? 0, captures: t?.captures ?? 0, rescues: t?.rescues ?? 0, baseCaptures: t?.baseCaptures ?? 0, held: this.heldBy(slot), ...counts[slot] };
       }),
-      bases: TEAM_SLOTS.map((slot) => {
+      bases: this.slots.map((slot) => {
         const b = this.bases.get(slot) ?? { owner: slot, cap: null, inside: [] };
         return { slot, owner: b.owner, cap: b.cap ? { team: b.cap.team, p: r2(Math.max(0, Math.min(1, b.cap.p))) } : null, inside: [...b.inside] };
       }),
@@ -592,7 +594,7 @@ export class AgawanEngine implements StageEngine {
     if (!s) return null;
     const left = (t: number) => r2(Math.max(0, t - this.now));
     return {
-      team: s.team, hp: s.hp, pen: s.pen, releaseLeft: s.pen ? left(s.releaseAt) : 0, protectLeft: left(s.protectUntil),
+      team: s.team, hp: s.hp, pen: s.pen, heldS: s.pen ? r2(Math.max(0, this.now - s.penSince)) : 0, protectLeft: left(s.protectUntil),
       hitCd: left(s.lastHitAt + AGAWAN.health.hitCooldownS),
       rescue: s.rescue ? { target: s.rescue.target, progress: r2(Math.min(1, s.rescue.progress)) } : null,
       healing: s.healAcc > 0 && s.hp < AGAWAN.health.max,
@@ -601,9 +603,15 @@ export class AgawanEngine implements StageEngine {
   }
 }
 
+/** Individual points for a team place: 2 / 1 / 0 with three teams; the last team always scores 0 (2 / 0 with two). */
+export function playerPoints(place: number, teamCount: number): number {
+  if (place >= teamCount) return 0;
+  return AGAWAN.playerPoints[place - 1] ?? 0;
+}
+
 function newState(team: TeamSlot): AgawanState {
   return {
-    team, hp: AGAWAN.health.max, pen: null, slot: -1, releaseAt: 0, protectUntil: 0, lastHitAt: -Infinity, nextRepeatAt: 0, holding: false, pressed: false,
+    team, hp: AGAWAN.health.max, pen: null, slot: -1, penSince: 0, protectUntil: 0, lastHitAt: -Infinity, nextRepeatAt: 0, holding: false, pressed: false,
     rescue: null, healAcc: 0, hits: 0, tags: 0, rescues: 0, bases: 0, captured: 0,
   };
 }

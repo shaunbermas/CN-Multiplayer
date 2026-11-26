@@ -348,6 +348,8 @@ label.check { display: flex !important; align-items: center; gap: 8px; font: 500
 .teams-mode { font: 700 12px/1 var(--body); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
 .teams-hint { margin: 6px 0 10px; font-size: 13px; color: var(--muted); }
 .team-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.team-cards[data-count="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.teams-controls { display: inline-flex; gap: 8px; flex-wrap: wrap; }
 .team-card { position: relative; display: grid; grid-template-rows: auto auto 1fr auto; gap: 8px; align-content: start; padding: 0 0 10px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: color-mix(in srgb, var(--team) 7%, rgba(10, 12, 16, 0.4)); }
 .team-card.mine { border-color: color-mix(in srgb, var(--team) 70%, transparent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--team) 40%, transparent); }
 .team-band { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 9px 12px; background: linear-gradient(90deg, color-mix(in srgb, var(--team) 55%, transparent), color-mix(in srgb, var(--team) 18%, transparent)); }
@@ -615,6 +617,7 @@ label.check { display: flex !important; align-items: center; gap: 8px; font: 500
 .ag-status { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(980px, calc(100vw - 32px)); max-height: 76vh; overflow: auto; pointer-events: none; }
 .ag-status header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
 .ag-status-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.ag-status-cols[data-count="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .ag-col { border-top: 3px solid var(--team); padding-top: 10px; }
 .ag-col.mine { background: rgba(255, 255, 255, 0.03); }
 .ag-col h3 { display: flex; align-items: center; gap: 10px; margin: 0 0 4px; font: 700 18px/1.2 var(--body); }
@@ -672,3 +675,56 @@ label.check { display: flex !important; align-items: center; gap: 8px; font: 500
 .ag-heal, .ag-low { position: fixed; left: 50%; top: 64%; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 10px; padding: 6px 16px; font: 700 13px/1 var(--display); letter-spacing: 0.1em; text-transform: uppercase; }
 .ag-heal { color: var(--go); } .ag-low { color: #ff9b93; }
 .ag-score-key { margin: 0 0 8px; font-size: 12px; }
+
+/* ---------- winner ceremony (decision 049): after a full 3-stage match ---------- */
+.ceremony { position: fixed; inset: 0; z-index: 30; pointer-events: auto; display: grid; place-items: start center; overflow: auto;
+  background: radial-gradient(ellipse at 50% 30%, rgba(201, 163, 91, 0.16), rgba(10, 15, 18, 0.78) 60%, rgba(10, 15, 18, 0.92)); }
+.ceremony .confetti { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 2; }
+.cer-reveal { position: fixed; inset: 0; display: grid; place-content: center; justify-items: center; gap: 10px; text-align: center; cursor: pointer; z-index: 1; padding: 0 16px; }
+.cer-reveal .eyebrow { color: var(--brass); animation: cer-fade 0.5s ease-out both; }
+.cer-and { margin: 0; font: italic 500 26px/1 var(--body); color: #d9d2c4; animation: cer-fade 0.6s 0.35s ease-out both; }
+.cer-name { margin: 6px 0 0; font: 800 clamp(64px, 11vw, 150px)/0.9 var(--display); letter-spacing: 0.01em; text-transform: uppercase; color: var(--porcelain);
+  text-shadow: 0 0 38px rgba(201, 163, 91, 0.65), 0 4px 0 rgba(0, 0, 0, 0.35); animation: cer-pop 0.75s 1.0s cubic-bezier(0.2, 1.6, 0.4, 1) both; }
+.cer-pts { font: 800 30px/1 var(--display); letter-spacing: 0.12em; color: var(--brass); text-transform: uppercase; animation: cer-fade 0.5s 1.6s ease-out both; }
+.cer-card { width: min(1000px, 95vw); margin: 40px auto; max-height: none; overflow: visible; z-index: 1; animation: cer-rise 0.5s ease-out both;
+  border-color: color-mix(in srgb, var(--brass) 40%, transparent); box-shadow: 0 0 80px rgba(201, 163, 91, 0.16); }
+.cer-head { text-align: center; margin-bottom: 8px; }
+.cer-head .eyebrow { color: var(--brass); }
+.cer-head h2 { margin: 6px 0 0; font: 800 52px/1 var(--display); letter-spacing: 0.04em; text-transform: uppercase; }
+.cer-me { margin: 10px auto 0; display: inline-block; padding: 6px 16px; border: 1px solid var(--line-strong); font: 600 16px/1.3 var(--body); color: #d9d2c4; }
+.cer-me.podium { border-color: color-mix(in srgb, var(--brass) 70%, transparent); color: var(--porcelain); background: rgba(201, 163, 91, 0.12); }
+.cer-podium { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: 12px; max-width: 760px; margin: 58px auto 8px; }
+.cer-step { display: grid; justify-items: center; animation: cer-rise 0.6s var(--delay, 0s) cubic-bezier(0.2, 1.3, 0.4, 1) both; }
+.cer-who { display: grid; justify-items: center; gap: 6px; padding-bottom: 12px; text-align: center; position: relative; }
+.cer-crown { position: absolute; top: -34px; font-size: 30px; line-height: 1; color: #e9c46a; text-shadow: 0 0 16px rgba(233, 196, 106, 0.8); animation: cer-bob 2.4s ease-in-out infinite; }
+.cer-medal { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; font: 800 22px/1 var(--display); color: #1a1408;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.25), 0 2px 10px rgba(0, 0, 0, 0.4); }
+.cer-medal.gold { background: radial-gradient(circle at 35% 30%, #fff1c2, #e9c46a 45%, #a87d2c); box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.25), 0 0 22px rgba(233, 196, 106, 0.7); }
+.cer-medal.silver { background: radial-gradient(circle at 35% 30%, #ffffff, #c8d0d3 45%, #808b90); }
+.cer-medal.bronze { background: radial-gradient(circle at 35% 30%, #ffd8b0, #c48a55 45%, #7c4f2a); }
+.cer-crest { display: block; border: 3px solid; }
+.cer-pname { font: 800 26px/1 var(--display); letter-spacing: 0.02em; max-width: 100%; overflow-wrap: anywhere; }
+.cer-pname em { font-style: normal; color: var(--muted); font-size: 0.7em; }
+.p1 .cer-pname { font-size: 34px; color: #f6e7bf; }
+.cer-score { font: 800 30px/1 var(--display); color: var(--brass); }
+.cer-score small { font-size: 14px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.cer-stats { font-size: 12px; color: var(--muted); }
+.cer-pillar { width: 100%; display: grid; align-content: start; justify-items: center; padding-top: 14px; border: 1px solid var(--line-strong); border-bottom: 0;
+  background: linear-gradient(180deg, rgba(233, 226, 212, 0.10), rgba(233, 226, 212, 0.02)); }
+.cer-pillar span { font: 800 40px/1 var(--display); letter-spacing: 0.04em; text-transform: uppercase; }
+.cer-pillar small { font: 700 11px/1.4 var(--display); letter-spacing: 0.24em; text-transform: uppercase; color: var(--muted); }
+.cer-step.p1 .cer-pillar { height: 170px; border-color: color-mix(in srgb, var(--brass) 80%, transparent); border-top-width: 4px;
+  background: linear-gradient(180deg, rgba(233, 196, 106, 0.32), rgba(201, 163, 91, 0.06)); position: relative; overflow: hidden; }
+.cer-step.p1 .cer-pillar span { color: #f6e7bf; font-size: 52px; }
+.cer-step.p1 .cer-pillar::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, rgba(255, 244, 210, 0.28) 50%, transparent 65%); animation: cer-shine 3.2s 1.4s ease-in-out infinite; }
+.cer-step.p2 .cer-pillar { height: 120px; border-top: 4px solid #c8d0d3; }
+.cer-step.p3 .cer-pillar { height: 90px; border-top: 4px solid #c48a55; }
+.cer-step.me .cer-pname { text-decoration: underline; text-decoration-color: var(--brass); text-underline-offset: 4px; }
+.cer-rest { margin-top: 22px; display: grid; gap: 8px; }
+@keyframes cer-fade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes cer-pop { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: none; } }
+@keyframes cer-rise { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: none; } }
+@keyframes cer-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes cer-shine { 0% { transform: translateX(-100%); } 60%, 100% { transform: translateX(100%); } }
+@media (max-width: 700px) { .cer-head h2 { font-size: 36px; } .cer-pname { font-size: 20px; } .p1 .cer-pname { font-size: 24px; } .cer-pillar span { font-size: 28px; } }
+@media (prefers-reduced-motion: reduce) { .ceremony *, .ceremony *::after { animation: none !important; } }

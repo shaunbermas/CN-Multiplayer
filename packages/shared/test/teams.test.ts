@@ -1,6 +1,6 @@
 // Stage 02 · AGAWAN BASE team lobby rules (handoff pack 03_TEAM_LOBBY_AND_CAPTAIN_MANAGEMENT, test matrix rows 1-10).
 import { describe, expect, it } from 'vitest';
-import { TEAMS, TEAM_PALETTE, TeamBook, balancedSizes, dealTeamColors, validateTeamName, type TeamPlayer } from '../src/index.ts';
+import { TEAMS, TEAM_PALETTE, rng, TeamBook, balancedSizes, dealTeamColors, validateTeamName, type TeamPlayer } from '../src/index.ts';
 
 const people = (n: number, bots = 0): TeamPlayer[] => Array.from({ length: n }, (_, i) => ({ id: `p${i + 1}`, joinOrder: i + 1, bot: i >= n - bots }));
 /** Manual mode (players pick their team); shuffle mode is covered in its own block below. */
@@ -179,5 +179,50 @@ describe('decision 047: shuffle mode and team colours', () => {
     expect(b.view().teams.map((t) => t.color).join()).not.toBe(before);
     b.locked = true;
     expect(b.recolor().ok).toBe(false);
+  });
+});
+
+describe('2 or 3 teams (decision 049)', () => {
+  const ps = (n: number) => Array.from({ length: n }, (_, i) => ({ id: `p${i}`, joinOrder: i + 1 }));
+  it('shuffle mode deals everyone into A and B only, sizes within one, and back to three', () => {
+    const b = new TeamBook(rng(5));
+    const players = ps(7);
+    b.shuffle(players);
+    expect(b.setCount(2, players)).toEqual({ ok: true });
+    expect(b.view().teams.map((t) => t.slot)).toEqual(['A', 'B']);
+    expect(b.view().count).toBe(2);
+    const sizes = ['A', 'B'].map((s) => b.size(s as 'A'));
+    expect(sizes[0] + sizes[1]).toBe(7);
+    expect(Math.abs(sizes[0] - sizes[1])).toBeLessThanOrEqual(1);
+    expect(b.size('C')).toBe(0);
+    expect(b.startProblems(players.map((p) => p.id))).toEqual([]);
+    b.setCount(3, players);
+    expect(b.view().teams).toHaveLength(3);
+    expect(b.startProblems(players.map((p) => p.id))).toEqual([]);
+  });
+
+  it('manual mode moves only team C players; C cannot be joined, newcomers go to A or B', () => {
+    const b = new TeamBook(rng(6));
+    const players = ps(6);
+    b.setMode('manual', players);
+    players.forEach((p, i) => b.join(p.id, ['A', 'B', 'C'][i % 3]));
+    const before = { p0: b.teamOf('p0'), p1: b.teamOf('p1') };
+    b.setCount(2, players);
+    expect(b.teamOf('p0')).toBe(before.p0);
+    expect(b.teamOf('p1')).toBe(before.p1);
+    expect(['A', 'B']).toContain(b.teamOf('p2'));
+    expect(b.join('p0', 'C').ok).toBe(false);
+    expect(['A', 'B']).toContain(b.place('late'));
+  });
+
+  it('two teams hold 15 each; 2 players are enough; locked during a match; only 2 or 3', () => {
+    const b = new TeamBook(rng(7));
+    expect(b.setCount(4, []).ok).toBe(false);
+    b.setCount(2, []);
+    expect(b.capacity()).toBe(15);
+    const two = ps(2); b.shuffle(two);
+    expect(b.startProblems(two.map((p) => p.id))).toEqual([]);
+    b.locked = true;
+    expect(b.setCount(3, two).ok).toBe(false);
   });
 });

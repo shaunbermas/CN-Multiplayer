@@ -16,7 +16,7 @@
 //   5. better place in the last stage played
 //   6. earlier to join the room (deterministic last resort, so there is always exactly one winner)
 import { ROUND, type Placing } from './round.ts';
-import { DEFAULT_STAGE_ID, MATCH_ORDER, resolveStageId } from './stages.ts';
+import { DEFAULT_STAGE_ID, MATCH_ORDER, OFFICIAL_ORDER, resolveStageId } from './stages.ts';
 import { TeamChampionship, type TeamStageResult, type TeamStanding } from './teamChampionship.ts';
 import type { TeamSlot } from './teams.ts';
 
@@ -30,6 +30,8 @@ export const MATCH = {
   /** Timings come from ROUND (round.ts), the one block where every game length is tuned. */
   stageResultsS: ROUND.stageResultsS,
   finalResultsS: ROUND.finalResultsS,
+  /** Decision 049: the winner ceremony after a full match (confetti, podium, then the full list) stays longer. */
+  championResultsS: ROUND.championResultsS,
   nextBriefingS: ROUND.nextBriefingS,
 } as const;
 
@@ -123,8 +125,17 @@ export class Match {
   /** Start the match at a later stage (landing page picker); earlier stages are not played (null points). */
   startAt(stageId: string): void {
     const i = this.order.indexOf(resolveStageId(stageId));
-    if (i > 0) this.index = i;
+    if (i > 0) { this.index = i; this.startIndex = i; }
   }
+
+  /** Index the match started at (0 = Stage 01). */
+  startIndex = 0;
+
+  /**
+   * Decision 049 (owner, 26 Nov 2026): the winner ceremony (podium, confetti) is only for a match that played every
+   * stage, from Stage 01 to the last one. A shorter match (a later start, a test match) ends on the plain results.
+   */
+  get fullRun(): boolean { return this.startIndex === 0 && OFFICIAL_ORDER.every((s) => this.order.includes(s)); }
 
   get stageId(): string { return this.order[Math.min(this.index, this.order.length - 1)]; }
   get total(): number { return this.order.length; }
