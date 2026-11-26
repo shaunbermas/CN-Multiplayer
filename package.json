@@ -30,7 +30,8 @@
     "test:second-pass": "tsx tests/e2e/second-pass.mjs",
     "test:restart-ui": "tsx tests/e2e/restart-ui.mjs",
     "test:hunt": "tsx tests/integration/hunt.mjs",
-    "test:teams": "tsx tests/integration/teams.mjs"
+    "test:teams": "tsx tests/integration/teams.mjs",
+    "test:agawan": "tsx tests/integration/agawan.mjs"
   },
   "devDependencies": {
     "@types/node": "22.20.5",

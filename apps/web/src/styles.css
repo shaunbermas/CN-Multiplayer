@@ -535,3 +535,19 @@ label.check { display: flex !important; align-items: center; gap: 8px; font: 500
 .hud .first-finisher { border-radius: 6px; border-color: rgba(255, 255, 255, 0.16); background: rgba(255, 255, 255, 0.05); }
 .hud .first-finisher small { color: #aeb2b5; }
 .hud .first-finisher b { font-style: italic; }
+
+/* ---------- Stage 02 · Agawan Base greybox HUD (team accents via --team) ---------- */
+.ag-top { display: grid; gap: 6px; padding: 8px 12px; min-width: 220px; }
+.ag-top .timer { padding: 0; background: none; border: 0; box-shadow: none; }
+.ag-scores { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+.ag-scores li { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; align-items: center; gap: 8px; font: 700 14px/1.2 var(--display); letter-spacing: 0.04em; }
+.ag-scores li i { width: 10px; height: 10px; border-radius: 50%; background: var(--team); }
+.ag-scores li span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ag-scores li b { font-size: 18px; }
+.ag-scores li.mine span { color: var(--porcelain); text-decoration: underline; text-decoration-color: var(--team); text-underline-offset: 3px; }
+.ag-protect { position: fixed; left: 50%; top: 58%; transform: translateX(-50%); padding: 6px 12px; font: 700 13px/1 var(--display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.ag-hold { position: fixed; left: 50%; top: 62%; transform: translateX(-50%); display: grid; gap: 6px; padding: 8px 14px; min-width: 220px; font: 700 14px/1 var(--display); letter-spacing: 0.06em; text-transform: uppercase; }
+.ag-hold .bar { display: block; height: 6px; background: rgba(233, 226, 212, 0.12); }
+.ag-hold .bar i { display: block; height: 100%; background: var(--go); }
+.ag-feed { position: fixed; left: 18px; top: 40%; list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 13px; }
+.ag-feed li { padding: 4px 8px; background: rgba(10, 14, 18, 0.6); border-left: 2px solid var(--line-strong); }

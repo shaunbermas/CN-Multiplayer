@@ -382,7 +382,13 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
       if (input.interactPressed && hp.role === 'hider') room.hide();
       const holding = hp.role === 'hunter' && input.interact;
       if (holding !== capHeld.current) { capHeld.current = holding; room.capture(holding); }
-    } else if (capHeld.current) { capHeld.current = false; room.capture(false); }
+    } else if (capHeld.current && !room.agawan) { capHeld.current = false; room.capture(false); }
+    // Agawan Base: hold E; the server decides whether it tags a rival, rescues a teammate or raids a base.
+    const ag = room.agawan;
+    if (ag) {
+      const holding = phase === 'active' && !ag.pen && input.interact;
+      if (holding !== capHeld.current) { capHeld.current = holding; room.interact(holding); }
+    }
     input.pulse = false; input.interactPressed = false;
     pr.reconcile(me);
     if (!mobile) pr.reset({ x: me.x, z: me.z, vx: 0, vz: 0 }); // frozen: the server position is the truth

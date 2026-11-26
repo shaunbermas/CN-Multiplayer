@@ -7,11 +7,13 @@ import type { Emote } from './contestantColorways.ts';
 import type { Standing } from './match.ts';
 import type { HuntPrivate, HuntPublic } from './hunt/hunt.ts';
 import type { TeamSlot, TeamsView } from './teams.ts';
+import type { AgawanEvent, AgawanPrivate, AgawanPublic } from './agawan/agawan.ts';
 
 /** v7 (Stage 01 refinement): bots, collisions (knock-down timer in snapshots), multi-stage match with points.
  *  v8 (The Hunt): input flags, stage actions, per-player Hunt state, filtered snapshots, reconnect by key, start stage.
- *  v9 (Agawan Base teams, decision 045): team messages and the `teams` view in welcome and team updates. */
-export const PROTOCOL_VERSION = 9;
+ *  v9 (Agawan Base teams, decision 045): team messages and the `teams` view in welcome and team updates.
+ *  v10 (Agawan Base play): hold-E interaction, public scores and prisoners, per-player `ag` state, stage feed events. */
+export const PROTOCOL_VERSION = 10;
 
 export interface StartRequestOptions {
   /** Obstacles are always on (decision 031). `false` is honoured only in test rooms (CN_TEST=1). */
@@ -52,6 +54,8 @@ export type ClientMessage =
   /** The Hunt actions: Pulse Detector (hunter), hold/release capture (hunter), enter/leave a hiding place (hider). */
   | { t: 'act'; a: 'pulse' | 'hide' }
   | { t: 'act'; a: 'capture'; on: boolean }
+  /** Agawan Base (v10): hold or release E; the server decides whether it tags, rescues or raids. */
+  | { t: 'act'; a: 'interact'; on: boolean }
   | { t: 'respawn' }
   | { t: 'start'; opts?: StartRequestOptions }
   | { t: 'skip' }
@@ -111,6 +115,8 @@ export interface RoundState {
   match: MatchState;
   /** The Hunt public state (v8): head start, hunter ids, hider counts. Never a hider's position. */
   hunt?: HuntPublic;
+  /** Agawan Base public state (v10): team scores, prisoners, raid cooldowns, sudden death, team of each player. */
+  agawan?: AgawanPublic;
   /** The host paused the room: nothing moves and no timer runs (owner, 25 Nov 2026). */
   paused?: boolean;
 }
@@ -127,7 +133,9 @@ export type ServerMessage =
    * The Hunt snapshots are made per player (v8): rows only for players the receiver may see (line of sight,
    * nobody hidden), and `me` with the receiver's own private stage state. `all` = rows are complete (Stage 01).
    */
-  | { t: 'snap'; time: number; rows: SnapRow[]; round: RoundState; me?: HuntPrivate; all?: boolean }
+  | { t: 'snap'; time: number; rows: SnapRow[]; round: RoundState; me?: HuntPrivate; all?: boolean; /** Agawan Base: your own state (v10). */ ag?: AgawanPrivate }
+  /** Agawan Base feed (v10): a tag, rescue, automatic release or base raid; at = seconds since GO. */
+  | { t: 'agawan'; ev: AgawanEvent; at: number }
   | { t: 'results'; roundId: number; stage: string; mode: Mode; placings: ResultPlacing[]; match: MatchState; standings: Standing[] }
   /** Overall standings (v7): after each stage and to a player joining mid-match. */
   | { t: 'standings'; match: MatchState; standings: Standing[] }

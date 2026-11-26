@@ -8,6 +8,7 @@ import type { Standing } from './match.ts';
 import type { Emote } from './contestantColorways.ts';
 import type { PlayerStatus } from './round.ts';
 import type { HuntPrivate } from './hunt/hunt.ts';
+import type { AgawanEvent, AgawanPrivate } from './agawan/agawan.ts';
 import type { TeamSlot, TeamsView } from './teams.ts';
 
 export interface PlayerView {
@@ -62,6 +63,10 @@ export class RoomClient {
   /** at = local receive time (ms); roundT = seconds since GO on the server's clock. */
   /** Your own Hunt state (role, timers, pulse reading), or null outside The Hunt (v8). */
   hunt: HuntPrivate | null = null;
+  /** Your own Agawan Base state (team, prison timer, hold progress), or null outside Agawan Base (v10). */
+  agawan: AgawanPrivate | null = null;
+  /** Agawan Base feed (v10): tags, rescues, releases and raids, newest last; at = local receive time (ms). */
+  readonly agawanFeed: (AgawanEvent & { at: number; roundT: number })[] = [];
   /** Team setup for Stage 02 · Agawan Base (v9), newest from the server. */
   teams: TeamsView | null = null;
   /** The last request the server refused after joining (e.g. a team rule), with its local receive time (ms). */
@@ -119,6 +124,7 @@ export class RoomClient {
             c.snapshots++;
             c.setRound(msg.round);
             c.hunt = msg.me ?? null;
+            c.agawan = msg.ag ?? null;
             if (msg.all !== false) for (const p of c.players.values()) p.seen = true;
             else for (const p of c.players.values()) p.seen = false;
             c.trackClock(msg.time);
@@ -142,6 +148,10 @@ export class RoomClient {
           case 'standings':
             c.standings = msg.standings;
             c.standingsMatch = msg.match;
+            break;
+          case 'agawan':
+            c.agawanFeed.push({ ...msg.ev, at: Date.now(), roundT: msg.at });
+            if (c.agawanFeed.length > 400) c.agawanFeed.shift();
             break;
           case 'event':
             c.events.push({ kind: msg.kind, id: msg.id, at: Date.now(), roundT: msg.at, ...(msg.other ? { other: msg.other } : {}) });
@@ -270,6 +280,8 @@ export class RoomClient {
   hide(): void { this.send({ t: 'act', a: 'hide' }); }
   /** The Hunt: hold or release capture (hunters). */
   capture(on: boolean): void { this.send({ t: 'act', a: 'capture', on }); }
+  /** Agawan Base: hold or release E (tag, rescue or raid; the server decides which). */
+  interact(on: boolean): void { this.send({ t: 'act', a: 'interact', on }); }
 
   onClose(h: (code: number, reason: string) => void): void { this.closeHandlers.push(h); }
   onSnapshot(h: () => void): void { this.snapHandlers.push(h); }

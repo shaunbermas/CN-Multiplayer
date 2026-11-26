@@ -7,7 +7,7 @@ import type { Mode } from './tournament.ts';
 import type { Rect } from './stage.ts';
 
 export interface StageEngine {
-  readonly rules: 'red_light_green_light' | 'hide_and_hunt';
+  readonly rules: 'red_light_green_light' | 'hide_and_hunt' | 'agawan_base';
   phase: Phase;
   phaseEnd: number;
   now: number;

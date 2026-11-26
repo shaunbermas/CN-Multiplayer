@@ -123,6 +123,12 @@ export interface Placing {
   /** The Hunt: the player's role and successful captures (hunters). */
   role?: 'hunter' | 'hider';
   captures?: number;
+  /** Agawan Base: the player's team, its placement (1-3) and the player's own tags, rescues and raids. */
+  team?: 'A' | 'B' | 'C';
+  teamPlace?: number;
+  tags?: number;
+  rescues?: number;
+  raids?: number;
 }
 
 /** Spec R3: qualifier target for a full tournament; 30 starters -> 22. Standup Quick has no target. */
@@ -172,7 +178,7 @@ export interface RoundEvents {
   results?: Placing[];
 }
 
-export interface StartOptions { seed: number; roundS?: number; briefingS?: number; mode?: Mode; /** Stage 1.5 obstacle twist (host toggle). */ obstacles?: boolean; /** Results screen length for this stage (match: per-stage or final). */ resultsS?: number; /** Seconds left for the others after the first finish. */ closeAfterFirstS?: number }
+export interface StartOptions { seed: number; roundS?: number; briefingS?: number; mode?: Mode; /** Stage 1.5 obstacle twist (host toggle). */ obstacles?: boolean; /** Results screen length for this stage (match: per-stage or final). */ resultsS?: number; /** Seconds left for the others after the first finish. */ closeAfterFirstS?: number; /** Agawan Base: player id -> team slot, locked in the lobby. */ teams?: Record<string, 'A' | 'B' | 'C'> }
 
 /**
  * Phase machine for one room. The room calls:

@@ -21,3 +21,7 @@ export * from './hunt/los.ts';
 export * from './hunt/nav.ts';
 export * from './hunt/hunt.ts';
 export * from './hunt/huntBots.ts';
+export * from './agawan/config.ts';
+export * from './agawan/layout.ts';
+export * from './agawan/agawan.ts';
+export * from './agawan/agawanBots.ts';
