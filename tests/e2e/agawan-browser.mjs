@@ -79,7 +79,7 @@ try {
     return { ...out, names: [...names].filter((n) => /^S02A_|^STG02/.test(n)), rings: rings ? rings.count : -1, players: window.__cn.players().length };
   });
   report.scene = scene;
-  for (const n of ['STG02_AGAWAN_BASE', 'S02A_STREET_SOLID', 'S02A_STREET_GLOW', 'S02A_STRING_LIGHTS', 'S02A_GLOWS', 'S02A_PEN_FENCES', 'S02A_BASE_MARKERS']) check(scene.names.includes(n), `scene part missing: ${n}`);
+  for (const n of ['STG02_AGAWAN_BASE', 'S02A_STREET_SOLID', 'S02A_STREET_GLOW', 'S02A_STRING_LIGHTS', 'S02A_GLOWS', 'S02A_PEN_FENCES', 'S02A_BASE_MARKERS', 'S02A_STREET_DETAILS', 'S02A_STREET_LIT_DETAILS', 'S02A_MATTE_LAYERS']) check(scene.names.includes(n), `scene part missing: ${n}`);
   check(scene.calls > 0 && scene.calls < 140, `draw calls ${scene.calls}`);
   check(scene.rings === scene.players, `team rings ${scene.rings} for ${scene.players} players`);
 

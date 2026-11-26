@@ -2,7 +2,7 @@
 // 03_STAGE_02_TEST_MATRIX). Pure engine tests: no room, no network.
 import { describe, expect, it } from 'vitest';
 import { simulateAgawan } from './agawanSim.ts';
-import { AGAWAN, AgawanEngine, playerPoints, getStage, findPath, newRoundPlayer, lineOfSight, agawanBotInput, makeBot, type AgawanBody, type TeamSlot } from '../src/index.ts';
+import { AGAWAN, AgawanEngine, playerPoints, contribution, getStage, findPath, newRoundPlayer, lineOfSight, agawanBotInput, makeBot, type AgawanBody, type TeamSlot } from '../src/index.ts';
 
 const def = getStage(AGAWAN.id);
 const layout = def.agawan!.layout;
@@ -454,5 +454,48 @@ describe('Agawan Base with 2 teams (decision 049)', () => {
     const r = simulateAgawan(2026, 120, 12, undefined, 2);
     expect(r.counts.tag).toBeGreaterThan(5);
     expect(r.teams.map((t) => t.slot)).toEqual(['A', 'B']);
+  });
+});
+
+describe('early end and contribution ranking (decision 050)', () => {
+  const run2 = (ps: AgawanBody[], teams: Record<string, TeamSlot>) => active(ps, teams, { teamCount: 2, roundS: 200 });
+  const capture = (e: AgawanEngine, a: AgawanBody, b: AgawanBody, run: (s: number) => unknown) => {
+    for (let i = 0; i < AGAWAN.health.max && !e.isImprisoned(b.id); i++) { face(a, b); press(e, a, run); }
+  };
+
+  it('ends as soon as every rival is captured and the free team owns every base', () => {
+    const a = body('a', 1), b = body('b', 2);
+    const { e, run } = run2([a, b], { a: 'A', b: 'B' });
+    b.x = 0; b.z = 0;
+    capture(e, a, b, run);
+    expect(e.isImprisoned('b')).toBe(true);
+    expect(e.phase).toBe('active'); // base B is still B's: a base left to take
+    inRing(a, 'B');
+    const r = run(AGAWAN.base.soloS + 2);
+    expect(e.phase).toBe('results');
+    expect(e.publicState().endReason).toBe('cleared');
+    expect(r?.results?.[0].id).toBe('a');
+  });
+
+  it('keeps playing while a rival is free, even if one team owns every base', () => {
+    const a = body('a', 1), b = body('b', 2, 40, 40);
+    const { e, run } = run2([a, b], { a: 'A', b: 'B' });
+    inRing(a, 'B');
+    run(AGAWAN.base.soloS + 2);
+    expect(e.ownerOf('B')).toBe('A');
+    expect(e.phase).toBe('active');
+  });
+
+  it('ranks teammates by contribution and gives the stage win to the top player of the winning team', () => {
+    const ps = [body('x', 1, 40, 40), body('y', 2, 40, 40), body('z', 3, -40, -40)];
+    const { e } = run2(ps, { x: 'A', y: 'A', z: 'B' });
+    Object.assign(e.state.get('x')!, { tags: 1 });
+    Object.assign(e.state.get('y')!, { bases: 1 });
+    e.teams.get('A')!.score = 20;
+    const rows = e.results(ps);
+    expect(rows.map((r) => r.id)).toEqual(['y', 'x', 'z']);
+    expect(rows[0].first).toBe(true);
+    expect(rows[1].first).toBe(false);
+    expect(contribution({ bases: 1, tags: 0, rescues: 0 })).toBeGreaterThan(contribution({ bases: 0, tags: 3, rescues: 3 }));
   });
 });

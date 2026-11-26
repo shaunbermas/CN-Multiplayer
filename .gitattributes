@@ -47,3 +47,8 @@ blender/exports/stage15/THE_WATCHER.meshopt.glb -filter -diff -merge
 blender/source/THE_WATCHER_DOLL.glb -filter -diff -merge
 blender/textures/WATCHER/T_W_Doll_BC.jpg -filter -diff -merge
 blender/exports/THE_WATCHER_browser/*.png -filter -diff -merge
+
+# Decision 050: the Agawan street's painted backgrounds and texture atlas were made in a cloud session that cannot
+# upload new LFS objects, so these small files (about 2 MB) are normal git files. Migrate later with `git lfs migrate`.
+art/stage02/** -filter -diff -merge
+blender/exports/stage02/** -filter -diff -merge

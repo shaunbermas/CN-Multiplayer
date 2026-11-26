@@ -21,8 +21,9 @@ export interface TeamBoard { standings: TeamStanding[]; stage: TeamStageResult |
  *  v12 (decision 047): the host's picked stage is the lobby (`lobby` message), team mode and colours, Agawan health
  *      and base capture state.
  *  v13 (decision 049): 2 or 3 teams (`team` count action, `count` in the teams view); no prison timer (prisoners carry
- *      seconds held, the private state `heldS`); `match.champion` marks a match that plays all three stages. */
-export const PROTOCOL_VERSION = 13;
+ *      seconds held, the private state `heldS`); `match.champion` marks a match that plays all three stages.
+ *  v14 (decision 050): a lobby between stages (`match.between`); the host's start continues the match. */
+export const PROTOCOL_VERSION = 14;
 
 export interface StartRequestOptions {
   /** Obstacles are always on (decision 031). `false` is honoured only in test rooms (CN_TEST=1). */
@@ -36,6 +37,10 @@ export interface StartRequestOptions {
   resultsS?: number;
   /** Stage the match starts at (landing page picker; any room). Unknown ids start at Stage 01. */
   startStage?: string;
+  /** Test rooms only: go straight to the next stage after the results instead of the between-stages lobby. */
+  autoNext?: boolean;
+  /** Test rooms only: length of the final results (the ranking), separate from `resultsS`. */
+  finalResultsS?: number;
 }
 
 /**
@@ -111,6 +116,9 @@ export interface MatchState {
   final: boolean;
   /** v13 (decision 049): this match plays every stage from Stage 01, so its final results crown the winners. */
   champion?: boolean;
+  /** v14 (decision 050): between stages. The room is in the lobby of the next stage (`stage`); players pick their
+   *  options (Agawan teams), ready up, and the host starts the stage. */
+  between?: boolean;
 }
 
 export interface RoundState {

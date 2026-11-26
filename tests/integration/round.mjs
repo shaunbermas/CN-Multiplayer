@@ -116,9 +116,19 @@ try {
   if (careful.round.match.total !== 2) errors.push(`Match total ${careful.round.match.total}, expected 2`);
   await waitFor(() => careful.round.phase === 'results' && careful.resultsMeta?.match?.stage === 1, 'stage 1 results', 30_000);
   if (careful.resultsMeta.match.final) errors.push('Stage 1 of 2 is marked final');
-  // Host skips the stage results: stage 2 should start without anyone pressing Start.
+  // Host skips the stage results. Decision 050: everyone lands in the next stage's lobby (team setup, ready) and the
+  // stage starts only when the host presses Start.
   careful.nextStage();
-  await waitFor(() => careful.round.match?.stage === 2 && careful.round.phase !== 'results', 'stage 2 starts', 30_000);
+  await waitFor(() => careful.round.match?.stage === 2 && careful.round.phase === 'lobby' && careful.round.match?.between, 'between-stages lobby', 30_000);
+  if (careful.round.stage !== 'STAGE_02_AGAWAN_BASE') errors.push(`Between-stages lobby is ${careful.round.stage}, expected Agawan Base`);
+  if (careful.teams?.locked) errors.push('Teams are locked in the between-stages lobby (players cannot pick)');
+  await sleep(1500);
+  if (careful.round.phase !== 'lobby') errors.push(`Stage 2 started without the host (phase ${careful.round.phase})`);
+  careful.setTeamCount(2);
+  await waitFor(() => careful.teams?.count === 2, '2 teams picked between stages', 10_000);
+  careful.start({});
+  await waitFor(() => careful.round.match?.stage === 2 && careful.round.phase !== 'lobby' && careful.round.phase !== 'results', 'stage 2 starts', 30_000);
+  if (careful.round.agawan && careful.round.agawan.teams.length !== 2) errors.push(`Agawan between-stages pick of 2 teams was not used (${careful.round.agawan.teams.length})`);
   await waitFor(() => careful.round.phase === 'results' && careful.resultsMeta?.match?.stage === 2, 'stage 2 results', 70_000);
   if (!careful.resultsMeta.match.final) errors.push('Stage 2 of 2 is not marked final');
   const st = careful.standings;

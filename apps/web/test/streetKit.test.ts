@@ -13,10 +13,13 @@ describe('Agawan street kit', () => {
   });
 
   it('a cached street still has its houses and windows when the scene mounts a second time', () => {
-    const s = buildStreet({ skyline: false });
+    const s = buildStreet();
     for (let mount = 1; mount <= 3; mount++) {
       expect(s.solid.build().getAttribute('position')?.count ?? 0, `solid, mount ${mount}`).toBeGreaterThan(1000);
       expect(s.glow.build().getAttribute('position')?.count ?? 0, `glow, mount ${mount}`).toBeGreaterThan(100);
+      // decision 050: the atlas details (windows, doors, roofs, signs) must survive a second mount too
+      expect(s.decals.build().getAttribute('position')?.count ?? 0, `details, mount ${mount}`).toBeGreaterThan(1000);
+      expect(s.lit.build().getAttribute('position')?.count ?? 0, `lit details, mount ${mount}`).toBeGreaterThan(300);
     }
   });
 });

@@ -1,4 +1,4 @@
-// Winner ceremony (decision 049, owner 26 Nov 2026): only after a match that played all three stages. The game
+// Winner ceremony (decisions 049 and 050, owner 26-27 Nov 2026): after every completed match. The game
 // "broadcasts" the winner first (a short reveal over confetti and a fanfare), then shows the podium (2nd, 1st, 3rd
 // like a ranking game) and, below it, everyone else's stats. Same frosted panels, Barlow Condensed type and brass
 // "winners" colour as the rest of the interface; the reveal and confetti respect prefers-reduced-motion.
@@ -74,7 +74,8 @@ function Crest({ room, id, size }: { room: TrialRoom; id: string; size: number }
 
 const MEDAL = ['gold', 'silver', 'bronze'] as const;
 
-export function WinnerCeremony({ room, standings, table, footer }: { room: TrialRoom; standings: Standing[]; table: ReactNode; footer: ReactNode }) {
+export function WinnerCeremony({ room, standings, total, table, extra, footer }: { room: TrialRoom; standings: Standing[]; total: number; table: ReactNode; extra?: ReactNode; footer: ReactNode }) {
+  const stagesLabel = `${total} ${total === 1 ? 'stage' : 'stages'}`;
   const [revealed, setRevealed] = useState(() => skipReveal() || reducedMotion());
   useEffect(() => {
     playFanfare();
@@ -95,7 +96,7 @@ export function WinnerCeremony({ room, standings, table, footer }: { room: Trial
       <Confetti bursts={2} />
       {!revealed && w && (
         <div className="cer-reveal" data-testid="ceremony-reveal" onClick={() => setRevealed(true)}>
-          <span className="eyebrow">CN Trial · all 3 stages complete</span>
+          <span className="eyebrow">CN Trial · {total === 3 ? 'all 3 stages' : stagesLabel} complete</span>
           <p className="cer-and">And the winner is</p>
           <h1 className="cer-name">{w.name}</h1>
           <span className="cer-pts num">{w.points} points</span>
@@ -104,7 +105,7 @@ export function WinnerCeremony({ room, standings, table, footer }: { room: Trial
       {revealed && (
         <section className="card results final cer-card" data-testid="results" aria-label="Final results">
           <div data-testid="final" className="cer-head">
-            <span className="eyebrow">Final results · 3 stages</span>
+            <span className="eyebrow">Final results · {stagesLabel}</span>
             <h2>We have a winner!</h2>
             {myLine && <p className={`cer-me${me && me.rank <= 3 ? ' podium' : ''}`} data-testid="ceremony-me">{myLine}</p>}
           </div>
@@ -120,7 +121,7 @@ export function WinnerCeremony({ room, standings, table, footer }: { room: Trial
                     <Crest room={room} id={x.id} size={i === 0 ? 56 : 44} />
                     <b className="cer-pname">{x.name}{x.id === room.id && <em> (you)</em>}</b>
                     <span className="cer-score num">{x.points}<small> pts</small></span>
-                    <span className="cer-stats">{x.wins} {x.wins === 1 ? 'stage win' : 'stage wins'} · finished {x.finishes} of 3</span>
+                    <span className="cer-stats">{x.wins} {x.wins === 1 ? 'stage win' : 'stage wins'} · finished {x.finishes} of {total}</span>
                   </div>
                   <div className="cer-pillar"><span>{ordinal(x.rank)}</span><small>place</small></div>
                 </div>
@@ -133,6 +134,7 @@ export function WinnerCeremony({ room, standings, table, footer }: { room: Trial
               {table}
             </div>
           )}
+          {extra}
           {footer}
         </section>
       )}

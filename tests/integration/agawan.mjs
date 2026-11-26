@@ -41,7 +41,7 @@ try {
   await waitFor(() => host.teams?.mode === 'manual', 4000, 'manual team mode');
   for (const s of ['A', 'B', 'C']) host.setCaptain(s, null);
   await waitFor(() => host.teams.teams.every((t) => !t.captain), 4000, 'no captains');
-  const opts = { startStage: AGAWAN.id, stages: 2, seed: 2026, roundS: 80, briefingS: 1, resultsS: 3 };
+  const opts = { startStage: AGAWAN.id, stages: 2, seed: 2026, roundS: 80, briefingS: 1, resultsS: 3, autoNext: true };
   let t0 = Date.now();
   host.start(opts);
   const refusal = await waitFor(() => host.lastError?.code === 'team' && host.lastError.at >= t0 && host.lastError, 4000, 'start refused');

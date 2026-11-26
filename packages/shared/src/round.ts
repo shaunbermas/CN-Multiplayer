@@ -121,6 +121,8 @@ export interface Placing {
   id: string; place: number; status: PlayerStatus; finishTime: number; progress: number; qualified: boolean;
   /** Points decided by the stage's own rules (The Hunt); when absent, match.ts scores by finish order. */
   points?: number;
+  /** A stage win decided by the stage's own rules (Agawan Base: its top player, decision 050). */
+  first?: boolean;
   /** The Hunt: the player's role and successful captures (hunters). */
   role?: 'hunter' | 'hider';
   captures?: number;

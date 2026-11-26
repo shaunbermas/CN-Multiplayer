@@ -10,6 +10,13 @@ import type { TrialRoom } from '../../net.ts';
 import { useQuality } from '../../game/quality.ts';
 import { buildStreet, starGeometry, type StreetBuild } from './streetKit.ts';
 import { colorOf, useTeamColors, type TeamColors } from '../../game/teamColors.ts';
+import art from '../../../../../blender/exports/stage02/STAGE_02_ART.json';
+import cloudsUrl from '../../../../../blender/exports/stage02/MP01_NightClouds.webp?url';
+import townUrl from '../../../../../blender/exports/stage02/MP02_FarTown.webp?url';
+import barangayUrl from '../../../../../blender/exports/stage02/MP03_Barangay.webp?url';
+import atlasUrl from '../../../../../blender/exports/stage02/T02_StreetAtlas.webp?url';
+import asphaltUrl from '../../../../../blender/exports/stage02/T02_Asphalt.webp?url';
+import paversUrl from '../../../../../blender/exports/stage02/T02_Pavers.webp?url';
 
 const def = getStage(AGAWAN.id);
 const layout = def.agawan!.layout;
@@ -21,9 +28,11 @@ export const agawanAssets = {
   problems: [] as string[],
   walls: layout.walls.length,
   drawCalls: 0,
-  parts: { solid: 0, glow: 0, bulbs: 0, halos: 0, wires: 0, pools: 0 },
+  parts: { solid: 0, glow: 0, decals: 0, lit: 0, bulbs: 0, halos: 0, wires: 0, pools: 0 },
   /** Vertices in the street meshes of the current mount (tests: a stage switch must not leave them empty). */
-  verts: { solid: 0, glow: 0 },
+  verts: { solid: 0, glow: 0, decals: 0 },
+  /** Painted background layers drawn (decision 050). */
+  matte: 0,
   /** How many times the street has mounted since the page loaded. */
   mounts: 0,
 };
@@ -33,11 +42,20 @@ const FOG = { color: '#1a1830', near: 38, far: 125 };
 export const POINT_MAX = { high: { bulb: 48, halo: 112 }, medium: { bulb: 40, halo: 84 }, low: { bulb: 32, halo: 60 } } as const;
 
 let cached: { key: string; k: StreetBuild } | null = null;
-function street(skyline: boolean, colors: TeamColors): StreetBuild {
+function street(colors: TeamColors): StreetBuild {
   // Team colours are baked into the merged street mesh (arches, pen posts), so a new colour deal rebuilds it once.
-  const key = `${skyline ? 'sky' : 'nosky'}|${TEAM_SLOTS.map((t) => colors[t]).join(',')}`;
-  if (!cached || cached.key !== key) cached = { key, k: buildStreet({ skyline, colors }) };
+  const key = TEAM_SLOTS.map((t) => colors[t]).join(',');
+  if (!cached || cached.key !== key) cached = { key, k: buildStreet({ colors }) };
   return cached.k;
+}
+
+const loader = new THREE.TextureLoader();
+function texture(url: string, label: string, repeat?: number[]): THREE.Texture {
+  const t = loader.load(url, undefined, undefined, () => agawanAssets.problems.push(`${label} failed to load`));
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  if (repeat) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(repeat[0], repeat[1]); }
+  return t;
 }
 
 /** Soft round sprites with per-point size (bulbs and glows), faded by the scene fog. */
@@ -88,8 +106,14 @@ function radialTexture(): THREE.Texture {
 function Street({ colors }: { colors: TeamColors }) {
   const tier = useQuality();
   const { size, camera, gl } = useThree();
-  const k = street(tier !== 'low', colors);
+  const k = street(colors);
   const objs = useMemo(() => {
+    // Atlas details (decision 050): one texture for every capiz window, grille, door, tin roof, sign and gift wrap.
+    const atlas = texture(atlasUrl, 'street atlas');
+    const decals = new THREE.Mesh(k.decals.build(), new THREE.MeshStandardMaterial({ map: atlas, vertexColors: true, roughness: 0.85, metalness: 0.04, alphaTest: 0.5, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4 }));
+    decals.name = 'S02A_STREET_DETAILS';
+    const lit = new THREE.Mesh(k.lit.build(), new THREE.MeshBasicMaterial({ map: atlas, vertexColors: true, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4 }));
+    lit.name = 'S02A_STREET_LIT_DETAILS';
     const solid = new THREE.Mesh(k.solid.build(), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.82, metalness: 0.04 }));
     solid.name = 'S02A_STREET_SOLID';
     const glow = new THREE.Mesh(k.glow.build(), new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false }));
@@ -115,14 +139,15 @@ function Street({ colors }: { colors: TeamColors }) {
     if (pools.instanceColor) pools.instanceColor.needsUpdate = true;
     pools.computeBoundingSphere();
     pools.renderOrder = 1;
-    agawanAssets.parts = { solid: k.solid.count, glow: k.glow.count, bulbs: k.bulbs.size.length, halos: k.halos.size.length, wires: k.wires.length / 6, pools: k.pools.length };
-    agawanAssets.verts = { solid: solid.geometry.getAttribute('position')?.count ?? 0, glow: glow.geometry.getAttribute('position')?.count ?? 0 };
+    agawanAssets.parts = { solid: k.solid.count, glow: k.glow.count, decals: k.decals.count, lit: k.lit.count, bulbs: k.bulbs.size.length, halos: k.halos.size.length, wires: k.wires.length / 6, pools: k.pools.length };
+    agawanAssets.verts = { solid: solid.geometry.getAttribute('position')?.count ?? 0, glow: glow.geometry.getAttribute('position')?.count ?? 0, decals: decals.geometry.getAttribute('position')?.count ?? 0 };
     agawanAssets.mounts++;
-    return { solid, glow, bulbs, halos, wires, pools, tex };
+    return { solid, glow, decals, lit, bulbs, halos, wires, pools, tex, atlas };
   }, [k]);
   useEffect(() => () => {
-    for (const o of [objs.solid, objs.glow, objs.bulbs, objs.halos, objs.wires, objs.pools]) { o.geometry.dispose(); (o.material as THREE.Material).dispose(); }
+    for (const o of [objs.solid, objs.glow, objs.decals, objs.lit, objs.bulbs, objs.halos, objs.wires, objs.pools]) { o.geometry.dispose(); (o.material as THREE.Material).dispose(); }
     objs.tex.dispose();
+    objs.atlas.dispose();
   }, [objs]);
   useFrame(() => {
     const cam = camera as THREE.PerspectiveCamera;
@@ -140,6 +165,8 @@ function Street({ colors }: { colors: TeamColors }) {
     <>
       <primitive object={objs.solid} />
       <primitive object={objs.glow} />
+      <primitive object={objs.decals} />
+      <primitive object={objs.lit} />
       <primitive object={objs.wires} />
       <primitive object={objs.pools} />
       <primitive object={objs.bulbs} />
@@ -204,6 +231,11 @@ function mergeAll(parts: THREE.BufferGeometry[]): THREE.BufferGeometry {
  *  takes the colour of whoever owns the base now, and a disc in the attacker's colour grows inside it as they take
  *  it over (decision 047). */
 function Ground({ room, colors }: { room: TrialRoom; colors: TeamColors }) {
+  const ground = useMemo(() => ({
+    asphalt: texture(asphaltUrl, 'asphalt', art.ground.T02_Asphalt.repeat),
+    pavers: texture(paversUrl, 'plaza pavers', art.ground.T02_Pavers.repeat),
+  }), []);
+  useEffect(() => () => { ground.asphalt.dispose(); ground.pavers.dispose(); }, [ground]);
   const rings = useRef<Partial<Record<TeamSlot, { ring: THREE.MeshBasicMaterial | null; fill: THREE.MeshBasicMaterial | null; cap: THREE.Mesh | null }>>>({});
   const R = AGAWAN.base.zoneM;
   useFrame(({ clock }) => {
@@ -227,8 +259,8 @@ function Ground({ room, colors }: { room: TrialRoom; colors: TeamColors }) {
   return (
     <group name="S02A_GROUND">
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.03, 0]}><planeGeometry args={[260, 240]} /><meshStandardMaterial color="#1d1c22" roughness={1} /></mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} name="S02A_ASPHALT"><planeGeometry args={[96, 80]} /><meshStandardMaterial color="#38363d" roughness={0.62} metalness={0.08} /></mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.006, 0]} name="S02A_PLAZA"><circleGeometry args={[8, 48]} /><meshStandardMaterial color="#5d5850" roughness={0.85} /></mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} name="S02A_ASPHALT"><planeGeometry args={[96, 80]} /><meshStandardMaterial map={ground.asphalt} color="#45434b" roughness={0.62} metalness={0.08} /></mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.006, 0]} name="S02A_PLAZA"><circleGeometry args={[8, 48]} /><meshStandardMaterial map={ground.pavers} color="#6a655c" roughness={0.85} /></mesh>
       {TEAM_SLOTS.map((s) => {
         const b = layout.bases[s], pen = layout.pens[s].area;
         return (
@@ -367,11 +399,74 @@ function Sky() {
   return <><primitive object={dome.mesh} /><primitive object={dome.stars} /></>;
 }
 
+const MATTE_URL: Record<string, string> = { MP01_NightClouds: cloudsUrl, MP02_FarTown: townUrl, MP03_Barangay: barangayUrl };
+
+/** Inward-facing open cylinder; u runs once around per `repeat` (the panoramas tile seamlessly). */
+function cylinder(radius: number, height: number, bottom: number, repeat: number, uOffset: number, segments = 128) {
+  const pos: number[] = [], uv: number[] = [], idx: number[] = [];
+  for (let i = 0; i <= segments; i++) {
+    const u = i / segments, a = u * Math.PI * 2;
+    const x = Math.sin(a) * radius, z = Math.cos(a) * radius;
+    pos.push(x, bottom, z, x, bottom + height, z);
+    uv.push(u * repeat + uOffset, 0, u * repeat + uOffset, 1);
+    if (i < segments) { const j = i * 2; idx.push(j, j + 2, j + 1, j + 1, j + 2, j + 3); }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  g.setIndex(idx);
+  return g;
+}
+
+/**
+ * Painted backgrounds (decision 050): three matte panoramas around the block, generated by
+ * tools/stage02/generate_street_art.py. They replace the old 3D silhouettes: the town past the wall is a picture,
+ * not geometry, so it costs three draw calls and no vertices to speak of.
+ */
+function MatteLayers() {
+  const tier = useQuality();
+  const group = useMemo(() => {
+    const g = new THREE.Group();
+    g.name = 'S02A_MATTE_LAYERS';
+    for (const l of art.layers) {
+      const tex = texture(MATTE_URL[l.id], `matte layer ${l.id}`);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.userData.drift = l.drift ?? 0;
+      const mat = new THREE.MeshBasicMaterial({ map: tex, color: new THREE.Color().setScalar(l.brightness ?? 1), transparent: true, depthWrite: false, side: THREE.DoubleSide, fog: false, toneMapped: false });
+      mat.onBeforeCompile = (sh) => {
+        sh.uniforms.uFogTint = { value: new THREE.Color(FOG.color) };
+        sh.uniforms.uFogTintMix = { value: l.fogMix };
+        sh.fragmentShader = 'uniform vec3 uFogTint; uniform float uFogTintMix;\n' + sh.fragmentShader.replace('#include <opaque_fragment>',
+          '#include <opaque_fragment>\n  gl_FragColor.rgb = mix(gl_FragColor.rgb, uFogTint, uFogTintMix);');
+      };
+      const mesh = new THREE.Mesh(cylinder(l.radius, l.height, l.bottom, l.repeat, l.uOffset), mat);
+      mesh.name = l.id;
+      mesh.renderOrder = -9 + l.order; // after the sky dome, before everything else; never writes depth
+      mesh.frustumCulled = false;
+      g.add(mesh);
+    }
+    agawanAssets.matte = art.layers.length;
+    return g;
+  }, []);
+  useFrame((_, dt) => {
+    if (tier === 'low') return;
+    for (const o of group.children) {
+      const map = ((o as THREE.Mesh).material as THREE.MeshBasicMaterial).map;
+      if (map?.userData.drift) map.offset.x = (map.offset.x + map.userData.drift * Math.min(dt, 0.1)) % 1;
+    }
+  });
+  useEffect(() => () => {
+    group.traverse((o) => { const m = o as THREE.Mesh; if (m.isMesh) { m.geometry.dispose(); const mat = m.material as THREE.MeshBasicMaterial; mat.map?.dispose(); mat.dispose(); } });
+  }, [group]);
+  return <primitive object={group} />;
+}
+
 export function AgawanScene({ room }: { room: TrialRoom }) {
   const colors = useTeamColors(room);
   return (
     <group name="STG02_AGAWAN_BASE">
       <Sky />
+      <MatteLayers />
       <Ground room={room} colors={colors} />
       <Street colors={colors} />
       <Fences />

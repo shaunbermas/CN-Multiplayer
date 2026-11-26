@@ -5,7 +5,7 @@
 // from the server's public and private state: the client decides nothing. The prompt is a hint from positions the
 // client already has; the server still checks every press.
 import { useEffect, useState } from 'react';
-import { AGAWAN, TeamChampionship, getStage, type AgawanPublic, type TeamSlot } from '@cn-trials/shared';
+import { AGAWAN, TeamChampionship, contribution, getStage, type AgawanPublic, type TeamSlot } from '@cn-trials/shared';
 import type { TrialRoom } from '../net.ts';
 import { colorOf } from '../game/teamColors.ts';
 
@@ -239,10 +239,13 @@ export function AgawanResultsBoard({ room }: { room: TrialRoom }) {
   const place = (s: TeamSlot) => rows.find((r) => r.team === s)?.teamPlace ?? 3;
   const teams = [...ag.teams].sort((a, b) => place(a.slot) - place(b.slot) || b.score - a.score);
   const P = AGAWAN.points;
-  const value = (r: (typeof rows)[number]) => (r.raids ?? 0) * P.baseCapture + (r.tags ?? 0) * P.capture + (r.rescues ?? 0) * P.rescue;
-  const best = [...rows].sort((a, b) => value(b) - value(a))[0];
+  const value = (r: (typeof rows)[number]) => contribution({ bases: r.raids ?? 0, tags: r.tags ?? 0, rescues: r.rescues ?? 0 });
+  // Decision 050: players are ranked by their contribution (rows arrive in that order: team place, then contribution).
+  const top = rows.filter((r) => value(r) > 0).slice(0, 3);
+  const why = ag.endReason === 'cleared' ? 'Ended early: no one left to catch and no base left to take' : null;
   return (
     <div className="ag-results" data-testid="agawan-results">
+      {why && <p className="ag-ended" data-testid="agawan-ended">{why}</p>}
       <ol className="ag-rank">
         {teams.map((t) => {
           const pts = rows.find((r) => r.team === t.slot)?.points ?? 0;
@@ -257,8 +260,20 @@ export function AgawanResultsBoard({ room }: { room: TrialRoom }) {
         })}
       </ol>
       <p className="muted ag-score-key">Base taken +{P.baseCapture} · base held at the end +{P.baseHeld} · capture +{P.capture} · rescue +{P.rescue}</p>
-      {best && value(best) > 0 && (
-        <p className="ag-mvp" data-testid="agawan-mvp"><span className="eyebrow">Most valuable</span> <b>{best.name}</b> <span className="muted num">{best.raids ?? 0} bases · {best.tags ?? 0} captures · {best.rescues ?? 0} rescues</span></p>
+      {top.length > 0 && (
+        <div className="ag-top" data-testid="agawan-top-players">
+          <span className="eyebrow">Top players · ranked by bases taken, captures and rescues</span>
+          <ol>
+            {top.map((r, i) => (
+              <li key={r.id} className={`m${i + 1}${r.id === room.id ? ' me' : ''}`} style={r.team ? teamVar(room, r.team) : undefined}>
+                <span className={`medal m${i + 1}`}>{i + 1}</span>
+                {r.team && <TeamChip room={room} slot={r.team} />}<b>{r.name}</b>
+                <span className="muted num">{r.raids ?? 0} {(r.raids ?? 0) === 1 ? 'base' : 'bases'} · {r.tags ?? 0} captures · {r.rescues ?? 0} rescues</span>
+                <em className="num">{value(r)}</em>
+              </li>
+            ))}
+          </ol>
+        </div>
       )}
     </div>
   );

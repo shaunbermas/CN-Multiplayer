@@ -85,9 +85,15 @@ export interface AgawanBasePublic {
 }
 
 /** Public stage state (everyone): scores, hearts, bases and prisoners. Positions are in the snapshots. */
+/** Why the stage ended (decision 050): the timer, or nothing left to play for (every rival captured and every base
+ *  owned by the one team still free). */
+export type AgawanEndReason = 'time' | 'cleared';
+
 export interface AgawanPublic {
   teams: AgawanTeamPublic[];
   bases: AgawanBasePublic[];
+  /** Set once the stage has ended. */
+  endReason?: AgawanEndReason;
   /** id, pen (owning team), seconds until automatic release. */
   prisoners: [string, TeamSlot, number][];
   /** Hearts of players who are not at full health (id -> hearts). */
@@ -146,6 +152,8 @@ export class AgawanEngine implements StageEngine {
   private lastNow = 0;
   private rand: () => number = rng(1);
   private suddenTied: TeamSlot[] = [];
+  /** Decision 050: the stage ended before the timer because nothing was left to play for. */
+  endReason: AgawanEndReason | null = null;
   private readonly walls: AgawanWall[];
 
   constructor(readonly layout: AgawanLayout) {
@@ -167,7 +175,7 @@ export class AgawanEngine implements StageEngine {
     if (typeof opts.roundS === 'number') this.matchS = Math.max(5, opts.roundS);
     this.mode = opts.mode === 'tournament' ? 'tournament' : 'standup';
     this.lastResults = []; this.skipped.clear(); this.state.clear(); this.events = [];
-    this.sudden = false; this.winners = []; this.suddenTied = [];
+    this.sudden = false; this.winners = []; this.suddenTied = []; this.endReason = null;
     this.slots = TEAM_SLOTS.slice(0, opts.teamCount === 2 ? 2 : 3);
     this.teams.clear(); this.bases.clear(); this.occupancy.clear();
     for (const s of this.slots) {
@@ -231,6 +239,12 @@ export class AgawanEngine implements StageEngine {
     const bodies = players as AgawanBody[];
     if (this.phase === 'active') this.activeTick(dt, bodies, ev);
     if (this.pendingResults) { this.drainResults(ev); return ev; } // a sudden-death base capture ended the stage
+    // Decision 050 (owner, 27 Nov 2026): "When there's no one to catch anymore or base to conquer, end the game
+    // already." Every rival captured and every base owned by the one team still free: the stage ends now.
+    if (this.phase === 'active' && !this.endReason) {
+      const why = this.decided(bodies);
+      if (why) { this.endReason = why; this.phaseEnd = now; }
+    }
     if (this.phase === 'lobby' || now < this.phaseEnd) return ev;
     switch (this.phase) {
       case 'briefing': this.setPhase('countdown', ROUND.countdownS); break;
@@ -239,6 +253,7 @@ export class AgawanEngine implements StageEngine {
         // Time is up: bases held now score, once. Tied at the top for the first time: sudden death.
         if (!this.sudden) this.scoreHeldBases();
         const top = this.leaders();
+        if (this.endReason) { this.finish(bodies, ev, top.length > 1 ? this.tieBreak(top) : top); break; } // decided early: no sudden death
         if (!this.sudden && top.length > 1) {
           this.sudden = true; this.suddenTied = top;
           this.phaseEnd = now + this.suddenS;
@@ -275,6 +290,24 @@ export class AgawanEngine implements StageEngine {
   }
 
   heldBy(team: TeamSlot): number { let n = 0; for (const b of this.bases.values()) if (b.owner === team) n++; return n; }
+
+  /**
+   * Nothing left to play for (decision 050): one team is the only one with free players (every rival is in a pen,
+   * and there is no release timer) and it owns every base in play. While a rival team still owns a base, the free
+   * team has a base to conquer, so play goes on.
+   */
+  decided(players: AgawanBody[]): AgawanEndReason | null {
+    const present = new Set(players.map((p) => p.id));
+    const withPlayers = new Set<TeamSlot>(), withFree = new Set<TeamSlot>();
+    for (const [id, s] of this.state) {
+      if (!present.has(id)) continue;
+      withPlayers.add(s.team);
+      if (!s.pen) withFree.add(s.team);
+    }
+    if (withPlayers.size < 2 || withFree.size !== 1) return null;
+    const [free] = [...withFree];
+    return [...this.bases.values()].every((b) => b.owner === free) ? 'cleared' : null;
+  }
 
   /** After a sudden death without a base capture: bases held, base captures, player captures, rescues; still tied = shared. */
   tieBreak(tied: TeamSlot[]): TeamSlot[] {
@@ -540,10 +573,13 @@ export class AgawanEngine implements StageEngine {
     const place = this.teamPlaces();
     const rows: { p: AgawanBody; s: AgawanState }[] = [];
     for (const p of players) { const s = this.state.get(p.id); if (s) rows.push({ p, s }); }
-    const contrib = (s: AgawanState) => s.bases * 5 + s.tags * 2 + s.rescues * 2 + s.hits * 0.1;
-    rows.sort((a, b) => place[a.s.team] - place[b.s.team] || contrib(b.s) - contrib(a.s) || a.p.joinOrder - b.p.joinOrder);
-    return rows.map(({ p, s }, i) => ({
+    // Decision 050 (owner, 27 Nov 2026): within a team the players are ranked by what they did for it, on the team
+    // score's own scale (a base taken counts most, then captures and rescues; hits only break ties). The top player of
+    // the winning team takes the stage win, which also separates teammates on the overall board.
+    const rank = [...rows].sort((a, b) => place[a.s.team] - place[b.s.team] || contribution(b.s) - contribution(a.s) || b.s.hits - a.s.hits || a.p.joinOrder - b.p.joinOrder);
+    return rank.map(({ p, s }, i) => ({
       id: p.id, place: i + 1, status: place[s.team] === 1 ? 'finished' : 'active', finishTime: -1, progress: 0, qualified: false,
+      first: i === 0 && place[s.team] === 1 && contribution(s) > 0,
       points: playerPoints(place[s.team], this.slots.length), team: s.team, teamPlace: place[s.team], teamScore: this.teams.get(s.team)?.score ?? 0,
       tags: s.tags, rescues: s.rescues, raids: s.bases,
     }));
@@ -586,6 +622,7 @@ export class AgawanEngine implements StageEngine {
         return { slot, owner: b.owner, cap: b.cap ? { team: b.cap.team, p: r2(Math.max(0, Math.min(1, b.cap.p))) } : null, inside: [...b.inside] };
       }),
       prisoners, hp, sudden: this.sudden, winners: this.winners, teamOf, protected: prot,
+      ...(this.phase === 'results' || this.phase === 'lobby' ? { endReason: this.endReason ?? 'time' } : {}),
     };
   }
 
@@ -601,6 +638,11 @@ export class AgawanEngine implements StageEngine {
       tags: s.tags, rescues: s.rescues, bases: s.bases, hits: s.hits,
     };
   }
+}
+
+/** A player's contribution to their team (decision 050), on the team score's scale. */
+export function contribution(s: { bases: number; tags: number; rescues: number }): number {
+  return s.bases * AGAWAN.points.baseCapture + s.tags * AGAWAN.points.capture + s.rescues * AGAWAN.points.rescue;
 }
 
 /** Individual points for a team place: 2 / 1 / 0 with three teams; the last team always scores 0 (2 / 0 with two). */
