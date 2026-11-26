@@ -253,6 +253,8 @@ export class RoomClient {
   }
 
   start(opts?: StartRequestOptions): void { this.send({ t: 'start', opts }); }
+  /** Host (v12): show this stage in the lobby (the stage the match will start at). */
+  setLobbyStage(stage: string): void { this.send({ t: 'lobby', stage }); }
   /** Stage 1.5 lobby ready toggle. */
   setReady(ready: boolean): void { this.send({ t: 'ready', ready }); }
   skipBriefing(): void { this.send({ t: 'skip' }); }
@@ -270,6 +272,10 @@ export class RoomClient {
   pause(on: boolean): void { this.send({ t: 'pause', on }); }
 
   /** Team setup (v9): pick a team, nominate yourself; host: rename, appoint a captain, move, auto-balance, auto-pick captains. */
+  /** v12 (decision 047): host picks shuffle or manual teams, reshuffles, or deals new team colours. */
+  setTeamMode(mode: 'shuffle' | 'manual'): void { this.send({ t: 'team', a: 'mode', mode }); }
+  shuffleTeams(): void { this.send({ t: 'team', a: 'shuffle' }); }
+  recolorTeams(): void { this.send({ t: 'team', a: 'recolor' }); }
   joinTeam(slot: TeamSlot): void { this.send({ t: 'team', a: 'join', slot }); }
   nominate(on: boolean): void { this.send({ t: 'team', a: 'nominate', on }); }
   renameTeam(slot: TeamSlot, name: string): void { this.send({ t: 'team', a: 'rename', slot, name }); }

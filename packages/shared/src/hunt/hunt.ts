@@ -161,6 +161,7 @@ export class HuntEngine implements StageEngine {
   /** A player who joins mid-stage has no role: they watch (the room benches them as 'waiting'). */
   roleOf(id: string): HuntRole | null { return this.state.get(id)?.role ?? null; }
   isHidden(id: string): boolean { return !!this.state.get(id)?.hideId; }
+  isHunter(id: string): boolean { return this.state.get(id)?.role === 'hunter'; }
   hunters(): string[] { return [...this.state].filter(([, s]) => s.role === 'hunter').map(([id]) => id); }
 
   skip(id: string, playerIds: string[]): void {

@@ -132,7 +132,9 @@ export function MainMenu({ initialName, inviteCode, busy, error, onJoin }: {
   const pick = STAGE_PICKS.find((x) => x.id === s.startStage && x.enabled) ?? STAGE_PICKS[0];
   return (
     <main className="menu" data-testid="menu">
-      <div className="menu-art" aria-hidden="true" data-stage={pick.id} data-testid="menu-art" />
+      <div className="menu-art" aria-hidden="true" data-stage={pick.id} data-testid="menu-art">
+        {STAGE_PICKS.map((p) => <i key={p.id} className={`menu-shot${p.id === pick.id ? ' on' : ''}`} data-shot={`STG${p.no}`} />)}
+      </div>
       <section className="menu-col">
         <div className="menu-title">
           <Brand />

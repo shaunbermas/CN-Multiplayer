@@ -13,7 +13,8 @@ import { sfx } from './audio.ts';
 import { PerfProbe, perfEnabled } from './PerfOverlay.tsx';
 import { STAGE_SCENES } from '../stages/registry.ts';
 import { activeStage } from './stage.ts';
-import { HUNT, TEAMS, greenTime, obstacleWalls, type Rect, type TeamSlot } from '@cn-trials/shared';
+import { colorOf } from './teamColors.ts';
+import { AGAWAN, HUNT, greenTime, obstacleWalls, type Rect, type TeamSlot } from '@cn-trials/shared';
 import { scheduleFor, signalView } from './roundClock.ts';
 
 
@@ -84,7 +85,8 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
     if (p.colorway !== colorway) setColorwayState(p.colorway);
     const spotted = p.status === 'spotted' || p.status === 'captured';
     // The Hunt snapshots leave out players you cannot see (walls, hiding places): their model is hidden too.
-    g.visible = (p.seen || local) && !(status === 'waiting' && local) && !(local && room.hunt?.hide);
+    g.visible = (p.seen || local) && !(status === 'waiting' && local) && !(local && room.hunt?.hide)
+      && !(window as unknown as { __cnHidePlayers?: boolean }).__cnHidePlayers; // test hook: empty stage renders (menu art)
     const hunter = !!room.round.hunt?.hunters.includes(id);
     if (marker.current) marker.current.visible = hunter && room.round.phase !== 'lobby' && p.status !== 'captured';
     // Crouch (The Hunt): a lower stance, presentation only (the local player shows their own key at once).
@@ -241,6 +243,8 @@ function NameTags({ room }: { room: TrialRoom }) {
       const cls = team ? `nametag team team-${team}${p.status === 'captured' ? ' held' : ''}${team === agMine ? ' mate' : ''}` : `nametag ${out ? 'spotted' : p.status}`;
       if (text !== t.text) { t.el.textContent = text; t.text = text; }
       if (cls !== t.cls) { t.el.className = cls; t.cls = cls; if (team) t.el.dataset.team = team; else delete t.el.dataset.team; }
+      const tc = team ? colorOf(room, team) : '';
+      if (t.el.style.getPropertyValue('--t') !== tc) { if (tc) t.el.style.setProperty('--t', tc); else t.el.style.removeProperty('--t'); }
       const sx = ((v.x + 1) / 2) * size.width, sy = ((1 - v.y) / 2) * size.height;
       const sc = Math.min(2, k / Math.max(dist, 0.5));
       const tf = `translate3d(${sx.toFixed(1)}px,${sy.toFixed(1)}px,0) translate(-50%,-50%) scale(${sc.toFixed(3)})`;
@@ -278,7 +282,7 @@ function TeamRings({ room }: { room: TrialRoom }) {
       const x = obj ? obj.position.x : p.x, z = obj ? obj.position.z : p.z;
       const sc = id === room.id ? 1.15 : 1;
       mesh.setMatrixAt(i, mtx.makeScale(sc, 1, sc).setPosition(x, 0.04, z));
-      mesh.setColorAt(i, col.set(TEAMS.colors[team as TeamSlot]).multiplyScalar(p.status === 'captured' ? 0.45 : 1));
+      mesh.setColorAt(i, col.set(colorOf(room, team as TeamSlot)).multiplyScalar(p.status === 'captured' ? 0.45 : 1));
       i++;
     }
     mesh.count = i;
@@ -286,6 +290,54 @@ function TeamRings({ room }: { room: TrialRoom }) {
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
   });
   return <primitive object={mesh} />;
+}
+
+/**
+ * Agawan Base: an enemy marker above every rival, like the hunter's marker in The Hunt but bigger and in the rival
+ * team's colour (owner's request, decision 047), with their hearts as pips underneath so you can see how many more
+ * taps they need. Teammates get no marker (their ring and name tag already say "friend"). Two instanced meshes for
+ * the whole crowd: two draw calls, whatever the player count.
+ */
+const MARKER_MAX = 32;
+function EnemyMarkers({ room }: { room: TrialRoom }) {
+  const { cones, pips } = useMemo(() => {
+    const cg = new THREE.ConeGeometry(0.2, 0.36, 4).rotateX(Math.PI);
+    const cones = new THREE.InstancedMesh(cg, new THREE.MeshBasicMaterial({ toneMapped: false }), MARKER_MAX);
+    cones.name = 'S02A_ENEMY_MARKERS';
+    const pips = new THREE.InstancedMesh(new THREE.OctahedronGeometry(0.075, 0), new THREE.MeshBasicMaterial({ toneMapped: false }), MARKER_MAX * AGAWAN.health.max);
+    pips.name = 'S02A_ENEMY_HEARTS';
+    for (const m of [cones, pips]) { m.frustumCulled = false; m.count = 0; m.renderOrder = 4; }
+    return { cones, pips };
+  }, []);
+  useEffect(() => () => { for (const m of [cones, pips]) { m.geometry.dispose(); (m.material as THREE.Material).dispose(); } }, [cones, pips]);
+  const mtx = useMemo(() => new THREE.Matrix4(), []), col = useMemo(() => new THREE.Color(), []);
+  const full = useMemo(() => new THREE.Color('#ff4d6d'), []), empty = useMemo(() => new THREE.Color('#3a3540'), []);
+  useFrame(({ clock }) => {
+    const ag = room.round.agawan, mine = room.agawan?.team;
+    if (!ag || !mine || room.round.phase === 'lobby') { cones.count = 0; pips.count = 0; return; }
+    let i = 0, j = 0;
+    const t = clock.elapsedTime;
+    for (const [id, p] of room.players) {
+      const team = ag.teamOf[id];
+      if (!team || team === mine || id === room.id || p.status === 'captured' || p.seen === false || i >= MARKER_MAX) continue;
+      const obj = contestantInstances.get(id)?.root.parent ?? null;
+      const x = obj ? obj.position.x : p.x, z = obj ? obj.position.z : p.z;
+      const bob = Math.sin(t * 3 + i) * 0.06;
+      const safe = ag.protected.includes(id);
+      cones.setMatrixAt(i, mtx.makeTranslation(x, 2.3 + bob, z));
+      cones.setColorAt(i, col.set(colorOf(room, team)).multiplyScalar(safe ? 0.4 : 1));
+      i++;
+      const hp = ag.hp[id] ?? AGAWAN.health.max;
+      for (let k = 0; k < AGAWAN.health.max; k++) {
+        pips.setMatrixAt(j, mtx.makeTranslation(x + (k - (AGAWAN.health.max - 1) / 2) * 0.19, 2.02 + bob, z));
+        pips.setColorAt(j, k < hp ? full : empty);
+        j++;
+      }
+    }
+    cones.count = i; pips.count = j;
+    for (const m of [cones, pips]) { m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; }
+  });
+  return <><primitive object={cones} /><primitive object={pips} /></>;
 }
 
 /** Contestant statistics for tests (window.__cn.contestants()). */
@@ -643,6 +695,7 @@ export function Scene({ room, onStageError }: { room: TrialRoom; onStageError: (
       <Players room={room} predictor={predictor} />
       <NameTags room={room} />
       <TeamRings room={room} />
+      <EnemyMarkers room={room} />
       <ContestantHooks room={room} />
       <GroundFxLayer />
       <LocalController room={room} predictor={predictor} />

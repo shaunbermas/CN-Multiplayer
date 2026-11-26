@@ -25,13 +25,24 @@ let browser;
 try {
   await worker.ready;
   browser = await chromium.launch();
+  // Decision 048: a Stage 01 lobby (a fresh browser picks Stage 01) shows no team setup at all.
+  {
+    const p1 = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    await p1.goto(`http://127.0.0.1:${PORT}/?name=Solo&autojoin=1&quality=low&teams=1&room=ag-s1-lobby`);
+    await p1.waitForSelector('[data-testid=lobby-stage]', { timeout: 60_000 });
+    await sleep(1500);
+    const s1 = await p1.evaluate(() => ({ teams: !!document.querySelector('[data-testid=teams]'), stage: window.__cn?.stage }));
+    report.stage01Lobby = s1;
+    if (s1.teams) errors.push('team setup shows in a Stage 01 lobby');
+    await p1.close();
+  }
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
   const pageErrors = [];
   page.on('pageerror', (e) => pageErrors.push(e.message));
   await page.goto(`http://127.0.0.1:${PORT}/?name=Tester&autojoin=1&quality=low&teams=1&startStage=STAGE_02_AGAWAN_BASE&testSeed=11&testRound=${ROUND_S}&testBriefing=1&testResults=60`);
   await page.waitForSelector('[data-testid=teams]', { timeout: 60_000 });
   for (let i = 0; i < 2; i++) { await page.click('[data-testid=add-bots]'); await sleep(400); }
-  await page.click('[data-testid=team-auto-captains]');
+  // Shuffle mode (the default, decision 047) picks captains at start; nothing to click.
   await sleep(600);
   await page.click('[data-testid=start]');
   await page.waitForSelector('[data-testid=agawan-top]', { timeout: 60_000 });

@@ -2,7 +2,7 @@
 // `wrangler dev` (test rooms may play Agawan Base before it is switched on). Real WebSocket clients plus server bots:
 //  A  a full room of 30 (3 people + 27 bots) balanced 10/10/10 with a captain each; Start goes straight to Agawan Base
 //  -  every player starts at their own base; every client sees the same public team state; each person gets `ag`
-//  B  bots play on their own: tags, prisoners, rescues or releases and base raids happen; scores match the feed
+//  B  bots play on their own: tags, prisoners, rescues or releases and bases change hands; scores match the feed
 //  C  a person disconnects mid-stage and reconnects with the same browser key: same id and team
 //  D  the stage ends with team places by score (board points 2 / 1 / 0), recorded once; prisoners cleared; teams unlock
 //  E  Start is refused when a team has no captain (the room lists the reason)
@@ -36,7 +36,11 @@ try {
   host.fillBots();
   await waitFor(() => host.players.size === 30 && Object.keys(host.teams?.members ?? {}).length === 30, 8000, '30 players in teams');
 
-  // E: no captains yet -> Start refused with the reason.
+  // E: Pick-your-team mode with no captains yet -> Start refused with the reason (Shuffle picks captains itself).
+  host.setTeamMode('manual');
+  await waitFor(() => host.teams?.mode === 'manual', 4000, 'manual team mode');
+  for (const s of ['A', 'B', 'C']) host.setCaptain(s, null);
+  await waitFor(() => host.teams.teams.every((t) => !t.captain), 4000, 'no captains');
   const opts = { startStage: AGAWAN.id, stages: 2, seed: 2026, roundS: 80, briefingS: 1, resultsS: 3 };
   let t0 = Date.now();
   host.start(opts);
@@ -87,16 +91,20 @@ try {
   report.scenarios.C = { id: p3.id, team: p3.agawan.team };
 
   // B: let the bots play; watch the feed
-  let maxPrisoners = 0;
+  let maxPrisoners = 0, maxCapture = 0;
   while (host.round.phase === 'active') {
     maxPrisoners = Math.max(maxPrisoners, host.round.agawan?.prisoners.length ?? 0);
+    for (const b of host.round.agawan?.bases ?? []) maxCapture = Math.max(maxCapture, b.cap?.p ?? 0);
     await sleep(200);
   }
   const feed = host.agawanFeed;
   const count = (k) => feed.filter((e) => e.kind === k).length;
-  report.scenarios.B = { tags: count('tag'), rescues: count('rescue'), releases: count('release'), raids: count('raid'), maxPrisoners };
-  check(count('tag') >= 3, `bots tagged ${count('tag')} times`);
-  check(count('raid') >= 1, `bots raided ${count('raid')} times`);
+  report.scenarios.B = { tags: count('tag'), rescues: count('rescue'), releases: count('release'), hits: count('hit'), bases: count('base'), maxCapture: Math.round(maxCapture * 100) / 100, maxPrisoners };
+  check(count('hit') >= 6, `bots hit ${count('hit')} times`);
+  check(count('tag') >= 3, `bots captured ${count('tag')} times`);
+  // Bots attack bases: within the 80 s test round a base either changes hands or a capture gets well past half
+  // (real-time play varies run to run; the full-match base rate is checked deterministically in agawan.test.ts).
+  check(count('base') >= 1 || maxCapture >= 0.5, `bases changed hands ${count('base')} times and the best capture reached ${Math.round(maxCapture * 100)} %`);
   check(count('rescue') + count('release') >= 1, 'no prisoner was ever rescued or released');
   check(maxPrisoners >= 1, 'nobody was ever in a pen');
 
@@ -106,9 +114,10 @@ try {
   check(res.length === 30, `results rows ${res.length}`);
   const fin = host.round.agawan;
   const scoreOf = Object.fromEntries((fin?.teams ?? []).map((t) => [t.slot, t.score]));
-  // Scores add up from the feed: 5 per raid, the points carried by tags and rescues.
+  // Scores add up from the feed (base takeovers, captures, rescues) plus the bases each team held at the whistle.
+  const heldOf = Object.fromEntries((fin?.teams ?? []).map((t) => [t.slot, t.held]));
   for (const s of ['A', 'B', 'C']) {
-    const fromFeed = feed.filter((e) => (e.kind === 'raid' && e.team === s) || ((e.kind === 'tag' || e.kind === 'rescue') && fin.teamOf[e.by] === s)).reduce((n, e) => n + (e.points ?? 0), 0);
+    const fromFeed = heldOf[s] * AGAWAN.points.baseHeld + feed.filter((e) => (e.kind === 'base' && e.team === s) || ((e.kind === 'tag' || e.kind === 'rescue') && fin.teamOf[e.by] === s)).reduce((n, e) => n + (e.points ?? 0), 0);
     check(fromFeed === scoreOf[s], `team ${s} score ${scoreOf[s]} vs feed ${fromFeed}`);
   }
   const byTeam = {};

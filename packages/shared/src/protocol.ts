@@ -17,8 +17,10 @@ export interface TeamBoard { standings: TeamStanding[]; stage: TeamStageResult |
  *  v8 (The Hunt): input flags, stage actions, per-player Hunt state, filtered snapshots, reconnect by key, start stage.
  *  v9 (Agawan Base teams, decision 045): team messages and the `teams` view in welcome and team updates.
  *  v10 (Agawan Base play): hold-E interaction, public scores and prisoners, per-player `ag` state, stage feed events.
- *  v11 (team championship): results and standings carry the team board (3 / 2 / 1 per stage) in matches with teams. */
-export const PROTOCOL_VERSION = 11;
+ *  v11 (team championship): results and standings carry the team board (3 / 2 / 1 per stage) in matches with teams.
+ *  v12 (decision 047): the host's picked stage is the lobby (`lobby` message), team mode and colours, Agawan health
+ *      and base capture state. */
+export const PROTOCOL_VERSION = 12;
 
 export interface StartRequestOptions {
   /** Obstacles are always on (decision 031). `false` is honoured only in test rooms (CN_TEST=1). */
@@ -45,7 +47,11 @@ export type TeamAction =
   | { t: 'team'; a: 'captain'; slot: TeamSlot; id: string | null }
   | { t: 'team'; a: 'move'; id: string; slot: TeamSlot }
   | { t: 'team'; a: 'balance' }
-  | { t: 'team'; a: 'autoCaptains' };
+  | { t: 'team'; a: 'autoCaptains' }
+  /** v12 (decision 047): host picks shuffle or manual teams, reshuffles, or deals new team colours. */
+  | { t: 'team'; a: 'mode'; mode: 'shuffle' | 'manual' }
+  | { t: 'team'; a: 'shuffle' }
+  | { t: 'team'; a: 'recolor' };
 
 /** Host-only bot management in the lobby: add some random bots, fill every free slot, or remove them all. */
 export type BotAction = { t: 'bots'; action: 'add'; count?: number } | { t: 'bots'; action: 'fill' } | { t: 'bots'; action: 'clear' };
@@ -62,6 +68,8 @@ export type ClientMessage =
   /** Agawan Base (v10): hold or release E; the server decides whether it tags, rescues or raids. */
   | { t: 'act'; a: 'interact'; on: boolean }
   | { t: 'respawn' }
+  /** Host (v12): the stage picked on the main menu becomes the lobby, so everyone practises where the match starts. */
+  | { t: 'lobby'; stage: string }
   | { t: 'start'; opts?: StartRequestOptions }
   | { t: 'skip' }
   | { t: 'probe_ack'; id: number }

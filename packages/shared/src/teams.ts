@@ -3,7 +3,7 @@
 // Clients only ask; every rule (capacity, unique names, one captain, locking) is checked here.
 //
 // Rules:
-//  - three fixed slots A, B, C with fixed accent colours; names default to Team A / B / C and only the host renames
+//  - three slots A, B, C with colours dealt at random (decision 047); names default to Team A / B / C and only the host renames
 //  - at most 10 players a team; Auto-balance keeps sizes within one (25 -> 9/8/8 ... 30 -> 10/10/10)
 //  - a player nominates themselves; the host appoints one captain per team (a nominee or any member)
 //  - changing team clears a player's captaincy and nomination
@@ -22,6 +22,50 @@ export const TEAMS = {
   defaultNames: { A: 'Team A', B: 'Team B', C: 'Team C' } as Record<TeamSlot, string>,
 } as const;
 
+/**
+ * Team colours are dealt at random (decision 047, owner 26 Nov 2026: "randomize the color of the team, not just the
+ * teal, purple and pink"). Saturated, readable at night on the street, none of them the UI's danger red. Each deal
+ * keeps the three colours at least 70 degrees of hue apart, so teams never look alike.
+ */
+export const TEAM_PALETTE: readonly { hex: string; hue: number; name: string }[] = [
+  { hex: '#A16FCD', hue: 275, name: 'Purple' },
+  { hex: '#36B2C9', hue: 190, name: 'Cyan' },
+  { hex: '#D56FA0', hue: 330, name: 'Pink' },
+  { hex: '#F28C28', hue: 30, name: 'Orange' },
+  { hex: '#8FD14F', hue: 90, name: 'Lime' },
+  { hex: '#F2C230', hue: 47, name: 'Gold' },
+  { hex: '#4F7DF2', hue: 225, name: 'Blue' },
+  { hex: '#2FBF8F', hue: 160, name: 'Jade' },
+  { hex: '#FF7A6B', hue: 6, name: 'Coral' },
+  { hex: '#C9E25A', hue: 70, name: 'Chartreuse' },
+  { hex: '#7B5CFF', hue: 252, name: 'Violet' },
+  { hex: '#E86BE0', hue: 305, name: 'Orchid' },
+];
+
+const hueGap = (a: number, b: number) => { const d = Math.abs(a - b) % 360; return Math.min(d, 360 - d); };
+
+/** Three distinct palette colours (hues at least 70 degrees apart), from a random source in [0, 1). */
+export function dealTeamColors(rand: () => number = Math.random): Record<TeamSlot, string> {
+  for (let attempt = 0; attempt < 200; attempt++) {
+    const pick: typeof TEAM_PALETTE[number][] = [];
+    const pool = [...TEAM_PALETTE];
+    while (pick.length < 3 && pool.length) {
+      const c = pool.splice(Math.floor(rand() * pool.length), 1)[0];
+      if (pick.every((p) => hueGap(p.hue, c.hue) >= 70)) pick.push(c);
+    }
+    if (pick.length === 3) return { A: pick[0].hex, B: pick[1].hex, C: pick[2].hex };
+  }
+  return { ...TEAMS.colors };
+}
+
+/** Colour of a team slot from a teams view (falls back to the original accents). */
+export function teamColor(view: { teams: { slot: TeamSlot; color: string }[] } | null | undefined, slot: TeamSlot): string {
+  return view?.teams.find((t) => t.slot === slot)?.color ?? TEAMS.colors[slot];
+}
+
+/** How players get their team (decision 047): the host shuffles them, or everyone picks a team themselves. */
+export type TeamMode = 'shuffle' | 'manual';
+
 export interface TeamView { slot: TeamSlot; name: string; color: string; captain: string | null }
 /** What every client receives (protocol v9). */
 export interface TeamsView {
@@ -32,6 +76,8 @@ export interface TeamsView {
   nominees: string[];
   /** Team setup is frozen (a match is running). */
   locked: boolean;
+  /** Shuffle (the host deals the teams; players cannot switch) or manual (players pick). */
+  mode: TeamMode;
 }
 
 export type TeamResult = { ok: true } | { ok: false; reason: string };
@@ -67,7 +113,45 @@ export class TeamBook {
   private captains: Record<TeamSlot, string | null> = { A: null, B: null, C: null };
   private member = new Map<string, TeamSlot>();
   private nominated = new Set<string>();
+  private colors: Record<TeamSlot, string>;
+  mode: TeamMode = 'shuffle';
   locked = false;
+
+  constructor(private readonly rand: () => number = Math.random) { this.colors = dealTeamColors(rand); }
+
+  colorOf(slot: TeamSlot): string { return this.colors[slot]; }
+  /** Deal three new team colours (a new room, after a match, or the host's "New colours"). */
+  recolor(): TeamResult {
+    if (this.locked) return fail('Colours are locked while the match is running');
+    const old = TEAM_SLOTS.map((s) => this.colors[s]).join();
+    for (let i = 0; i < 5; i++) { this.colors = dealTeamColors(this.rand); if (TEAM_SLOTS.map((s) => this.colors[s]).join() !== old) break; }
+    return OK;
+  }
+
+  /** Host: shuffle mode or manual picks. Switching to shuffle deals the teams at once. */
+  setMode(mode: unknown, players: TeamPlayer[]): TeamResult {
+    if (this.locked) return fail('Teams are locked while the match is running');
+    if (mode !== 'shuffle' && mode !== 'manual') return fail('Unknown team mode');
+    const was = this.mode;
+    this.mode = mode;
+    if (mode === 'shuffle' && was !== 'shuffle') this.shuffle(players);
+    return OK;
+  }
+
+  /**
+   * Host: deal everyone into random teams with sizes within one, then give each team a captain (a nominee if it has
+   * one, else its earliest person). Players keep nothing of their old team.
+   */
+  shuffle(players: TeamPlayer[]): TeamResult {
+    if (this.locked) return fail('Teams are locked while the match is running');
+    const order = [...players];
+    for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(this.rand() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+    const start = Math.floor(this.rand() * 3); // which team gets the extra seat varies too
+    this.captains = { A: null, B: null, C: null };
+    order.forEach((p, i) => { this.member.set(p.id, TEAM_SLOTS[(i + start) % 3]); });
+    this.autoCaptains(players);
+    return OK;
+  }
 
   teamOf(id: string): TeamSlot | null { return this.member.get(id) ?? null; }
   nameOf(slot: TeamSlot): string { return this.names[slot]; }
@@ -107,9 +191,10 @@ export class TeamBook {
     this.member.set(id, slot);
   }
 
-  /** A player picks a team. */
-  join(id: string, slot: unknown): TeamResult {
+  /** A player picks a team (manual mode; the host may still move anyone in either mode). */
+  join(id: string, slot: unknown, byHost = false): TeamResult {
     if (this.locked) return fail('Teams are locked while the match is running');
+    if (this.mode === 'shuffle' && !byHost) return fail('The host shuffles the teams in this room');
     if (!TEAM_SLOTS.includes(slot as TeamSlot)) return fail('Unknown team');
     const s = slot as TeamSlot;
     if (this.member.get(id) === s) return OK;
@@ -151,7 +236,7 @@ export class TeamBook {
   /** Host: move a player to another team. */
   move(id: unknown, slot: unknown): TeamResult {
     if (typeof id !== 'string' || !this.member.has(id)) return fail('Unknown player');
-    return this.join(id, slot);
+    return this.join(id, slot, true);
   }
 
   /**
@@ -227,14 +312,17 @@ export class TeamBook {
     this.member.clear();
     this.nominated.clear();
     this.locked = false;
+    this.mode = 'shuffle';
+    this.colors = dealTeamColors(this.rand);
   }
 
   view(): TeamsView {
     return {
-      teams: TEAM_SLOTS.map((s) => ({ slot: s, name: this.names[s], color: TEAMS.colors[s], captain: this.captains[s] })),
+      teams: TEAM_SLOTS.map((s) => ({ slot: s, name: this.names[s], color: this.colors[s], captain: this.captains[s] })),
       members: Object.fromEntries(this.member),
       nominees: [...this.nominated],
       locked: this.locked,
+      mode: this.mode,
     };
   }
 }
