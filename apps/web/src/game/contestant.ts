@@ -142,7 +142,8 @@ varying vec2 vCntUv;
 flat varying float vCntRegion;
 varying float vCntAO;
 `;
-const FRAG_HEAD = /* glsl */ `
+const FRAG_HEAD = /* glsl */ `uniform float uRim;
+
 uniform vec3 uPalette[${N_REGIONS}];
 uniform sampler2D uDetail;
 uniform float uAccentGlow;
@@ -156,7 +157,7 @@ export function contestantMaterial(asset: ContestantAsset, colorwayId: string): 
   const cw = colorwayById(colorwayId) ?? CONTESTANT_COLORWAYS[0];
   const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1, metalness: 0, normalMap: asset.normal });
   mat.normalScale.set(0.9, 0.9);
-  const uniforms = { uPalette: { value: palette(cw) }, uDetail: { value: asset.detail }, uAccentGlow: { value: 0.45 } };
+  const uniforms = { uPalette: { value: palette(cw) }, uDetail: { value: asset.detail }, uAccentGlow: { value: 0.45 }, uRim: CONTESTANT_RIM };
   mat.userData.uniforms = uniforms;
   mat.userData.colorway = cw.id;
   mat.onBeforeCompile = (sh) => {
@@ -180,11 +181,17 @@ export function contestantMaterial(asset: ContestantAsset, colorwayId: string): 
       .replace('#include <metalnessmap_fragment>', `float metalnessFactor = cntR == 3 ? 0.65 : 0.0;`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
         if (cntR == 6) totalEmissiveRadiance += vec3(0.55);
-        if (cntR == 4) totalEmissiveRadiance += uPalette[4] * uAccentGlow;`);
+        if (cntR == 4) totalEmissiveRadiance += uPalette[4] * uAccentGlow;
+        // warm edge light (0 except in dark stages) so silhouettes stay readable at night; lighting only, the look is unchanged
+        float cntRim = pow(1.0 - clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0), 2.5);
+        totalEmissiveRadiance += vec3(1.0, 0.82, 0.62) * cntRim * uRim;`);
   };
-  mat.customProgramCacheKey = () => 'cnt-contestant-v1';
+  mat.customProgramCacheKey = () => 'cnt-contestant-v2';
   return mat;
 }
+
+/** Shared edge-light strength for every contestant (a dark stage sets it, and puts it back to 0 when it unmounts). */
+export const CONTESTANT_RIM = { value: 0 };
 
 export function setColorway(mat: THREE.MeshStandardMaterial, colorwayId: string): void {
   const cw = colorwayById(colorwayId) ?? CONTESTANT_COLORWAYS[0];

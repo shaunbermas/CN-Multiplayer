@@ -5,7 +5,6 @@ with matte-painted PNG backgrounds, very low-poly geometry and detailed textures
 code with fixed seeds (numpy + Pillow): no photographs, no third-party or AI-generated images.
 
 Matte layers (seamless panoramas on inward-facing cylinders around the block, like Stage 01):
-  MP01_NightClouds   moonlit cloud banks lit warm from below by the town (translucent, drifts slowly)
   MP02_FarTown       hills of the town at night: thousands of window lights, a church with a giant parol, a
                      water tower and a radio mast, a lit tree in a far plaza
   MP03_Barangay      the neighbourhood just past the block: two- to four-storey houses with capiz windows, tin
@@ -18,7 +17,8 @@ Street atlas (one texture for the merged street details, 8 x 3 cells of 256 px):
   row 1 (lit by the scene): plaster wall, hollow blocks, corrugated tin, panel door, grille window, roll-up shutter,
                     wood planks, gift wrap
   row 2: more gift wraps, a MERRY CHRISTMAS tarpaulin, a wreath, piko (hopscotch) chalk, a drain grate, a court
-Plus tileable ground textures: asphalt (cracks, patches, oil) and plaza pavers.
+Plus tileable ground textures: concrete road slabs (the usual Philippine street surface), scored cement for the
+open ground and sidewalks, and clay plaza tiles.
 
 Output:
   art/stage02/source/<id>.png                         full-resolution PNG sources
@@ -184,35 +184,6 @@ def save(name: str, rgba: np.ndarray, quality: int = 84, alpha: bool = True) -> 
 
 
 # =============================================================================================== matte layers
-def night_clouds(seed: int = 2101) -> np.ndarray:
-    W, H = 2048, 512
-    rng = np.random.default_rng(seed)
-    n = tile_noise(rng, H, W, 6.0, aniso=3.5)
-    n2 = tile_noise(rng, H, W, 2.0, aniso=2.0)
-    y = np.linspace(0, 1, H)[:, None]
-    band = np.exp(-((y - 0.62) / 0.22) ** 2) * 0.9 + np.exp(-((y - 0.3) / 0.12) ** 2) * 0.45
-    dens = np.clip((n * 0.8 + n2 * 0.35 - 0.52) * 2.6, 0, 1) * band
-    lit_below = np.clip((y - 0.35) / 0.65, 0, 1)  # the town's glow warms the cloud undersides
-    base = np.array([0.20, 0.19, 0.36])
-    warm = np.array([0.55, 0.36, 0.42])
-    col = base[None, None, :] * (1 - lit_below[..., None]) + warm[None, None, :] * lit_below[..., None]
-    col = col * (0.75 + 0.5 * n2[..., None])
-    out = np.zeros((H, W, 4), np.float32)
-    out[..., :3] = np.clip(col, 0, 1)
-    out[..., 3] = np.clip(dens * 0.85, 0, 1) * np.clip((1 - y) * 3.0, 0, 1) * np.clip(y * 6, 0, 1)
-    # the moon with a halo (behind thin cloud), on one side of the panorama
-    mx, my = int(W * 0.31), int(H * 0.28)
-    yy, xx = np.mgrid[0:H, 0:W]
-    d = np.hypot(xx - mx, yy - my)
-    halo = np.exp(-(d / 70) ** 2) * 0.55 + np.exp(-(d / 22) ** 2) * 0.4
-    disc = np.clip(15.5 - d, 0, 1)
-    moon = np.array([0.93, 0.92, 0.85])
-    out[..., :3] = out[..., :3] * (1 - halo[..., None] * 0.6) + moon * halo[..., None] * 0.6
-    out[..., :3] = out[..., :3] * (1 - disc[..., None]) + moon * disc[..., None]
-    out[..., 3] = np.clip(np.maximum(out[..., 3], np.maximum(halo * 0.8, disc)), 0, 1)
-    return out
-
-
 def far_town(seed: int = 2202) -> np.ndarray:
     W, H = 2048, 512
     rng = np.random.default_rng(seed)
@@ -294,7 +265,7 @@ def far_town(seed: int = 2202) -> np.ndarray:
     return out
 
 
-WALLS_N = ["#8a7c66", "#76866f", "#8f6e5e", "#6d7d8f", "#8f8456", "#866a78", "#7d6f5d", "#6a8073", "#948a7a", "#7c6550"]
+WALLS_N = ["#e8c46a", "#8fd1a8", "#f0a3a3", "#9cc7e8", "#f3e3c3", "#e59a5c", "#c9a6e0", "#a8d672", "#f2d0a4", "#7fc4c0"]
 ROOFS_N = ["#5a2c22", "#2c4246", "#45413f", "#63371f", "#363a50", "#4d5054"]
 
 
@@ -383,7 +354,7 @@ def barangay(seed: int = 2303) -> np.ndarray:
         fh = 2.9 * M
         bh = floors * fh + 0.4 * M
         wall = WALLS_N[int(rng.integers(len(WALLS_N)))]
-        wc = shade(wall, 0.62)
+        wc = shade(wall, 0.5)
         top = ground - bh
         cv.rect(x, top, x + bw, ground, wc + (255,))
         # plaster stains: a few darker vertical streaks
@@ -839,52 +810,117 @@ def atlas() -> tuple[np.ndarray, dict]:
     return arr, cells
 
 
-def asphalt(seed: int = 2505) -> np.ndarray:
-    S = 512
+def _grain(rng, S_h, S_w, base, amp):
+    n = tile_noise(rng, S_h, S_w, 1.0)
+    n2 = tile_noise(rng, S_h, S_w, 10.0)
+    n3 = tile_noise(rng, S_h, S_w, 40.0)
+    v = 1 + (n - 0.5) * amp + (n2 - 0.5) * amp * 1.2 + (n3 - 0.5) * amp * 0.8
+    out = np.ones((S_h, S_w, 4), np.float32)
+    out[..., :3] = np.clip(np.array(base, np.float32)[None, None, :] / 255.0 * v[..., None], 0, 1)
+    return out
+
+
+def concrete_road(seed: int = 2505) -> np.ndarray:
+    """A Philippine barangay road: Portland-cement concrete slabs (the usual street surface, not asphalt), 7 m across
+    and two 4.5 m slabs along (512 x 656 px). Broom marks across, a centre joint, sealed transverse joints, gutters
+    at both edges, wheel-track wear, oil drips, hairline cracks and one newer patched panel. Tiles along v."""
+    W, H = 512, 656
     rng = np.random.default_rng(seed)
-    n = tile_noise(rng, S, S, 1.0)
-    n2 = tile_noise(rng, S, S, 12.0)
-    base = 0.86 + (n - 0.5) * 0.28 + (n2 - 0.5) * 0.3
-    out = np.ones((S, S, 4), np.float32)
-    out[..., :3] = np.clip(base, 0, 1.2)[..., None] * np.array([0.98, 0.97, 1.0])
-    img = Image.fromarray((np.clip(out, 0, 1) * 255).astype(np.uint8), "RGBA")
+    out = _grain(rng, H, W, (178, 175, 166), 0.16)
+    # wheel-track wear: slightly darker, smoother bands
+    u = np.linspace(0, 1, W)[None, :]
+    wear = np.exp(-((u - 0.27) / 0.06) ** 2) + np.exp(-((u - 0.73) / 0.06) ** 2)
+    out[..., :3] *= (1 - 0.08 * wear)[..., None]
+    img = Image.fromarray((out * 255).astype(np.uint8), "RGBA")
     d = ImageDraw.Draw(img)
-    for _ in range(4):  # patched squares
-        x, y, w, h = rng.uniform(0, S), rng.uniform(0, S), rng.uniform(40, 120), rng.uniform(30, 90)
-        for dx in (0, -S):
-            for dy in (0, -S):
-                d.rectangle([x + dx, y + dy, x + w + dx, y + h + dy], fill=(180, 178, 182, 255))
-    for _ in range(10):  # cracks
-        x, y = rng.uniform(0, S), rng.uniform(0, S)
+    # broom (tine) marks across the slab
+    for y in range(0, H, 3):
+        if rng.random() < 0.55:
+            x0 = rng.uniform(0, W * 0.2)
+            d.line([(x0, y), (rng.uniform(W * 0.8, W), y + rng.uniform(-1, 1))], fill=(160, 157, 150, 255), width=1)
+    # one newer patched panel (lighter, smoother)
+    px0 = 0.52 * W
+    py0 = rng.uniform(0.55, 0.62) * H
+    patch = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    ImageDraw.Draw(patch).rectangle([px0, py0, px0 + 0.35 * W, py0 + 0.22 * H], fill=(186, 184, 178, 90))
+    img.alpha_composite(patch.filter(ImageFilter.GaussianBlur(3)))
+    d = ImageDraw.Draw(img)
+    d.rectangle([px0, py0, px0 + 0.35 * W, py0 + 0.22 * H], outline=(150, 148, 142, 255), width=1)
+    # oil drips in the middle of the lane
+    for _ in range(9):
+        x, y, r = rng.choice([0.38, 0.62]) * W + rng.uniform(-30, 30), rng.uniform(0, H), rng.uniform(6, 18)
+        d.ellipse([x - r, y - r * 0.6, x + r, y + r * 0.6], fill=(146, 142, 136, 255))
+    # hairline cracks
+    for _ in range(7):
+        x, y = rng.uniform(20, W - 20), rng.uniform(0, H)
         pts = [(x, y)]
         a = rng.uniform(0, math.tau)
-        for _k in range(10):
-            a += rng.uniform(-0.6, 0.6)
-            x += math.cos(a) * 14; y += math.sin(a) * 14
+        for _k in range(8):
+            a += rng.uniform(-0.7, 0.7)
+            x += math.cos(a) * 10; y += math.sin(a) * 10
             pts.append((x, y))
-        for dx in (0, -S, S):
-            for dy in (0, -S, S):
-                d.line([(p[0] + dx, p[1] + dy) for p in pts], fill=(120, 118, 124, 255), width=2)
-    for _ in range(5):  # oil stains
-        x, y, r_ = rng.uniform(0, S), rng.uniform(0, S), rng.uniform(10, 30)
-        d.ellipse([x - r_, y - r_ * 0.7, x + r_, y + r_ * 0.7], fill=(150, 148, 156, 255))
-    arr = np.asarray(img.filter(ImageFilter.GaussianBlur(0.6)), np.float32) / 255.0
-    return arr
+        d.line(pts, fill=(128, 125, 120, 255), width=1)
+    # joints: centre (longitudinal) and transverse every 4.5 m, sealed dark with a little spalling
+    d.line([(W / 2, 0), (W / 2, H)], fill=(96, 94, 90, 255), width=3)
+    for y in (0, H / 2):
+        d.rectangle([0, y - 2, W, y + 2], fill=(84, 82, 78, 255))
+        for _ in range(10):
+            x = rng.uniform(0, W)
+            d.ellipse([x - 3, y - 4, x + 5, y + 4], fill=(120, 118, 112, 255))
+    d.rectangle([0, H - 2, W, H], fill=(84, 82, 78, 255))
+    # gutters: a darker cement channel with a little moss at both edges
+    for x0, x1 in ((0, 0.055 * W), (0.945 * W, W)):
+        d.rectangle([x0, 0, x1, H], fill=(128, 126, 118, 255))
+        for _ in range(60):
+            yy = rng.uniform(0, H)
+            xx = rng.uniform(x0, x1)
+            d.ellipse([xx - 1.5, yy - 2, xx + 1.5, yy + 2], fill=(112, 120, 96, 255))
+        edge = x1 if x0 == 0 else x0
+        d.line([(edge, 0), (edge, H)], fill=(100, 98, 92, 255), width=2)
+    return np.asarray(img.filter(ImageFilter.GaussianBlur(0.5)), np.float32) / 255.0
 
 
-def pavers(seed: int = 2606) -> np.ndarray:
+def cement_yard(seed: int = 2707) -> np.ndarray:
+    """Open ground off the road (alleys, base yards, sidewalks): lighter brushed cement scored into 1.5 m panels,
+    with water stains and moss in the score lines. 512 px = 3 m."""
     S = 512
     rng = np.random.default_rng(seed)
-    img = Image.new("RGBA", (S, S), (150, 140, 128, 255))
+    out = _grain(rng, S, S, (188, 182, 170), 0.14)
+    stains = tile_noise(rng, S, S, 4.0)  # soft water stains (tileable)
+    out[..., :3] *= (1 - 0.1 * np.clip((stains - 0.55) * 4, 0, 1))[..., None]
+    img = Image.fromarray((out * 255).astype(np.uint8), "RGBA")
+    d = ImageDraw.Draw(img)
+    for t in (0, S / 2):
+        d.rectangle([t - 1, 0, t + 1, S], fill=(158, 153, 142, 255))
+        d.rectangle([0, t - 1, S, t + 1], fill=(158, 153, 142, 255))
+    for _ in range(50):  # moss specks in the score lines
+        t = rng.choice([0, S / 2])
+        a = rng.uniform(0, S)
+        x, y = (t, a) if rng.random() < 0.5 else (a, t)
+        d.ellipse([x - 2, y - 2, x + 3, y + 3], fill=(110, 124, 90, 255))
+    d.rectangle([S - 1, 0, S, S], fill=(158, 153, 142, 255))
+    d.rectangle([0, S - 1, S, S], fill=(158, 153, 142, 255))
+    return np.asarray(img.filter(ImageFilter.GaussianBlur(0.6)), np.float32) / 255.0
+
+
+def plaza_tiles(seed: int = 2606) -> np.ndarray:
+    """Town plaza floor: cream and terracotta clay tiles in a diamond pattern with grout lines. 512 px = 2.4 m."""
+    S = 512
+    rng = np.random.default_rng(seed)
+    img = Image.new("RGBA", (S, S), (150, 140, 126, 255))
     d = ImageDraw.Draw(img)
     n = 8
     t = S / n
     for a in range(n):
         for b in range(n):
-            k = 0.85 + 0.25 * rng.random()
-            c = shade((214, 204, 186) if (a + b) % 3 else (200, 176, 156), k)
-            d.rectangle([a * t + 3, b * t + 3, (a + 1) * t - 3, (b + 1) * t - 3], fill=c + (255,))
-    return np.asarray(img.filter(ImageFilter.GaussianBlur(0.7)), np.float32) / 255.0
+            k = 0.9 + 0.14 * rng.random()
+            diamond = (a + b) % 4 == 0 or (a - b) % 4 == 0
+            base = (176, 108, 84) if diamond else (222, 210, 186)
+            d.rectangle([a * t + 2, b * t + 2, (a + 1) * t - 2, (b + 1) * t - 2], fill=shade(base, k) + (255,))
+    arr = np.asarray(img, np.float32) / 255.0
+    n1 = tile_noise(rng, S, S, 8.0)
+    arr[..., :3] *= (0.92 + 0.16 * n1)[..., None]
+    return np.clip(arr, 0, 1)
 
 
 def main() -> None:
@@ -900,7 +936,6 @@ def main() -> None:
         "ground": {},
     }
     layers = [
-        ("MP01_NightClouds", night_clouds, {"radius": 260, "height": 150, "bottom": 10, "repeat": 1, "order": 0, "uOffset": 0.1, "brightness": 0.9, "fogMix": 0.15, "drift": 0.0012, "role": "moonlit clouds lit warm from below by the town"}),
         ("MP02_FarTown", far_town, {"radius": 140, "height": 36, "bottom": -2, "repeat": 2, "order": 1, "uOffset": 0.37, "brightness": 1.0, "fogMix": 0.28, "drift": 0, "role": "the town on the hills: window lights, church with a giant parol, water tower, radio mast"}),
         ("MP03_Barangay", barangay, {"radius": 70, "height": 27.6, "bottom": -0.6, "repeat": 3, "order": 2, "uOffset": 0.0, "brightness": 1.0, "fogMix": 0.12, "drift": 0, "role": "the neighbourhood past the block's wall: houses, capiz windows, parols, palms, light-wrapped poles"}),
     ]
@@ -913,7 +948,8 @@ def main() -> None:
     manifest["atlas"] = {"id": "T02_StreetAtlas", "cols": COLS, "rows": ROWS, "cell": CELL, "cells": cells, **info,
                          "lit": ["capiz", "capizParol", "curtain", "sari", "banner", "lanterns", "bakery", "transom"]}
     print("atlas", info["runtime_bytes"])
-    for gid, build, rep in (("T02_Asphalt", asphalt, [10, 8]), ("T02_Pavers", pavers, [5, 5])):
+    # repeat: road = metres per tile along the road (u spans the road's width); yard and plaza = metres per tile
+    for gid, build, rep in (("T02_ConcreteRoad", concrete_road, [7, 9]), ("T02_CementYard", cement_yard, [3, 3]), ("T02_PlazaTiles", plaza_tiles, [2.4, 2.4])):
         info = save(gid, build(), quality=82)
         manifest["ground"][gid] = {"repeat": rep, **info}
         print(gid, info["runtime_bytes"])
