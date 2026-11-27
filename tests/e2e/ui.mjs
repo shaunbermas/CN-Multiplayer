@@ -88,7 +88,7 @@ try {
   // screenshots the screen when it is still showing.
   await page.evaluate(() => {
     window.__seen = {};
-    const ids = ['briefing', 'countdown', 'spotted', 'spectating', 'results'];
+    const ids = ['briefing', 'countdown', 'frozen', 'results'];
     const check = () => { for (const id of ids) if (!window.__seen[id] && document.querySelector(`[data-testid=${id}]`)) window.__seen[id] = { at: Date.now(), text: document.querySelector(`[data-testid=${id}]`).textContent.trim().slice(0, 60) }; };
     new MutationObserver(check).observe(document.body, { subtree: true, childList: true, characterData: true });
   });
@@ -112,22 +112,24 @@ try {
   });
   await page.evaluate(() => { delete globalThis.__cnSignalHold; });
 
-  // 12: another player is eliminated (bot keeps walking into the first red) → feed toast
+  // 12: another player is caught (bot keeps walking into the first red) → frozen, feed toast (decision 054)
   const reck = bots[3];
   let seq = 1;
   const walker = setInterval(() => reck.send({ t: 'input', seq: seq++, mx: 0, mz: -1, yaw: 0 }), 33);
   await step(page, '12_elimination_feed', async () => { await waitFor(() => visible(page, '.toast.spotted'), 'elimination toast', 30_000); });
   clearInterval(walker);
 
-  // 13–14: we walk into the red ourselves → spotted stamp, then spectator UI
+  // 13–14: we walk into the red ourselves → frozen in ice with the Frozen banner, then we thaw and play on
   await page.bringToFront();
   await page.locator('canvas').click();
   await page.keyboard.down('KeyW');
-  await step(page, '13_you_were_spotted', async () => { await waitFor(() => seen('spotted'), 'spotted stamp', 60_000); await shotIfShowing('spotted'); });
+  await step(page, '13_you_were_frozen', async () => { await waitFor(() => seen('frozen'), 'Frozen banner', 60_000); await shotIfShowing('frozen'); });
   await page.keyboard.up('KeyW');
-  // The spectator bar appears 3 s after the spot (death cam). On a slow CI runner the spotted screenshot alone can
-  // take longer than that, so like the other transient screens this asserts that it appeared (observer above).
-  await step(page, '14_spectator', async () => { await waitFor(() => seen('spectating'), 'spectator', 45_000); await shotIfShowing('spectating'); });
+  // Nobody is out any more (decision 054): the ice breaks 2 s after the next GO and the player is still racing.
+  await step(page, '14_thawed_still_racing', async () => {
+    await waitFor(() => page.evaluate(() => { const me = window.__cn.players().find((p) => p.id === window.__cn.sessionId); return me && !(me.frozen > 0) && me.status === 'active'; }), 'thawed', 45_000);
+    if (await page.evaluate(() => !!document.querySelector('[data-testid=spectating]'))) throw new Error('spectator bar shown, but nobody is eliminated in Stage 01');
+  });
 
   // 15: results (round ends; the remaining bots never finish)
   await step(page, '15_results', async () => { await waitFor(() => seen('results'), 'results', 150_000); await shotIfShowing('results'); });

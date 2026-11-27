@@ -34,9 +34,9 @@ export function HowToPlay({ onClose }: { onClose: () => void }) {
     <Modal title="How to play" onClose={onClose} testid="howto">
       <ol className="howto">
         <li><b>Green light: move.</b> Walk toward the finish line at the far end of the yard.</li>
-        <li><b>Red light: freeze.</b> There is no warning: red can come at any moment. Anyone still moving a split second after it turns red is spotted and eliminated.</li>
+        <li><b>Red light: freeze.</b> There is no warning: red can come at any moment. Anyone still moving a split second after it turns red is frozen in ice. The ice breaks 2 seconds after the next GO, and you race on: nobody is out.</li>
         <li><b>Finish</b> before the timer runs out. Once the first player finishes, everyone else has 30 seconds.</li>
-        <li><b>Points.</b> First to finish a stage: 2 points. Every other finisher: 1. Spotted or out of time: 0. A match has several stages; everyone plays every stage, and the most points wins.</li>
+        <li><b>Points.</b> First to finish a stage: 2 points. Every other finisher: 1. Not over the line when time runs out: 0. A match has several stages; everyone plays every stage, and the most points wins.</li>
         <li><b>Bumping into someone</b> knocks you both over for a moment. Falling never eliminates you, but it costs time.</li>
         <li><b>Obstacles</b>: barricade rows to weave through and a gate that slides only on green. The yard is foggy: you only see them up close.</li>
         <li><b>Your contestant</b> wears colours dealt at random when you join (kept if you rejoin). Nobody in the room has the same ones. In the lobby, <kbd>Space</kbd> jumps and <kbd>E</kbd> dives, just for fun.</li>

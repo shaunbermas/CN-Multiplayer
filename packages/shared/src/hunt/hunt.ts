@@ -150,7 +150,7 @@ export class HuntEngine implements StageEngine {
       const role: HuntRole = hunters.has(id) ? 'hunter' : 'hider';
       const s = role === 'hunter' ? this.layout.hunterSpawns[h++ % this.layout.hunterSpawns.length] : this.layout.hiderSpawns[k++ % this.layout.hiderSpawns.length];
       const index = role === 'hunter' ? this.layout.hiderSpawns.length + s.index : s.index;
-      Object.assign(p, { spawn: index, x: s.x, z: s.z, status: 'active', finishTime: -1, spotTime: -1, redDisp: 0, recent: [], downUntil: 0, immuneUntil: 0 });
+      Object.assign(p, { spawn: index, x: s.x, z: s.z, status: 'active', finishTime: -1, spotTime: -1, redDisp: 0, recent: [], downUntil: 0, immuneUntil: 0, frozenUntil: 0, catches: 0 });
       spawnOf.set(id, index);
       this.state.set(id, newState(role));
     }

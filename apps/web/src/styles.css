@@ -276,6 +276,10 @@ label.check { display: flex !important; align-items: center; gap: 8px; font: 500
 .banner b { font: 800 calc(56px * var(--hud-scale))/0.9 var(--display); letter-spacing: 0.04em; text-transform: uppercase; }
 .banner span { font: 500 calc(15px * var(--hud-scale))/1.3 var(--body); color: #c4d0d2; }
 .banner.spotted { border-top: 4px solid var(--stop); } .banner.spotted b { color: #ff6b5e; }
+/* Decision 054: the Frozen banner sits low, above the bottom bar, so your contestant in the ice stays in view. */
+.banner.frozen { top: auto; bottom: calc(112px * var(--hud-scale)); padding: 10px 28px 10px; gap: 4px; }
+.banner.frozen > b { font-size: calc(38px * var(--hud-scale)); }
+.banner.frozen span b { font: 800 calc(24px * var(--hud-scale))/1 var(--display); color: #ff6b5e; letter-spacing: 0.02em; }
 .banner.finished { border-top: 4px solid var(--go); } .banner.finished b { color: var(--go); }
 .banner.down { top: 40%; border-top: 4px solid var(--hold); padding: 10px 24px; } .banner.down b { font-size: calc(30px * var(--hud-scale)); color: var(--hold); }
 .banner .pts { font: 800 calc(22px * var(--hud-scale))/1 var(--display); color: var(--brass); letter-spacing: 0.06em; }

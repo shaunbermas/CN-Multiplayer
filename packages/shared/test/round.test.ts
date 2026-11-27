@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
-  ROUND, RoundEngine, SIM_DT, buildSchedule, getStage, graceFor, newRoundPlayer, rankPlayers, segmentAt, shuffled,
+  ROUND, RoundEngine, SIM_DT, buildSchedule, getStage, graceFor, newRoundPlayer, rankPlayers, segmentAt, shuffled, thawTime,
   type RoundEvents, type RoundPlayer,
 } from '../src/index.ts';
 
@@ -101,6 +101,73 @@ describe('round engine (spec §4–§5)', () => {
     expect(ev.spotted).toEqual(['b']);
     expect(players.find((p) => p.id === 'a')!.status).toBe('active');
     expect(players.find((p) => p.id === 'c')!.status).toBe('active');
+  });
+
+  it('decision 054: a caught player is frozen, not eliminated, and thaws 2 s after the next GO', () => {
+    const { engine, players } = setup();
+    engine.tick(1.01, players); engine.tick(4.02, players);
+    const sched = engine.schedule;
+    const firstRed = sched.find((s) => s.signal === 'red')!;
+    const b = players.find((p) => p.id === 'b')!;
+    const ev = runTo(engine, players, 4.1, engine.goTime + firstRed.end - 0.1, (p) => (p.id === 'b' ? 4 : 0));
+    expect(ev.spotted).toEqual(['b']);
+    expect(b.status).toBe('active');
+    expect(b.catches).toBe(1);
+    expect(b.frozenUntil).toBeCloseTo(engine.goTime + firstRed.end + ROUND.freezeS, 5);
+    // Still frozen when GO comes back, and for 2 s after it; free just after.
+    engine.tick(engine.goTime + firstRed.end + 0.05, players);
+    expect(engine.canMove(b)).toBe(false);
+    engine.tick(engine.goTime + firstRed.end + ROUND.freezeS - 0.05, players);
+    expect(engine.canMove(b)).toBe(false);
+    engine.tick(engine.goTime + firstRed.end + ROUND.freezeS + 0.01, players);
+    expect(engine.canMove(b)).toBe(true);
+    expect(engine.phase).toBe('active'); // a frozen player keeps the round going (nobody is out)
+  });
+
+  it('decision 054: thawTime counts from the next GO, or from now if it is already green', () => {
+    const sched = buildSchedule(5, 60);
+    const red = sched.find((s) => s.signal === 'red')!;
+    expect(thawTime(sched, 10, 10 + red.start + 0.5)).toBeCloseTo(10 + red.end + ROUND.freezeS, 5);
+    expect(thawTime(sched, 10, 10 + 0.5)).toBeCloseTo(10 + 0.5 + ROUND.freezeS, 5);
+  });
+
+  it('decision 054: a browser\'s own caught report counts only during (or just after) a red light', () => {
+    const { engine, players } = setup();
+    engine.tick(1.01, players); engine.tick(4.02, players);
+    const sched = engine.schedule;
+    const firstRed = sched.find((s) => s.signal === 'red')!;
+    const a = players[0];
+    const ev: RoundEvents = { spotted: [], finished: [] };
+    engine.tick(engine.goTime + 1, players);
+    expect(engine.reportCaught(a, ev)).toBe(false); // green: ignored
+    engine.tick(engine.goTime + firstRed.start + 0.5, players);
+    expect(engine.reportCaught(a, ev)).toBe(true);
+    expect(engine.reportCaught(a, ev)).toBe(false); // already frozen
+    expect(ev.spotted).toEqual([a.id]);
+    expect(a.frozenUntil).toBeCloseTo(engine.goTime + firstRed.end + ROUND.freezeS, 5);
+    // A report that lands just after the red ended, for a catch made during it, still waits for that GO.
+    const b = players[1];
+    engine.tick(engine.goTime + firstRed.end + 0.3, players);
+    expect(engine.reportCaught(b, ev, firstRed.end - 0.2)).toBe(true);
+    expect(b.frozenUntil).toBeCloseTo(engine.goTime + firstRed.end + ROUND.freezeS, 5);
+  });
+
+  it('decision 054: the room backstop catches a reported walk through a red light, but not the reaction time', () => {
+    const { engine, players } = setup();
+    engine.tick(1.01, players); engine.tick(4.02, players);
+    const firstRed = engine.schedule.find((s) => s.signal === 'red')!;
+    const a = players[0];
+    const ev: RoundEvents = { spotted: [], finished: [] };
+    for (let t = firstRed.start; t < firstRed.start + ROUND.backstopGraceS - 0.05; t += SIM_DT) {
+      engine.tick(engine.goTime + t, players);
+      engine.backstop(a, 4 * SIM_DT, ev);
+    }
+    expect(ev.spotted).toEqual([]);
+    for (let t = firstRed.start + ROUND.backstopGraceS; t < firstRed.end - 0.05; t += SIM_DT) {
+      engine.tick(engine.goTime + t, players);
+      engine.backstop(a, 4 * SIM_DT, ev);
+    }
+    expect(ev.spotted).toEqual([a.id]);
   });
 
   it('ranks finishers by time, then progress, then spotted (latest first)', () => {

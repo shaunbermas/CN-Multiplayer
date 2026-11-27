@@ -245,7 +245,7 @@ Each stage must have one primary gameplay verb, one clear win/qualification cond
 | Genre / role | Opening reaction / movement |
 | Player count | 30 target starters; 22 target qualifiers. |
 | Core loop | Contestants cross a large outdoor testing yard while The Watcher, a giant mechanical observer, controls the signal. Move during green. Stop during red. Crossing the finish line before time expires qualifies. |
-| Rules and failure | The Watcher turns away or displays green. On red, The Watcher turns and scans. Movement above an approved tolerance during the red window triggers elimination. The server validates motion and accounts for latency. |
+| Rules and failure | The Watcher turns away or displays green. On red, The Watcher turns and scans. Movement above an approved tolerance during the red window triggers elimination. The server validates motion and accounts for latency. *Decision 054 (owner, 27 Nov 2026): a caught player is frozen in ice until 2 s after the next green instead of eliminated, and each browser judges its own movement (player-side) with a room backstop.* |
 | Environment | Night, floodlit yard (APPROVED v0.3): large yard, start zone, finish gate, Watcher plinth, cover-free lanes, floodlight masts, side dressing and distant silhouettes. |
 | Implementation needs | Signal state machine, scan timing, movement validation, finish detection, elimination, timer, results and spectator handoff. |
 | Design notes | This is the first vertical-slice stage. Its environment and mechanic must be fully playable before large-scale content production. |

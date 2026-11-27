@@ -32,6 +32,16 @@ export const ROUND = {
   speedWindow: 3,
   dispLimit: 0.15,      // D2 m since the grace window ended
   resultsS: 9,          // single-stage default                          [20]
+  /** Decision 054 (owner, 27 Nov 2026): a caught player is frozen in ice instead of eliminated. The thaw countdown
+   *  starts only when the next GREEN (GO) begins, then the player can move again after this many seconds. */
+  freezeS: 2,
+  /** Client-authoritative movement (decision 054): the room's backstop only catches a player whose reported moves
+   *  clearly ignore a red light (their own browser normally catches them first). Grace after red starts (plus
+   *  twice the player's one-way latency) and the distance they may cover after it. */
+  backstopGraceS: 1.0,
+  backstopDisp: 0.75,
+  /** How long after a red ends the room still accepts a player's own "I was caught" report (latency, clock skew). */
+  caughtReportS: 0.75,
   // Match flow (match.ts reads these): results between stages, the final leaderboard, later briefings.
   // Decision 052 (owner, 27 Nov 2026: "do not redirect players to the next stage"): the ranking stays up until the
   // host picks Next stage (or Back to lobby / Restart); the long limit only stops an abandoned room waiting forever.
@@ -109,10 +119,14 @@ export interface RoundPlayer {
   downUntil: number;
   /** Room time until which a collision cannot knock the player down again, or 0. */
   immuneUntil: number;
+  /** Decision 054: room time when the ice thaws (caught in a red light), or 0 when not frozen. */
+  frozenUntil: number;
+  /** Decision 054: times caught moving in a red light this round (results and tie-break). */
+  catches: number;
 }
 
 export function newRoundPlayer(id: string, joinOrder: number, spawn: number, x: number, z: number): RoundPlayer {
-  return { id, joinOrder, spawn, x, z, status: 'active', finishTime: -1, spotTime: -1, latencyS: 0, redDisp: 0, recent: [], downUntil: 0, immuneUntil: 0 };
+  return { id, joinOrder, spawn, x, z, status: 'active', finishTime: -1, spotTime: -1, latencyS: 0, redDisp: 0, recent: [], downUntil: 0, immuneUntil: 0, frozenUntil: 0, catches: 0 };
 }
 
 export function graceFor(latencyS: number): number {
@@ -136,6 +150,8 @@ export interface Placing {
   tags?: number;
   rescues?: number;
   raids?: number;
+  /** Stage 01 (decision 054): times this player was caught and frozen. */
+  caught?: number;
 }
 
 /** Spec R3: qualifier target for a full tournament; 30 starters -> 22. Standup Quick has no target. */
@@ -161,18 +177,46 @@ export function qualify(placings: Placing[], mode: Mode, starters: number): Plac
   return out;
 }
 
-/** Spec R5–R7: finishers by time, then unfinished by progress, then spotted (latest spot first). */
+/**
+ * Spec R5–R7: finishers by time, then unfinished by progress, then spotted (latest spot first). Decision 054: nobody
+ * is spotted out of Stage 01 any more (a caught player is frozen, then plays on); an unfinished tie on progress goes
+ * to the player caught fewer times.
+ */
 export function rankPlayers(players: RoundPlayer[], geo: StageGeometry): Placing[] {
   const progress = (p: RoundPlayer) => Math.max(0, Math.min(1, (p.z - geo.startZ) / (geo.finishZ - geo.startZ)));
   const finished = players.filter((p) => p.status === 'finished')
     .sort((a, b) => a.finishTime - b.finishTime || a.z - b.z || a.joinOrder - b.joinOrder);
   const active = players.filter((p) => p.status === 'active')
-    .sort((a, b) => a.z - b.z || a.joinOrder - b.joinOrder);
+    .sort((a, b) => a.z - b.z || (a.catches ?? 0) - (b.catches ?? 0) || a.joinOrder - b.joinOrder);
   const spotted = players.filter((p) => p.status === 'spotted')
     .sort((a, b) => b.spotTime - a.spotTime || a.z - b.z || a.joinOrder - b.joinOrder);
   return [...finished, ...active, ...spotted].map((p, i) => ({
     id: p.id, place: i + 1, status: p.status, finishTime: p.finishTime, progress: Math.round(progress(p) * 1000) / 1000, qualified: false,
+    ...(p.catches ? { caught: p.catches } : {}),
   }));
+}
+
+/** Decision 054: room time when a player caught at room time `now` thaws: freezeS after the next GO (or after now,
+ *  if the light is already green when the catch is recorded). */
+export function thawTime(schedule: SignalSegment[], goTime: number, now: number): number {
+  const seg = segmentAt(schedule, now - goTime);
+  const go = seg && seg.signal !== 'green' ? goTime + seg.end : now;
+  return go + ROUND.freezeS;
+}
+
+/**
+ * The red-light detector (spec D1–D2) for one player, as a small state machine both the room (bots and server-moved
+ * players) and the browser (its own player, decision 054) run on every movement step. Only movement from the
+ * player's own input counts: bumps and pushes never do.
+ */
+export interface RedWatch { redDisp: number; recent: number[] }
+export function redStep(w: RedWatch, sinceRed: number, grace: number, d: number, dt: number): boolean {
+  if (sinceRed < 0 || sinceRed < grace) { w.redDisp = 0; w.recent.length = 0; return false; }
+  w.redDisp += d;
+  w.recent.push(d / dt);
+  if (w.recent.length > ROUND.speedWindow) w.recent.shift();
+  const avg = w.recent.length === ROUND.speedWindow ? w.recent.reduce((a, b) => a + b, 0) / ROUND.speedWindow : 0;
+  return w.redDisp > ROUND.dispLimit || avg > ROUND.speedLimit;
 }
 
 // ------------------------------------------------------------------ engine
@@ -244,7 +288,7 @@ export class RoundEngine {
     order.forEach((id, i) => spawnOf.set(id, this.geo.spawns[i % this.geo.spawns.length].index));
     for (const p of players) {
       const s = this.geo.spawns.find((x) => x.index === spawnOf.get(p.id))!;
-      Object.assign(p, { spawn: s.index, x: s.x, z: s.z, status: 'active', finishTime: -1, spotTime: -1, redDisp: 0, recent: [], downUntil: 0, immuneUntil: 0 });
+      Object.assign(p, { spawn: s.index, x: s.x, z: s.z, status: 'active', finishTime: -1, spotTime: -1, redDisp: 0, recent: [], downUntil: 0, immuneUntil: 0, frozenUntil: 0, catches: 0 });
     }
     this.setPhase('briefing', opts.briefingS ?? ROUND.briefingS);
     return spawnOf;
@@ -267,6 +311,7 @@ export class RoundEngine {
     if (p.downUntil > this.now) return false; // knocked down by a collision: no control until back up
     if (this.phase === 'lobby') return true;
     if (this.phase !== 'active') return false;
+    if (p.frozenUntil > this.now) return false; // frozen in ice (decision 054) until 2 s after the next GO
     return p.status === 'active' || p.status === 'finished';
   }
 
@@ -280,19 +325,51 @@ export class RoundEngine {
       return;
     }
     const seg = segmentAt(this.schedule, this.now - this.goTime);
-    if (!seg || seg.signal !== 'red') { p.redDisp = 0; p.recent = []; return; }
-    const sinceRed = this.now - this.goTime - seg.start;
-    if (sinceRed < graceFor(p.latencyS)) { p.redDisp = 0; p.recent = []; return; }
-    const d = Math.hypot(dx, dz);
-    p.redDisp += d;
-    p.recent.push(d / dt);
-    if (p.recent.length > ROUND.speedWindow) p.recent.shift();
-    const avg = p.recent.length === ROUND.speedWindow ? p.recent.reduce((a, b) => a + b, 0) / ROUND.speedWindow : 0;
-    if (p.redDisp > ROUND.dispLimit || avg > ROUND.speedLimit) {
-      p.status = 'spotted';
-      p.spotTime = this.now;
-      ev.spotted.push(p.id);
-    }
+    const sinceRed = seg && seg.signal === 'red' ? this.now - this.goTime - seg.start : -1;
+    if (redStep(p, sinceRed, graceFor(p.latencyS), Math.hypot(dx, dz), dt)) this.freeze(p, ev);
+  }
+
+  /**
+   * Decision 054: caught moving in a red light. No elimination: the player is frozen in ice, the thaw countdown
+   * starts at the next GO, then they race on. The 'spotted' event still fires so The Watcher reacts.
+   */
+  freeze(p: RoundPlayer, ev: RoundEvents, thawAt?: number): void {
+    if (this.phase !== 'active' || p.status !== 'active' || p.frozenUntil > this.now) return;
+    p.frozenUntil = thawAt ?? thawTime(this.schedule, this.goTime, this.now);
+    p.spotTime = this.now;
+    p.catches = (p.catches ?? 0) + 1;
+    p.redDisp = 0; p.recent = [];
+    ev.spotted.push(p.id);
+  }
+
+  /**
+   * Client-authoritative movement (decision 054): the player's own browser saw itself move in a red light and says
+   * so. Accepted while the light is red, or just after it ended (the report travels over the network).
+   */
+  reportCaught(p: RoundPlayer, ev: RoundEvents, at?: number): boolean {
+    if (this.phase !== 'active' || p.status !== 'active' || p.frozenUntil > this.now) return false;
+    const t = this.now - this.goTime;
+    const red = this.schedule.find((s) => s.signal === 'red' && t >= s.start && t < s.end + ROUND.caughtReportS);
+    if (!red) return false;
+    // The browser says when on its own clock it was caught (at, seconds since GO). Trusted only within the last
+    // caughtReportS: a catch made during the red waits for that red's GO, even when the report lands after it.
+    const tc = typeof at === 'number' && Number.isFinite(at) ? Math.max(t - ROUND.caughtReportS, Math.min(t, at)) : t;
+    const inRed = tc < red.end;
+    this.freeze(p, ev, inRed ? this.goTime + red.end + ROUND.freezeS : undefined);
+    return true;
+  }
+
+  /**
+   * Room backstop for client-authoritative players (decision 054): a much looser check on the positions they report,
+   * so a browser that never reports itself still cannot walk through a red light. Normal players never reach it.
+   */
+  backstop(p: RoundPlayer & { bsDisp?: number }, d: number, ev: RoundEvents): void {
+    if (this.phase !== 'active' || p.status !== 'active' || p.frozenUntil > this.now) { p.bsDisp = 0; return; }
+    const seg = segmentAt(this.schedule, this.now - this.goTime);
+    const sinceRed = seg && seg.signal === 'red' ? this.now - this.goTime - seg.start : -1;
+    if (sinceRed < ROUND.backstopGraceS + 2 * Math.max(0, p.latencyS)) { p.bsDisp = 0; return; }
+    p.bsDisp = (p.bsDisp ?? 0) + d;
+    if (p.bsDisp > ROUND.backstopDisp) { p.bsDisp = 0; this.freeze(p, ev); }
   }
 
   /** Called when a red phase starts for players who sent no movement (resets their window). */

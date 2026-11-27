@@ -1,5 +1,7 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { inputFromKeys, MOVEMENT, progress, SIM_DT } from '@cn-trials/shared';
+import { COLLISION, inputFromKeys, MOVEMENT, progress, redStep, ROUND, segmentAt, SIM_DT, type RedWatch } from '@cn-trials/shared';
+import { freezeView, isFrozen, markCaught } from './freeze.ts';
+import { IceShell, iceWarmupObject } from './ice.ts';
 import { Component, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import * as THREE from 'three';
 import { GroundFx, groundFx, groundFxStatus, nearestWet } from './groundFx.ts';
@@ -55,6 +57,7 @@ export function canMove(room: TrialRoom): boolean {
   if (me.down > 0) return false; // knocked down by a collision (server-authoritative): no control until back up
   if (room.round.phase === 'lobby') return true;
   if (room.round.paused) return false; // the host paused the room
+  if (isFrozen(room)) return false; // Stage 01: frozen in ice until 2 s after the next GO (decision 054)
   if (room.hunt && (room.hunt.captured || room.hunt.hide)) return false; // The Hunt: caught, or inside a hiding place
   return room.round.phase === 'active' && (me.status === 'active' || me.status === 'finished');
 }
@@ -75,6 +78,8 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
     return () => { contestantInstances.delete(id); lodDist.delete(id); inst.dispose(); };
   }, [inst, id]);
   useEffect(() => { if (inst && colorway) setColorway(inst.material, colorway); }, [inst, colorway]);
+  // Decision 054: the ice a caught contestant is held in (Stage 01), seeded by the player id so everyone sees the same.
+  const ice = useMemo(() => new IceShell([...id].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7)), [id]);
   const anim = useRef({ speed: 0, vx: 0, vz: 0, face: p0?.yaw ?? 0, lastX: p0?.x ?? 0, lastZ: p0?.z ?? 0, fall: 0, emoteAt: Date.now(), stepDist: 0, side: 1, audioDist: 0, turn: 0, animDt: 0, animN: 0, animStatus: p0?.status ?? 'active' });
   const tmp = useMemo(() => new THREE.Vector3(), []);
   useFrame((_, dt) => {
@@ -109,6 +114,8 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
     }
     const a = anim.current;
     const step = Math.min(dt, 0.1);
+    const fv = freezeView(room, id);
+    const iced = ice.update(dt, fv.frozen, fv.thawing ? fv.left : Infinity);
     const dx = g.position.x - a.lastX, dz = g.position.z - a.lastZ;
     a.lastX = g.position.x; a.lastZ = g.position.z;
     const ks = 1 - Math.exp(-step * 10);
@@ -118,7 +125,7 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
     // Owner feedback (decision 031): contestants turn to face where they move, all the way round (360°),
     // instead of always facing the camera. Facing is presentation only; the server owns positions.
     const faceBefore = a.face;
-    if (a.speed > 0.35 && !spotted) {
+    if (a.speed > 0.35 && !spotted && !fv.frozen) {
       const target = Math.atan2(-a.vx, -a.vz); // yaw 0 faces -Z
       let d = target - a.face;
       d = Math.atan2(Math.sin(d), Math.cos(d));
@@ -142,7 +149,9 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
       const prevDist = lodDist.get(id) ?? 0;
       const every = local || inst.lod < 2 ? 1 : prevDist > 45 ? 3 : 2;
       a.animDt += step;
-      if (++a.animN % every === 0 || p.status !== a.animStatus) {
+      // Frozen (decision 054): the pose is held exactly as it was caught, mid-stride, until the ice breaks.
+      if (fv.frozen) a.animDt = 0;
+      else if (++a.animN % every === 0 || p.status !== a.animStatus) {
         const t0 = performance.now();
         inst.update(a.animDt, { speed: a.speed, status: p.status === 'captured' ? 'spotted' : p.status, greenActive: room.round.phase === 'active' && room.round.signal === 'green', down: p.down, turn: a.turn });
         cpuAcc.ms += performance.now() - t0;
@@ -171,13 +180,16 @@ function Contestant({ id, room, local, predictor }: { id: string; room: TrialRoo
         }
       }
       inst.events.length = 0;
-      inst.material.color.setRGB(tint, tint, tint);
+      // Frozen: the coat takes a cold blue tint while in the ice (lighting only; the colourway is unchanged).
+      if (iced > 0) inst.material.color.setRGB(tint + (0.62 - tint) * iced, tint + (0.86 - tint) * iced, tint + (1.18 - tint) * iced);
+      else inst.material.color.setRGB(tint, tint, tint);
       return;
     }
   });
   return (
     <group ref={group} position={[p0?.x ?? 0, 0, p0?.z ?? 0]} name={`PLAYER_${id}`}>
       {inst && <primitive object={inst.root} />}
+      <primitive object={ice.root} />
       {/* The Hunt hunter marker and Pulse Detector blockout (one shared model; no new character). */}
       <group ref={marker} visible={false} name="S02_HUNTER_MARKER">
         <mesh position={[0, 1.95, 0]} rotation={[Math.PI, 0, 0]}><coneGeometry args={[0.12, 0.22, 4]} /><meshBasicMaterial color="#e2332b" /></mesh>
@@ -239,8 +251,9 @@ function NameTags({ room }: { room: TrialRoom }) {
       // Agawan Base: every tag carries the team letter and colour (decision: coloured ring and name tag, coats
       // untouched); a prisoner keeps their name, marked as held.
       const team = agTeams?.[id];
-      const text = team ? p.name : p.status === 'spotted' ? 'SPOTTED!' : p.status === 'captured' ? 'CAUGHT' : p.name;
-      const cls = team ? `nametag team team-${team}${p.status === 'captured' ? ' held' : ''}${team === agMine ? ' mate' : ''}` : `nametag ${out ? 'spotted' : p.status}`;
+      const frozen = !team && p.frozen > 0;
+      const text = team ? p.name : frozen ? `${p.name} · FROZEN` : p.status === 'spotted' ? 'SPOTTED!' : p.status === 'captured' ? 'CAUGHT' : p.name;
+      const cls = team ? `nametag team team-${team}${p.status === 'captured' ? ' held' : ''}${team === agMine ? ' mate' : ''}` : `nametag ${out || frozen ? 'spotted' : p.status}`;
       if (text !== t.text) { t.el.textContent = text; t.text = text; }
       if (cls !== t.cls) { t.el.className = cls; t.cls = cls; if (team) t.el.dataset.team = team; else delete t.el.dataset.team; }
       const tc = team ? colorOf(room, team) : '';
@@ -424,6 +437,33 @@ function ContestantHooks({ room }: { room: TrialRoom }) {
   return null;
 }
 
+const r3 = (n: number) => Math.round(n * 1000) / 1000;
+
+/**
+ * Player-side movement (decision 054): keep our own contestant out of the others, as the room used to. We push only
+ * ourselves (each browser does the same for its player), against where the others are drawn. A frozen contestant is
+ * a solid block of ice: walk around it. Knock-downs are still decided by the room from everyone's reported moves.
+ */
+function separate(room: TrialRoom, pr: Predictor): void {
+  const phase = room.round.phase;
+  if (phase !== 'lobby' && phase !== 'active') return;
+  const me = room.self;
+  if (!me || (phase === 'active' && me.status !== 'active') || room.hunt?.hide) return;
+  const d0 = COLLISION.contactDist;
+  for (const [id, p] of room.players) {
+    if (id === room.id || !p.seen || p.status === 'waiting' || p.status === 'captured' || p.away) continue;
+    if (phase === 'active' && p.status !== 'active') continue;
+    const sm = room.sample(id);
+    const ox = sm ? sm.x : p.x, oz = sm ? sm.z : p.z;
+    const dx = pr.state.x - ox, dz = pr.state.z - oz;
+    const d2 = dx * dx + dz * dz;
+    if (d2 >= d0 * d0) continue;
+    const d = Math.sqrt(d2);
+    const nx = d > 1e-6 ? dx / d : (room.id < id ? -1 : 1), nz = d > 1e-6 ? dz / d : 0;
+    pr.nudge(nx * (d0 - d), nz * (d0 - d));
+  }
+}
+
 function LocalController({ room, predictor }: { room: TrialRoom; predictor: React.RefObject<Predictor | null> }) {
   const { camera, gl } = useThree();
   const acc = useRef(0);
@@ -438,6 +478,10 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
   const capHeld = useRef(false);
   /** Agawan Base: the stage (seed) whose start we already faced the camera for. */
   const facedFor = useRef<number | null>(null);
+  /** Player-side movement (decision 054): the room's teleport epoch we have applied. */
+  const tpSeen = useRef<number | null>(null);
+  /** Stage 01: our own red-light detector (decision 054), the same rules the room uses for bots. */
+  const watchRed = useRef<RedWatch>({ redDisp: 0, recent: [] });
 
   useEffect(() => attachInput(gl.domElement), [gl]);
 
@@ -450,7 +494,7 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
     const dt = Math.min(dtRaw, 1.0);
     clock.current += dt;
     const phase = room.round.phase;
-    const mobile = canMove(room);
+    let mobile = canMove(room);
     if (input.respawn) {
       input.respawn = false;
       if (phase === 'lobby') {
@@ -487,17 +531,39 @@ function LocalController({ room, predictor }: { room: TrialRoom; predictor: Reac
       if (holding !== capHeld.current) { capHeld.current = holding; room.interact(holding); }
     }
     input.pulse = false; input.interactPressed = false;
-    pr.reconcile(me);
-    if (!mobile) pr.reset({ x: me.x, z: me.z, vx: 0, vz: 0 }); // frozen: the server position is the truth
+    // Player-side movement (decision 054): our own position is the truth, except when the room places us itself
+    // (a new stage, a respawn, a capture: a new teleport epoch) or we cannot move (briefing, knocked over, frozen).
+    if (tpSeen.current !== me.tp) { tpSeen.current = me.tp; pr.reset({ x: me.x, z: me.z, vx: 0, vz: 0 }); }
+    if (!mobile) pr.reset({ x: me.x, z: me.z, vx: 0, vz: 0 });
+    const redLight = phase === 'active' && activeStage(room).def.rules === 'red_light_green_light';
     // Fixed 30 Hz steps, matching the server simulation. Locked phases still send (zero) inputs so acks flow.
     acc.current += dt;
+    const frameT = redLight ? signalView(room).elapsed : 0;
     while (acc.current >= SIM_DT) {
       acc.current -= SIM_DT;
       const mv = mobile ? inputFromKeys(input.forward, input.right, input.yaw) : { mx: 0, mz: 0 };
       if (phase === 'lobby' && firstMove.current === null && (mv.mx || mv.mz)) firstMove.current = clock.current;
+      const before = pr.state;
       const seq = pr.apply(mv);
+      const stepX = pr.state.x - before.x, stepZ = pr.state.z - before.z;
+      if (mobile) separate(room, pr);
+      // Stage 01 (decision 054): we catch ourselves. Only our own steps count (never a bump), measured against the
+      // light we see on our screen, with the same reaction grace and limits the room uses.
+      // Each step is judged at its own time (a slow computer runs several steps per frame).
+      if (redLight && mobile && me.status === 'active') {
+        const stepT = frameT - acc.current;
+        const seg = segmentAt(scheduleFor(room.round.seed), stepT);
+        if (redStep(watchRed.current, seg?.signal === 'red' ? stepT - seg.start : -1, ROUND.graceBaseS, Math.hypot(stepX, stepZ), SIM_DT)) {
+          watchRed.current = { redDisp: 0, recent: [] };
+          markCaught();
+          room.reportCaught(Math.round(stepT * 1000) / 1000);
+          pr.reset({ x: pr.state.x, z: pr.state.z, vx: 0, vz: 0 });
+          mobile = false;
+        }
+      } else watchRed.current = { redDisp: 0, recent: [] };
       const k = room.hunt ? (input.crouch ? 1 : 0) | (input.sprint ? 2 : 0) : 0;
-      room.send({ t: 'input', seq, mx: mv.mx, mz: mv.mz, yaw: input.yaw, ...(k ? { k } : {}) });
+      const st = pr.state;
+      room.send({ t: 'pos', seq, x: r3(st.x), z: r3(st.z), vx: r3(st.vx), vz: r3(st.vz), yaw: Math.round(input.yaw * 100) / 100, tp: me.tp, ...(k ? { k } : {}) });
     }
     const rp = pr.updateRender(acc.current / SIM_DT, dt);
     // Follow ourselves, or spectate an active player once spotted or while waiting (spec §7).
@@ -607,6 +673,12 @@ function ShaderWarmup({ stageId, ready }: { stageId: string; ready: () => boolea
   return null;
 }
 
+/** Keeps the ice materials in the scene so the shader warm-up compiles them before anyone is caught (decision 054). */
+function IceWarmup() {
+  const obj = useMemo(() => iceWarmupObject(), []);
+  return <primitive object={obj} />;
+}
+
 /** Renderer statistics of the last frame, for tests (window.__cn.renderInfo). */
 const renderInfo = { calls: 0, triangles: 0, programs: 0, textures: 0, geometries: 0, dpr: 1 };
 function RenderInfo() {
@@ -662,7 +734,7 @@ export function Scene({ room, onStageError }: { room: TrialRoom; onStageError: (
       roomId: room.room,
       sessionId: room.id,
       stage: stage.def.id,
-      players: () => [...room.players.values()].map((p) => ({ id: p.id, name: p.name, x: p.x, z: p.z, status: p.status, finishTime: p.finishTime, colorway: p.colorway, bot: p.bot, down: p.down, seen: p.seen })),
+      players: () => [...room.players.values()].map((p) => ({ id: p.id, name: p.name, x: p.x, z: p.z, status: p.status, finishTime: p.finishTime, colorway: p.colorway, bot: p.bot, down: p.down, frozen: p.frozen, tp: p.tp, seen: p.seen })),
       hunt: () => (room.hunt ? JSON.parse(JSON.stringify(room.hunt)) : null),
       contestants: () => (window as unknown as { __cnContestants?: () => unknown }).__cnContestants?.() ?? null,
       self: () => predictor.current?.state,
@@ -692,6 +764,7 @@ export function Scene({ room, onStageError }: { room: TrialRoom; onStageError: (
           <StageScene key={stage.def.id} room={room} />
         </Suspense>
       </StageErrorBoundary>
+      <IceWarmup />
       <Players room={room} predictor={predictor} />
       <NameTags room={room} />
       <TeamRings room={room} />
