@@ -7,27 +7,6 @@
   "collision": "none (decorative scenery only)",
   "layers": [
     {
-      "id": "MP01_NightClouds",
-      "radius": 260,
-      "height": 150,
-      "bottom": 10,
-      "repeat": 1,
-      "order": 0,
-      "uOffset": 0.1,
-      "brightness": 0.9,
-      "fogMix": 0.15,
-      "drift": 0.0012,
-      "role": "moonlit clouds lit warm from below by the town",
-      "texture": "blender/exports/stage02/MP01_NightClouds.webp",
-      "source": "art/stage02/source/MP01_NightClouds.png",
-      "px": [
-        2048,
-        512
-      ],
-      "source_bytes": 1593111,
-      "runtime_bytes": 384436
-    },
-    {
       "id": "MP02_FarTown",
       "radius": 140,
       "height": 36,
@@ -66,8 +45,8 @@
         4096,
         768
       ],
-      "source_bytes": 1350316,
-      "runtime_bytes": 193812
+      "source_bytes": 1397334,
+      "runtime_bytes": 207888
     }
   ],
   "atlas": {
@@ -241,33 +220,47 @@
     ]
   },
   "ground": {
-    "T02_Asphalt": {
+    "T02_ConcreteRoad": {
       "repeat": [
-        10,
-        8
+        7,
+        9
       ],
-      "texture": "blender/exports/stage02/T02_Asphalt.webp",
-      "source": "art/stage02/source/T02_Asphalt.png",
+      "texture": "blender/exports/stage02/T02_ConcreteRoad.webp",
+      "source": "art/stage02/source/T02_ConcreteRoad.png",
       "px": [
         512,
-        512
+        656
       ],
-      "source_bytes": 331219,
-      "runtime_bytes": 25758
+      "source_bytes": 343623,
+      "runtime_bytes": 18126
     },
-    "T02_Pavers": {
+    "T02_CementYard": {
       "repeat": [
-        5,
-        5
+        3,
+        3
       ],
-      "texture": "blender/exports/stage02/T02_Pavers.webp",
-      "source": "art/stage02/source/T02_Pavers.png",
+      "texture": "blender/exports/stage02/T02_CementYard.webp",
+      "source": "art/stage02/source/T02_CementYard.png",
       "px": [
         512,
         512
       ],
-      "source_bytes": 8513,
-      "runtime_bytes": 3952
+      "source_bytes": 302024,
+      "runtime_bytes": 13714
+    },
+    "T02_PlazaTiles": {
+      "repeat": [
+        2.4,
+        2.4
+      ],
+      "texture": "blender/exports/stage02/T02_PlazaTiles.webp",
+      "source": "art/stage02/source/T02_PlazaTiles.png",
+      "px": [
+        512,
+        512
+      ],
+      "source_bytes": 183900,
+      "runtime_bytes": 11632
     }
   }
 }

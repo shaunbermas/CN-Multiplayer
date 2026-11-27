@@ -3,20 +3,21 @@
 // so what you see is exactly what collides. Team colours come from the room (dealt per match, decision 047). See streetKit.ts for how the
 // street is put together in a handful of draw calls.
 import { useFrame, useThree } from '@react-three/fiber';
+import { CONTESTANT_RIM } from '../../game/contestant';
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { AGAWAN, TEAM_SLOTS, getStage, type TeamSlot } from '@cn-trials/shared';
 import type { TrialRoom } from '../../net.ts';
 import { useQuality } from '../../game/quality.ts';
-import { buildStreet, starGeometry, type StreetBuild } from './streetKit.ts';
+import { buildStreet, starGeometry, withBakedLight, type StreetBuild } from './streetKit.ts';
 import { colorOf, useTeamColors, type TeamColors } from '../../game/teamColors.ts';
 import art from '../../../../../blender/exports/stage02/STAGE_02_ART.json';
-import cloudsUrl from '../../../../../blender/exports/stage02/MP01_NightClouds.webp?url';
 import townUrl from '../../../../../blender/exports/stage02/MP02_FarTown.webp?url';
 import barangayUrl from '../../../../../blender/exports/stage02/MP03_Barangay.webp?url';
 import atlasUrl from '../../../../../blender/exports/stage02/T02_StreetAtlas.webp?url';
-import asphaltUrl from '../../../../../blender/exports/stage02/T02_Asphalt.webp?url';
-import paversUrl from '../../../../../blender/exports/stage02/T02_Pavers.webp?url';
+import roadUrl from '../../../../../blender/exports/stage02/T02_ConcreteRoad.webp?url';
+import yardUrl from '../../../../../blender/exports/stage02/T02_CementYard.webp?url';
+import plazaUrl from '../../../../../blender/exports/stage02/T02_PlazaTiles.webp?url';
 
 const def = getStage(AGAWAN.id);
 const layout = def.agawan!.layout;
@@ -37,7 +38,7 @@ export const agawanAssets = {
   mounts: 0,
 };
 
-const FOG = { color: '#1a1830', near: 38, far: 125 };
+const FOG = { color: '#1b1424', near: 38, far: 125 }; // a warm night haze, not a cold blue one (owner, 27 Nov 2026)
 /** Largest bulb and glow sprite, in CSS pixels, per tier (performance pass, 26 Nov 2026). */
 export const POINT_MAX = { high: { bulb: 48, halo: 112 }, medium: { bulb: 40, halo: 84 }, low: { bulb: 32, halo: 60 } } as const;
 
@@ -110,11 +111,11 @@ function Street({ colors }: { colors: TeamColors }) {
   const objs = useMemo(() => {
     // Atlas details (decision 050): one texture for every capiz window, grille, door, tin roof, sign and gift wrap.
     const atlas = texture(atlasUrl, 'street atlas');
-    const decals = new THREE.Mesh(k.decals.build(), new THREE.MeshStandardMaterial({ map: atlas, vertexColors: true, roughness: 0.85, metalness: 0.04, alphaTest: 0.5, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4 }));
+    const decals = new THREE.Mesh(k.decals.build(), withBakedLight(new THREE.MeshStandardMaterial({ map: atlas, vertexColors: true, roughness: 0.85, metalness: 0.04, alphaTest: 0.5, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4 }), 1.45));
     decals.name = 'S02A_STREET_DETAILS';
     const lit = new THREE.Mesh(k.lit.build(), new THREE.MeshBasicMaterial({ map: atlas, vertexColors: true, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4 }));
     lit.name = 'S02A_STREET_LIT_DETAILS';
-    const solid = new THREE.Mesh(k.solid.build(), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.82, metalness: 0.04 }));
+    const solid = new THREE.Mesh(k.solid.build(), withBakedLight(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.82, metalness: 0.04 }), 1.45));
     solid.name = 'S02A_STREET_SOLID';
     const glow = new THREE.Mesh(k.glow.build(), new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false }));
     glow.name = 'S02A_STREET_GLOW';
@@ -128,11 +129,11 @@ function Street({ colors }: { colors: TeamColors }) {
     const wires = new THREE.LineSegments(wg, new THREE.LineBasicMaterial({ color: '#0d0d12', transparent: true, opacity: 0.8 }));
     wires.name = 'S02A_WIRES';
     const tex = radialTexture();
-    const pools = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.22, toneMapped: false }), k.pools.length);
+    const pools = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.62, toneMapped: false }), k.pools.length);
     pools.name = 'S02A_LIGHT_POOLS';
     const m = new THREE.Matrix4(), c = new THREE.Color();
     k.pools.forEach((p, i) => {
-      pools.setMatrixAt(i, m.makeScale(p.r * 2, 1, p.r * 2).setPosition(p.x, 0.03 + i * 0.0001, p.z));
+      pools.setMatrixAt(i, m.makeScale(p.r * 2.9, 1, p.r * 2.9).setPosition(p.x, 0.03 + i * 0.0001, p.z));
       pools.setColorAt(i, c.set(p.color));
     });
     pools.instanceMatrix.needsUpdate = true;
@@ -231,11 +232,41 @@ function mergeAll(parts: THREE.BufferGeometry[]): THREE.BufferGeometry {
  *  takes the colour of whoever owns the base now, and a disc in the attacker's colour grows inside it as they take
  *  it over (decision 047). */
 function Ground({ room, colors }: { room: TrialRoom; colors: TeamColors }) {
-  const ground = useMemo(() => ({
-    asphalt: texture(asphaltUrl, 'asphalt', art.ground.T02_Asphalt.repeat),
-    pavers: texture(paversUrl, 'plaza pavers', art.ground.T02_Pavers.repeat),
-  }), []);
-  useEffect(() => () => { ground.asphalt.dispose(); ground.pavers.dispose(); }, [ground]);
+  const ground = useMemo(() => {
+    const B = layout.bounds;
+    const [yw, yd] = art.ground.T02_CementYard.repeat, [pw, pd] = art.ground.T02_PlazaTiles.repeat;
+    const yard = texture(yardUrl, 'cement ground', [(B.maxX - B.minX) / yw, (B.maxZ - B.minZ) / yd]);
+    const plaza = texture(plazaUrl, 'plaza tiles', [16 / pw, 16 / pd]);
+    const roadTex = texture(roadUrl, 'concrete road', [1, 1]);
+    // Concrete road slabs along the three main streets (owner, 27 Nov 2026: Philippine streets are concrete slabs
+    // with joints and gutters). One strip per segment, textured across its width and tiled along its length. The
+    // strips are painted over the ground without a depth test and before everything that stands on them, so their
+    // overlaps at the bends never flicker.
+    const [rw, rl] = art.ground.T02_ConcreteRoad.repeat;
+    const pos: number[] = [], uv: number[] = [], idx: number[] = [];
+    for (const r of layout.routes) {
+      for (let s = 0; s < r.points.length - 1; s++) {
+        const [x0, z0] = r.points[s], [x1, z1] = r.points[s + 1];
+        const len = Math.hypot(x1 - x0, z1 - z0), ux = (x1 - x0) / len, uz = (z1 - z0) / len, px = -uz * rw / 2, pz = ux * rw / 2;
+        const ext = 3, ax = x0 - ux * ext, az = z0 - uz * ext, bx = x1 + ux * ext, bz = z1 + uz * ext, v = (len + ext * 2) / rl;
+        const o = pos.length / 3;
+        pos.push(ax + px, 0, az + pz, ax - px, 0, az - pz, bx + px, 0, bz + pz, bx - px, 0, bz - pz);
+        uv.push(0, 0, 1, 0, 0, v, 1, v);
+        idx.push(o, o + 2, o + 1, o + 1, o + 2, o + 3);
+      }
+    }
+    const rg = new THREE.BufferGeometry();
+    rg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    rg.setAttribute('normal', new THREE.Float32BufferAttribute(pos.map((_, i) => (i % 3 === 1 ? 1 : 0)), 3));
+    rg.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    rg.setIndex(idx);
+    rg.computeBoundingSphere();
+    const road = new THREE.Mesh(rg, new THREE.MeshStandardMaterial({ map: roadTex, color: '#968f87', roughness: 0.9, side: THREE.DoubleSide, depthTest: false, depthWrite: false }));
+    road.name = 'S02A_ROADS';
+    road.renderOrder = -5;
+    return { yard, plaza, roadTex, road };
+  }, []);
+  useEffect(() => () => { ground.yard.dispose(); ground.plaza.dispose(); ground.roadTex.dispose(); ground.road.geometry.dispose(); (ground.road.material as THREE.Material).dispose(); }, [ground]);
   const rings = useRef<Partial<Record<TeamSlot, { ring: THREE.MeshBasicMaterial | null; fill: THREE.MeshBasicMaterial | null; cap: THREE.Mesh | null }>>>({});
   const R = AGAWAN.base.zoneM;
   useFrame(({ clock }) => {
@@ -259,8 +290,9 @@ function Ground({ room, colors }: { room: TrialRoom; colors: TeamColors }) {
   return (
     <group name="S02A_GROUND">
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.03, 0]}><planeGeometry args={[260, 240]} /><meshStandardMaterial color="#1d1c22" roughness={1} /></mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} name="S02A_ASPHALT"><planeGeometry args={[96, 80]} /><meshStandardMaterial map={ground.asphalt} color="#45434b" roughness={0.62} metalness={0.08} /></mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.006, 0]} name="S02A_PLAZA"><circleGeometry args={[8, 48]} /><meshStandardMaterial map={ground.pavers} color="#6a655c" roughness={0.85} /></mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} name="S02A_GROUND_CEMENT" renderOrder={-6}><planeGeometry args={[96, 80]} /><meshStandardMaterial map={ground.yard} color="#857f77" roughness={0.9} /></mesh>
+      <primitive object={ground.road} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.006, 0]} name="S02A_PLAZA" renderOrder={-4}><circleGeometry args={[8, 48]} /><meshStandardMaterial map={ground.plaza} color="#968d80" roughness={0.85} depthTest={false} depthWrite={false} /></mesh>
       {TEAM_SLOTS.map((s) => {
         const b = layout.bases[s], pen = layout.pens[s].area;
         return (
@@ -355,11 +387,12 @@ function Markers({ room, colors }: { room: TrialRoom; colors: TeamColors }) {
 /** Night sky: a gradient dome with stars, fog matched to the horizon, two lights. */
 function Sky() {
   const { scene, gl } = useThree();
+  const near = useMemo(() => new THREE.PointLight('#ffd9a8', 9, 11, 1.4), []);
   const dome = useMemo(() => {
     const g = new THREE.SphereGeometry(400, 32, 16);
     const m = new THREE.ShaderMaterial({
       side: THREE.BackSide, depthWrite: false, fog: false,
-      uniforms: { top: { value: new THREE.Color('#070818') }, mid: { value: new THREE.Color('#171535') }, bottom: { value: new THREE.Color('#3a2448') } },
+      uniforms: { top: { value: new THREE.Color('#05060f') }, mid: { value: new THREE.Color('#121026') }, bottom: { value: new THREE.Color('#3a2232') } }, // clear night, warm town glow on the horizon
       vertexShader: 'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
       fragmentShader: 'uniform vec3 top, mid, bottom; varying vec3 vP; void main(){ float h = vP.y; vec3 c = h > 0.12 ? mix(mid, top, smoothstep(0.12, 0.7, h)) : mix(bottom, mid, smoothstep(-0.05, 0.12, h)); gl_FragColor = vec4(c, 1.0); }',
     });
@@ -383,23 +416,29 @@ function Sky() {
   useEffect(() => {
     const prevFog = scene.fog, prevBg = scene.background, prevExp = gl.toneMappingExposure;
     scene.fog = new THREE.Fog(FOG.color, FOG.near, FOG.far);
-    scene.background = new THREE.Color('#0b0b1c');
+    scene.background = new THREE.Color('#07070f');
     gl.toneMappingExposure = 1.1;
-    const hemi = new THREE.HemisphereLight('#8a88c4', '#6a4a30', 1.5);
-    const key = new THREE.DirectionalLight('#ffbf7a', 1.15); // warm street glow from one side
+    // Dim on purpose, then darker again at the owner's pick (27 Nov 2026: "dimmer the whole stage and rely only on the lights"): the street is lit
+    // by its lamps, windows and parols (baked into the walls and pooled on the ground), not by these.
+    const hemi = new THREE.HemisphereLight('#a898c8', '#4a3428', 0.5);
+    const key = new THREE.DirectionalLight('#ffbf7a', 0.14); // warm street glow from one side
     key.position.set(-30, 40, 25);
-    const moon = new THREE.DirectionalLight('#8fa4ff', 0.5);
+    const moon = new THREE.DirectionalLight('#b8b0ff', 0.1);
     moon.position.set(35, 60, -40);
     hemi.name = 'LGT_STG02A_Ambient'; key.name = 'LGT_STG02A_Key'; moon.name = 'LGT_STG02A_Moon';
-    scene.add(hemi, key, moon);
-    return () => { scene.fog = prevFog; scene.background = prevBg; gl.toneMappingExposure = prevExp; scene.remove(hemi, key, moon); hemi.dispose(); key.dispose(); moon.dispose(); };
+    // A soft warm lantern that follows the camera, so your own contestant and whoever is right in front of you stay
+    // readable in the dark street; everything further away still relies on the street lights.
+    near.name = 'LGT_STG02A_Lantern';
+    scene.add(hemi, key, moon, near);
+    CONTESTANT_RIM.value = 0.32;
+    return () => { scene.fog = prevFog; scene.background = prevBg; gl.toneMappingExposure = prevExp; scene.remove(hemi, key, moon, near); CONTESTANT_RIM.value = 0; hemi.dispose(); key.dispose(); moon.dispose(); };
   }, [scene, gl]);
   useEffect(() => () => { dome.mesh.geometry.dispose(); (dome.mesh.material as THREE.Material).dispose(); dome.stars.geometry.dispose(); (dome.stars.material as THREE.Material).dispose(); }, [dome]);
-  useFrame(({ gl: r, camera }) => { agawanAssets.drawCalls = r.info.render.calls; dome.mesh.position.copy(camera.position); dome.stars.position.copy(camera.position); });
+  useFrame(({ gl: r, camera }) => { agawanAssets.drawCalls = r.info.render.calls; dome.mesh.position.copy(camera.position); dome.stars.position.copy(camera.position); near.position.copy(camera.position); near.position.y += 0.6; });
   return <><primitive object={dome.mesh} /><primitive object={dome.stars} /></>;
 }
 
-const MATTE_URL: Record<string, string> = { MP01_NightClouds: cloudsUrl, MP02_FarTown: townUrl, MP03_Barangay: barangayUrl };
+const MATTE_URL: Record<string, string> = { MP02_FarTown: townUrl, MP03_Barangay: barangayUrl };
 
 /** Inward-facing open cylinder; u runs once around per `repeat` (the panoramas tile seamlessly). */
 function cylinder(radius: number, height: number, bottom: number, repeat: number, uOffset: number, segments = 128) {
@@ -432,7 +471,7 @@ function MatteLayers() {
       const tex = texture(MATTE_URL[l.id], `matte layer ${l.id}`);
       tex.wrapS = THREE.RepeatWrapping;
       tex.userData.drift = l.drift ?? 0;
-      const mat = new THREE.MeshBasicMaterial({ map: tex, color: new THREE.Color().setScalar(l.brightness ?? 1), transparent: true, depthWrite: false, side: THREE.DoubleSide, fog: false, toneMapped: false });
+      const mat = new THREE.MeshBasicMaterial({ map: tex, color: new THREE.Color().setScalar((l.brightness ?? 1) * 0.72), transparent: true, depthWrite: false, side: THREE.DoubleSide, fog: false, toneMapped: false });
       mat.onBeforeCompile = (sh) => {
         sh.uniforms.uFogTint = { value: new THREE.Color(FOG.color) };
         sh.uniforms.uFogTintMix = { value: l.fogMix };

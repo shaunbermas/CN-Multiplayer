@@ -174,7 +174,7 @@ export class Decals {
 }
 
 // ---- palettes (muted for night: the warm light comes from windows, parols and bulbs)
-const WALLS = ['#d8c9a8', '#c9d6c0', '#e0b9a0', '#b8c8d8', '#e3d08f', '#d6b4c4', '#c4b49a', '#a9c2b3', '#e6dccb', '#c7a98b'];
+const WALLS = ['#e8c46a', '#8fd1a8', '#f0a3a3', '#9cc7e8', '#f3e3c3', '#e59a5c', '#c9a6e0', '#a8d672', '#f2d0a4', '#7fc4c0']; // PH house colours: bright pastels
 const TRIM = ['#f1ebe0', '#8f6e52', '#5d6f7a', '#a24f3c', '#ece3cf'];
 const ROOFS = ['#7d3b2c', '#3d5a60', '#5f5a57', '#8a4b2a', '#4a4f6b', '#6b6f73'];
 const WINDOW_WARM = ['#ffd27a', '#ffc35e', '#ffe2a6', '#ffb86b', '#fff0c8'];
@@ -303,7 +303,7 @@ function house(k: StreetBuild, u: Unit, rand: () => number): void {
     { const [x, , z] = at(0, 0, 0.012); k.decals.face(x, g1 / 2, z, F.len, g1, F.ry, rand() < 0.25 ? 'blocks' : 'plaster', u.wall); }
     { const [x, , z] = at(0, 0, 0.002); k.decals.face(x, g1 + (h - g1) / 2, z, F.len - 0.02, h - g1, F.ry, 'plaster', upper); }
     const n = Math.max(1, Math.floor((F.len - 1) / 2.3));
-    // A few ground floors are a lantern stall (a wall of lit parols, the owner's reference photo) or a closed shop.
+    // A few ground floors hang a big parol in front of a window, or are a closed shop.
     const shop = F.len > 5 ? rand() : 1;
     const tarpAt = F.len > 4.5 && h > 4.3 && rand() < 0.12 ? Math.floor(n / 2) : -1;
     const doorAt = !doorDone && F.len > 3.5 ? Math.floor(rand() * n) : -1;
@@ -332,11 +332,11 @@ function house(k: StreetBuild, u: Unit, rand: () => number): void {
       } else {
         const lit = rand() < 0.7;
         const [x, , z] = at(t, 0, 0.03);
-        if (shop > 0.1 && shop < 0.24 && i === (doorAt + 1) % n) {
-          // lantern stall: a wall of lit parols where the window would be
-          k.lit.face(x, 1.45, z, Math.min(2.2, F.len / n), 1.7, F.ry, 'lanterns');
-          const [hx, , hz] = at(t, 0, 0.6);
-          k.halos.add(hx, 1.5, hz, '#ffb870', 2.6);
+        if (shop > 0.1 && shop < 0.3 && i === (doorAt + 1) % n) {
+          // a lit window with one big parol hanging in front of it (owner, 27 Nov 2026: no walls of stars)
+          k.lit.face(x, 1.55, z, 1.0, 0.95, F.ry, 'curtain');
+          const [hx, , hz] = at(t, 0, 0.45);
+          parol(k, hx, 2.35, hz, F.ry, PAROL[Math.floor(rand() * PAROL.length)], 0.75, rand);
           k.pools.push({ x: hx, z: hz, r: 2.6, color: '#ffb36a' });
         } else if (lit) k.lit.face(x, 1.55, z, 1.0, 0.95, F.ry, rand() < 0.2 ? 'curtain' : 'capiz', WINDOW_WARM[Math.floor(rand() * WINDOW_WARM.length)]);
         else k.decals.face(x, 1.55, z, 1.0, 0.95, F.ry, 'grille');
@@ -516,8 +516,25 @@ function props(k: StreetBuild, rand: () => number): void {
     switch (w.kind) {
       case 'shell': {
         // The block's boundary: a tall breeze-block wall with posts and a coping.
-        k.solid.box(cx, 1.6, cz, sx, 3.2, sz, '#6e6a63');
+        k.solid.box(cx, 1.6, cz, sx, 3.2, sz, '#c9bfa8'); // painted cream, like a barangay perimeter wall
         k.solid.box(cx, 3.25, cz, sx + 0.1, 0.12, sz + 0.1, '#8a857c');
+        // Christmas lights along the top of the wall and a parol every 12 m, so the block's edge is lit and lively
+        // instead of a dark band (owner, 27 Nov 2026).
+        const inX = cx < 0 ? 1 : -1, inZ = cz < 0 ? 1 : -1;
+        const ox = along ? (sx / 2 + 0.08) * inX : 0, oz = along ? 0 : (sz / 2 + 0.08) * inZ;
+        const span = Math.min(L, along ? B.maxZ - B.minZ : B.maxX - B.minX);
+        const nb = Math.floor(span / 0.5), loops = Math.round(span / 3);
+        for (let i = 0; i <= nb; i++) {
+          const t = -span / 2 + (span * i) / nb, sag = 0.28 * Math.abs(Math.sin((i / nb) * Math.PI * loops));
+          if (insideSolid(cx + ox * 2 + (along ? 0 : t), cz + oz * 2 + (along ? t : 0))) continue; // behind a house
+          k.bulbs.add(cx + ox + (along ? 0 : t), 3.12 - sag, cz + oz + (along ? t : 0), BULB[i % BULB.length], 0.16);
+        }
+        for (let t = -span / 2 + 4; t < span / 2 - 2; t += 8) {
+          const col = PAROL[Math.floor(rand() * PAROL.length)];
+          if (insideSolid(cx + ox * 8 + (along ? 0 : t), cz + oz * 8 + (along ? t : 0))) continue;
+          parol(k, cx + ox * 1.6 + (along ? 0 : t), 2.6, cz + oz * 1.6 + (along ? t : 0), along ? Math.PI / 2 * inX : (inZ > 0 ? 0 : Math.PI), col, 0.8, rand);
+          k.pools.push({ x: cx + ox * 8 + (along ? 0 : t), z: cz + oz * 8 + (along ? t : 0), r: 2.4, color: '#ffc27a' });
+        }
         break;
       }
       case 'barrier': {
@@ -868,8 +885,8 @@ function stall(k: StreetBuild, cx: number, cz: number, sx: number, sz: number, a
   // Four sides: a lit shelf window on each (it is seen from every street).
   for (const [nx, nz] of [[0, -1], [0, 1], [-1, 0], [1, 0]]) {
     const w = nx ? sz : sx;
-    // sari-sari store front (kiosk) or a wall of lit parols for sale (stall, the owner's reference photo)
-    k.lit.face(cx + nx * (sx / 2 + 0.03), 1.2, cz + nz * (sz / 2 + 0.03), w * 0.86, sariSari ? 1.0 : 1.3, Math.atan2(nx, nz), sariSari ? 'sari' : 'lanterns');
+    // sari-sari store front on every side
+    k.lit.face(cx + nx * (sx / 2 + 0.03), 1.2, cz + nz * (sz / 2 + 0.03), w * 0.86, 1.0, Math.atan2(nx, nz), 'sari');
     k.solid.box(cx + nx * (sx / 2 + 0.12), 0.8, cz + nz * (sz / 2 + 0.12), nx ? 0.24 : w * 0.8, 0.06, nx ? w * 0.8 : 0.24, '#7a5a3f');
     // striped awning
     for (let i = 0; i < 5; i++) {
@@ -955,12 +972,12 @@ function roadPaint(k: StreetBuild): void {
     if (w.kind !== 'house') continue;
     const e = 0.9;
     const cx = (w.minX + w.maxX) / 2, cz = (w.minZ + w.maxZ) / 2, sx = w.maxX - w.minX, sz = w.maxZ - w.minZ;
-    k.solid.box(cx, 0.02, cz, sx + e * 2, 0.04, sz + e * 2, '#55524d');
+    k.solid.box(cx, 0.02, cz, sx + e * 2, 0.04, sz + e * 2, '#9c968a'); // concrete sidewalk
     // kerb edge line
-    k.solid.box(cx, 0.03, w.minZ - e, sx + e * 2, 0.06, 0.12, '#8d8879');
-    k.solid.box(cx, 0.03, w.maxZ + e, sx + e * 2, 0.06, 0.12, '#8d8879');
-    k.solid.box(w.minX - e, 0.03, cz, 0.12, 0.06, sz + e * 2, '#8d8879');
-    k.solid.box(w.maxX + e, 0.03, cz, 0.12, 0.06, sz + e * 2, '#8d8879');
+    k.solid.box(cx, 0.03, w.minZ - e, sx + e * 2, 0.06, 0.12, '#c2bcaf');
+    k.solid.box(cx, 0.03, w.maxZ + e, sx + e * 2, 0.06, 0.12, '#c2bcaf');
+    k.solid.box(w.minX - e, 0.03, cz, 0.12, 0.06, sz + e * 2, '#c2bcaf');
+    k.solid.box(w.maxX + e, 0.03, cz, 0.12, 0.06, sz + e * 2, '#c2bcaf');
   }
 }
 
@@ -977,5 +994,72 @@ export function buildStreet(opts: { colors?: Record<TeamSlot, string> } = {}): S
   lightPoles(k, rand);
   banners(k);
   groundArt(k);
+  bakeLight(k);
   return k;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Baked lamp light (owner, 27 Nov 2026: "dimmer the whole stage and rely only on the lights"). The scene's real lights
+// are dim; every wall, roof and prop vertex gets the warm light of the lamps, windows, parols and pools near it baked
+// in once, as a per-vertex glow (attribute `bake`, added as emissive in the shader). No real-time point lights, so
+// nothing extra per frame.
+
+interface BakeLight { x: number; y: number; z: number; r: number; c: THREE.Color; i: number }
+
+export function bakeLight(k: StreetBuild): void {
+  const lights: BakeLight[] = [];
+  for (const p of k.pools) lights.push({ x: p.x, y: 2.4, z: p.z, r: p.r * 2.3, c: new THREE.Color(p.color), i: 1.0 });
+  const hp = k.halos.pos, hc = k.halos.col, hs = k.halos.size;
+  for (let i = 0; i < hs.length; i++) {
+    if (hs[i] < 1.4) continue;
+    lights.push({ x: hp[i * 3], y: hp[i * 3 + 1], z: hp[i * 3 + 2], r: 1.3 * hs[i] + 1.2, c: new THREE.Color(hc[i * 3], hc[i * 3 + 1], hc[i * 3 + 2]), i: 0.4 });
+  }
+  const C = 6, grid = new Map<number, BakeLight[]>();
+  const key = (gx: number, gz: number) => (gx + 500) * 1000 + (gz + 500);
+  for (const l of lights) {
+    for (let gx = Math.floor((l.x - l.r) / C); gx <= Math.floor((l.x + l.r) / C); gx++) {
+      for (let gz = Math.floor((l.z - l.r) / C); gz <= Math.floor((l.z + l.r) / C); gz++) {
+        const kk = key(gx, gz);
+        let a = grid.get(kk);
+        if (!a) grid.set(kk, (a = []));
+        a.push(l);
+      }
+    }
+  }
+  for (const g of [k.solid.build(), k.decals.build()]) {
+    if (g.getAttribute('bake')) continue; // already baked (the build is cached)
+    const pos = g.getAttribute('position'), nor = g.getAttribute('normal');
+    if (!pos || !nor) continue;
+    const out = new Float32Array(pos.count * 3);
+    for (let v = 0; v < pos.count; v++) {
+      const x = pos.getX(v), y = pos.getY(v), z = pos.getZ(v);
+      const nx = nor.getX(v), ny = nor.getY(v), nz = nor.getZ(v);
+      const cell = grid.get(key(Math.floor(x / C), Math.floor(z / C)));
+      if (!cell) continue;
+      let r = 0, gg = 0, b = 0;
+      for (const l of cell) {
+        const dx = l.x - x, dy = l.y - y, dz = l.z - z;
+        const d2 = dx * dx + dy * dy + dz * dz;
+        if (d2 >= l.r * l.r) continue;
+        const d = Math.sqrt(d2) + 1e-4;
+        const fall = (1 - d / l.r) ** 2;
+        const ndl = Math.max(0, (dx * nx + dy * ny + dz * nz) / d) * 0.75 + 0.25;
+        const w = fall * ndl * l.i;
+        r += l.c.r * w; gg += l.c.g * w; b += l.c.b * w;
+      }
+      out[v * 3] = Math.min(r, 1.4); out[v * 3 + 1] = Math.min(gg, 1.4); out[v * 3 + 2] = Math.min(b, 1.4);
+    }
+    g.setAttribute('bake', new THREE.BufferAttribute(out, 3));
+  }
+}
+
+/** Adds the baked lamp light (attribute `bake`) to a standard material as emissive light on its own colour. */
+export function withBakedLight(m: THREE.MeshStandardMaterial, strength = 1): THREE.MeshStandardMaterial {
+  m.onBeforeCompile = (sh) => {
+    sh.uniforms.uBake = { value: strength };
+    sh.vertexShader = 'attribute vec3 bake;\nvarying vec3 vBake;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n  vBake = bake;');
+    sh.fragmentShader = 'uniform float uBake;\nvarying vec3 vBake;\n' + sh.fragmentShader.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n  totalEmissiveRadiance += vBake * diffuseColor.rgb * uBake;');
+  };
+  m.customProgramCacheKey = () => `baked-${strength}`;
+  return m;
 }

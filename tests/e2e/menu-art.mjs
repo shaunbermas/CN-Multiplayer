@@ -15,7 +15,7 @@ if (process.env.SKIP_BUILD !== '1') execSync('npm run build', { cwd: root, stdio
 
 export const SHOTS = {
   STG01: { stage: 'STAGE_01_RED_LIGHT', view: JSON.parse(process.env.V1 ?? 'null') ?? { pos: [-4, 2.4, -95], look: [-17, 9, -185] } },
-  STG02: { stage: 'STAGE_02_AGAWAN_BASE', view: JSON.parse(process.env.V2 ?? 'null') ?? { pos: [24, 2.0, 31], look: [-8, 5, 31] } },
+  STG02: { stage: 'STAGE_02_AGAWAN_BASE', view: JSON.parse(process.env.V2 ?? 'null') ?? { pos: [-24, 2.0, 31], look: [8, 5, 31] } }, // 27 Nov 2026: the dim, lit Christmas street
   STG03: { stage: 'STAGE_03_THE_HUNT', view: JSON.parse(process.env.V3 ?? 'null') ?? { pos: [-22, 2.2, -24], look: [18, 2.4, 8] } },
 };
 const only = process.argv[2];
