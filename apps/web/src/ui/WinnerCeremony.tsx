@@ -74,10 +74,16 @@ function Crest({ room, id, size }: { room: TrialRoom; id: string; size: number }
 
 const MEDAL = ['gold', 'silver', 'bronze'] as const;
 
-export function WinnerCeremony({ room, standings, total, table, extra, footer }: { room: TrialRoom; standings: Standing[]; total: number; table: ReactNode; extra?: ReactNode; footer: ReactNode }) {
+/**
+ * `after` set: the ranking after one stage of a running match (decision 052, owner 27 Nov 2026: "show the ranking in
+ * every stage finished"). Same podium and list, no reveal or fanfare (those stay for the end of the match).
+ */
+export function WinnerCeremony({ room, standings, total, table, extra, footer, after }: { room: TrialRoom; standings: Standing[]; total: number; table: ReactNode; extra?: ReactNode; footer: ReactNode; after?: { label: string; played: number } }) {
   const stagesLabel = `${total} ${total === 1 ? 'stage' : 'stages'}`;
-  const [revealed, setRevealed] = useState(() => skipReveal() || reducedMotion());
+  const played = after?.played ?? total;
+  const [revealed, setRevealed] = useState(() => !!after || skipReveal() || reducedMotion());
   useEffect(() => {
+    if (after) return;
     playFanfare();
     if (revealed) return;
     const t = setTimeout(() => setRevealed(true), REVEAL_MS);
@@ -87,13 +93,14 @@ export function WinnerCeremony({ room, standings, total, table, extra, footer }:
   const w = top[0];
   const me = standings.find((x) => x.id === room.id);
   const myLine = !me ? null
+    : after ? `You are ${ordinal(me.rank)} of ${standings.length} with ${me.points} ${me.points === 1 ? 'point' : 'points'} so far.`
     : me.rank <= 3 ? `You placed ${ordinal(me.rank)}!${me.rank === 1 ? ' You are the CN Trial champion.' : ' A podium finish.'}`
     : `You finished ${ordinal(me.rank)} of ${standings.length} with ${me.points} ${me.points === 1 ? 'point' : 'points'}.`;
   // Podium order like a ranking game: 2nd on the left, 1st in the middle (tallest), 3rd on the right.
   const order = [1, 0, 2].filter((i) => top[i]);
   return (
-    <div className="ceremony" data-testid="ceremony" data-step={revealed ? 'podium' : 'reveal'}>
-      <Confetti bursts={2} />
+    <div className={`ceremony${after ? ' after-stage' : ''}`} data-testid={after ? 'stage-ranking' : 'ceremony'} data-step={revealed ? 'podium' : 'reveal'}>
+      <Confetti bursts={after ? 1 : 2} />
       {!revealed && w && (
         <div className="cer-reveal" data-testid="ceremony-reveal" onClick={() => setRevealed(true)}>
           <span className="eyebrow">CN Trial · {total === 3 ? 'all 3 stages' : stagesLabel} complete</span>
@@ -103,10 +110,10 @@ export function WinnerCeremony({ room, standings, total, table, extra, footer }:
         </div>
       )}
       {revealed && (
-        <section className="card results final cer-card" data-testid="results" aria-label="Final results">
-          <div data-testid="final" className="cer-head">
-            <span className="eyebrow">Final results · {stagesLabel}</span>
-            <h2>We have a winner!</h2>
+        <section className={`card results cer-card${after ? '' : ' final'}`} data-testid="results" aria-label={after ? 'Ranking so far' : 'Final results'}>
+          <div data-testid={after ? 'stage-ranking-head' : 'final'} className="cer-head">
+            <span className="eyebrow">{after ? `${after.label} complete · stage ${after.played} of ${total}` : `Final results · ${stagesLabel}`}</span>
+            <h2>{after ? 'Ranking so far' : 'We have a winner!'}</h2>
             {myLine && <p className={`cer-me${me && me.rank <= 3 ? ' podium' : ''}`} data-testid="ceremony-me">{myLine}</p>}
           </div>
           <div className="cer-podium" data-testid="podium">
@@ -121,20 +128,23 @@ export function WinnerCeremony({ room, standings, total, table, extra, footer }:
                     <Crest room={room} id={x.id} size={i === 0 ? 56 : 44} />
                     <b className="cer-pname">{x.name}{x.id === room.id && <em> (you)</em>}</b>
                     <span className="cer-score num">{x.points}<small> pts</small></span>
-                    <span className="cer-stats">{x.wins} {x.wins === 1 ? 'stage win' : 'stage wins'} · finished {x.finishes} of {total}</span>
+                    <span className="cer-stats">{x.wins} {x.wins === 1 ? 'stage win' : 'stage wins'} · finished {x.finishes} of {played}</span>
                   </div>
                   <div className="cer-pillar"><span>{ordinal(x.rank)}</span><small>place</small></div>
                 </div>
               );
             })}
           </div>
-          {standings.length > 3 && (
-            <div className="cer-rest" data-testid="ceremony-rest">
-              <span className="eyebrow">Everyone else</span>
-              {table}
-            </div>
-          )}
-          {extra}
+          {/* Owner, 27 Nov 2026: long lists scroll inside the card; the title, podium and buttons stay in view. */}
+          <div className="cer-scroll" data-testid="ceremony-scroll">
+            {standings.length > 3 && (
+              <div className="cer-rest" data-testid="ceremony-rest">
+                <span className="eyebrow">Everyone else</span>
+                {table}
+              </div>
+            )}
+            {extra}
+          </div>
           {footer}
         </section>
       )}

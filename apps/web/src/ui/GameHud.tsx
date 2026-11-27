@@ -136,11 +136,6 @@ function Lobby({ room }: { room: TrialRoom }) {
           <div className="lobby-next" data-testid="lobby-next">
             <span className="eyebrow">Next up · stage {r.match.stage} of {r.match.total}</span>
             <b>{nextLabel}</b>
-            {room.standings.length > 0 && (
-              <ol className="mini-standings" aria-label="Standings so far">
-                {room.standings.slice(0, 3).map((x) => <li key={x.id}><b>{x.rank}</b><span>{x.name}</span><span className="num">{x.points} pts</span></li>)}
-              </ol>
-            )}
           </div>
         ) : (
         <div className="lobby-stage" data-testid="lobby-stage">
@@ -366,9 +361,6 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
               <p className="rule">{stage.briefing.rule}</p>
               {isHunt ? <HuntBriefingRole room={room} />
                 : <p className="muted">{m.final ? 'Last stage. ' : ''}Everyone plays, including anyone spotted or caught before. First finisher +2, every finisher +1.</p>}
-              <ul className="mini-standings">
-                {room.standings.slice(0, 3).map((x) => <li key={x.id}><b>{x.rank}</b><span>{x.name}</span><span className="num">{x.points} pts</span></li>)}
-              </ul>
             </>
           ) : (
             <>
@@ -430,8 +422,8 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
       {r.phase === 'active' && me?.status === 'finished' && !recentFinish && <div className="spectator status-in" data-testid="qualified">Finished in {me.finishTime.toFixed(2)} s · watch the others</div>}
 
       {r.phase === 'results' && (m.final || m.total <= 1
-        ? <FinalResults room={room} remaining={remaining} onLeave={onLeave} />
-        : <StageResults room={room} remaining={remaining} onLeave={onLeave} />)}
+        ? <FinalResults room={room} onLeave={onLeave} />
+        : <StageResults room={room} onLeave={onLeave} />)}
 
       <div className="hud-lower">
         {r.phase === 'lobby' && <div className="glass objective">{isAgawan ? `Practice: explore the street and find the ${room.teams?.count === 2 ? 'two bases (base C is closed with 2 teams)' : 'three bases'}` : isHunt ? 'Practice: explore the facility and its hiding places' : hud.status === 'finished' ? `Practice: finished in ${hud.finishTime.toFixed(2)} s` : 'Practice: walk to the finish line'}</div>}
@@ -468,44 +460,34 @@ function StagePoints({ perStage }: { perStage: (number | null)[] }) {
   return <span className="stage-pts">{perStage.map((x, i) => <i key={i} className={x === 2 ? 'p2' : x === 1 ? 'p1' : ''}>{x === null ? '–' : x}</i>)}</span>;
 }
 
-function StageResults({ room, remaining, onLeave }: { room: TrialRoom; remaining: number; onLeave: () => void }) {
-  const rows = room.results;
+/**
+ * Decision 052 (owner, 27 Nov 2026): after every stage the players see the ranking (podium and everyone else, like the
+ * end of a match), not the old standings table, and nobody is moved on automatically: the host picks Next stage (which
+ * opens the next stage's lobby, decision 050) and anyone can go back to the main menu.
+ */
+function StageResults({ room, onLeave }: { room: TrialRoom; onLeave: () => void }) {
   const m = room.resultsMeta?.match ?? room.round.match;
-  const first = rows.find((p) => p.first);
-  const firstPlayer = first ? room.players.get(first.id) : undefined;
-  const standings = room.standings;
-  return (
-    <section className="card results" data-testid="results" aria-label="Stage results">
-      <div className="results-head">
-        <div><span className="eyebrow">Stage results</span><h2>Stage {room.round.stage ? pad2(stageNumber(room.round.stage)) : stageNoAt(m.total, m.stage)} <i>/ {ALL_STAGES}</i></h2></div>
-        <div className="first-finisher" data-testid="winner">
-          {rows.some((x) => x.teamPlace) ? <div><small>Agawan Base</small><b>{(room.round.agawan?.winners ?? []).map((s) => teamName(room, s)).join(' and ') || 'No winner'} {(room.round.agawan?.winners.length ?? 0) > 1 ? 'share first place' : 'win'}</b></div>
-            : rows.some((x) => x.role) ? <div><small>The Hunt</small><b>{rows.filter((x) => x.role === 'hider' && x.status !== 'captured').length} hiders survived</b> <span className="muted num">{rows.filter((x) => x.status === 'captured').length} caught</span></div>
-            : first ? <><Swatch colorway={firstPlayer?.colorway} /><div><small>First to finish · +2</small><b>{first.name}</b> <span className="muted num">{first.finishTime.toFixed(2)} s</span></div></>
-            : <div><small>First to finish</small><b>Nobody finished</b></div>}
-        </div>
+  const st = room.standings;
+  const doneNo = room.round.stage ? pad2(stageNumber(room.round.stage)) : stageNoAt(m.total, m.stage);
+  const nextNo = stageNoAt(m.total, m.stage + 1);
+  const footer = (
+    <footer className="card-foot">
+      <span className="next-line">{room.isHost ? `Up next: Stage ${nextNo}. Points so far are kept.` : `Waiting for the host to continue to Stage ${nextNo}. Points so far are kept.`}</span>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button className="btn" onClick={onLeave} data-testid="exit">Main menu</button>
+        {room.isHost && <button className="btn go" onClick={() => room.nextStage()} data-testid="next-stage">Next stage: Stage {nextNo} →</button>}
       </div>
-      <div className="results-body">
-        <div>
-          <span className="eyebrow">This stage</span>
-          <AgawanResultsBoard room={room} />
-          <StageBoard room={room} />
-        </div>
-        <div>
-          {room.teamBoard && <><span className="eyebrow">Team championship</span><TeamChampionshipBoard room={room} /></>}
-          <span className="eyebrow">{room.teamBoard ? 'Individual board' : 'Overall standings'}</span>
-          <StandingsTable room={room} standings={standings} compact />
-        </div>
-      </div>
-      <footer className="card-foot">
-        <span className="next-line">Stage {stageNoAt(m.total, m.stage + 1)} starts in {Math.ceil(remaining)} s · spotted and caught players play it too</span>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn" onClick={onLeave} data-testid="exit">Exit to menu</button>
-          {room.isHost && <button className="btn go" onClick={() => room.nextStage()} data-testid="next-stage">Start stage {stageNoAt(m.total, m.stage + 1)} now</button>}
-        </div>
-      </footer>
-    </section>
+    </footer>
   );
+  const thisStage = room.results.length > 0 && (
+    <details className="last-stage" data-testid="last-stage">
+      <summary className="eyebrow">Stage {doneNo} results</summary>
+      <AgawanResultsBoard room={room} />
+      <StageBoard room={room} />
+    </details>
+  );
+  return <WinnerCeremony room={room} standings={st} total={m.total} after={{ label: `Stage ${doneNo}`, played: m.stage }}
+    table={<StandingsTable room={room} standings={st.slice(3)} />} extra={thisStage} footer={footer} />;
 }
 
 /** One stage's placings with the points each player earned. */
@@ -549,14 +531,14 @@ function StandingsTable({ room, standings, compact = false }: { room: TrialRoom;
   );
 }
 
-function FinalResults({ room, remaining, onLeave }: { room: TrialRoom; remaining: number; onLeave: () => void }) {
+function FinalResults({ room, onLeave }: { room: TrialRoom; onLeave: () => void }) {
   const st = room.standings;
   const m = room.resultsMeta?.match ?? room.round.match;
   const footer = (
     <footer className="card-foot">
-      <span className="next-line">Back to the lobby in {Math.ceil(remaining)} s · ties: points, then stage wins, finishes, total time</span>
+      <span className="next-line">{room.isHost ? 'Play again, or take everyone back to the lobby.' : 'Waiting for the host to play again.'} Ties: points, then stage wins, finishes, total time</span>
       <div style={{ display: 'flex', gap: 8 }}>
-        <button className="btn" onClick={onLeave} data-testid="exit">Exit to menu</button>
+        <button className="btn" onClick={onLeave} data-testid="exit">Main menu</button>
         {room.isHost && <button className="btn" onClick={() => room.nextStage()} data-testid="back-to-lobby">Back to lobby</button>}
         {room.isHost && <button className="btn go" onClick={() => room.restart()} data-testid="play-again">↻ Restart game</button>}
       </div>

@@ -1,10 +1,10 @@
 // Stage 02 · AGAWAN BASE team setup integration test (protocol v9), against the real Worker + Durable Object rooms
 // under `wrangler dev`. Real WebSocket clients plus server-side bots:
 //  1  everyone (people and bots) lands in a team; sizes stay within one; every client sees the same team view
-//  2  a person switches team and nominates themselves; a full team refuses joins
-//  3  host-only actions (rename, captain, move, balance, auto-pick) are refused for others, with a 'team' error
-//  4  the host renames (bad names refused), appoints a captain, moves a player, Auto-balances and Auto-picks captains
-//  5  starting a match locks teams for everyone; changes are refused while it runs; leavers free their captain seat
+//  2  a person switches team; a full team refuses joins
+//  3  host-only actions (rename, move, balance) are refused for others, with a 'team' error
+//  4  the host renames (bad names refused), moves players and Auto-balances; no captains (decision 053)
+//  5  starting a match locks teams for everyone; changes are refused while it runs; leavers free their seat
 //  6  a second room keeps its own teams
 // Usage: npm run test:teams
 import { execSync } from 'node:child_process';
@@ -55,9 +55,8 @@ try {
   const target = ['A', 'B', 'C'].find((s) => s !== p2.teams.members[p2.id]);
   p2.joinTeam(target);
   await waitFor(() => host.teams.members[p2.id] === target, 3000, 'p2 switched team');
-  p2.nominate(true);
-  await waitFor(() => host.teams.nominees.includes(p2.id), 3000, 'p2 nominated');
-  report.scenarios[2] = { p2Team: target, nominees: host.teams.nominees };
+  check(!('nominees' in host.teams) && host.teams.teams.every((t) => !('captain' in t)), 'no captain state in the team view');
+  report.scenarios[2] = { p2Team: target };
 
   // 3
   let t0 = Date.now();
@@ -79,12 +78,6 @@ try {
   host.renameTeam('A', '  Mga   Parol ');
   await waitFor(() => host.teams.teams[0].name === 'Mga Parol', 3000, 'rename applied');
   await waitFor(() => p3.teams.teams[0].name === 'Mga Parol', 3000, 'rename reached others');
-  host.setCaptain(target, p2.id);
-  await waitFor(() => host.teams.teams.find((t) => t.slot === target).captain === p2.id, 3000, 'captain appointed');
-  t0 = Date.now();
-  const wrong = ['A', 'B', 'C'].find((s) => s !== target);
-  host.setCaptain(wrong, p2.id);
-  await teamError(host, t0, 'captain from another team refused');
   // pile everyone movable into one team, then Auto-balance
   const ids = [...host.players.keys()].filter((id) => id !== p2.id);
   for (const id of ids) host.moveToTeam(id, target);
@@ -95,12 +88,7 @@ try {
   if (outsider) { host.moveToTeam(outsider, target); await teamError(host, t0, 'full team refused'); }
   host.balanceTeams();
   await waitFor(() => spread(host) <= 1, 3000, 'auto-balance');
-  check(host.teams.members[p2.id] === target, 'auto-balance moved the captain');
-  host.autoCaptains();
-  await waitFor(() => host.teams.teams.every((t) => t.captain), 3000, 'auto-pick captains');
-  const capOk = host.teams.teams.every((t) => host.teams.members[t.captain] === t.slot);
-  check(capOk, 'a captain is not on their team');
-  report.scenarios[4] = { duplicate: dup.message, markup: bad.message, sizes: sizes(host), captains: host.teams.teams.map((t) => t.captain) };
+  report.scenarios[4] = { duplicate: dup.message, markup: bad.message, sizes: sizes(host) };
 
   // 6 (started before the match so both rooms run at once)
   const other = await RoomClient.connect(url('teams-it-b'), 'Other', 10_000, 'teamother001');
@@ -117,10 +105,9 @@ try {
   t0 = Date.now();
   host.renameTeam('B', 'Late Name');
   await teamError(host, t0, 'rename refused while locked');
-  const capSlot = host.teams.teams.find((t) => t.captain === p3.id)?.slot;
   p3.leave();
   await sleep(500);
-  report.scenarios[5] = { locked: host.teams.locked, p3WasCaptainOf: capSlot ?? null };
+  report.scenarios[5] = { locked: host.teams.locked };
   for (const c of [host, p2, other]) c.leave();
 } catch (e) {
   errors.push(String(e?.stack ?? e));

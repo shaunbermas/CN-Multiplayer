@@ -12,7 +12,7 @@ Every number below lives in `packages/shared/src/agawan/config.ts` (the pack: "o
 
 | Rule | Value |
 |---|---|
-| Teams | A, B and C (up to 10 each), or A and B only (up to 15 each) when the host picks 2 teams (decision 049); sizes within one. With 2 teams base C and its pen are closed: grey, not capturable, not in the HUD. Colours are dealt at random per match (12-colour palette, hues at least 70° apart). The host picks Shuffle (random teams, captains picked automatically) or Pick your team (players join, nominate, host appoints captains). Locked for the whole match. At least one player per team (bots count). |
+| Teams | A, B and C (up to 10 each), or A and B only (up to 15 each) when the host picks 2 teams (decision 049); sizes within one. With 2 teams base C and its pen are closed: grey, not capturable, not in the HUD. Colours are dealt at random per match (12-colour palette, hues at least 70° apart). The host picks Shuffle (random teams) or Pick your team (players join a team; the host can move anyone). No captains (decision 053). Locked for the whole match. At least one player per team (bots count). |
 | Match | 4:00. Everyone starts at their own base, which their team owns. |
 | Hearts and hits (tap `E`) | Every player has 3 hearts. Each press on a rival within 2 m, inside a 70° half-angle cone in front of you, with clear line of sight, takes one heart and pushes them back a little. 0.35 s between hits; holding E repeats every 0.5 s. Teammates never knock each other down. |
 | Capture and prison | The last heart captures: the player is moved to the attacker's pen (5 x 4 = 20 fixed slots, see-through fence). They cannot move, hit, rescue or score. No release timer (decision 049): they stay in the pen until a teammate rescues them or the stage ends. |
@@ -123,7 +123,7 @@ about a real GPU; draw calls, triangles, server tick time and bytes on the wire 
   - `packages/shared/test/agawan.test.ts` (25 tests): map, hearts and hits, prison, rescue, healing, base takeover, end, sudden death, bots
   - `teamChampionship.test.ts` (5 tests)
 - `npm run test:agawan`: 30-player room with 3 people and 27 bots in the real Worker. Covers bots tagging,
-  rescuing and taking bases, a reconnect, results, captains, and two rooms at once.
+  rescuing and taking bases, a reconnect, results, the empty-team start refusal, and two rooms at once.
 - `npm run test:e2e:agawan`: real browser. Covers the street, the HUD, the Tab board, the results screen and
   page errors.
 

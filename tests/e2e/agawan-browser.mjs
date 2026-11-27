@@ -63,7 +63,7 @@ try {
   await page.goto(`http://127.0.0.1:${PORT}/?name=Tester&autojoin=1&quality=low&teams=1&startStage=STAGE_02_AGAWAN_BASE&testSeed=11&testRound=${ROUND_S}&testBriefing=1&testResults=60`);
   await page.waitForSelector('[data-testid=teams]', { timeout: 60_000 });
   for (let i = 0; i < 2; i++) { await page.click('[data-testid=add-bots]'); await sleep(400); }
-  // Shuffle mode (the default, decision 047) picks captains at start; nothing to click.
+  // Shuffle mode (the default, decision 047) deals the teams; nothing to click.
   await sleep(600);
   await page.click('[data-testid=start]');
   await page.waitForSelector('[data-testid=agawan-top]', { timeout: 60_000 });
@@ -104,7 +104,10 @@ try {
   check(status === 3, `team status columns ${status}`);
   check(closed, 'team status stays open after Tab is released');
 
-  await page.waitForSelector('[data-testid=agawan-results]', { timeout: (ROUND_S + 60) * 1000 });
+  // Decision 052: after a stage the ranking leads; that stage's Agawan board is folded below it.
+  await page.waitForSelector('[data-testid=agawan-results]', { state: 'attached', timeout: (ROUND_S + 60) * 1000 });
+  await page.evaluate(() => document.querySelectorAll('[data-testid=last-stage]').forEach((d) => { d.open = true; }));
+  await page.waitForSelector('[data-testid=agawan-results]', { timeout: 10_000 });
   await sleep(600);
   const res = await page.evaluate(() => [...document.querySelectorAll('[data-testid^=agawan-rank-]')].map((li) => ({ id: li.getAttribute('data-testid'), place: Number(li.querySelector('.pl')?.textContent) })));
   report.results = res;

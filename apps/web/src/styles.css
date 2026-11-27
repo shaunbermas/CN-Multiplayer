@@ -364,24 +364,20 @@ label.check { display: flex !important; align-items: center; gap: 8px; font: 500
 .team-name-input { flex: 1; min-width: 0; font: 800 16px/1.2 var(--display); padding: 2px 6px; background: rgba(0, 0, 0, 0.35); color: var(--ink); border: 1px solid var(--team); border-radius: 4px; }
 .team-count { font: 700 15px/1 var(--display); color: var(--ink); } .team-count small { color: var(--muted); font-size: 12px; }
 .team-you { justify-self: start; margin: 0 12px; padding: 2px 8px; border-radius: 999px; background: var(--team); color: #14121a; font: 800 10px/1.4 var(--body); letter-spacing: 0.12em; text-transform: uppercase; }
-.team-members { list-style: none; margin: 0; padding: 0 10px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; align-content: start; }
+.team-members { list-style: none; margin: 0; padding: 0 10px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; align-content: start; max-height: 196px; overflow-y: auto; overscroll-behavior: contain; }
 .team-members li { position: relative; display: flex; align-items: center; gap: 6px; min-width: 0; padding: 4px 6px; font-size: 13px; border-radius: 4px; background: rgba(233, 226, 212, 0.05); }
 .team-members li.me { outline: 1px solid var(--porcelain); }
-.team-members li.captain { background: color-mix(in srgb, var(--team) 22%, transparent); }
 .team-members li.empty { grid-column: 1 / -1; display: block; color: var(--muted); background: none; font-style: italic; }
 .team-members .coat { width: 10px; height: 10px; border-radius: 3px; flex: none; }
 .team-members .slot-name { min-width: 0; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.team-members .crown { color: #ffd166; font-size: 13px; } .team-members .nom { color: var(--muted); font-size: 13px; }
 .team-members .bot-tag { font: 700 9px/1 var(--body); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
 .team-move { position: absolute; right: 3px; top: 50%; transform: translateY(-50%); display: none; gap: 3px; padding: 2px; border-radius: 4px; background: rgba(12, 14, 18, 0.92); }
 .team-members li:hover .team-move, .team-members li:focus-within .team-move { display: flex; }
 .team-move .mini { width: 18px; height: 18px; padding: 0; font: 700 10px/1 var(--display); color: var(--ink); background: var(--team, transparent); border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 50%; cursor: pointer; }
-.team-move .mini.star { background: transparent; color: #ffd166; border-color: #ffd166; }
 .team-move .mini:hover { transform: scale(1.15); }
 .team-foot { padding: 0 10px; }
 .team-foot .btn.wide { width: 100%; justify-content: center; }
 .team-foot .btn.on { border-color: var(--team); color: var(--team); }
-.team-captain-line { display: block; font-size: 12px; color: var(--muted); } .team-captain-line b { color: var(--ink); }
 .team-tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .team-error { min-height: 1.3em; margin: 8px 0 0; font-size: 13px; color: var(--stop, #e8705a); }
 @media (max-width: 860px) { .team-cards { grid-template-columns: 1fr; } }
@@ -691,7 +687,7 @@ label.check { display: flex !important; align-items: center; gap: 8px; font: 500
 .ag-score-key { margin: 0 0 8px; font-size: 12px; }
 
 /* ---------- winner ceremony (decision 049): after a full 3-stage match ---------- */
-.ceremony { position: fixed; inset: 0; z-index: 30; pointer-events: auto; display: grid; place-items: start center; overflow: auto;
+.ceremony { position: fixed; inset: 0; z-index: 30; pointer-events: auto; display: grid; place-items: start center; overflow: hidden;
   background: radial-gradient(ellipse at 50% 30%, rgba(201, 163, 91, 0.16), rgba(10, 15, 18, 0.78) 60%, rgba(10, 15, 18, 0.92)); }
 .ceremony .confetti { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 2; }
 .cer-reveal { position: fixed; inset: 0; display: grid; place-content: center; justify-items: center; gap: 10px; text-align: center; cursor: pointer; z-index: 1; padding: 0 16px; }
@@ -700,7 +696,7 @@ label.check { display: flex !important; align-items: center; gap: 8px; font: 500
 .cer-name { margin: 6px 0 0; font: 800 clamp(64px, 11vw, 150px)/0.9 var(--display); letter-spacing: 0.01em; text-transform: uppercase; color: var(--porcelain);
   text-shadow: 0 0 38px rgba(201, 163, 91, 0.65), 0 4px 0 rgba(0, 0, 0, 0.35); animation: cer-pop 0.75s 1.0s cubic-bezier(0.2, 1.6, 0.4, 1) both; }
 .cer-pts { font: 800 30px/1 var(--display); letter-spacing: 0.12em; color: var(--brass); text-transform: uppercase; animation: cer-fade 0.5s 1.6s ease-out both; }
-.cer-card { width: min(1000px, 95vw); margin: 40px auto; max-height: none; overflow: visible; z-index: 1; animation: cer-rise 0.5s ease-out both;
+.cer-card { width: min(1000px, 95vw); margin: 24px auto; max-height: calc(100vh - 48px); overflow: hidden; display: flex; flex-direction: column; z-index: 1; animation: cer-rise 0.5s ease-out both;
   border-color: color-mix(in srgb, var(--brass) 40%, transparent); box-shadow: 0 0 80px rgba(201, 163, 91, 0.16); }
 .cer-head { text-align: center; margin-bottom: 8px; }
 .cer-head .eyebrow { color: var(--brass); }
@@ -734,7 +730,18 @@ label.check { display: flex !important; align-items: center; gap: 8px; font: 500
 .cer-step.p2 .cer-pillar { height: 120px; border-top: 4px solid #c8d0d3; }
 .cer-step.p3 .cer-pillar { height: 90px; border-top: 4px solid #c48a55; }
 .cer-step.me .cer-pname { text-decoration: underline; text-decoration-color: var(--brass); text-underline-offset: 4px; }
-.cer-rest { margin-top: 22px; display: grid; gap: 8px; }
+.cer-rest { margin-top: 4px; display: grid; gap: 8px; }
+.cer-head, .cer-podium, .cer-card > .card-foot { flex: none; }
+.cer-card .cer-podium { width: 100%; }
+@media (max-height: 760px) { .cer-stats { display: none; } .cer-step.p1 .cer-pillar { height: 80px; } .cer-step.p2 .cer-pillar { height: 60px; } .cer-step.p3 .cer-pillar { height: 44px; } .cer-pillar small { display: none; } }
+/* Long rankings and the folded stage board scroll inside the card (owner, 27 Nov 2026: max height + scroll). */
+.cer-scroll { flex: 1 1 auto; min-height: 140px; overflow-y: auto; overscroll-behavior: contain; margin-top: 14px; padding-right: 6px; }
+.cer-scroll .board thead th { position: sticky; top: 0; z-index: 1; background: #24272b; }
+@media (max-height: 1000px) {
+  .cer-head h2 { font-size: 40px; } .cer-podium { margin-top: 40px; } .cer-who { gap: 3px; padding-bottom: 8px; } .cer-crest { transform: scale(0.8); }
+  .cer-step.p1 .cer-pillar { height: 110px; } .cer-step.p2 .cer-pillar { height: 80px; } .cer-step.p3 .cer-pillar { height: 60px; }
+  .cer-pillar span, .cer-step.p1 .cer-pillar span { font-size: 30px; } .cer-pname { font-size: 22px; } .p1 .cer-pname { font-size: 26px; }
+}
 @keyframes cer-fade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 @keyframes cer-pop { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: none; } }
 @keyframes cer-rise { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: none; } }
@@ -742,3 +749,9 @@ label.check { display: flex !important; align-items: center; gap: 8px; font: 500
 @keyframes cer-shine { 0% { transform: translateX(-100%); } 60%, 100% { transform: translateX(100%); } }
 @media (max-width: 700px) { .cer-head h2 { font-size: 36px; } .cer-pname { font-size: 20px; } .p1 .cer-pname { font-size: 24px; } .cer-pillar span { font-size: 28px; } }
 @media (prefers-reduced-motion: reduce) { .ceremony *, .ceremony *::after { animation: none !important; } }
+
+/* Scrolling panels (owner, 27 Nov 2026): every long panel has a max height and scrolls inside, with a thin frosted bar. */
+.lobby, .results, .cer-scroll, .team-members, .modal, .lobby-slots, .ag-status, .briefing { scrollbar-width: thin; scrollbar-color: rgba(233, 226, 212, 0.35) transparent; }
+.lobby::-webkit-scrollbar, .results::-webkit-scrollbar, .cer-scroll::-webkit-scrollbar, .team-members::-webkit-scrollbar, .modal::-webkit-scrollbar, .lobby-slots::-webkit-scrollbar { width: 8px; }
+.lobby::-webkit-scrollbar-thumb, .results::-webkit-scrollbar-thumb, .cer-scroll::-webkit-scrollbar-thumb, .team-members::-webkit-scrollbar-thumb, .modal::-webkit-scrollbar-thumb, .lobby-slots::-webkit-scrollbar-thumb { background: rgba(233, 226, 212, 0.28); border-radius: 4px; }
+.briefing { max-height: calc(100vh - 140px); overflow-y: auto; }

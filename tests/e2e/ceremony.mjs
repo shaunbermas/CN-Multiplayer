@@ -2,6 +2,8 @@
 //  - a full match (Stage 01 -> 02 -> 03, short test rounds, bots) ends on the winner reveal over confetti, then the
 //    podium (1st, 2nd, 3rd) and everyone else's stats below
 //  - decision 050: a one-stage match ends on the same ranking ceremony
+//  - decision 052: after each stage of a match the ranking (podium + list) shows, with Next stage / Main menu and no
+//    countdown; the old standings screen is gone
 // Screenshots go to tests/reports/screenshots/ceremony-*.png. Usage: npm run test:e2e:ceremony
 import { execSync } from 'node:child_process';
 import { createRequire } from 'node:module';
@@ -33,11 +35,30 @@ try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
     const pageErrors = [];
     page.on('pageerror', (e) => pageErrors.push(e.message));
-    await page.goto(`http://127.0.0.1:${PORT}/?name=Host&autojoin=1&quality=low&room=ceremony-full&testSeed=21&testRound=8&testBriefing=1&testStages=3&testResults=2&testAutoNext=1&testFinalResults=40`);
+    await page.goto(`http://127.0.0.1:${PORT}/?name=Host&autojoin=1&quality=low&room=ceremony-full&testSeed=21&testRound=8&testBriefing=1&testStages=3&testResults=8&testAutoNext=1&testFinalResults=40`);
     await page.waitForSelector('[data-testid=start]', { timeout: 60_000 });
     await addBots(page, 2);
     await page.click('[data-testid=start]');
-    // Stage results take 2 s in test rooms; the final results of a full match keep the ceremony length.
+    // Decision 052: the ranking after Stage 01 (test rooms move on after 8 s; real rooms wait for the host).
+    await page.waitForSelector('[data-testid=stage-ranking] [data-testid=podium]', { timeout: 120_000 });
+    const after1 = await page.evaluate(() => ({
+      head: document.querySelector('[data-testid=stage-ranking-head]')?.textContent ?? '',
+      places: [1, 2, 3].map((i) => document.querySelector(`[data-testid=podium-${i}] .cer-pname`)?.textContent ?? ''),
+      next: !!document.querySelector('[data-testid=next-stage]'), menu: !!document.querySelector('[data-testid=exit]'),
+      countdown: /starts in|in \d+ s/i.test(document.querySelector('[data-testid=results]')?.textContent ?? ''),
+      reveal: !!document.querySelector('[data-testid=ceremony-reveal]'),
+    }));
+    report.afterStage1 = after1;
+    check(/Stage 01 complete/.test(after1.head) && /Ranking so far/.test(after1.head), `ranking after Stage 01: ${after1.head}`);
+    check(after1.places.every((x) => x.length > 0), `podium after Stage 01: ${JSON.stringify(after1.places)}`);
+    check(after1.next && after1.menu, 'Next stage and Main menu buttons after a stage');
+    check(!after1.countdown, 'no countdown to the next stage');
+    check(!after1.reveal, 'the winner reveal is only for the end of the match');
+    await page.screenshot({ path: `${shots}/ceremony-after-stage.png` });
+    await page.evaluate(() => document.querySelector('.ceremony')?.scrollTo(0, 99999));
+    await sleep(300);
+    await page.screenshot({ path: `${shots}/ceremony-after-stage-buttons.png` });
+    // The final results of a full match keep the ceremony.
     await page.waitForSelector('[data-testid=ceremony]', { timeout: 180_000 });
     const reveal = await page.evaluate(() => ({
       step: document.querySelector('[data-testid=ceremony]')?.getAttribute('data-step'),

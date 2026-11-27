@@ -84,7 +84,7 @@ export class TrialRoom extends DurableObject<Env> {
   /** The host paused the room (owner, 25 Nov 2026): the simulation, timers and bots stand still. */
   private paused = false;
   private roomCode = 'default';
-  /** Stage 02 · Agawan Base teams and captains (v9): set in the lobby, locked while a match runs, kept between matches. */
+  /** Stage 02 · Agawan Base teams (v9): set in the lobby, locked while a match runs, kept between matches. */
   private teams = new TeamBook();
   /** The match started in an Agawan Base lobby, where players saw and set up the teams (decision 048). */
   private teamsFromLobby = false;
@@ -396,23 +396,20 @@ export class TrialRoom extends DurableObject<Env> {
   }
 
   // ---------------------------------------------------------------- teams (Stage 02 · Agawan Base, v9)
-  /** Lobby team setup. Players pick a team and nominate themselves; the host does the rest. The book checks every rule. */
+  /** Lobby team setup. Players pick a team; the host does the rest (no captains, decision 053). The book checks every rule. */
   private teamAction(by: Player, msg: TeamAction): void {
     const ws = this.sockets.get(by.id);
     const refuse = (message: string) => { if (ws) send(ws, { t: 'error', code: 'team', message }); };
     if (this.engine.phase !== 'lobby' || this.teams.locked) return refuse('Teams are locked while the match is running');
-    const hostOnly = ['rename', 'captain', 'move', 'balance', 'autoCaptains', 'mode', 'count', 'shuffle', 'recolor'];
+    const hostOnly = ['rename', 'move', 'balance', 'mode', 'count', 'shuffle', 'recolor'];
     if (hostOnly.includes(msg.a) && by.id !== this.hostId) return refuse('Only the host can change that');
     const players = () => [...this.players.values()].filter((p) => !p.away).map((p) => ({ id: p.id, joinOrder: p.joinOrder, bot: !!p.bot }));
     let r: TeamResult;
     switch (msg.a) {
       case 'join': r = this.teams.join(by.id, msg.slot); break;
-      case 'nominate': r = this.teams.nominate(by.id, !!msg.on); break;
       case 'rename': r = this.teams.rename(msg.slot, msg.name); break;
-      case 'captain': r = this.teams.setCaptain(msg.slot, msg.id ?? null); break;
       case 'move': r = this.players.has(String(msg.id)) ? this.teams.move(msg.id, msg.slot) : { ok: false, reason: 'Unknown player' }; break;
       case 'balance': this.teams.balance(players()); r = { ok: true }; break;
-      case 'autoCaptains': this.teams.autoCaptains(players()); r = { ok: true }; break;
       case 'mode': r = this.teams.setMode(msg.mode, players()); break;
       case 'count': r = this.teams.setCount(msg.count, players()); break;
       case 'shuffle': r = this.teams.shuffle(players()); break;
@@ -504,9 +501,7 @@ export class TrialRoom extends DurableObject<Env> {
     const order = this.orderFor(opts);
     const stageToStart = this.between && this.match ? this.match.stageId : resolveStageId(opts?.startStage ?? DEFAULT_STAGE_ID);
     if (stageToStart === AGAWAN_STAGE_ID) {
-      // Teams are only set up in an Agawan Base lobby (decision 048). Shuffle mode (decision 047): nobody has to appoint captains by hand; any team still without one gets one now.
-      if (this.teams.mode === 'shuffle') this.teams.autoCaptains([...this.players.values()].filter((p) => !p.away).map((p) => ({ id: p.id, joinOrder: p.joinOrder, bot: !!p.bot })));
-      // Agawan Base needs three valid teams with a captain each before the match may start (handoff pack §6).
+      // Teams are only set up in an Agawan Base lobby (decision 048); every team in play needs players and sizes within one.
       const problems = this.teams.startProblems([...this.players.values()].filter((p) => !p.away).map((p) => p.id));
       if (problems.length) {
         const ws = this.sockets.get(by.id);
@@ -565,7 +560,7 @@ export class TrialRoom extends DurableObject<Env> {
       this.teams.locked = false;
       const present = [...this.players.values()].filter((p) => !p.away).map((p) => ({ id: p.id, joinOrder: p.joinOrder, bot: !!p.bot }));
       if (this.teams.mode === 'shuffle') this.teams.shuffle(present);
-      else { for (const p of present) this.teams.place(p.id); this.teams.autoCaptains(present); }
+      else for (const p of present) this.teams.place(p.id);
       this.broadcastTeams();
     }
     console.log(JSON.stringify({ ev: 'between_stages', room: this.roomCode, next: m.stageId, match: this.matchState() }));
@@ -597,7 +592,7 @@ export class TrialRoom extends DurableObject<Env> {
     this.teamsFromLobby = resolveStageId(opts?.startStage ?? DEFAULT_STAGE_ID) === AGAWAN_STAGE_ID;
     for (const p of this.players.values()) this.match.ensure({ ...p, bot: !!p.bot });
     this.matchRunning = true;
-    this.teams.locked = true; // names, captains and membership are fixed for the whole match
+    this.teams.locked = true; // names and membership are fixed for the whole match
     for (const p of this.players.values()) this.teams.place(p.id);
     this.broadcastTeams();
     this.matchOpts = opts ?? {};
@@ -633,8 +628,8 @@ export class TrialRoom extends DurableObject<Env> {
     // Obstacles are always on (decision 031); only test rooms may switch them off (walk-timing and rollback tests).
     const obstacles = !(test && (opts?.obstacles === false || this.plainCourse()));
     // Agawan Base plays the teams locked in the lobby (late joiners were placed in the smallest team). A match that
-    // started on another stage never showed the team setup (decision 048), so the teams are dealt now: random,
-    // balanced, a captain each.
+    // started on another stage never showed the team setup (decision 048), so the teams are dealt now: random and
+    // balanced.
     if (this.geo.stage === AGAWAN_STAGE_ID && !this.teamsFromLobby) {
       this.teams.locked = false;
       this.teams.shuffle(players.map((p) => ({ id: p.id, joinOrder: p.joinOrder, bot: !!p.bot })));
