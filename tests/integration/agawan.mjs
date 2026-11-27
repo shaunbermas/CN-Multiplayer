@@ -1,11 +1,11 @@
 // Stage 02 · AGAWAN BASE multiplayer integration test, against the real Worker + Durable Object rooms under
 // `wrangler dev` (test rooms may play Agawan Base before it is switched on). Real WebSocket clients plus server bots:
-//  A  a full room of 30 (3 people + 27 bots) balanced 10/10/10 with a captain each; Start goes straight to Agawan Base
+//  A  a full room of 30 (3 people + 27 bots) balanced 10/10/10; Start goes straight to Agawan Base
 //  -  every player starts at their own base; every client sees the same public team state; each person gets `ag`
 //  B  bots play on their own: tags, prisoners, rescues or releases and bases change hands; scores match the feed
 //  C  a person disconnects mid-stage and reconnects with the same browser key: same id and team
 //  D  the stage ends with team places by score (board points 2 / 1 / 0), recorded once; prisoners cleared; teams unlock
-//  E  Start is refused when a team has no captain (the room lists the reason)
+//  E  Start is refused when a team has no players (the room lists the reason); there are no captains (decision 053)
 //  F  a second room plays at the same time with its own teams, scores and timer
 // Usage: npm run test:agawan
 import { execSync } from 'node:child_process';
@@ -36,30 +36,29 @@ try {
   host.fillBots();
   await waitFor(() => host.players.size === 30 && Object.keys(host.teams?.members ?? {}).length === 30, 8000, '30 players in teams');
 
-  // E: Pick-your-team mode with no captains yet -> Start refused with the reason (Shuffle picks captains itself).
-  host.setTeamMode('manual');
-  await waitFor(() => host.teams?.mode === 'manual', 4000, 'manual team mode');
-  for (const s of ['A', 'B', 'C']) host.setCaptain(s, null);
-  await waitFor(() => host.teams.teams.every((t) => !t.captain), 4000, 'no captains');
   const opts = { startStage: AGAWAN.id, stages: 2, seed: 2026, roundS: 80, briefingS: 1, resultsS: 3, autoNext: true };
   let t0 = Date.now();
-  host.start(opts);
-  const refusal = await waitFor(() => host.lastError?.code === 'team' && host.lastError.at >= t0 && host.lastError, 4000, 'start refused');
-  check(/captain/i.test(refusal.message), `refusal names the captain rule: ${refusal.message}`);
-  check(host.round.phase === 'lobby', 'match started without captains');
-  report.scenarios.E = { refusal: refusal.message };
-
-  host.balanceTeams();
-  host.autoCaptains();
-  await waitFor(() => host.teams.teams.every((t) => t.captain), 4000, 'captains');
 
   // F: second room, started at the same time
   const ROOM2 = 'agawan-it-b';
   const other = await RoomClient.connect(url(ROOM2), 'Other', 10_000, 'agother00001');
   other.addBots(5);
   await waitFor(() => other.players.size === 6 && Object.keys(other.teams?.members ?? {}).length === 6, 5000, 'room 2 ready');
-  other.autoCaptains();
-  await waitFor(() => other.teams.teams.every((t) => t.captain), 4000, 'room 2 captains');
+
+  // E (in room 2, 6 players): Pick your team with Team C emptied -> Start refused with the reason.
+  other.setTeamMode('manual');
+  await waitFor(() => other.teams?.mode === 'manual', 4000, 'manual team mode');
+  for (const [id, s] of Object.entries(other.teams.members)) if (s === 'C') other.moveToTeam(id, 'A');
+  await waitFor(() => !Object.values(other.teams.members).includes('C'), 4000, 'Team C empty');
+  check(other.teams.teams.every((t) => !('captain' in t)) && !('nominees' in other.teams), 'no captain state in the team view');
+  t0 = Date.now();
+  other.start({ ...opts, seed: 7, roundS: 30 });
+  const refusal = await waitFor(() => other.lastError?.code === 'team' && other.lastError.at >= t0 && other.lastError, 4000, 'start refused');
+  check(/no players/i.test(refusal.message), `refusal names the empty team: ${refusal.message}`);
+  check(other.round.phase === 'lobby', 'match started with an empty team');
+  report.scenarios.E = { refusal: refusal.message };
+  other.balanceTeams();
+  await waitFor(() => ['A', 'B', 'C'].every((s) => Object.values(other.teams.members).includes(s)), 4000, 'room 2 balanced');
 
   // A
   host.start(opts);

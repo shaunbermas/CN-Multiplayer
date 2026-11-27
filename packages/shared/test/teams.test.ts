@@ -1,4 +1,4 @@
-// Stage 02 · AGAWAN BASE team lobby rules (handoff pack 03_TEAM_LOBBY_AND_CAPTAIN_MANAGEMENT, test matrix rows 1-10).
+// Stage 02 · AGAWAN BASE team lobby rules (handoff pack 03, test matrix rows 1-10; captains removed by decision 053).
 import { describe, expect, it } from 'vitest';
 import { TEAMS, TEAM_PALETTE, rng, TeamBook, balancedSizes, dealTeamColors, validateTeamName, type TeamPlayer } from '../src/index.ts';
 
@@ -31,15 +31,14 @@ describe('team sizes', () => {
     expect(c.size('A')).toBe(10);
   });
 
-  it('auto-balance moves the fewest players, bots first, and never the captain', () => {
+  it('auto-balance moves the fewest players, bots first, then the newest joiners', () => {
     const b = manualBook();
     const ps = [...people(8), { id: 'bot1', joinOrder: 9, bot: true }];
     for (const p of ps) b.join(p.id, 'A');
-    b.setCaptain('A', 'p8');
     const moved = b.balance(ps);
     expect(moved).toBe(6);
     expect(sizes(b)).toEqual([3, 3, 3]);
-    expect(b.teamOf('p8')).toBe('A');
+    expect(b.teamOf('p1')).toBe('A'); // the earliest joiners stay
     expect(b.teamOf('bot1')).not.toBe('A');
     expect(b.balance(ps)).toBe(0); // already balanced: nothing moves
   });
@@ -67,45 +66,16 @@ describe('team names', () => {
   });
 });
 
-describe('captains', () => {
-  it('a nominee or any member can be appointed; a non-member cannot', () => {
+describe('decision 053: no captains', () => {
+  it('the team view has no captain or nominees, and a player who leaves frees their seat', () => {
     const b = manualBook();
-    b.join('a', 'A'); b.join('b', 'A'); b.join('c', 'B');
-    expect(b.nominate('a', true).ok).toBe(true);
-    expect(b.nominate('b', true).ok).toBe(true);
-    expect(b.view().nominees.sort()).toEqual(['a', 'b']);
-    expect(b.setCaptain('A', 'b').ok).toBe(true); // host picks exactly one
-    expect(b.captainOf('A')).toBe('b');
-    expect(b.setCaptain('A', 'c').ok).toBe(false);
-    expect(b.setCaptain('A', null).ok).toBe(true);
-    expect(b.captainOf('A')).toBeNull();
-  });
-
-  it('switching team clears captaincy and nomination', () => {
-    const b = manualBook();
-    b.join('a', 'A'); b.nominate('a', true); b.setCaptain('A', 'a');
-    b.join('a', 'B');
-    expect(b.captainOf('A')).toBeNull();
-    expect(b.view().nominees).toEqual([]);
-  });
-
-  it('auto-pick prefers the earliest human nominee, then the earliest human member', () => {
-    const b = manualBook();
-    const ps: TeamPlayer[] = [{ id: 'bot', joinOrder: 1, bot: true }, { id: 'x', joinOrder: 2 }, { id: 'y', joinOrder: 3 }, { id: 'z', joinOrder: 4 }];
-    b.join('bot', 'A'); b.join('x', 'A'); b.join('y', 'A'); b.join('z', 'B');
-    b.nominate('y', true);
-    expect(b.autoCaptains(ps)).toBe(2); // C has nobody
-    expect(b.captainOf('A')).toBe('y');
-    expect(b.captainOf('B')).toBe('z');
-    expect(b.captainOf('C')).toBeNull();
-  });
-
-  it('a captain who leaves the room frees the seat', () => {
-    const b = manualBook();
-    b.join('a', 'A'); b.setCaptain('A', 'a');
+    b.join('a', 'A');
+    const v = b.view() as unknown as Record<string, unknown>;
+    expect('nominees' in v).toBe(false);
+    expect(b.view().teams.every((t) => !('captain' in t))).toBe(true);
     b.remove('a');
-    expect(b.captainOf('A')).toBeNull();
     expect(b.teamOf('a')).toBeNull();
+    expect(b.size('A')).toBe(0);
   });
 });
 
@@ -117,10 +87,9 @@ describe('start gating and locking', () => {
     for (const p of ps) b.join(p.id, 'A');
     const before = b.startProblems(ps.map((p) => p.id));
     expect(before.some((x) => /Team B has no players/.test(x))).toBe(true);
-    expect(before.some((x) => /needs a captain/.test(x))).toBe(true);
+    expect(before.some((x) => /captain/.test(x))).toBe(false);
     expect(before.some((x) => /differ by more than one/.test(x))).toBe(true);
     b.balance(ps);
-    b.autoCaptains(ps);
     expect(b.startProblems(ps.map((p) => p.id))).toEqual([]);
   });
 
@@ -130,8 +99,6 @@ describe('start gating and locking', () => {
     b.locked = true;
     expect(b.join('a', 'B').ok).toBe(false);
     expect(b.rename('A', 'New Name').ok).toBe(false);
-    expect(b.setCaptain('A', 'a').ok).toBe(false);
-    expect(b.nominate('a', true).ok).toBe(false);
     expect(b.balance([{ id: 'a', joinOrder: 1 }])).toBe(0);
     expect(b.place('late')).toBe('B');
     expect(b.view().locked).toBe(true);
@@ -146,7 +113,7 @@ describe('start gating and locking', () => {
 });
 
 describe('decision 047: shuffle mode and team colours', () => {
-  it('shuffle deals everyone into balanced random teams with a captain each, and players cannot switch', () => {
+  it('shuffle deals everyone into balanced random teams, and players cannot switch', () => {
     let seed = 7;
     const b = new TeamBook(() => ((seed = (seed * 16807) % 2147483647) / 2147483647));
     const ps = people(28, 20);
@@ -154,7 +121,6 @@ describe('decision 047: shuffle mode and team colours', () => {
     expect(b.shuffle(ps).ok).toBe(true);
     expect(Math.max(...sizes(b)) - Math.min(...sizes(b))).toBeLessThanOrEqual(1);
     expect(sizes(b).reduce((a, n) => a + n, 0)).toBe(28);
-    for (const s of ['A', 'B', 'C'] as const) expect(b.teamOf(b.captainOf(s)!)).toBe(s);
     const r = b.join('p1', b.teamOf('p1') === 'A' ? 'B' : 'A');
     expect(r.ok).toBe(false);
     expect(b.move('p1', b.teamOf('p1') === 'A' ? 'B' : 'A').ok).toBe(true); // the host may still move anyone

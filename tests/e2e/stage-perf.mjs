@@ -62,7 +62,6 @@ try {
         if (n >= 30) break;
         await page.evaluate(() => document.querySelector('[data-testid=add-bots]')?.click()); await sleep(400);
       }
-      if (await page.$('[data-testid=team-auto-captains]')) { await page.evaluate(() => document.querySelector('[data-testid=team-auto-captains]')?.click()); await sleep(800); }
       await page.evaluate(() => document.querySelector('[data-testid=start]')?.click());
       await waitFor(page, () => window.__cn.round().phase === 'active', 'active', 120_000);
       await sleep(5000); // shader compiles, texture uploads and the adaptive warm-up

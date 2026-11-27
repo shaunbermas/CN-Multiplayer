@@ -33,9 +33,11 @@ export const ROUND = {
   dispLimit: 0.15,      // D2 m since the grace window ended
   resultsS: 9,          // single-stage default                          [20]
   // Match flow (match.ts reads these): results between stages, the final leaderboard, later briefings.
-  stageResultsS: 9,     // host can skip                                 [new]
-  finalResultsS: 16,    // then everyone returns to the lobby            [new]
-  championResultsS: 35, // winner ceremony after a full 3-stage match (decision 049)
+  // Decision 052 (owner, 27 Nov 2026: "do not redirect players to the next stage"): the ranking stays up until the
+  // host picks Next stage (or Back to lobby / Restart); the long limit only stops an abandoned room waiting forever.
+  stageResultsS: 600,   // ranking after a stage, until the host continues
+  finalResultsS: 600,   // final ranking, until the host continues
+  championResultsS: 600, // winner ceremony after the last stage, until the host continues
   nextBriefingS: 4,     // stage 2 onward (rules already known, skippable) [new]
 } as const;
 

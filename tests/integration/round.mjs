@@ -104,10 +104,8 @@ try {
   await sleep(200);
   if (late.self.status !== 'active') errors.push(`Late joiner is ${late.self.status} in the lobby, expected active`);
 
-  // Two-stage match (Stage 01, then Agawan Base, decision 046): everyone stands still for two short stages. Agawan Base
-  // needs a captain per team first; a scoreless Agawan stage plays its 30 s sudden death before the results.
-  careful.autoCaptains();
-  await waitFor(() => careful.teams?.teams.every((t) => t.captain), 'captains for the two-stage match', 10_000);
+  // Two-stage match (Stage 01, then Agawan Base, decision 046): everyone stands still for two short stages. A scoreless
+  // Agawan stage plays its 30 s sudden death before the results.
   careful.start({ seed: SEED + 1, roundS: 6, briefingS: 0, stages: 2, resultsS: 2 });
   const keepAlive = setInterval(() => {
     for (const b of [...bots, late]) b.send({ t: 'input', seq: Date.now(), mx: 0, mz: 0, yaw: 0 });

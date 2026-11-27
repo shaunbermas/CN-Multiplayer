@@ -271,7 +271,7 @@ export class RoomClient {
   /** Host: pause or resume the room for everyone. */
   pause(on: boolean): void { this.send({ t: 'pause', on }); }
 
-  /** Team setup (v9): pick a team, nominate yourself; host: rename, appoint a captain, move, auto-balance, auto-pick captains. */
+  /** Team setup (v9): pick a team; host: rename, move, auto-balance (no captains, decision 053). */
   /** v12 (decision 047): host picks shuffle or manual teams, reshuffles, or deals new team colours. */
   setTeamMode(mode: 'shuffle' | 'manual'): void { this.send({ t: 'team', a: 'mode', mode }); }
   /** Host: play Agawan Base with 2 or 3 teams (decision 049). */
@@ -279,12 +279,9 @@ export class RoomClient {
   shuffleTeams(): void { this.send({ t: 'team', a: 'shuffle' }); }
   recolorTeams(): void { this.send({ t: 'team', a: 'recolor' }); }
   joinTeam(slot: TeamSlot): void { this.send({ t: 'team', a: 'join', slot }); }
-  nominate(on: boolean): void { this.send({ t: 'team', a: 'nominate', on }); }
   renameTeam(slot: TeamSlot, name: string): void { this.send({ t: 'team', a: 'rename', slot, name }); }
-  setCaptain(slot: TeamSlot, id: string | null): void { this.send({ t: 'team', a: 'captain', slot, id }); }
   moveToTeam(id: string, slot: TeamSlot): void { this.send({ t: 'team', a: 'move', id, slot }); }
   balanceTeams(): void { this.send({ t: 'team', a: 'balance' }); }
-  autoCaptains(): void { this.send({ t: 'team', a: 'autoCaptains' }); }
 
   /** The Hunt: fire the Pulse Detector (hunters). */
   pulse(): void { this.send({ t: 'act', a: 'pulse' }); }

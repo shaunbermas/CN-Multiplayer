@@ -44,17 +44,14 @@ export interface StartRequestOptions {
 }
 
 /**
- * Team setup in the lobby (v9, Stage 02 · Agawan Base). Players pick a team and nominate themselves as captain; the host
- * renames teams, appoints captains, moves players, auto-balances and auto-picks captains. The server checks every rule.
+ * Team setup in the lobby (v9, Stage 02 · Agawan Base). Players pick a team; the host renames teams, moves players and
+ * auto-balances. The server checks every rule. Captains were removed by decision 053.
  */
 export type TeamAction =
   | { t: 'team'; a: 'join'; slot: TeamSlot }
-  | { t: 'team'; a: 'nominate'; on: boolean }
   | { t: 'team'; a: 'rename'; slot: TeamSlot; name: string }
-  | { t: 'team'; a: 'captain'; slot: TeamSlot; id: string | null }
   | { t: 'team'; a: 'move'; id: string; slot: TeamSlot }
   | { t: 'team'; a: 'balance' }
-  | { t: 'team'; a: 'autoCaptains' }
   /** v12 (decision 047): host picks shuffle or manual teams, reshuffles, or deals new team colours. */
   | { t: 'team'; a: 'mode'; mode: 'shuffle' | 'manual' }
   | { t: 'team'; a: 'count'; count: 2 | 3 }
