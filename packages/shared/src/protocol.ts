@@ -1,6 +1,8 @@
 // WebSocket protocol between the browser and the room (a Cloudflare Durable Object, ADR 0002).
-// JSON text frames. The client only ever sends inputs and requests; the server owns movement,
-// signals, detection and results (GDD §7.3).
+// JSON text frames. Decision 054 (owner, 27 Nov 2026: "make it player-sided ... in all stages"): each browser moves
+// its own contestant and reports its position (`pos`); the room checks every report (speed, walls, phase) and owns
+// signals, captures, hits and results. In Stage 01 the browser also catches itself moving in a red light (`caught`),
+// with a loose room backstop. The older `input` message (the room simulates the move) still works: bots and tests.
 import type { Phase, Placing, PlayerStatus, Signal } from './round.ts';
 import type { Mode } from './tournament.ts';
 import type { Emote } from './contestantColorways.ts';
@@ -22,8 +24,10 @@ export interface TeamBoard { standings: TeamStanding[]; stage: TeamStageResult |
  *      and base capture state.
  *  v13 (decision 049): 2 or 3 teams (`team` count action, `count` in the teams view); no prison timer (prisoners carry
  *      seconds held, the private state `heldS`); `match.champion` marks a match that plays all three stages.
- *  v14 (decision 050): a lobby between stages (`match.between`); the host's start continues the match. */
-export const PROTOCOL_VERSION = 14;
+ *  v14 (decision 050): a lobby between stages (`match.between`); the host's start continues the match.
+ *  v15 (decision 054): player-side movement (`pos`, teleport epoch `tp` in rows), Stage 01 `caught` reports and the
+ *      freeze (frozen-until in rows) instead of elimination. */
+export const PROTOCOL_VERSION = 15;
 
 export interface StartRequestOptions {
   /** Obstacles are always on (decision 031). `false` is honoured only in test rooms (CN_TEST=1). */
@@ -67,6 +71,13 @@ export type ClientMessage =
   | { t: 'join'; v: number; name: string; key?: string }
   /** k: flags (The Hunt): 1 crouch held, 2 sprint requested. */
   | { t: 'input'; seq: number; mx: number; mz: number; yaw: number; k?: number }
+  /**
+   * v15 (decision 054): the browser's own position after its fixed step `seq`. tp = the teleport epoch the browser
+   * has applied (a report made before the room moved the player is dropped). k: The Hunt flags as in `input`.
+   */
+  | { t: 'pos'; seq: number; x: number; z: number; vx: number; vz: number; yaw: number; tp: number; k?: number }
+  /** v15 (decision 054), Stage 01: the browser saw its own player move in a red light (at = seconds since GO). */
+  | { t: 'caught'; at: number }
   /** The Hunt actions: Pulse Detector (hunter), hold/release capture (hunter), enter/leave a hiding place (hider). */
   | { t: 'act'; a: 'pulse' | 'hide' }
   | { t: 'act'; a: 'capture'; on: boolean }
@@ -100,8 +111,12 @@ export type ClientMessage =
 // ---- server -> client
 export interface RosterEntry { /** Disconnected mid-match, seat kept for a reconnect (v8). */ away?: boolean; id: string; name: string; spawn: number; /** Ready in the lobby (Stage 1.5). */ ready?: boolean; /** Colourway of the shared contestant, unique in the room and kept on reconnect (CW01–CW30; protocol v6). */ colorway: string; /** Server-side bot (v7). */ bot?: boolean }
 
-/** One player in a snapshot: [id, x, z, vx, vz, yaw, ack, status, finishTime, down]; down = seconds of knock-down left (v7). */
-export type SnapRow = [string, number, number, number, number, number, number, number, number, number];
+/**
+ * One player in a snapshot: [id, x, z, vx, vz, yaw, ack, status, finishTime, down, frozen, tp].
+ * down = seconds of knock-down left (v7). frozen = seconds since GO when the ice thaws, 0 when not frozen (v15).
+ * tp = teleport epoch: it changes when the room moves the player itself, so the browser takes the room's position (v15).
+ */
+export type SnapRow = [string, number, number, number, number, number, number, number, number, number, number, number];
 
 /** Where the room is in its multi-stage match (v7). */
 export interface MatchState {
@@ -184,6 +199,7 @@ const r3 = (n: number) => Math.round(n * 1000) / 1000;
 
 export function encodeRow(
   id: string, p: { x: number; z: number; vx: number; vz: number; yaw: number; ack: number; status: PlayerStatus; finishTime: number }, down = 0,
+  frozen = 0, tp = 0,
 ): SnapRow {
-  return [id, r3(p.x), r3(p.z), r3(p.vx), r3(p.vz), r2(p.yaw), p.ack, STATUS_CODE[p.status], p.finishTime, r2(down)];
+  return [id, r3(p.x), r3(p.z), r3(p.vx), r3(p.vz), r2(p.yaw), p.ack, STATUS_CODE[p.status], p.finishTime, r2(down), r2(frozen), tp];
 }

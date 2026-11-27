@@ -191,7 +191,7 @@ export class AgawanEngine implements StageEngine {
       if (!team || !this.slots.includes(team)) team = this.slots.reduce((a, b) => (used[b] < used[a] ? b : a));
       const spawns = this.layout.bases[team].spawns;
       const s = spawns[used[team]++ % spawns.length];
-      Object.assign(p, { spawn: s.index, x: s.x, z: s.z, status: 'active', finishTime: -1, spotTime: -1, redDisp: 0, recent: [], downUntil: 0, immuneUntil: 0 });
+      Object.assign(p, { spawn: s.index, x: s.x, z: s.z, status: 'active', finishTime: -1, spotTime: -1, redDisp: 0, recent: [], downUntil: 0, immuneUntil: 0, frozenUntil: 0, catches: 0 });
       spawnOf.set(p.id, s.index);
       this.state.set(p.id, newState(team));
     }

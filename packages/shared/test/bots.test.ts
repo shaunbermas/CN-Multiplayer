@@ -46,7 +46,7 @@ export function simulateStage(n: number, seed: number, roundS: number = ROUND.ro
   }
   const finished = players.filter((p) => p.status === 'finished');
   return {
-    finished: finished.length, spotted: players.filter((p) => p.status === 'spotted').length, active: players.filter((p) => p.status === 'active').length,
+    finished: finished.length, spotted: players.filter((p) => p.status === 'spotted').length, caught: players.reduce((n, p) => n + (p.catches ?? 0), 0), active: players.filter((p) => p.status === 'active').length,
     firstFinish: Math.min(...finished.map((p) => p.finishTime)), lastFinish: Math.max(...finished.map((p) => p.finishTime)),
     knockdowns, maxSpeed, maxTickMs, players, results: engine.lastResults,
   };
@@ -81,17 +81,18 @@ describe('bots', () => {
     expect(Math.hypot(go.mx, go.mz)).toBeLessThanOrEqual(1 + 1e-9);
   });
 
-  it('a full 30-bot stage: bots finish, some get spotted, bumps happen, nobody gets stuck or speeds', () => {
+  it('a full 30-bot stage: bots finish, some get caught and frozen (never out), bumps happen, nobody gets stuck or speeds', () => {
     const runs = [11, 22, 33].map((s) => simulateStage(30, s));
     for (const r of runs) {
       expect(r.maxSpeed).toBeLessThanOrEqual(MOVEMENT.walkSpeed + 1e-6);
       expect(r.finished).toBeGreaterThanOrEqual(12);   // most bots get through the course
-      expect(r.spotted).toBeGreaterThanOrEqual(1);     // some fail to stop in time
-      expect(r.finished + r.spotted + r.active).toBe(30);
+      expect(r.caught).toBeGreaterThanOrEqual(1);      // some fail to stop in time and are frozen (decision 054)
+      expect(r.spotted).toBe(0);                       // nobody is eliminated any more
+      expect(r.finished + r.active).toBe(30);
       expect(r.maxTickMs).toBeLessThan(25);            // one tick for 30 players stays far below the 33 ms budget
     }
     expect(runs.reduce((n, r) => n + r.knockdowns, 0)).toBeGreaterThan(0); // collisions do happen in a crowd
     // Report the numbers used to choose the round length (docs/STAGE_01_REFINEMENT_IMPLEMENTATION.md).
-    console.log(JSON.stringify(runs.map((r) => ({ finished: r.finished, spotted: r.spotted, unfinished: r.active, first: +r.firstFinish.toFixed(1), last: +r.lastFinish.toFixed(1), knockdowns: r.knockdowns, maxTickMs: +r.maxTickMs.toFixed(2) }))));
+    console.log(JSON.stringify(runs.map((r) => ({ finished: r.finished, caught: r.caught, unfinished: r.active, first: +r.firstFinish.toFixed(1), last: +r.lastFinish.toFixed(1), knockdowns: r.knockdowns, maxTickMs: +r.maxTickMs.toFixed(2) }))));
   });
 });

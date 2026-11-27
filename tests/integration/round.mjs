@@ -1,8 +1,8 @@
 // Red Light, Green Light round against the Worker + Durable Object (wrangler dev), with seeded bots.
 //  - the host starts a seeded round (test-only short briefing and 25 s round)
 //  - "Careful" walks only on green and stops just before red (no warning since decision 037); "Reckless" never stops; "Statue" never moves
-//  - expected: Reckless is spotted at the first red after the grace window; Careful and Statue are not;
-//    results order Careful, Statue, Reckless; spawns are shuffled and distinct; a late joiner waits on the
+//  - expected (decision 054): Reckless is caught at the first red after the grace window and frozen, never
+//    eliminated (still in the race, frozen at least once); Careful and Statue are never caught; Careful ranks above Statue; spawns are shuffled and distinct; a late joiner waits on the
 //    bench and joins in when the room returns to the lobby
 //  - results carry the round id, stage id, points per player (0 here: nobody finishes) and the match standings
 //  - a two-stage match (decision 033): stage 1 results, then stage 2 starts by itself; points accumulate, each
@@ -83,10 +83,12 @@ try {
   const placings = careful.results.map((r) => `${r.place}. ${r.name} (${r.status})`);
   const names = careful.results.map((r) => r.name);
   const statusOf = (n) => careful.results.find((r) => r.name === n)?.status;
-  if (statusOf('Reckless') !== 'spotted') errors.push('Reckless was not spotted');
+  const caughtOf = (n) => careful.results.find((r) => r.name === n)?.caught ?? 0;
+  if (statusOf('Reckless') !== 'active' || !(caughtOf('Reckless') >= 1)) errors.push(`Reckless should be frozen at least once and still racing: ${statusOf('Reckless')}, caught ${caughtOf('Reckless')}`);
+  if (caughtOf('Careful') || caughtOf('Statue')) errors.push(`Careful or Statue was caught (${caughtOf('Careful')}, ${caughtOf('Statue')})`);
   if (statusOf('Careful') !== 'active') errors.push(`Careful ended ${statusOf('Careful')}, expected active (not spotted)`);
   if (statusOf('Statue') !== 'active') errors.push(`Statue ended ${statusOf('Statue')}, expected active`);
-  if (names.join() !== 'Careful,Statue,Reckless') errors.push(`Unexpected order: ${names.join(', ')}`);
+  if (names.indexOf('Careful') > names.indexOf('Statue')) errors.push(`Unexpected order: ${names.join(', ')}`);
   if (!(spottedAt >= firstRed.start + 0.3 && spottedAt <= firstRed.start + 1.2)) {
     errors.push(`Reckless spotted at ${spottedAt.toFixed(2)} s; first red starts at ${firstRed.start} s (expected just after the 0.3-0.5 s grace)`);
   }

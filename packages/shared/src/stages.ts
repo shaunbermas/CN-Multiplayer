@@ -40,7 +40,7 @@ function stage01(): StageDefinition {
     number: stageNumber(metadata.stageId),
     name: metadata.stageName,
     rules: 'red_light_green_light',
-    briefing: { rule: 'Move on GO. Freeze when The Watcher turns.', detail: 'Reach the finish line before time runs out. Moving while it watches gets you spotted.' },
+    briefing: { rule: 'Move on GO. Freeze when The Watcher turns.', detail: 'Reach the finish line before time runs out. Moving while it watches freezes you in ice until 2 s after the next GO.' },
     figure: 'The Watcher',
     metadata,
     geometry: geometryFromMetadata(metadata, { watcherHeight: Number(watcherManifest.height_m) }),

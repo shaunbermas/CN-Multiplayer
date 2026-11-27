@@ -4,11 +4,12 @@
 // lens, timer, counts) · spotted / finished / knocked-down banners · feed · spectator · stage results with points
 // and overall standings · final winner and leaderboard.
 import { useEffect, useState } from 'react';
-import { AGAWAN_STAGE_ID, BOT_LIMITS, DEFAULT_STAGE_ID, MATCH, MAX_PLAYERS, OFFICIAL_ORDER, STARTABLE_STAGES, colorwayById, getStage, matchOrder, stageNumber, tieBreakReason, type Standing, type TeamSlot } from '@cn-trials/shared';
+import { AGAWAN_STAGE_ID, BOT_LIMITS, DEFAULT_STAGE_ID, MATCH, MAX_PLAYERS, OFFICIAL_ORDER, ROUND, STARTABLE_STAGES, colorwayById, getStage, matchOrder, stageNumber, tieBreakReason, type Standing, type TeamSlot } from '@cn-trials/shared';
 import type { TrialRoom } from '../net.ts';
 import { inviteLink } from '../net.ts';
 import { hud } from '../game/hudStore.ts';
 import { signalView } from '../game/roundClock.ts';
+import { freezeView } from '../game/freeze.ts';
 import { activeStage } from '../game/stage.ts';
 import { STAGE_SCENES } from '../stages/registry.ts';
 import { Brand, HowToPlay, SettingsPanel } from './Menu.tsx';
@@ -250,7 +251,9 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
   const players = [...room.players.values()];
   const inRound = players.filter((p) => p.status !== 'waiting');
   const alive = inRound.filter((p) => p.status === 'active' || p.status === 'finished').length;
-  const eliminated = inRound.filter((p) => p.status === 'spotted').length;
+  // Decision 054: nobody is eliminated in Stage 01 any more; the third count is who is frozen in ice right now.
+  const frozenNow = inRound.filter((p) => p.frozen > 0).length;
+  const fz = freezeView(room);
   const finished = inRound.filter((p) => p.status === 'finished').length;
   const now = Date.now();
   const recentSpot = room.events.find((e) => e.kind === 'spotted' && e.id === room.id && now - e.at < 3000);
@@ -328,7 +331,7 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
             <div className="glass counts num" data-testid="round-counts">
               <span title="Still racing"><IconUsers size={22} />{alive} / {inRound.length}</span><i className="sep" />
               <span className="in" title="Finished"><IconCheck size={22} />{finished}</span><i className="sep" />
-              <span className="out" title="Spotted"><IconX size={20} />{eliminated}</span>
+              <span className="out" title="Frozen right now" data-testid="frozen-count"><IconX size={20} />{frozenNow}</span>
             </div>
           )}
           <div className="hud-tools">
@@ -360,7 +363,7 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
               <div className="stage-of" data-testid="next-stage-intro">Stage {pad2(stage.number)} <i>/ {ALL_STAGES}</i></div>
               <p className="rule">{stage.briefing.rule}</p>
               {isHunt ? <HuntBriefingRole room={room} />
-                : <p className="muted">{m.final ? 'Last stage. ' : ''}Everyone plays, including anyone spotted or caught before. First finisher +2, every finisher +1.</p>}
+                : <p className="muted">{m.final ? 'Last stage. ' : ''}Everyone plays, including anyone caught before. First finisher +2, every finisher +1.</p>}
             </>
           ) : (
             <>
@@ -385,8 +388,15 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
         </div>
       )}
 
-      {recentSpot && r.phase === 'active' && (
-        <div className="banner spotted" data-testid="spotted"><b>Spotted</b><span>You moved while The Watcher was looking.{m.total > 1 ? ` You keep your ${myStanding?.points ?? 0} points${m.final ? '' : ' and play the next stage'}.` : ''}</span></div>
+      {fz.frozen && r.phase === 'active' && (
+        // Decision 054: caught = frozen, never out. The countdown only starts when the light is green again.
+        <div className="banner spotted frozen" data-testid="frozen" data-thawing={fz.thawing ? '1' : '0'}>
+          <b>Frozen</b>
+          <span>{fz.thawing ? <>Thawing in <b className="num">{fz.left.toFixed(1)}</b> s</> : <>The Watcher saw you move. You thaw {ROUND.freezeS} s after GO.</>}</span>
+        </div>
+      )}
+      {recentSpot && !fz.frozen && me?.status === 'spotted' && r.phase === 'active' && (
+        <div className="banner spotted" data-testid="spotted"><b>Spotted</b><span>You moved while The Watcher was looking.</span></div>
       )}
       {recentFinish && r.phase === 'active' && (
         <div className="banner finished" data-testid="finished-banner"><b>{iWonStage ? 'Finished 1st' : 'Finished'}</b>
@@ -398,14 +408,14 @@ export function GameHud({ room, stageError, onLeave }: { room: TrialRoom; stageE
       {isHunt && <HuntPanel room={room} />}
       {isAgawan && <AgawanPanel room={room} />}
       {isAgawan && playing && <AgawanTeamStatus room={room} />}
-      {hud.down > 0 && !recentSpot && (
+      {hud.down > 0 && !fz.frozen && (
         <div className="banner down" data-testid="knocked-down"><b>Knocked over</b><span>Back on your feet in a moment</span></div>
       )}
       <div className="feed" aria-live="polite">
         {(r.phase === 'active' || r.phase === 'lobby') && feed.map((e) => {
           const p = room.players.get(e.id);
           const o = e.other ? room.players.get(e.other) : undefined;
-          const text = e.kind === 'spotted' ? `${p?.name ?? 'Player'} was spotted`
+          const text = e.kind === 'spotted' ? `${p?.name ?? 'Player'} was frozen`
             : e.kind === 'captured' ? captureText(room, e.id, e.other)
             : e.kind === 'finished' ? `${p?.name ?? 'Player'} finished${firstFinisherId(room) === e.id ? ' first · +2' : ' · +1'}`
             : `${p?.name ?? 'Player'} and ${o?.name ?? 'someone'} collided`;
@@ -504,7 +514,8 @@ function StageBoard({ room }: { room: TrialRoom }) {
             <td className="muted">{p.teamPlace ? [`${p.team ? teamName(room, p.team as TeamSlot) : ''} · ${ordinal(p.teamPlace)}`, p.raids ? `${p.raids} ${p.raids === 1 ? 'raid' : 'raids'}` : '', p.tags ? `${p.tags} ${p.tags === 1 ? 'tag' : 'tags'}` : '', p.rescues ? `${p.rescues} ${p.rescues === 1 ? 'rescue' : 'rescues'}` : ''].filter(Boolean).join(' · ')
               : p.role === 'hunter' ? `Hunter · ${p.captures ?? 0} ${p.captures === 1 ? 'capture' : 'captures'}`
               : p.role === 'hider' ? (p.status === 'captured' ? 'Hider · caught' : 'Hider · survived')
-              : p.status === 'finished' ? `${p.finishTime.toFixed(2)} s` : p.status === 'spotted' ? 'Spotted' : `${Math.round(p.progress * 100)}% of the way`}</td>
+              : [p.status === 'finished' ? `${p.finishTime.toFixed(2)} s` : p.status === 'spotted' ? 'Spotted' : `${Math.round(p.progress * 100)}% of the way`,
+                p.caught ? `frozen ${p.caught}×` : ''].filter(Boolean).join(' · ')}</td>
             <td className={`r gain${p.points ? '' : ' zero'}`}>+{p.points}</td>
           </tr>
         ))}

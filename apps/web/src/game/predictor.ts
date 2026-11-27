@@ -5,8 +5,10 @@
 // so drawing the latest step made the contestant (and the camera's look target) move in visible stair steps.
 // Sideways walking showed it most, because each step swung the camera. `renderPos` now interpolates between the
 // last two steps, and a reconciliation correction is blended out over a few frames instead of snapping.
-// None of this changes what is simulated or sent: the server still owns positions.
-import { SIM_DT, step, type MoveInput, type MoveState, type Rect } from '@cn-trials/shared';
+// Decision 054 (owner, 27 Nov 2026): movement is player-side in every stage. The browser's state IS the player's
+// position (sent to the room each step); `reconcile` is only used by older input-only clients and tests, and the
+// room's own placements (a new stage, a respawn, a capture) arrive as a teleport (`reset`).
+import { SIM_DT, pushOutOfWalls, step, type MoveInput, type MoveState, type Rect } from '@cn-trials/shared';
 
 /** Corrections larger than this (metres) snap instead of blending: a respawn, a knock-back, a teleport. */
 const SNAP_DISTANCE = 1.5;
@@ -78,6 +80,17 @@ export class Predictor {
     this.render.x = this.prev.x + (this.state.x - this.prev.x) * a + this.errX;
     this.render.z = this.prev.z + (this.state.z - this.prev.z) * a + this.errZ;
     return this.render;
+  }
+
+  /**
+   * Player-side movement (decision 054): push the current state by (dx, dz), e.g. out of another contestant, then
+   * back out of the walls. Moves the interpolation pair too, so the push shows smoothly.
+   */
+  nudge(dx: number, dz: number): void {
+    const [x, z] = pushOutOfWalls(this.state.x + dx, this.state.z + dz, this.wallsNow());
+    const ax = x - this.state.x, az = z - this.state.z;
+    this.state = { ...this.state, x, z };
+    this.prev = { ...this.prev, x: this.prev.x + ax, z: this.prev.z + az };
   }
 
   private wallsNow(): Rect[] { return typeof this.walls === 'function' ? this.walls() : this.walls; }

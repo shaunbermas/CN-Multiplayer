@@ -23,6 +23,10 @@ export interface PlayerView {
   bot: boolean;
   /** Seconds of collision knock-down left (0 = standing; v7). */
   down: number;
+  /** v15 (decision 054): seconds since GO when this player's ice thaws (Stage 01), 0 when not frozen. */
+  frozen: number;
+  /** v15: the room's teleport epoch for this player (changes when the room places them itself). */
+  tp: number;
   /** In the latest snapshot (The Hunt snapshots leave out players you cannot see; v8). */
   seen: boolean;
   /** Disconnected mid-match, seat kept (v8). */
@@ -130,10 +134,10 @@ export class RoomClient {
             if (msg.all !== false) for (const p of c.players.values()) p.seen = true;
             else for (const p of c.players.values()) p.seen = false;
             c.trackClock(msg.time);
-            for (const [id, x, z, vx, vz, yaw, ack, st, ft, down] of msg.rows) {
+            for (const [id, x, z, vx, vz, yaw, ack, st, ft, down, frozen, tp] of msg.rows) {
               const p = c.players.get(id);
               if (!p) continue;
-              Object.assign(p, { x, z, vx, vz, yaw, ack, status: STATUS_OF[st] ?? 'active', finishTime: ft, down: down ?? 0, seen: true });
+              Object.assign(p, { x, z, vx, vz, yaw, ack, status: STATUS_OF[st] ?? 'active', finishTime: ft, down: down ?? 0, frozen: frozen ?? 0, tp: tp ?? 0, seen: true });
               const h = (p.hist ??= []);
               if (h.length && msg.time <= h[h.length - 1].t) h.length = 0; // a new room clock (stage change): start over
               h.push({ t: msg.time, x, z, vx, vz });
@@ -192,7 +196,7 @@ export class RoomClient {
       if (p) { p.name = r.name; p.spawn = r.spawn; p.ready = !!r.ready; p.colorway = r.colorway; p.bot = !!r.bot; p.away = !!r.away; continue; }
       this.players.set(r.id, {
         id: r.id, name: r.name, spawn: r.spawn, x: 0, z: 0, vx: 0, vz: 0, yaw: 0, ack: 0, status: 'active', finishTime: -1, ready: !!r.ready, colorway: r.colorway,
-        bot: !!r.bot, down: 0, seen: true, away: !!r.away,
+        bot: !!r.bot, down: 0, frozen: 0, tp: 0, seen: true, away: !!r.away,
       });
     }
   }
@@ -289,6 +293,8 @@ export class RoomClient {
   hide(): void { this.send({ t: 'act', a: 'hide' }); }
   /** The Hunt: hold or release capture (hunters). */
   capture(on: boolean): void { this.send({ t: 'act', a: 'capture', on }); }
+  /** Stage 01 (v15): tell the room this browser saw its own player move in a red light. */
+  reportCaught(at: number): void { this.send({ t: 'caught', at }); }
   /** Agawan Base: hold or release E (tag, rescue or raid; the server decides which). */
   interact(on: boolean): void { this.send({ t: 'act', a: 'interact', on }); }
 

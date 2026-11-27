@@ -87,6 +87,12 @@ The seed and the full signal sequence are logged per round (GDD §3.1).
 
 ## 4. Red detection (server-owned)
 
+> Decision 054 (owner, 27 Nov 2026): movement is player-side. Each browser applies D1–D6 to its own contestant
+> against the light on its own screen (grace 0.4 s, no latency term: the player reacts to what they see) and reports
+> the catch; the room accepts it during the red or up to 0.75 s after, and keeps a loose backstop on the reported
+> positions (1.0 s + 2 × latency grace, then more than 0.75 m). Bots and input-only clients are still judged by the
+> room with D1–D2. A catch no longer eliminates: see §7.
+
 | ID | Item | Value |
 |----|------|-------|
 | D1 | Grace window at the start of RED | 0.3 s + that player's measured one-way latency, capped at 0.5 s total |
@@ -124,6 +130,15 @@ Animation clips for The Watcher (`THE_WATCHER.glb`): `Watcher_Idle`, `Watcher_Tu
 Animation follows the server's state; it never decides anything (GDD §2.6).
 
 ## 7. Playful elimination and spectating
+
+> Decision 054 (owner, 27 Nov 2026) replaces this section for Stage 01: **nobody is eliminated.** A caught
+> contestant is frozen in a block of ice, mid-pose, where they stood (a cold tint, shards and a frosted patch; no
+> particles). The thaw countdown of **2 s** starts only when the light turns GREEN again; when it ends the ice breaks
+> and they race on, and they can be caught again later. The falling "spotted" animation, the 3 s death cam and the
+> spectator view are gone from Stage 01 (The Hunt keeps its own). The HUD shows a red "Frozen" banner ("You thaw 2 s
+> after GO", then "Thawing in 1.4 s"); the counts panel shows how many are frozen right now. A frozen contestant is a
+> solid block others walk around and cannot be knocked over. Points are unchanged (first finisher 2, other finishers
+> 1, not finished 0); unfinished players rank by progress, then by fewer catches, and the results say "frozen N×".
 
 - **Spotted:** the player freezes in a startled pose, a "SPOTTED!" stamp pops above them, then they
   shrug, wave and walk off to the side benches (about 2 s, no damage or harm imagery).

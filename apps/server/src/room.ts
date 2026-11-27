@@ -5,7 +5,7 @@
 // (bots.ts) and player-to-player collisions (collisions.ts), all simulated here for humans and bots alike.
 import { DurableObject } from 'cloudflare:workers';
 import {
-  BOT_LIMITS, CLOSE, DEFAULT_STAGE_ID, INPUT_BURST, INPUT_QUEUE_MAX, MATCH, MAX_MESSAGE_BYTES, MAX_PLAYERS, Match, PROBE_MS, PROTOCOL_VERSION, RoundEngine, SIM_DT,
+  BOT_LIMITS, CLOSE, MOVEMENT, POSITION_CHECK, pushOutOfWalls, DEFAULT_STAGE_ID, INPUT_BURST, INPUT_QUEUE_MAX, MATCH, MAX_MESSAGE_BYTES, MAX_PLAYERS, Match, PROBE_MS, PROTOCOL_VERSION, RoundEngine, SIM_DT,
   SIM_HZ, SNAPSHOT_MS, botInput, botNames, downLeft, encodeRow, getStage, insideRect, makeBot, matchOrder, newRoundPlayer, obstacleGapRows,
   resetBot, resolvePlayerContacts, sanitizeInput, segmentAt, HuntEngine, huntSenses, huntBotInput, CLOSE as CLOSE_CODES,
   type StageEngine, type HuntBody, type SnapRow,
@@ -44,6 +44,18 @@ interface Player extends RoundPlayer {
   away?: boolean;
   /** The Hunt bots think at 10 Hz: the last decided move, repeated between decisions. */
   botMove?: { mx: number; mz: number; yaw: number; k: number };
+  /** Decision 054: position reports from the player's browser (player-side movement), applied in the next tick. */
+  posQueue: { seq: number; x: number; z: number; vx: number; vz: number; yaw: number; k: number }[];
+  /** The browser moves this player itself (it has sent a position report). */
+  clientAuth: boolean;
+  /** Teleport epoch: bumped whenever the room places the player itself, so the browser takes the room's position. */
+  tp: number;
+  /** Where the browser last put the player (after the room's checks), to notice the room moving them. */
+  authX: number; authZ: number;
+  /** Metres of movement the player may still cover (refilled at the allowed speed, capped at burstS). */
+  moveBudget: number;
+  /** Stage 01 backstop: metres moved in a red light past its long grace. */
+  bsDisp?: number;
 }
 
 interface Attachment { room: string; id: string | null }
@@ -143,6 +155,26 @@ export class TrialRoom extends DurableObject<Env> {
         p.queue.push({ seq: msg.seq, mx: msg.mx, mz: msg.mz, yaw: msg.yaw, k: typeof msg.k === 'number' ? msg.k & 3 : 0 });
         this.stats.accepted++;
         break;
+      case 'pos': {
+        // Decision 054: the browser moved its own player. Checked and applied in the next tick (simStep).
+        const nums = [msg.seq, msg.x, msg.z, msg.vx, msg.vz, msg.tp];
+        if (!nums.every((n) => typeof n === 'number' && Number.isFinite(n))) return;
+        if (p.bot || msg.tp !== p.tp) return; // made before the room moved the player: stale
+        if (p.posQueue.length >= INPUT_QUEUE_MAX) { this.stats.dropped++; return; }
+        p.clientAuth = true;
+        p.posQueue.push({ seq: msg.seq, x: msg.x, z: msg.z, vx: msg.vx, vz: msg.vz, yaw: typeof msg.yaw === 'number' && Number.isFinite(msg.yaw) ? msg.yaw : p.yaw, k: typeof msg.k === 'number' ? msg.k & 3 : 0 });
+        this.stats.accepted++;
+        break;
+      }
+      case 'caught': {
+        // Stage 01 (decision 054): the browser caught its own player moving in a red light.
+        const e = this.engine;
+        if (e instanceof RoundEngine) {
+          const ev: RoundEvents = { spotted: [], finished: [] };
+          if (e.reportCaught(p, ev, msg.at)) this.broadcastRoundEvents(ev);
+        }
+        break;
+      }
       case 'act':
         this.stageAction(p, msg);
         break;
@@ -282,7 +314,7 @@ export class TrialRoom extends DurableObject<Env> {
     return {
       ...newRoundPlayer(id, this.nextId, spawn.index, spawn.x, spawn.z),
       name: sanitizeName(rawName, `Nomad ${spawn.index}`),
-      vx: 0, vz: 0, yaw: spawn.yaw, ack: 0, queue: [], tokens: INPUT_BURST, firstMoveAt: null, probeSentAt: new Map(), ready: false,
+      vx: 0, vz: 0, yaw: spawn.yaw, ack: 0, queue: [], posQueue: [], clientAuth: false, tp: 0, authX: spawn.x, authZ: spawn.z, moveBudget: 0, tokens: INPUT_BURST, firstMoveAt: null, probeSentAt: new Map(), ready: false,
       // Random among the colourways nobody else has; a returning player (same browser key) keeps theirs when free.
       colorway: dealColorway([...this.players.values()].map((x) => x.colorway), () => crypto.getRandomValues(new Uint32Array(1))[0] / 2 ** 32,
         key ? this.colorwayByKey.get(key) : undefined) ?? 'CW01',
@@ -435,7 +467,7 @@ export class TrialRoom extends DurableObject<Env> {
 
   private respawn(p: Player): void {
     const s = this.geo.spawns.find((x) => x.index === p.spawn) ?? this.geo.spawns[0];
-    Object.assign(p, { x: s.x, z: s.z, vx: 0, vz: 0, yaw: s.yaw, status: 'active', finishTime: -1, spotTime: -1, firstMoveAt: null, downUntil: 0, immuneUntil: 0 });
+    Object.assign(p, { x: s.x, z: s.z, vx: 0, vz: 0, yaw: s.yaw, status: 'active', finishTime: -1, spotTime: -1, firstMoveAt: null, downUntil: 0, immuneUntil: 0, frozenUntil: 0, catches: 0 });
   }
 
   private toBench(p: Player, status: 'waiting'): void {
@@ -753,6 +785,7 @@ export class TrialRoom extends DurableObject<Env> {
     const ag = this.agawan();
     if (this.botCount() > 0) { if (h) this.driveHuntBots(h); else if (ag) this.driveAgawanBots(ag); else this.driveBots(gt); }
     for (const p of this.players.values()) {
+      if (p.clientAuth) { this.applyReports(p, e, walls, moveEv); continue; }
       // Token bucket: one step per tick sustained, so a client cannot move faster than real time.
       p.tokens = Math.min(INPUT_BURST, p.tokens + 1);
       while (p.tokens >= 1 && p.queue.length) {
@@ -773,7 +806,7 @@ export class TrialRoom extends DurableObject<Env> {
     // Player-to-player collisions (server authority, same code for humans and bots). In the lobby everyone on the
     // yard collides; in a round only contestants still racing (finished, spotted and waiting players are out of play).
     const racing = e.phase === 'lobby' ? [...this.players.values()].filter((p) => p.status !== 'waiting')
-      : e.phase === 'active' ? [...this.players.values()].filter((p) => p.status === 'active' && !h?.isHidden(p.id)) : [];
+      : e.phase === 'active' ? [...this.players.values()].filter((p) => p.status === 'active' && !h?.isHidden(p.id) && !(p.frozenUntil > this.elapsed)) : [];
     // Teammates never knock each other over (decision 047): Agawan teams, and The Hunt's hunters or hiders.
     const friendly = e.phase !== 'active' ? undefined
       : ag ? (a: string, b: string) => { const ta = ag.teamOf(a); return !!ta && ta === ag.teamOf(b); }
@@ -781,8 +814,7 @@ export class TrialRoom extends DurableObject<Env> {
       : undefined;
     const knocks = racing.length > 1 ? resolvePlayerContacts(racing, this.elapsed, walls, friendly) : [];
     const at = Math.round((this.elapsed - e.goTime) * 1000) / 1000;
-    for (const id of moveEv.spotted) this.broadcast({ t: 'event', kind: 'spotted', id, at });
-    for (const id of moveEv.finished) this.broadcast({ t: 'event', kind: 'finished', id, at });
+    this.broadcastRoundEvents(moveEv);
     if (ag) for (const x of ag.drainEvents()) {
       this.broadcast({ t: 'agawan', ev: x, at });
       console.log(JSON.stringify({ ev: `agawan_${x.kind}`, room: this.roomCode, round: this.roundId, at, ...x }));
@@ -795,10 +827,65 @@ export class TrialRoom extends DurableObject<Env> {
       this.broadcast({ t: 'event', kind: 'collision', id: k.a, other: k.b, at });
       this.stats.knockdowns++;
     }
+    // Player-side movement (decision 054): when the room itself moved a player (a new stage, a respawn, a capture,
+    // a big push), a new teleport epoch tells their browser to take the room's position.
+    for (const p of this.players.values()) {
+      if (!p.clientAuth) continue;
+      if (Math.hypot(p.x - p.authX, p.z - p.authZ) > POSITION_CHECK.correctDist) { p.tp++; p.posQueue = []; p.authX = p.x; p.authZ = p.z; }
+    }
     const ms = performance.now() - t0;
     const s = this.stats;
     s.ticks++; s.totalMs += ms; s.maxMs = Math.max(s.maxMs, ms);
     s.recent.push(ms); if (s.recent.length > 3000) s.recent.shift();
+  }
+
+  /** Spotted (Stage 01: caught and frozen, decision 054) and finished events, timed in seconds since GO. */
+  private broadcastRoundEvents(ev: RoundEvents): void {
+    const at = Math.round((this.elapsed - this.engine.goTime) * 1000) / 1000;
+    for (const id of ev.spotted) this.broadcast({ t: 'event', kind: 'spotted', id, at });
+    for (const id of ev.finished) this.broadcast({ t: 'event', kind: 'finished', id, at });
+  }
+
+  /**
+   * Player-side movement (decision 054): apply the positions this player's browser reported since the last tick.
+   * Each report is checked: the player may move now (phase, knock-down, freeze, prison), covers no more ground than
+   * the allowed speed (with a small bank for lag spikes) and ends up outside every wall. A report that fails is
+   * clamped to what is allowed; if the result is far from the browser's, the teleport check corrects the browser.
+   * The stage then sees the move exactly as it sees a simulated one (finish line, Stage 01 backstop).
+   */
+  private applyReports(p: Player, e: StageEngine, walls: Rect[], ev: RoundEvents): void {
+    const scale = Math.max(1, e.speedScale?.(p) ?? 1);
+    const rate = MOVEMENT.walkSpeed * scale * POSITION_CHECK.speedSlack;
+    p.moveBudget = Math.min(rate * POSITION_CHECK.burstS, p.moveBudget + rate * SIM_DT);
+    const h = this.hunt();
+    let n = 0;
+    while (p.posQueue.length && n < POSITION_CHECK.perTick) {
+      const m = p.posQueue.shift()!;
+      n++;
+      p.ack = m.seq;
+      if (!e.canMove(p)) { p.vx = 0; p.vz = 0; p.authX = p.x; p.authZ = p.z; continue; }
+      const ox = p.x, oz = p.z;
+      let dx = m.x - ox, dz = m.z - oz;
+      const d = Math.hypot(dx, dz);
+      if (d > p.moveBudget) { const k = p.moveBudget / d; dx *= k; dz *= k; }
+      const [nx, nz] = pushOutOfWalls(ox + dx, oz + dz, walls);
+      const moved = Math.hypot(nx - ox, nz - oz);
+      p.moveBudget = Math.max(0, p.moveBudget - moved);
+      h?.applyFlags(p, m.k, Math.hypot(m.vx, m.vz) > 0.1);
+      p.x = nx; p.z = nz;
+      const vmax = MOVEMENT.walkSpeed * scale * POSITION_CHECK.speedSlack;
+      const vl = Math.hypot(m.vx, m.vz);
+      const vk = vl > vmax ? vmax / vl : 1;
+      p.vx = m.vx * vk; p.vz = m.vz * vk;
+      p.yaw = m.yaw;
+      // Where the browser put the player: a clamp or wall push larger than correctDist triggers a correction.
+      p.authX = m.x; p.authZ = m.z;
+      if (e.phase === 'lobby') this.practiceFinish(p, { mx: p.vx, mz: p.vz });
+      else {
+        e.afterMove(p, 0, 0, SIM_DT, ev); // finish line (no red-light check on reported moves: the browser does it)
+        if (e instanceof RoundEngine) e.backstop(p, moved, ev);
+      }
+    }
   }
 
   /** Queues one input per bot per tick, through the same token bucket and movement code as human inputs. */
@@ -929,7 +1016,8 @@ export class TrialRoom extends DurableObject<Env> {
 
   private broadcastSnapshot(): void {
     const all = [...this.players.values()];
-    const rows = all.map((p) => encodeRow(p.id, p, downLeft(p, this.elapsed)));
+    const go = this.engine.goTime;
+    const rows = all.map((p) => encodeRow(p.id, p, downLeft(p, this.elapsed), p.frozenUntil > this.elapsed ? p.frozenUntil - go : 0, p.tp));
     const time = Math.round(this.elapsed * 1000) / 1000;
     const round = this.roundState();
     const h = this.hunt();

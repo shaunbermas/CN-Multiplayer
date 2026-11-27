@@ -21,6 +21,21 @@ export const DECEL = MOVEMENT.walkSpeed / MOVEMENT.stopTime;
 export const INPUT_BURST = 4;
 export const INPUT_QUEUE_MAX = 60;
 
+/**
+ * Player-side movement (decision 054): the room's checks on the positions a browser reports. Loose enough that a
+ * normal player (including a short lag spike) is never corrected, tight enough that nobody can teleport or speed.
+ */
+export const POSITION_CHECK = {
+  /** Allowed speed over the stage's walking (or sprint) speed. */
+  speedSlack: 1.3,
+  /** Seconds of unused movement a player may bank (reports bunched up by a lag spike arrive together). */
+  burstS: 1.5,
+  /** When the room's position and the browser's differ by more than this (m), the browser takes the room's. */
+  correctDist: 0.5,
+  /** Most position reports applied per player in one 30 Hz tick. */
+  perTick: 8,
+} as const;
+
 export const NAME_MAX = 16;
 export const DEFAULT_ROOM = 'default';
 export const DEV_WORKER_PORT = 8787;

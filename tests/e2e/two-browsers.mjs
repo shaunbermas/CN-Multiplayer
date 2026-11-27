@@ -4,7 +4,8 @@
 //  - player A walks forward with the W key; player B sees A move; A's prediction matches the server
 //  - Prompt 07: both browsers load the Stage 01 environment GLB and THE_WATCHER.glb with no asset problems
 //    (28 m Watcher, every clip present); The Watcher's clip follows the server signal (green / red);
-//    the spotted player sees the spectator status, results show qualified / eliminated tags
+//    decision 054: Beta's own browser catches Beta walking into red, Beta is frozen in ice (not eliminated), sees
+//    the Frozen banner, thaws 2 s after the next GO, and the results show how often Beta was frozen
 //  - screenshots: A's third-person view at spawn (Watcher readability), A after walking, B's view
 // Builds the web app first. Usage: npm run test:e2e
 import { execSync } from 'node:child_process';
@@ -129,12 +130,29 @@ try {
   if (!histG.includes('Watcher_TurnAway')) errors.push(`Watcher_TurnAway never played at GREEN (clips: ${histG.join(', ')})`);
   await pageB.screenshot({ path: `${shots}/s1-4_green_view.png`, timeout: 120_000 });
   step('green checked; Beta walks');
+  // The Frozen banner can come and go faster than a check on a slow software-rendered page: record it in-page.
+  await pageB.evaluate(() => {
+    window.__frozenSeen = false;
+    new MutationObserver(() => { if (document.querySelector('[data-testid=frozen]')) window.__frozenSeen = true; })
+      .observe(document.body, { subtree: true, childList: true });
+  });
   await pageB.keyboard.down('KeyW');
-  // Wait for the server's decision rather than polling for the short red window (slow software WebGL in CI
-  // can miss it): Beta keeps walking, so the server spots Beta just after the first red's grace window.
+  // Wait for the room's confirmation rather than polling for the short red window (slow software WebGL in CI can
+  // miss it): Beta keeps walking, so Beta's browser catches Beta just after the first red's grace window (decision
+  // 054: player-side) and the room freezes Beta.
   const idB = await pageB.evaluate(() => window.__cn.sessionId);
-  await waitFor(async () => (await players(pageB)).find((p) => p.id === idB)?.status === 'spotted', 'Beta spotted by the server', 40_000);
-  step('Beta spotted');
+  await waitFor(async () => (await players(pageB)).find((p) => p.id === idB)?.frozen > 0, 'Beta frozen by the room', 40_000);
+  step('Beta frozen');
+  const betaNow = (await players(pageB)).find((p) => p.id === idB);
+  if (betaNow?.status !== 'active') errors.push(`A frozen Beta should still be active (in the race), got ${betaNow?.status}`);
+  // Checked at once: the freeze lasts only until 2 s after the next GO, and the Watcher checks below are slow in CI.
+  // Frozen (decision 054): the banner shows, Beta's contestant is inside the ice, and holding W does not move Beta.
+  await waitFor(() => pageB.evaluate(() => window.__frozenSeen), 'Frozen banner on Beta', 10_000)
+    .catch(() => errors.push('Frozen player does not see the Frozen banner'));
+  const iceShown = await pageB.evaluate((id) => !!window.__cnThree?.scene.getObjectByName(`PLAYER_${id}`)?.getObjectByName('ICE_SHELL')?.visible, idB);
+  if (!iceShown) errors.push('The ice effect is not shown on the frozen contestant');
+  step('frozen checked');
+  await pageB.screenshot({ path: `${shots}/s1-4_frozen_view.png`, timeout: 120_000 });
   // The server stamps each spotting with its round time; the seeded schedule says which signal that was.
   const spotEv = (await pageB.evaluate(() => window.__cn.events())).find((e) => e.kind === 'spotted' && e.id === idB);
   sigAtSpot = segmentAt(buildSchedule(12345, ROUND_S), spotEv?.roundT ?? -1)?.signal ?? 'none';
@@ -163,12 +181,10 @@ try {
   if (!reds.length || skipped || !locked) errors.push(`Neither Watcher_FocusLock nor Watcher_Detect opened the red (clips: ${hist.join(', ')})`);
   await pageB.screenshot({ path: `${shots}/s1-4_red_view.png`, timeout: 120_000 });
   step('detect checked');
-  await sleep(2600); // past the SPOTTED! stamp
-  // The HUD shows the spectator status after the 2.5 s SPOTTED! stamp; allow for a slow software-rendered page.
-  await waitFor(async () => (await pageB.locator('[data-testid=spectating]').count()) > 0, 'spectator status on Beta', 10_000)
-    .catch(() => errors.push('Spotted player does not see the spectator status'));
-  await pageB.screenshot({ path: `${shots}/s1-4_spotted_view.png`, timeout: 120_000 });
-  step('spectator checked');
+  // Thaw: once the room's thaw time passes (2 s after the next GO), Beta is free to move again (still in the race).
+  await waitFor(async () => { const b = (await players(pageB)).find((p) => p.id === idB); return b && !(b.frozen > 0) && b.status === 'active'; }, 'Beta thaws', 30_000)
+    .catch(() => errors.push('Beta did not thaw after the freeze'));
+  step('thaw checked');
   await pageB.keyboard.up('KeyW');
   const alphaStatus = (await players(pageA)).find((p) => p.id === idA)?.status;
   if (alphaStatus !== 'active') errors.push(`Alpha (standing still) ended up ${alphaStatus}`);
@@ -178,16 +194,17 @@ try {
   await waitFor(async () => (await pageB.evaluate(() => window.__cn.resultsMeta())) !== null, 'results message (Beta)', (ROUND_S + 30) * 1000);
   step(`results on Beta, phase ${(await round(pageB)).phase}`);
   if ((await round(pageB)).phase === 'results') {
-    await waitFor(async () => (await pageB.locator('[data-testid=stage-board] .out').count()) > 0, 'results screen on Beta', 10_000)
-      .catch(() => errors.push('Results screen has no eliminated tag'));
+    await waitFor(async () => /frozen \d+×/.test(await pageB.locator('[data-testid=stage-board]').innerText().catch(() => '')), 'results screen on Beta', 10_000)
+      .catch(() => errors.push('Results screen does not say how often Beta was frozen'));
     await pageB.screenshot({ path: `${shots}/s1-4_results_view.png`, timeout: 120_000 });
   } else errors.push(`Results screen closed before the test could check it (Beta phase ${(await round(pageB)).phase})`);
   await pageA.bringToFront();
   await waitFor(async () => (await pageA.evaluate(() => window.__cn.results().length)) >= 2, 'results (seen by Alpha)', 30_000);
   step('results on Alpha');
   const results = await pageA.evaluate(() => window.__cn.results());
-  if (results.map((r) => r.name).join() !== 'Alpha,Beta') errors.push(`Results order ${results.map((r) => r.name).join(', ')}`);
-  if (results.find((r) => r.name === 'Beta')?.status !== 'spotted') errors.push('Beta is not spotted in the results');
+  if (results.map((r) => r.name).sort().join() !== 'Alpha,Beta') errors.push(`Results ${results.map((r) => r.name).join(', ')}`);
+  const betaRes = results.find((r) => r.name === 'Beta');
+  if (betaRes?.status === 'spotted' || !(betaRes?.caught >= 1)) errors.push(`Beta should be in the race and frozen at least once in the results: ${JSON.stringify(betaRes)}`);
   const meta = await pageA.evaluate(() => window.__cn.resultsMeta());
   if (meta?.stage !== 'STAGE_01_RED_LIGHT' || !(meta?.roundId >= 1)) errors.push(`Results meta ${JSON.stringify(meta)}`);
   if (consoleErrors.length) errors.push(...consoleErrors);
@@ -199,9 +216,9 @@ try {
     same_room: roomA === roomB,
     both_see_players: 2,
     walk_4s: { moved_m_seen_by_other_browser: +moved.toFixed(2), held_w_s: +heldS.toFixed(1), seen_gap_m: +seenGap.toFixed(3), prediction_error_m: +predictionError.toFixed(3) },
-    round: { results: 'Alpha (stood still) 1st, Beta (walked into red) spotted', watcher_clips: { green: greenClip, red: redClip }, beta_spotted_during: sigAtSpot },
+    round: { results: 'Beta walked into red: frozen, thawed, still in the race', watcher_clips: { green: greenClip, red: redClip }, beta_spotted_during: sigAtSpot },
     assets: { watcher_height_m: assetA.watcherHeight, clips: assetA.watcherClips.length, quality: assetA.quality, problems: assetA.problems },
-    screenshots: ['s1-3_start_view.png', 's1-3_after_walk.png', 's1-3_other_player_view.png', 's1-4_green_view.png', 's1-4_red_view.png', 's1-4_spotted_view.png', 's1-4_results_view.png'].map((f) => `tests/reports/screenshots/${f}`),
+    screenshots: ['s1-3_start_view.png', 's1-3_after_walk.png', 's1-3_other_player_view.png', 's1-4_green_view.png', 's1-4_red_view.png', 's1-4_frozen_view.png', 's1-4_results_view.png'].map((f) => `tests/reports/screenshots/${f}`),
     renderer: 'headless Chromium, software WebGL (SwiftShader)',
     player_a_cpu_throttle: throttle,
     steps,
